@@ -1,0 +1,59 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/security/security_guard/security_guard.gni")
+import("//build/ohos.gni")
+
+group("sg_classify_service_build_module") {
+  if (is_standard_system) {
+    deps = [
+      "${sg_root_dir}/interfaces/inner_api/classify:libsg_classify_sdk",
+      "${sg_root_dir}/services/risk_classify:sg_classify_service",
+    ]
+  }
+}
+
+group("sg_collect_service_build_module") {
+  if (is_standard_system) {
+    deps = [
+      "${sg_root_dir}/interfaces/inner_api/collect:libsg_collect_sdk",
+      "${sg_root_dir}/interfaces/inner_api/obtaindata:libsg_obtaindata_sdk",
+      "${sg_root_dir}/services/risk_collect:sg_collect_service",
+    ]
+  }
+}
+
+group("security_guard_build_module_test") {
+  testonly = true
+  deps = []
+  if (is_standard_system) {
+    deps += [
+      "${sg_root_dir}/interfaces/inner_api/classify/test:unittest",
+      "${sg_root_dir}/interfaces/inner_api/collect/test:unittest",
+      "${sg_root_dir}/interfaces/inner_api/obtaindata/test:unittest",
+      "${sg_root_dir}/test/unittest:unittest",
+    ]
+  }
+}
+
+group("security_guard_fuzz_test") {
+  testonly = true
+  deps = []
+  if (is_standard_system) {
+    deps += [
+      "${sg_root_dir}/test/fuzztest/classify:fuzztest",
+      "${sg_root_dir}/test/fuzztest/collect:fuzztest",
+      "${sg_root_dir}/test/fuzztest/obtaindata:fuzztest"
+    ]
+  }
+}

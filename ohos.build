@@ -1,0 +1,16 @@
+{
+  "subsystem": "security",
+  "parts": {
+    "security_guard": {
+      "variants": [
+        "phone"
+      ],
+      "module_list": [
+        "//base/security/security_guard:security_guard_build_module"
+      ],
+      "test_list": [
+        "//base/security/security_guard:security_guard_build_module_test"
+      ]
+    }
+  }
+}
