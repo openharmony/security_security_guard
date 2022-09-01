@@ -1,0 +1,51 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/security/security_guard/security_guard.gni")
+import("//build/ohos.gni")
+
+config("security_guard_config") {
+  visibility = [ ":*" ]
+  include_dirs = [ "include" ]
+}
+
+ohos_shared_library("libsg_collect_sdk") {
+  subsystem_name = "security"
+  part_name = "security_guard"
+  output_name = "libsg_collect_sdk"
+
+  public_configs = [ ":security_guard_config" ]
+
+  include_dirs = [
+    "include",
+    "${sg_root_dir}/services/risk_collect/include",
+    "${sg_root_dir}/frameworks/common/constants/include",
+    "${sg_root_dir}/interfaces/inner_api/collect/include",
+    "${sg_root_dir}/frameworks/common/log/include",
+  ]
+
+  sources = [
+    "src/data_collect_proxy.cpp",
+    "src/sg_collect_client.cpp",
+    "src/event_info.cpp",
+  ]
+
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+    "c_utils:utils",
+  ]
+
+  cflags_cc = ["-DHILOG_ENABLE",]
+}

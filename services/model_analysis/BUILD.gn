@@ -1,0 +1,48 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/security/security_guard/security_guard.gni")
+import("//build/ohos.gni")
+
+ohos_shared_library("sg_model_analysis") {
+  subsystem_name = "security"
+  part_name = "security_guard"
+
+  include_dirs = [
+    "//third_party/json/include",
+    "${sg_root_dir}/services/model_analysis/include",
+    "${sg_root_dir}/frameworks/common/constants/include",
+    "${sg_root_dir}/frameworks/common/json/include",
+    "${sg_root_dir}/frameworks/common/log/include",
+    "${sg_root_dir}/frameworks/common/utils/include",
+  ]
+
+  sources = [
+    "${sg_root_dir}/services/model_analysis/src/data_mgr_cfg.cpp",
+    "${sg_root_dir}/services/model_analysis/src/event_config.cpp",
+    "${sg_root_dir}/services/model_analysis/src/model_analysis.cpp",
+    "${sg_root_dir}/services/model_analysis/src/model_cfg_marshalling.cpp",
+    "${sg_root_dir}/services/model_analysis/src/model_config.cpp",
+    "${sg_root_dir}/services/model_analysis/src/threat_config.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
+  ]
+
+  cflags_cc = [
+    "-DHILOG_ENABLE"
+  ]
+
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "c_utils:utils",
+  ]
+}
