@@ -52,7 +52,7 @@ ohos_shared_library("sg_db_store") {
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "c_utils:utils",
-    "distributeddatamgr:distributeddata_inner",
+    "kv_store:distributeddata_inner",
   ]
 }
 
@@ -89,7 +89,7 @@ ohos_source_set("sg_uevent_listener_stamp") {
     "hiviewdfx_hilog_native:libhilog",
     "c_utils:utils",
     "hdf_core:libhdf_ipc_adapter",
-    "distributeddatamgr:distributeddata_inner",
+    "kv_store:distributeddata_inner",
   ]
 }
 
@@ -134,6 +134,6 @@ ohos_shared_library("sg_collect_service") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "c_utils:utils",
-    "distributeddatamgr:distributeddata_inner",
+    "kv_store:distributeddata_inner",
   ]
 }

@@ -57,6 +57,6 @@ ohos_shared_library("sg_classify_service") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "c_utils:utils",
-    "distributeddatamgr:distributeddata_inner",
+    "kv_store:distributeddata_inner",
   ]
 }
