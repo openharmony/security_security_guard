@@ -58,13 +58,12 @@ ohos_unittest("SecurityGuardUnitTest") {
   ]
 
   external_deps = [
-    "distributeddatamgr:distributeddata_inner",
+    "kv_store:distributeddata_inner",
     "hiviewdfx_hilog_native:libhilog",
     "c_utils:utils",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
     "safwk:system_ability_fwk",
-    "distributeddatamgr:distributeddata_inner",
   ]
 }
 
