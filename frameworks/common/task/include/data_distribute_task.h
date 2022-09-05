@@ -30,10 +30,10 @@ public:
     void OnExecute() override;
 
 private:
+    static ErrorCode ParseEventList(std::string &eventList, std::vector<int64_t> &eventListVec);
     std::string devId_;
     std::string eventList_;
     sptr<IRemoteObject> obj_;
-    static ErrorCode ParseEventList(std::string &eventList, std::vector<int64_t> &eventListVec);
 };
 } // namespace OHOS::Security::SecurityGuard
 

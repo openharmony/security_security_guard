@@ -30,7 +30,9 @@
 namespace OHOS::Security::SecurityGuard {
 using nlohmann::json;
 DataDistributeTask::DataDistributeTask(std::string &devId, std::string &eventList, sptr<IRemoteObject> &obj)
-    : devId_(devId), eventList_(eventList), obj_(obj)
+    : devId_(devId),
+      eventList_(eventList),
+      obj_(obj)
 {
 }
 
@@ -43,7 +45,7 @@ void DataDistributeTask::OnExecute()
     std::vector<int64_t> eventListVec;
     ErrorCode code = ParseEventList(eventList_, eventListVec);
     if (code != SUCCESS) {
-        SGLOGE("ParseEventList error, code=%{public}u", code);
+        SGLOGE("ParseEventList error, code=%{public}d", code);
         std::string empty;
         proxy->ResponseRiskData(devId_, empty, FINISH);
         return;
@@ -54,7 +56,7 @@ void DataDistributeTask::OnExecute()
     int32_t curIndex = 0;
     int32_t lastIndex = curIndex + MAX_DISTRIBUTE_LENS;
     auto maxIndex = static_cast<int32_t>(events.size());
-    SGLOGI("events size=%{public}u", maxIndex);
+    SGLOGI("events size=%{public}d", maxIndex);
     std::vector<EventDataSt> dispatchVec;
 
     while (lastIndex < maxIndex) {
@@ -65,7 +67,6 @@ void DataDistributeTask::OnExecute()
             dispatch += jsonObj.dump();
         }
 
-        SGLOGI("dispatch=%{public}s", dispatch.c_str());
         (void) proxy->ResponseRiskData(devId_, dispatch, CONTINUE);
         curIndex = lastIndex;
         lastIndex = curIndex + MAX_DISTRIBUTE_LENS;
@@ -78,8 +79,6 @@ void DataDistributeTask::OnExecute()
         json jsonObj(event);
         dispatch += jsonObj.dump();
     }
-
-    SGLOGI("last dispatch=%{public}s", dispatch.c_str());
     (void) proxy->ResponseRiskData(devId_, dispatch, FINISH);
 }
 

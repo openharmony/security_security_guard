@@ -25,19 +25,19 @@ BaseEventId::BaseEventId(int64_t eventId)
 {
 }
 
-void BaseEventId::ToJson(Json &jsonObj) const
+void BaseEventId::ToJson(nlohmann::json &jsonObj) const
 {
-    jsonObj = Json(eventVec_);
+    jsonObj = nlohmann::json(eventVec_);
 }
 
-void BaseEventId::FromJson(const Json &jsonObj)
+void BaseEventId::FromJson(const nlohmann::json &jsonObj)
 {
     eventVec_ = jsonObj.get<std::vector<EventDataSt>>();
 }
 
 std::string BaseEventId::ToString() const
 {
-    Json json;
+    nlohmann::json json;
     ToJson(json);
     return json.dump();
 }
@@ -108,13 +108,8 @@ bool BaseEventId::GetCacheData(std::vector<EventDataSt>& vector)
     }
     sort(eventVec_.begin(), eventVec_.end(),
         [] (const EventDataSt &a, const EventDataSt &b) -> bool {
-        return a.date > b.date;
-    });
-
-    for (EventDataSt data : eventVec_) {
-        SGLOGE("enter eventId=%{public}ld, version=%{public}s, content=%{public}s, date=%{public}s",
-            data.eventId, data.version.c_str(), data.content.c_str(), data.date.c_str());
-    }
+            return a.date > b.date;
+        });
 
     for (uint32_t index = 0; index < size; index++) {
         vector.emplace_back(eventVec_[index]);

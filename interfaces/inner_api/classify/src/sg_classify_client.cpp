@@ -31,14 +31,16 @@ namespace {
 int32_t RiskAnalysisManagerKit::RequestSecurityModelResultSync(std::string &devId, uint32_t modelId,
     std::shared_ptr<SecurityModelResult> &result)
 {
-    std::promise<SecurityModel> promise;
-    auto func = [&promise] (std::string &devId, uint32_t modelId, std::string &result)-> int32_t {
+    auto promise = std::make_shared<std::promise<SecurityModel>>();
+    auto future = promise->get_future();
+    auto func = [cap = std::move(promise)] (std::string &devId, uint32_t modelId,
+        std::string &result) mutable -> int32_t {
         SecurityModel model = {
             .devId = devId,
             .modelId = modelId,
             .result = result
         };
-        promise.set_value(model);
+        cap->set_value(model);
         return SUCCESS;
     };
 
@@ -47,7 +49,6 @@ int32_t RiskAnalysisManagerKit::RequestSecurityModelResultSync(std::string &devI
         SGLOGE("RequestSecurityModelResult error, code=%{public}d", code);
         return code;
     }
-    auto future = promise.get_future();
     std::chrono::milliseconds span(TIMEOUT_REPLY);
     if (future.wait_for(span) == std::future_status::timeout) {
         SGLOGE("wait timeout");

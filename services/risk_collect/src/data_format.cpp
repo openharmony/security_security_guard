@@ -33,7 +33,7 @@ bool DataFormat::CheckRiskContent(std::string content)
         return false;
     }
 
-    json jsonObj = json::parse(content, nullptr, false);
+    nlohmann::json jsonObj = nlohmann::json::parse(content, nullptr, false);
     if (jsonObj.is_discarded()) {
         SGLOGE("json parse error");
         return false;

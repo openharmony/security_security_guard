@@ -47,7 +47,7 @@ ohos_shared_library("sg_classify_service") {
 
   deps = [
     "${sg_root_dir}/services/model_analysis:sg_model_analysis",
-    "${sg_root_dir}/services/risk_collect:sg_db_store",
+    "${sg_root_dir}/services/risk_collect:sg_collect_service",
     "${sg_root_dir}/frameworks/common/task:sg_task_stamp",
   ]
 

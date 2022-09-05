@@ -34,7 +34,7 @@ public:
 
 private:
     int64_t eventId_{};
-    std::string eventName_;
+    std::string eventName_{};
     uint32_t version_{};
     uint32_t eventType_{};
     uint32_t dataSensitivityLevel_{};

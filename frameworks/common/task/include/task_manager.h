@@ -21,11 +21,9 @@
 namespace OHOS::Security::SecurityGuard {
 class TaskManager {
 public:
-    static TaskManager& GetInstance();
-
-    bool PushTask(std::shared_ptr<BaseTask> &task);
-
     ~TaskManager() = default;
+    static TaskManager& GetInstance();
+    bool PushTask(std::shared_ptr<BaseTask> &task);
 
 private:
     TaskManager();

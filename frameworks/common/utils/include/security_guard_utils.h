@@ -21,11 +21,13 @@
 namespace OHOS::Security::SecurityGuard {
 class SecurityGuardUtils {
 public:
-    SecurityGuardUtils() = delete;
     static bool StrToU32(const std::string &str, uint32_t &value);
     static bool StrToI64(const std::string &str, int64_t &value);
     static bool StrToLL(const std::string &str, long long &value);
-    static bool StrToUL(const std::string &str, unsigned long &value);
+    static bool StrToULL(const std::string &str, unsigned long long &value);
+
+private:
+    SecurityGuardUtils() = default;
 };
 } // namespace OHOS::Security::SecurityGuard
 

@@ -28,12 +28,12 @@ REGISTER_SYSTEM_ABILITY_BY_ID(RiskAnalysisManagerService, RISK_ANALYSIS_MANAGER_
 RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnCreate)
     : SystemAbility(saId, runOnCreate)
 {
-    SGLOGD("%{public}s", __func__);
+    SGLOGW("%{public}s", __func__);
 }
 
 void RiskAnalysisManagerService::OnStart()
 {
-    SGLOGE("RiskAnalysisManagerService %{public}s", __func__);
+    SGLOGI("RiskAnalysisManagerService %{public}s", __func__);
     if (!Publish(this)) {
         SGLOGE("Publish error");
     }

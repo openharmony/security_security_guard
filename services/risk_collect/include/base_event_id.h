@@ -24,8 +24,8 @@ class BaseEventId : public ICollectInfo {
 public:
     explicit BaseEventId(int64_t eventId);
     ~BaseEventId() override = default;
-    void ToJson(Json &jsonObj) const override;
-    void FromJson(const Json &jsonObj) override;
+    void ToJson(nlohmann::json &jsonObj) const override;
+    void FromJson(const nlohmann::json &jsonObj) override;
     std::string ToString() const override;
     std::string GetPrimeKey() const override;
     bool Push(const EventDataSt &eventDataSt);

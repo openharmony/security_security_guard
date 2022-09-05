@@ -35,7 +35,7 @@ int32_t NativeDataCollectKit::ReportSecurityInfo(const std::shared_ptr<EventInfo
     }
     int32_t ret = proxy->RequestDataSubmit(info);
     if (ret != SUCCESS) {
-        SGLOGE("RequestSecurityInfo error, ret=%{public}u", ret);
+        SGLOGE("RequestSecurityInfo error, ret=%{public}d", ret);
         return ret;
     }
     return SUCCESS;

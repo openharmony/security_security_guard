@@ -38,10 +38,7 @@ public:
     ErrorCode GetEventConfig(int64_t eventId, std::shared_ptr<EventConfig> &config) const;
 
 private:
-    std::unordered_map<uint32_t, std::set<int64_t>> modelToEventMap_;
-    std::unordered_map<uint32_t, std::shared_ptr<ModelConfig>> modelMap_;
-    std::unordered_map<uint32_t, std::shared_ptr<ThreatConfig>> threatMap_;
-    std::unordered_map<int64_t, std::shared_ptr<EventConfig>> eventMap_;
+    ModelAnalysis() = default;
     void MapModelToEvent(const std::unordered_map<uint32_t, std::set<uint32_t>> &modelToThreatMap,
         std::unordered_map<uint32_t, std::set<int64_t>> threatToEventMap);
     ErrorCode InitDataMgrCfg();
@@ -50,7 +47,11 @@ private:
     void MapThreatToEvent(const std::vector<ThreatCfgSt> &threatCfgs,
         std::unordered_map<uint32_t, std::set<int64_t>> &map);
     ErrorCode CheckFileStream(std::ifstream &stream);
-    ErrorCode ParseConfig(nlohmann::json json);
+    ErrorCode ParseConfig(const nlohmann::json &json);
+    std::unordered_map<uint32_t, std::set<int64_t>> modelToEventMap_;
+    std::unordered_map<uint32_t, std::shared_ptr<ModelConfig>> modelMap_;
+    std::unordered_map<uint32_t, std::shared_ptr<ThreatConfig>> threatMap_;
+    std::unordered_map<int64_t, std::shared_ptr<EventConfig>> eventMap_;
 };
 } // namespace OHOS::Security::SecurityGuard
 

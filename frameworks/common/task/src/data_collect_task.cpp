@@ -20,7 +20,7 @@
 
 namespace OHOS::Security::SecurityGuard {
 DataCollectTask::DataCollectTask(EventDataSt &eventData)
-    : BaseTask(), eventData_(eventData)
+    : eventData_(eventData)
 {
 }
 
@@ -28,7 +28,7 @@ void DataCollectTask::OnExecute()
 {
     ErrorCode code = DataManagerWrapper::GetInstance().AddCollectInfo(eventData_);
     if (code != SUCCESS) {
-        SGLOGE("AddCollectInfo error, %{public}u", code);
+        SGLOGE("AddCollectInfo error, %{public}d", code);
     }
 }
 }

@@ -25,8 +25,8 @@ public:
 
     SecurityModelResult(std::string &devId, uint32_t modelId, std::string &result)
         : devId_(devId),
-        modelId_(modelId),
-        result_(result) {}
+          modelId_(modelId),
+          result_(result) {}
 
     SecurityModelResult(const SecurityModelResult& result) = default;
     std::string GetDevId() const;

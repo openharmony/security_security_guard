@@ -24,9 +24,7 @@ using namespace testing::ext;
 using namespace OHOS::Security::SecurityGuardTest;
 using namespace OHOS::Security::SecurityGuard;
 
-namespace {
-}  // namespace
-
+namespace OHOS::Security::SecurityGuardTest {
 void DataCollectKitTest::SetUpTestCase()
 {
 }
@@ -46,9 +44,9 @@ void DataCollectKitTest::TearDown()
 // RIGHT TEST
 HWTEST_F(DataCollectKitTest, ReportSecurityInfo001, TestSize.Level1)
 {
-    int64_t eventId = 1011009000;
-    std::string version = "0";
-    std::string content = "{\"cred\":0,\"extra\":\"\",\"status\":0}";
+    static int64_t eventId = 1011009000;
+    static std::string version = "0";
+    static std::string content = "{\"cred\":0,\"extra\":\"\",\"status\":0}";
     std::shared_ptr<EventInfo> eventInfo = std::make_shared<EventInfo>(eventId, version, content);
     int ret = NativeDataCollectKit::ReportSecurityInfo(eventInfo);
     EXPECT_EQ(ret, SUCCESS);
@@ -57,9 +55,9 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo001, TestSize.Level1)
 // wrong test:cred
 HWTEST_F(DataCollectKitTest, ReportSecurityInfo002, TestSize.Level1)
 {
-    int64_t eventId = 1011009000;
-    std::string version = "0";
-    std::string content = "{\"cred\":\"0\",\"extra\":\"\",\"status\":0}";
+    static int64_t eventId = 1011009000;
+    static std::string version = "0";
+    static std::string content = "{\"cred\":\"0\",\"extra\":\"\",\"status\":0}";
     std::shared_ptr<EventInfo> eventInfo = std::make_shared<EventInfo>(eventId, version, content);
     int ret = NativeDataCollectKit::ReportSecurityInfo(eventInfo);
     EXPECT_EQ(ret, BAD_PARAM);
@@ -68,9 +66,9 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo002, TestSize.Level1)
 // wrong test:extra
 HWTEST_F(DataCollectKitTest, ReportSecurityInfo003, TestSize.Level1)
 {
-    int64_t eventId = 1011009000;
-    std::string version = "0";
-    std::string content = "{\"cred\":0,\"extra\":0,\"status\":0}";
+    static int64_t eventId = 1011009000;
+    static std::string version = "0";
+    static std::string content = "{\"cred\":0,\"extra\":0,\"status\":0}";
     std::shared_ptr<EventInfo> eventInfo = std::make_shared<EventInfo>(eventId, version, content);
     int ret = NativeDataCollectKit::ReportSecurityInfo(eventInfo);
     EXPECT_EQ(ret, BAD_PARAM);
@@ -79,10 +77,21 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo003, TestSize.Level1)
 // wrong test:status
 HWTEST_F(DataCollectKitTest, ReportSecurityInfo004, TestSize.Level1)
 {
-    int64_t eventId = 1011009000;
-    std::string version = "0";
-    std::string content = "{\"cred\":0,\"extra\":\"\",\"status\":\"0\"}";
+    static int64_t eventId = 1011009000;
+    static std::string version = "0";
+    static std::string content = "{\"cred\":0,\"extra\":\"\",\"status\":\"0\"}";
     std::shared_ptr<EventInfo> eventInfo = std::make_shared<EventInfo>(eventId, version, content);
     int ret = NativeDataCollectKit::ReportSecurityInfo(eventInfo);
     EXPECT_EQ(ret, BAD_PARAM);
+}
+
+HWTEST_F(DataCollectKitTest, ReportSecurityInfo005, TestSize.Level1)
+{
+    static int64_t eventId = 0;
+    static std::string version = "0";
+    static std::string content = "{\"cred\":0,\"extra\":\"\",\"status\":0}";
+    std::shared_ptr<EventInfo> eventInfo = std::make_shared<EventInfo>(eventId, version, content);
+    int ret = NativeDataCollectKit::ReportSecurityInfo(eventInfo);
+    EXPECT_EQ(ret, SUCCESS);
+}
 }

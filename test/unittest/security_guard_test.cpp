@@ -45,6 +45,7 @@ using namespace OHOS::Security::SecurityGuard;
 using namespace OHOS::Security::SecurityGuardTest;
 using namespace OHOS::DistributedKv;
 
+namespace OHOS::Security::SecurityGuardTest {
 namespace {
     constexpr uint32_t MAX_PUSH_NUM = 6;
     const std::string TEST_APP_ID = "test_security_guard";
@@ -81,8 +82,8 @@ public:
 class MockCollectInfo : public ICollectInfo {
 public:
     ~MockCollectInfo() override = default;
-    MOCK_CONST_METHOD1(ToJson, void(Json &jsonObj));
-    MOCK_METHOD1(FromJson, void(const Json &jsonObj));
+    MOCK_CONST_METHOD1(ToJson, void(json &jsonObj));
+    MOCK_METHOD1(FromJson, void(const json &jsonObj));
     MOCK_CONST_METHOD0(ToString, std::string());
     MOCK_CONST_METHOD0(GetPrimeKey, std::string());
 };
@@ -107,18 +108,19 @@ public:
 
 HWTEST_F(SecurityGuardUnitTest, TestDataMgrCfg001, TestSize.Level1)
 {
-    DataMgrCfg::GetInstance().SetEventMaxRamNum(1);
-    DataMgrCfg::GetInstance().SetDeviceRam(1);
-    DataMgrCfg::GetInstance().SetDeviceRom(1);
-    DataMgrCfg::GetInstance().SetEventMaxRomNum(1);
+    static const uint32_t actualValue = 1;
+    DataMgrCfg::GetInstance().SetEventMaxRamNum(actualValue);
+    DataMgrCfg::GetInstance().SetDeviceRam(actualValue);
+    DataMgrCfg::GetInstance().SetDeviceRom(actualValue);
+    DataMgrCfg::GetInstance().SetEventMaxRomNum(actualValue);
     uint32_t expectValue = DataMgrCfg::GetInstance().GetEventMaxRamNum();
-    EXPECT_EQ(expectValue, 1);
+    EXPECT_EQ(expectValue, actualValue);
     expectValue = DataMgrCfg::GetInstance().GetDeviceRam();
-    EXPECT_EQ(expectValue, 1);
+    EXPECT_EQ(expectValue, actualValue);
     expectValue = DataMgrCfg::GetInstance().GetDeviceRom();
-    EXPECT_EQ(expectValue, 1);
+    EXPECT_EQ(expectValue, actualValue);
     expectValue = DataMgrCfg::GetInstance().GetEventMaxRomNum();
-    EXPECT_EQ(expectValue, 1);
+    EXPECT_EQ(expectValue, actualValue);
 }
 
 HWTEST_F(SecurityGuardUnitTest, TestEventConfig001, TestSize.Level1)
@@ -156,7 +158,7 @@ HWTEST_F(SecurityGuardUnitTest, TestModelConfig001, TestSize.Level1)
     EXPECT_STREQ(modelConfig->GetModelName().c_str(), config.modelName.c_str());
     EXPECT_EQ(modelConfig->GetVersion(), config.version);
     std::vector<uint32_t> vec = modelConfig->GetThreatList();
-    EXPECT_EQ(vec.size(), 0);
+    EXPECT_TRUE(vec.empty());
     EXPECT_EQ(modelConfig->GetComputeModel(), config.computeModel);
 }
 
@@ -174,7 +176,7 @@ HWTEST_F(SecurityGuardUnitTest, TestThreatConfig001, TestSize.Level1)
     EXPECT_STREQ(threatConfig->GetThreatName().c_str(), config.threatName.c_str());
     EXPECT_EQ(threatConfig->GetVersion(), config.version);
     std::vector<int64_t> vec = threatConfig->GetEventList();
-    EXPECT_EQ(vec.size(), 0);
+    EXPECT_TRUE(vec.empty());
     EXPECT_EQ(threatConfig->GetComputeModel(), config.computeModel);
 }
 
@@ -186,13 +188,11 @@ HWTEST_F(SecurityGuardUnitTest, TestModelAnalysis001, TestSize.Level1)
     uint32_t modelId = 0;
     std::vector<int64_t> vec;
     vec = ModelAnalysis::GetInstance().GetEventIds(modelId);
-    uint32_t size = vec.size();
-    EXPECT_EQ(size, 0);
+    EXPECT_TRUE(vec.empty());
 
     modelId = 3001000000;
     vec = ModelAnalysis::GetInstance().GetEventIds(modelId);
-    size = vec.size();
-    EXPECT_NE(size, 0);
+    EXPECT_FALSE(vec.empty());
 
     std::shared_ptr<EventConfig> eventConfig = std::make_shared<EventConfig>();
     int64_t eventId = 0;
@@ -272,7 +272,6 @@ HWTEST_F(SecurityGuardUnitTest, TestBaseEventIdStorage001, TestSize.Level1)
     ErrorCode code = storage->LoadAllData(infos);
     EXPECT_EQ(code, NULL_OBJECT);
     EXPECT_TRUE(infos.empty());
-    SGLOGE("SecurityGuardUnitTest, %{public}d", __LINE__);
     MockCollectInfo info;
     EXPECT_CALL(info, ToString).Times(AtLeast(1)).WillOnce(Return("")).WillRepeatedly(Return("TEST STRING"));
     EXPECT_CALL(info, GetPrimeKey).Times(AtLeast(1)).WillOnce(Return("")).WillRepeatedly(Return("TEST KEY"));
@@ -280,37 +279,29 @@ HWTEST_F(SecurityGuardUnitTest, TestBaseEventIdStorage001, TestSize.Level1)
     EXPECT_EQ(code, DB_INFO_ERR);
     code = storage->AddCollectInfo(info);
     EXPECT_EQ(code, NULL_OBJECT);
-    SGLOGE("SecurityGuardUnitTest, %{public}d", __LINE__);
 
     code = storage->GetCollectInfoById("TEST KEY", info);
     EXPECT_EQ(code, NULL_OBJECT);
-    SGLOGE("SecurityGuardUnitTest, %{public}d", __LINE__);
 
     // database wrapper is not null
     auto mockDatabase = std::make_shared<MockDatabase>(dataManager);
-    EXPECT_CALL(*mockDatabase, GetEntries).Times(AtLeast(1)).WillRepeatedly(
-        Return(Status::DB_ERROR));
-    EXPECT_CALL(*mockDatabase, Get).Times(AtLeast(1)).WillRepeatedly(
-        Return(Status::DB_ERROR));
-    EXPECT_CALL(*mockDatabase, Put).Times(AtLeast(1)).WillRepeatedly(
-        Return(Status::DB_ERROR));
+    EXPECT_CALL(*mockDatabase, GetEntries).Times(AtLeast(1)).WillRepeatedly(Return(Status::DB_ERROR));
+    EXPECT_CALL(*mockDatabase, Get).Times(AtLeast(1)).WillRepeatedly(Return(Status::DB_ERROR));
+    EXPECT_CALL(*mockDatabase, Put).Times(AtLeast(1)).WillRepeatedly(Return(Status::DB_ERROR));
     databaseWrapper = std::make_shared<DatabaseWrapper>(mockDatabase);
     auto storageObj = BaseEventIdStorage(databaseWrapper);
     code = storageObj.LoadAllData(infos);
     EXPECT_EQ(code, DB_LOAD_ERR);
     EXPECT_TRUE(infos.empty());
-    SGLOGE("SecurityGuardUnitTest, %{public}d", __LINE__);
     EXPECT_CALL(info, ToString).Times(AtLeast(1)).WillOnce(Return("")).WillRepeatedly(Return("TEST STRING"));
     EXPECT_CALL(info, GetPrimeKey).Times(AtLeast(1)).WillOnce(Return("")).WillRepeatedly(Return("TEST KEY"));
     code = storageObj.AddCollectInfo(info);
     EXPECT_EQ(code, DB_INFO_ERR);
     code = storageObj.AddCollectInfo(info);
     EXPECT_EQ(code, DB_OPT_ERR);
-    SGLOGE("SecurityGuardUnitTest, %{public}d", __LINE__);
 
     code = storageObj.GetCollectInfoById("TEST KEY", info);
     EXPECT_EQ(code, DB_OPT_ERR);
-    SGLOGE("SecurityGuardUnitTest, %{public}d", __LINE__);
 }
 
 HWTEST_F(SecurityGuardUnitTest, TestDataFormat001, TestSize.Level1)
@@ -400,18 +391,18 @@ HWTEST_F(SecurityGuardUnitTest, TestDataManager002, TestSize.Level1)
 
     // test storage is not null
     auto mockStorage = std::make_shared<MockDataStorage>(databaseWrapper);
-    EXPECT_CALL(*mockStorage, LoadAllData).Times(AtLeast(1)).WillOnce(
-        Return(FAILED)).WillOnce(Return(FAILED)).WillRepeatedly(Return(ErrorCode::SUCCESS));
-    EXPECT_CALL(*mockStorage, AddCollectInfo).Times(AtLeast(1)).WillOnce(
+    EXPECT_CALL(*mockStorage, LoadAllData).Times(AtLeast(1)).WillOnce(Return(FAILED)).WillOnce(
         Return(FAILED)).WillRepeatedly(Return(ErrorCode::SUCCESS));
-    EXPECT_CALL(*mockStorage, GetCollectInfoById).Times(AtLeast(1)).WillOnce(
-        Return(FAILED)).WillRepeatedly(Return(ErrorCode::SUCCESS));
+    EXPECT_CALL(*mockStorage, AddCollectInfo).Times(AtLeast(1)).WillOnce(Return(FAILED)).WillRepeatedly(
+        Return(ErrorCode::SUCCESS));
+    EXPECT_CALL(*mockStorage, GetCollectInfoById).Times(AtLeast(1)).WillOnce(Return(FAILED)).WillRepeatedly(
+        Return(ErrorCode::SUCCESS));
     std::map<std::string, std::shared_ptr<ICollectInfo>> infos;
-    EXPECT_CALL(*mockStorage, SaveEntries).WillRepeatedly([&infos] (
-        const std::vector<OHOS::DistributedKv::Entry> &allEntries,
-        std::map<std::string, std::shared_ptr<ICollectInfo>> &info) {
-        infos = info;
-    });
+    EXPECT_CALL(*mockStorage, SaveEntries).WillRepeatedly(
+        [&infos](const std::vector<OHOS::DistributedKv::Entry> &allEntries,
+            std::map<std::string, std::shared_ptr<ICollectInfo>> &info) {
+            infos = info;
+        });
     DataManager managerObj(mockStorage);
     code = managerObj.LoadCacheData();
     EXPECT_EQ(code, FAILED);
@@ -451,8 +442,7 @@ HWTEST_F(SecurityGuardUnitTest, TestDatabase001, TestSize.Level1)
     std::vector<Entry> entries;
     Status status;
 
-    EXPECT_CALL(*dataManager, GetSingleKvStore).Times(AtLeast(1)).WillRepeatedly(
-        Return(Status::DB_ERROR));
+    EXPECT_CALL(*dataManager, GetSingleKvStore).Times(AtLeast(1)).WillRepeatedly(Return(Status::DB_ERROR));
     status = database->GetEntries(key, entries);
     EXPECT_EQ(status, Status::INVALID_ARGUMENT);
     status = database->Get(key, value);
@@ -486,14 +476,11 @@ HWTEST_F(SecurityGuardUnitTest, TestDatabaseWrapper001, TestSize.Level1)
     EXPECT_EQ(status, Status::INVALID_ARGUMENT);
 
     auto mockDatabase = std::make_shared<MockDatabase>(dataManager);
-    EXPECT_CALL(*mockDatabase, GetEntries).Times(AtLeast(1)).WillRepeatedly(
-        Return(Status::DB_ERROR));
-    EXPECT_CALL(*mockDatabase, Get).Times(AtLeast(1)).WillOnce(
-        Return(Status::DB_ERROR)).WillRepeatedly(Return(Status::SUCCESS));
-    EXPECT_CALL(*mockDatabase, Put).Times(AtLeast(1)).WillRepeatedly(
-        Return(Status::DB_ERROR));
-    EXPECT_CALL(*mockDatabase, Delete).Times(AtLeast(1)).WillRepeatedly(
-        Return(Status::DB_ERROR));
+    EXPECT_CALL(*mockDatabase, GetEntries).Times(AtLeast(1)).WillRepeatedly(Return(Status::DB_ERROR));
+    EXPECT_CALL(*mockDatabase, Get).Times(AtLeast(1)).WillOnce(Return(Status::DB_ERROR)).WillRepeatedly(
+        Return(Status::SUCCESS));
+    EXPECT_CALL(*mockDatabase, Put).Times(AtLeast(1)).WillRepeatedly(Return(Status::DB_ERROR));
+    EXPECT_CALL(*mockDatabase, Delete).Times(AtLeast(1)).WillRepeatedly(Return(Status::DB_ERROR));
     DatabaseWrapper databaseWrapperObj(mockDatabase);
     status = databaseWrapperObj.GetEntries(key, entries);
     EXPECT_EQ(status, Status::DB_ERROR);
@@ -503,4 +490,5 @@ HWTEST_F(SecurityGuardUnitTest, TestDatabaseWrapper001, TestSize.Level1)
     EXPECT_EQ(status, Status::DB_ERROR);
     status = databaseWrapperObj.Delete(key);
     EXPECT_EQ(status, Status::DB_ERROR);
+}
 }

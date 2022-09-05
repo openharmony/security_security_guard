@@ -24,7 +24,6 @@
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
-using nlohmann::json;
 ModelManager &ModelManager::GetInstance()
 {
     static ModelManager instance;
@@ -38,23 +37,21 @@ ErrorCode ModelManager::InitModel() const
 
 std::vector<int64_t> ModelManager::GetEventIds(uint32_t modelId)
 {
-    SGLOGE("%{public}s", __func__);
     return ModelAnalysis::GetInstance().GetEventIds(modelId);
 }
 
 ErrorCode ModelManager::AnalyseRisk(const std::vector<int64_t> &events) const
 {
-    SGLOGE("%{public}s, size=%{public}u", __func__, static_cast<uint32_t>(events.size()));
+    SGLOGD("size=%{public}u", static_cast<uint32_t>(events.size()));
     std::vector<EventDataSt> eventData;
     ErrorCode code = DataManagerWrapper::GetInstance().GetCachedEventDataById(events, eventData);
     if (code != SUCCESS) {
-        SGLOGE("code=%{public}u", code);
+        SGLOGE("code=%{public}d", code);
         return code;
     }
 
     for (const EventDataSt &data : eventData) {
-        SGLOGE("eventId=%{public}ld, content=%{public}s", data.eventId, data.content.c_str());
-        json jsonObj = json::parse(data.content, nullptr, false);
+        nlohmann::json jsonObj = nlohmann::json::parse(data.content, nullptr, false);
         if (jsonObj.is_discarded()) {
             SGLOGE("json err");
             return JSON_ERR;
@@ -72,7 +69,7 @@ ErrorCode ModelManager::AnalyseRisk(const std::vector<int64_t> &events) const
         }
     }
 
-    SGLOGE("no risk");
+    SGLOGI("no risk");
     return SUCCESS;
 }
 }

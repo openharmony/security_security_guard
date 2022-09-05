@@ -22,8 +22,8 @@
 
 namespace OHOS::Security::SecurityGuard {
 DataStorage::DataStorage(std::shared_ptr<DatabaseWrapper> &database)
+    : database_(database)
 {
-    database_ = database;
 }
 
 ErrorCode DataStorage::LoadAllData(std::map<std::string, std::shared_ptr<ICollectInfo>> &infos)

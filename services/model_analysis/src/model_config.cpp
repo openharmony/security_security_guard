@@ -18,10 +18,10 @@
 namespace OHOS::Security::SecurityGuard {
 ModelConfig::ModelConfig(const ModelCfgSt &config)
     : modelId_(config.modelId),
-    modelName_(config.modelName),
-    version_(config.version),
-    threatList_(config.threatList),
-    computeModel_(config.computeModel)
+      modelName_(config.modelName),
+      version_(config.version),
+      threatList_(config.threatList),
+      computeModel_(config.computeModel)
 {
 }
 

@@ -30,7 +30,7 @@ void BaseEventIdStorage::SaveEntries(const std::vector<OHOS::DistributedKv::Entr
     std::map<std::string, std::shared_ptr<ICollectInfo>> &infos)
 {
     for (const auto &item : allEntries) {
-        Json jsonObj = Json::parse(item.value.ToString(), nullptr, false);
+        nlohmann::json jsonObj = nlohmann::json::parse(item.value.ToString(), nullptr, false);
         if (jsonObj.is_discarded()) {
             database_->Delete(item.key);
             return;
@@ -40,7 +40,7 @@ void BaseEventIdStorage::SaveEntries(const std::vector<OHOS::DistributedKv::Entr
             return;
         }
 
-        std::shared_ptr<BaseEventId> eventData = std::make_shared<BaseEventId>(eventId);
+        auto eventData = std::make_shared<BaseEventId>(eventId);
         eventData->FromJson(jsonObj);
         infos.emplace(item.key.ToString(), eventData);
     }

@@ -72,7 +72,7 @@ ErrorCode DataManager::AddCollectInfo(const EventDataSt& eventData)
     BaseEventId info(eventData.eventId);
     ErrorCode code = storage_->GetCollectInfoById(info.GetPrimeKey(), info);
     if (code != SUCCESS) {
-        SGLOGE("GetCollectInfoById error, code=%{public}u", code);
+        SGLOGE("GetCollectInfoById error, code=%{public}d", code);
     }
 
     if (!info.Push(eventData)) {
@@ -81,7 +81,7 @@ ErrorCode DataManager::AddCollectInfo(const EventDataSt& eventData)
     }
     code = storage_->AddCollectInfo(info);
     if (code != SUCCESS) {
-        SGLOGE("AddCollectInfo error, code=%{public}u", code);
+        SGLOGE("AddCollectInfo error, code=%{public}d", code);
         return code;
     }
 
@@ -116,10 +116,10 @@ ErrorCode DataManager::GetEventDataById(const std::vector<int64_t> &eventIds, st
         if (ret != SUCCESS) {
             return ret;
         }
-        SGLOGE("get all date");
+        SGLOGI("get all date");
         for (const auto& item : eventIdToDataMap) {
             std::shared_ptr<ICollectInfo> info = item.second;
-            std::shared_ptr<BaseEventId> eventIdInfo = std::static_pointer_cast<BaseEventId>(info);
+            auto eventIdInfo = std::static_pointer_cast<BaseEventId>(info);
             std::vector<EventDataSt> data = eventIdInfo->GetEventVec();
             eventData.insert(eventData.end(), data.begin(), data.end());
         }
@@ -131,7 +131,7 @@ ErrorCode DataManager::GetEventDataById(const std::vector<int64_t> &eventIds, st
         BaseEventId info(eventId);
         code = storage_->GetCollectInfoById(std::to_string(eventId), info);
         if (code != SUCCESS) {
-            SGLOGE("GetCollectInfoById error, code=%{public}u, continue", code);
+            SGLOGE("GetCollectInfoById error, code=%{public}d, continue", code);
             continue;
         }
         std::vector<EventDataSt> data = info.GetEventVec();
@@ -144,15 +144,16 @@ ErrorCode DataManager::GetCachedEventDataById(const std::vector<int64_t> &eventI
 {
     std::lock_guard<std::mutex> lock(mapMutex_);
     for (int64_t eventId : eventIds) {
-        auto it = eventIdToCacheDataMap_.find(std::to_string(eventId));
+        std::string eventIdStr = std::to_string(eventId);
+        auto it = eventIdToCacheDataMap_.find(eventIdStr);
         if (it == eventIdToCacheDataMap_.end()) {
-            SGLOGE("not find eventId, %{public}s", std::to_string(eventId).c_str());
+            SGLOGE("not find eventId, %{public}s", eventIdStr.c_str());
             continue;
         }
 
-        nlohmann::json jsonObj = nlohmann::json::parse(eventIdToCacheDataMap_[std::to_string(eventId)], nullptr, false);
+        nlohmann::json jsonObj = nlohmann::json::parse(it->second, nullptr, false);
         if (jsonObj.is_discarded()) {
-            SGLOGE("json err eventId, %{public}ld", eventId);
+            SGLOGE("json err eventId, %{public}s", eventIdStr.c_str());
             continue;
         }
 
@@ -164,7 +165,7 @@ ErrorCode DataManager::GetCachedEventDataById(const std::vector<int64_t> &eventI
 
 ErrorCode DataManager::CacheData(std::shared_ptr<ICollectInfo> &info, std::shared_ptr<EventConfig> &config)
 {
-    std::shared_ptr<BaseEventId> eventId = std::static_pointer_cast<BaseEventId>(info);
+    auto eventId = std::static_pointer_cast<BaseEventId>(info);
     std::vector<EventDataSt> vector;
     bool isSuccess = eventId->GetCacheData(vector);
     if (!isSuccess) {

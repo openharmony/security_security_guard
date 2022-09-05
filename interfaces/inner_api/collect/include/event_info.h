@@ -26,8 +26,8 @@ public:
     EventInfo(const EventInfo& eventIfo) = default;
     EventInfo(int64_t &eventId, std::string version, std::string &content)
         : eventId_(eventId),
-        version_(version),
-        content_(content) {}
+          version_(version),
+          content_(content) {}
     int64_t GetEventId() const;
     std::string GetVersion() const;
     std::string GetContent() const;

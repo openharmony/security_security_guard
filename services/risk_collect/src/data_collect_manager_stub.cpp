@@ -67,9 +67,7 @@ ErrorCode DataCollectManagerStub::HandleDataCollectCmd(MessageParcel &data, Mess
         SGLOGE("CheckRiskContent error");
         return BAD_PARAM;
     }
-    SGLOGE("Collect Data SUCCESS");
-    SGLOGE("eventId=%{public}ld, version=%{public}s, date=%{public}s, content=%{public}s",
-        eventId, version.c_str(), time.c_str(), content.c_str());
+    SGLOGI("eventId=%{public}ld, version=%{public}s, date=%{public}s", eventId, version.c_str(), time.c_str());
     EventDataSt eventData {
         .eventId = eventId,
         .version = version,
@@ -102,8 +100,7 @@ ErrorCode DataCollectManagerStub::HandleDataRequestCmd(MessageParcel &data, Mess
         SGLOGE("object is nullptr");
         return BAD_PARAM;
     }
-    SGLOGE("GET ObtaindataRequest SUCCESS");
-    SGLOGE("devId=%{public}s, eventList=%{public}s", devId.c_str(), eventList.c_str());
+    SGLOGI("devId=%{public}s, eventList=%{public}s", devId.c_str(), eventList.c_str());
     std::shared_ptr<BaseTask> task = std::make_shared<DataDistributeTask>(devId, eventList, object);
     bool isSuccess = TaskManager::GetInstance().PushTask(task);
     if (!isSuccess) {

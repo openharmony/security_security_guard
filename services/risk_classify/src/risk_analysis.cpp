@@ -24,10 +24,8 @@ namespace OHOS::Security::SecurityGuard {
 ErrorCode RiskAnalysis::RequestSecurityModelResult(std::string &devId, uint32_t modelId,
     SecurityModelCallBack &callback)
 {
-    SGLOGE("%{public}s", __func__);
     TaskCallback func = [callback] (const std::shared_ptr<BaseTask>& baseTask) {
-        std::shared_ptr<RequestSecurityModelResultTask> task =
-            std::static_pointer_cast<RequestSecurityModelResultTask>(baseTask);
+        auto task = std::static_pointer_cast<RequestSecurityModelResultTask>(baseTask);
         std::string devId = task->GetDevId();
         uint32_t modelId = task->GetModelId();
         std::string status = task->GetRiskStatus();
