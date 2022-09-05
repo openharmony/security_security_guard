@@ -19,9 +19,7 @@ using namespace testing::ext;
 using namespace OHOS::Security::SecurityGuardTest;
 using namespace OHOS::Security::SecurityGuard;
 
-namespace {
-}  // namespace
-
+namespace OHOS::Security::SecurityGuardTest {
 void RiskClassifyKitTest::SetUpTestCase()
 {
 }
@@ -41,8 +39,8 @@ void RiskClassifyKitTest::TearDown()
 
 HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync001, TestSize.Level1)
 {
-    std::string devId;
-    uint32_t modelId = 0;
+    static std::string devId;
+    static uint32_t modelId = 0;
     std::shared_ptr<SecurityModelResult> result = std::make_shared<SecurityModelResult>();
     int ret = RiskAnalysisManagerKit::RequestSecurityModelResultSync(devId, modelId, result);
     EXPECT_EQ(ret, SUCCESS);
@@ -53,8 +51,8 @@ HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync001, TestSize.Level1
 
 HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync002, TestSize.Level1)
 {
-    std::string devId;
-    uint32_t modelId = 3001000000;
+    static std::string devId;
+    static uint32_t modelId = 3001000000;
     std::shared_ptr<SecurityModelResult> result = std::make_shared<SecurityModelResult>();
     int ret = RiskAnalysisManagerKit::RequestSecurityModelResultSync(devId, modelId, result);
     EXPECT_EQ(ret, SUCCESS);
@@ -64,16 +62,17 @@ HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync002, TestSize.Level1
 
 HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultASync001, TestSize.Level1)
 {
-    std::string devId;
-    uint32_t modelId = 0;
+    static std::string devId;
+    static uint32_t modelId = 0;
     int ret = RiskAnalysisManagerKit::RequestSecurityModelResultAsync(devId, modelId, callback_);
     EXPECT_EQ(ret, SUCCESS);
 }
 
 HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultASync002, TestSize.Level1)
 {
-    std::string devId;
-    uint32_t modelId = 3001000000;
+    static std::string devId;
+    static uint32_t modelId = 3001000000;
     int ret = RiskAnalysisManagerKit::RequestSecurityModelResultAsync(devId, modelId, callback_);
     EXPECT_EQ(ret, SUCCESS);
+}
 }

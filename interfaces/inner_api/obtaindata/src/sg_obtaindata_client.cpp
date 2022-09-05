@@ -55,7 +55,7 @@ int32_t ObtainDataKit::RequestSecurityEventInfo(std::string &devId, std::string 
     }
     int32_t ret = proxy->RequestRiskData(devId, eventList, stub);
     if (ret != 0) {
-        SGLOGE("RequestSecurityEventInfo error, ret=%{public}u", ret);
+        SGLOGE("RequestSecurityEventInfo error, ret=%{public}d", ret);
         return ret;
     }
     return SUCCESS;

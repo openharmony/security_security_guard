@@ -18,10 +18,10 @@
 namespace OHOS::Security::SecurityGuard {
 ThreatConfig::ThreatConfig(const ThreatCfgSt &config)
     : threatId_(config.threatId),
-    threatName_(config.threatName),
-    version_(config.version),
-    eventList_(config.eventList),
-    computeModel_(config.computeModel)
+      threatName_(config.threatName),
+      version_(config.version),
+      eventList_(config.eventList),
+      computeModel_(config.computeModel)
 {
 }
 

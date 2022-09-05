@@ -20,9 +20,7 @@ using namespace testing::ext;
 using namespace OHOS::Security::SecurityGuardTest;
 using namespace OHOS::Security::SecurityGuard;
 
-namespace {
-}  // namespace
-
+namespace OHOS::Security::SecurityGuardTest {
 void ObtainDataKitTest::SetUpTestCase()
 {
 }
@@ -43,8 +41,8 @@ void ObtainDataKitTest::TearDown()
 // right test
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync001, TestSize.Level1)
 {
-    std::string devId;
-    std::string eventList = "{\"eventId\":[1011009000]}";
+    static std::string devId = "";
+    static std::string eventList = "{\"eventId\":[1011009000]}";
     int ret = ObtainDataKit::RequestSecurityEventInfoAsync(devId, eventList, callback_);
     EXPECT_EQ(ret, SUCCESS);
 }
@@ -52,8 +50,8 @@ HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync001, TestSize.Level1)
 // right test, all
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync002, TestSize.Level1)
 {
-    std::string devId;
-    std::string eventList = "{\"eventId\":[-1]}";
+    static std::string devId = "";
+    static std::string eventList = "{\"eventId\":[-1]}";
     int ret = ObtainDataKit::RequestSecurityEventInfoAsync(devId, eventList, callback_);
     EXPECT_EQ(ret, SUCCESS);
 }
@@ -61,8 +59,8 @@ HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync002, TestSize.Level1)
 // wrong: eventList key
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync003, TestSize.Level1)
 {
-    std::string devId;
-    std::string eventList = "{\"eventIds\":[1011009000]}";
+    static std::string devId = "";
+    static std::string eventList = "{\"eventIds\":[1011009000]}";
     int ret = ObtainDataKit::RequestSecurityEventInfoAsync(devId, eventList, callback_);
     EXPECT_EQ(ret, SUCCESS);
 }
@@ -70,8 +68,8 @@ HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync003, TestSize.Level1)
 // wrong: eventList content
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync004, TestSize.Level1)
 {
-    std::string devId;
-    std::string eventList = "{eventId:[1011009000]}";
+    static std::string devId = "";
+    static std::string eventList = "{eventId:[1011009000]}";
     int ret = ObtainDataKit::RequestSecurityEventInfoAsync(devId, eventList, callback_);
     EXPECT_EQ(ret, SUCCESS);
 }
@@ -79,8 +77,18 @@ HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync004, TestSize.Level1)
 // wrong: eventList null
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync005, TestSize.Level1)
 {
-    std::string devId;
-    std::string eventList = "{\"eventIds\":[]}";
+    static std::string devId = "";
+    static std::string eventList = "{\"eventIds\":[]}";
     int ret = ObtainDataKit::RequestSecurityEventInfoAsync(devId, eventList, callback_);
     EXPECT_EQ(ret, SUCCESS);
+}
+
+// wrong: eventList not contain eventId
+HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync006, TestSize.Level1)
+{
+    static std::string devId = "";
+    static std::string eventList = "{\"eventIds\":[0]}";
+    int ret = ObtainDataKit::RequestSecurityEventInfoAsync(devId, eventList, callback_);
+    EXPECT_EQ(ret, SUCCESS);
+}
 }

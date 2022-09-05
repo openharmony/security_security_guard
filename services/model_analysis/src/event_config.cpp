@@ -18,12 +18,12 @@
 namespace OHOS::Security::SecurityGuard {
 EventConfig::EventConfig(const EventCfgSt& config)
     : eventId_(config.eventId),
-    eventName_(config.eventName),
-    version_(config.version),
-    eventType_(config.eventType),
-    dataSensitivityLevel_(config.dataSensitivityLevel),
-    storageRamNums_(config.storageRamNums),
-    storageRomNums_(config.storageRomNums)
+      eventName_(config.eventName),
+      version_(config.version),
+      eventType_(config.eventType),
+      dataSensitivityLevel_(config.dataSensitivityLevel),
+      storageRamNums_(config.storageRamNums),
+      storageRomNums_(config.storageRomNums)
 {
 }
 

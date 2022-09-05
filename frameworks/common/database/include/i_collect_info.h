@@ -21,13 +21,11 @@
 #include "nlohmann/json.hpp"
 
 namespace OHOS::Security::SecurityGuard {
-using Json = nlohmann::json;
-
 class ICollectInfo {
 public:
     virtual ~ICollectInfo() = default;
-    virtual void ToJson(Json &jsonObj) const = 0;
-    virtual void FromJson(const Json &jsonObj) = 0;
+    virtual void ToJson(nlohmann::json &jsonObj) const = 0;
+    virtual void FromJson(const nlohmann::json &jsonObj) = 0;
     virtual std::string ToString() const = 0;
     virtual std::string GetPrimeKey() const = 0;
 };

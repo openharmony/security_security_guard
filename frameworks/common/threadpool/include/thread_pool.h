@@ -27,14 +27,10 @@ namespace OHOS::Security::SecurityGuard {
 class ThreadPool {
 public:
     ThreadPool();
-
-    static ThreadPool& GetInstance();
-
-    void InitThreadPool();
-
-    bool PushTask(const std::shared_ptr<BaseTask>& task);
-
     ~ThreadPool();
+    static ThreadPool& GetInstance();
+    void InitThreadPool();
+    bool PushTask(const std::shared_ptr<BaseTask>& task);
 
 private:
     std::vector<std::thread> workerThread_{};

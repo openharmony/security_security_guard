@@ -33,7 +33,7 @@ DataCollectManagerService::DataCollectManagerService(int32_t saId, bool runOnCre
 
 void DataCollectManagerService::OnStart()
 {
-    SGLOGE("%{public}s", __func__);
+    SGLOGI("%{public}s", __func__);
     if (!Publish(this)) {
         SGLOGE("Publish error");
         return;

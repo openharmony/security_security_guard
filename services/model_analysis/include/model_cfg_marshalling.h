@@ -21,8 +21,6 @@
 
 #include "nlohmann/json.hpp"
 
-using nlohmann::json;
-
 namespace OHOS::Security::SecurityGuard {
 using ModelCfgSt = struct {
     uint32_t modelId;
@@ -70,18 +68,18 @@ using EventContentSt = struct {
     std::string extra;
 };
 
-void to_json(json &jsonObj, const ModelCfgSt &modelCfg);
-void from_json(const json &jsonObj, ModelCfgSt &modelCfg);
-void to_json(json &jsonObj, const ThreatCfgSt &threatCfg);
-void from_json(const json &jsonObj, ThreatCfgSt &threatCfg);
-void to_json(json &jsonObj, const EventCfgSt &eventCfg);
-void from_json(const json &jsonObj, EventCfgSt &eventCfg);
-void to_json(json &jsonObj, const DataMgrCfgSt &dataMgrCfg);
-void from_json(const json &jsonObj, DataMgrCfgSt &dataMgrCfg);
-void to_json(json &jsonObj, const EventDataSt &eventDataSt);
-void from_json(const json &jsonObj, EventDataSt &eventDataSt);
-void to_json(json &jsonObj, const EventContentSt &eventContentSt);
-void from_json(const json &jsonObj, EventContentSt &eventContentSt);
+void to_json(nlohmann::json &jsonObj, const ModelCfgSt &modelCfg);
+void from_json(const nlohmann::json &jsonObj, ModelCfgSt &modelCfg);
+void to_json(nlohmann::json &jsonObj, const ThreatCfgSt &threatCfg);
+void from_json(const nlohmann::json &jsonObj, ThreatCfgSt &threatCfg);
+void to_json(nlohmann::json &jsonObj, const EventCfgSt &eventCfg);
+void from_json(const nlohmann::json &jsonObj, EventCfgSt &eventCfg);
+void to_json(nlohmann::json &jsonObj, const DataMgrCfgSt &dataMgrCfg);
+void from_json(const nlohmann::json &jsonObj, DataMgrCfgSt &dataMgrCfg);
+void to_json(nlohmann::json &jsonObj, const EventDataSt &eventDataSt);
+void from_json(const nlohmann::json &jsonObj, EventDataSt &eventDataSt);
+void to_json(nlohmann::json &jsonObj, const EventContentSt &eventContentSt);
+void from_json(const nlohmann::json &jsonObj, EventContentSt &eventContentSt);
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_MODEL_CFG_MARSHALLING_H

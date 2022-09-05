@@ -26,7 +26,6 @@ RiskAnalysisManagerCallbackProxy::RiskAnalysisManagerCallbackProxy(const sptr<IR
 int32_t RiskAnalysisManagerCallbackProxy::ResponseSecurityModelResult(std::string &devId, uint32_t modelId,
     std::string &result)
 {
-    SGLOGE("%{public}s", __func__);
     MessageParcel data;
     MessageParcel reply;
 

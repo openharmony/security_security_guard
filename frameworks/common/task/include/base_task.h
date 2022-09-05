@@ -28,6 +28,7 @@ using TaskCallback = std::function<void (const std::shared_ptr<BaseTask> &)>;
 class BaseTask : public NoCopyable {
 public:
     BaseTask() = default;
+    ~BaseTask() override = default;
     explicit BaseTask(TaskCallback taskCallback);
     virtual void OnPrepare();
     virtual void OnExecute() = 0;

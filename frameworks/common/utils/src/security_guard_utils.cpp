@@ -26,9 +26,9 @@ namespace {
 
 bool SecurityGuardUtils::StrToU32(const std::string &str, uint32_t &value)
 {
-    unsigned long tmp = 0;
-    bool isOK = StrToUL(str, tmp);
-    value = tmp;
+    unsigned long long tmp = 0;
+    bool isOK = StrToULL(str, tmp);
+    value = static_cast<uint32_t>(tmp);
     return isOK && (tmp <= UINT32_MAX);
 }
 
@@ -46,36 +46,34 @@ bool SecurityGuardUtils::StrToLL(const std::string &str, long long &value)
     char *end = nullptr;
     errno = 0;
     value = strtoll(add, &end, DEC_RADIX);
-    if ((errno == ERANGE && (value == LLONG_MAX || value == LLONG_MIN))
-        || (errno != 0 && value == 0)) {
-        SGLOGE("converse error");
+    if ((errno == ERANGE && (value == LLONG_MAX || value == LLONG_MIN)) || (errno != 0 && value == 0)) {
+        SGLOGE("strtoll converse error");
         return false;
     } else if (end == add) {
-        SGLOGE("no digit find");
+        SGLOGE("strtoll no digit find");
         return false;
     } else if (end[0] != '\0') {
-        SGLOGE("no all digit");
+        SGLOGE("strtoll no all digit");
         return false;
     }
 
     return true;
 }
 
-bool SecurityGuardUtils::StrToUL(const std::string &str, unsigned long &value)
+bool SecurityGuardUtils::StrToULL(const std::string &str, unsigned long long &value)
 {
     auto add = str.c_str();
     char *end = nullptr;
     errno = 0;
-    value = strtoll(add, &end, DEC_RADIX);
-    if ((errno == ERANGE && value == ULONG_MAX)
-        || (errno != 0 && value == 0)) {
-        SGLOGE("converse error");
+    value = strtoull(add, &end, DEC_RADIX);
+    if ((errno == ERANGE && value == ULLONG_MAX) || (errno != 0 && value == 0)) {
+        SGLOGE("strtoull converse error");
         return false;
     } else if (end == add) {
-        SGLOGE("no digit find");
+        SGLOGE("strtoull no digit find");
         return false;
     } else if (end[0] != '\0') {
-        SGLOGE("no all digit");
+        SGLOGE("strtoull no all digit");
         return false;
     }
 

@@ -24,7 +24,9 @@
 namespace OHOS::Security::SecurityGuard {
 RequestSecurityModelResultTask::RequestSecurityModelResultTask(std::string &devId, int32_t modelId,
     TaskCallback callback)
-    : BaseTask(std::move(callback)), devId_(devId), modelId_(modelId)
+    : BaseTask(std::move(callback)),
+      devId_(devId),
+      modelId_(modelId)
 {
 }
 

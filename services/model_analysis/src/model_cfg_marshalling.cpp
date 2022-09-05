@@ -20,6 +20,8 @@
 #include "security_guard_utils.h"
 
 namespace OHOS::Security::SecurityGuard {
+using nlohmann::json;
+
 void to_json(json &jsonObj, const ModelCfgSt &modelCfg)
 {
     std::vector<std::string> threatList;

@@ -46,7 +46,7 @@ ErrorCode ModelAnalysis::AnalyseModel()
 
     ErrorCode ret = CheckFileStream(stream);
     if (ret != SUCCESS) {
-        SGLOGE("check file stream error, ret=%{public}u", ret);
+        SGLOGE("check file stream error, ret=%{public}d", ret);
         stream.close();
         return ret;
     }
@@ -62,7 +62,7 @@ ErrorCode ModelAnalysis::AnalyseModel()
     return ParseConfig(json);
 }
 
-ErrorCode ModelAnalysis::ParseConfig(nlohmann::json json)
+ErrorCode ModelAnalysis::ParseConfig(const nlohmann::json &json)
 {
     SGLOGD("parse ModelCfgSt: ");
     std::vector<ModelCfgSt> modelCfgs;
@@ -143,7 +143,7 @@ void ModelAnalysis::MapModelToThreat(const std::vector<ModelCfgSt>& modelCfgs,
         for (uint32_t threat : modelCfg.threatList) {
             tmpSet.emplace(threat);
         }
-        map[modelCfg.modelId] = tmpSet;
+        map[modelCfg.modelId] = std::move(tmpSet);
     }
 }
 
@@ -160,7 +160,7 @@ void ModelAnalysis::MapThreatToEvent(const std::vector<ThreatCfgSt>& threatCfgs,
         for (int64_t event : threatCfg.eventList) {
             tmpSet.emplace(event);
         }
-        map[threatCfg.threatId] = tmpSet;
+        map[threatCfg.threatId] = std::move(tmpSet);
     }
 }
 
@@ -177,7 +177,7 @@ void ModelAnalysis::MapModelToEvent(const std::unordered_map<uint32_t, std::set<
         for (uint32_t threat : pair.second) {
             tmpSet.insert(threatToEventMap[threat].begin(), threatToEventMap[threat].end());
         }
-        modelToEventMap_[pair.first] = tmpSet;
+        modelToEventMap_[pair.first] = std::move(tmpSet);
     }
 }
 

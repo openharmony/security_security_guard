@@ -23,7 +23,7 @@
 namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr int32_t MAX_TIMES = 5;
-    constexpr int32_t SLEEP_INTERVAL = 1000;
+    constexpr int32_t SLEEP_INTERVAL = 500;
 }
 
 Database::Database(std::shared_ptr<DatabaseManager> dataManager)
