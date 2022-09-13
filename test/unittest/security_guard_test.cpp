@@ -106,6 +106,12 @@ public:
     MOCK_METHOD2(DeleteKvStore, Status(const AppId &appId, const StoreId &storeId));
 };
 
+/**
+ * @tc.name: TestDataMgrCfg001
+ * @tc.desc: Test DataMgrCfg setter and getter
+ * @tc.type: FUNC
+ * @tc.require: SR000H8DA6
+ */
 HWTEST_F(SecurityGuardUnitTest, TestDataMgrCfg001, TestSize.Level1)
 {
     static const uint32_t actualValue = 1;
@@ -123,6 +129,12 @@ HWTEST_F(SecurityGuardUnitTest, TestDataMgrCfg001, TestSize.Level1)
     EXPECT_EQ(expectValue, actualValue);
 }
 
+/**
+ * @tc.name: TestEventConfig001
+ * @tc.desc: Test EventConfig getter
+ * @tc.type: FUNC
+ * @tc.require: SR000H8DA6
+ */
 HWTEST_F(SecurityGuardUnitTest, TestEventConfig001, TestSize.Level1)
 {
     EventCfgSt config = {
@@ -144,6 +156,12 @@ HWTEST_F(SecurityGuardUnitTest, TestEventConfig001, TestSize.Level1)
     EXPECT_EQ(eventConfig->GetStorageRomNums(), config.storageRomNums);
 }
 
+/**
+ * @tc.name: TestModelConfig001
+ * @tc.desc: Test ModelConfig getter
+ * @tc.type: FUNC
+ * @tc.require: SR000H8DA6
+ */
 HWTEST_F(SecurityGuardUnitTest, TestModelConfig001, TestSize.Level1)
 {
     ModelCfgSt config = {
@@ -162,6 +180,12 @@ HWTEST_F(SecurityGuardUnitTest, TestModelConfig001, TestSize.Level1)
     EXPECT_EQ(modelConfig->GetComputeModel(), config.computeModel);
 }
 
+/**
+ * @tc.name: TestThreatConfig001
+ * @tc.desc: Test ThreatConfig getter
+ * @tc.type: FUNC
+ * @tc.require: SR000H8DA6
+ */
 HWTEST_F(SecurityGuardUnitTest, TestThreatConfig001, TestSize.Level1)
 {
     ThreatCfgSt config = {
@@ -180,6 +204,12 @@ HWTEST_F(SecurityGuardUnitTest, TestThreatConfig001, TestSize.Level1)
     EXPECT_EQ(threatConfig->GetComputeModel(), config.computeModel);
 }
 
+/**
+ * @tc.name: TestModelAnalysis001
+ * @tc.desc: Test ModelAnalysis GetEventIds and GetEventConfig
+ * @tc.type: FUNC
+ * @tc.require: SR000H8DA6
+ */
 HWTEST_F(SecurityGuardUnitTest, TestModelAnalysis001, TestSize.Level1)
 {
     ErrorCode code = ModelAnalysis::GetInstance().AnalyseModel();
@@ -205,6 +235,12 @@ HWTEST_F(SecurityGuardUnitTest, TestModelAnalysis001, TestSize.Level1)
     EXPECT_EQ(eventConfig->GetEventId(), eventId);
 }
 
+/**
+ * @tc.name: TestBaseEventId001
+ * @tc.desc: Test BaseEventId class
+ * @tc.type: FUNC
+ * @tc.require: SR000H8DA6
+ */
 HWTEST_F(SecurityGuardUnitTest, TestBaseEventId001, TestSize.Level1)
 {
     ErrorCode code = ModelAnalysis::GetInstance().AnalyseModel();
@@ -259,6 +295,12 @@ HWTEST_F(SecurityGuardUnitTest, TestBaseEventId001, TestSize.Level1)
     EXPECT_STREQ(string.c_str(), stringOri.c_str());
 }
 
+/**
+ * @tc.name: TestBaseEventIdStorage001
+ * @tc.desc: Test BaseEventIdStorage class with mock
+ * @tc.type: FUNC
+ * @tc.require: SR000H8DA6
+ */
 HWTEST_F(SecurityGuardUnitTest, TestBaseEventIdStorage001, TestSize.Level1)
 {
     DistributedKvDataManager kvDataManager;
@@ -304,6 +346,12 @@ HWTEST_F(SecurityGuardUnitTest, TestBaseEventIdStorage001, TestSize.Level1)
     EXPECT_EQ(code, DB_OPT_ERR);
 }
 
+/**
+ * @tc.name: TestDataFormat001
+ * @tc.desc: Test DataFormat class with all type
+ * @tc.type: FUNC
+ * @tc.require: SR000H8DA6
+ */
 HWTEST_F(SecurityGuardUnitTest, TestDataFormat001, TestSize.Level1)
 {
     string test = "test";
@@ -335,6 +383,12 @@ HWTEST_F(SecurityGuardUnitTest, TestDataFormat001, TestSize.Level1)
     EXPECT_TRUE(isSuccess);
 }
 
+/**
+ * @tc.name: TestDataManager001
+ * @tc.desc: Test DataManager class with nullptr
+ * @tc.type: FUNC
+ * @tc.require: SR000H8DA6
+ */
 HWTEST_F(SecurityGuardUnitTest, TestDataManager001, TestSize.Level1)
 {
     ErrorCode code = ModelAnalysis::GetInstance().AnalyseModel();
@@ -369,6 +423,12 @@ HWTEST_F(SecurityGuardUnitTest, TestDataManager001, TestSize.Level1)
     EXPECT_EQ(code, ErrorCode::SUCCESS);
 }
 
+/**
+ * @tc.name: TestDataManager002
+ * @tc.desc: Test DataManager class with mock
+ * @tc.type: FUNC
+ * @tc.require: SR000H8DA6
+ */
 HWTEST_F(SecurityGuardUnitTest, TestDataManager002, TestSize.Level1)
 {
     ErrorCode code = ModelAnalysis::GetInstance().AnalyseModel();
@@ -431,6 +491,12 @@ HWTEST_F(SecurityGuardUnitTest, TestDataManager002, TestSize.Level1)
     EXPECT_EQ(code, ErrorCode::SUCCESS);
 }
 
+/**
+ * @tc.name: TestDatabase001
+ * @tc.desc: Test Database class with invalid argument
+ * @tc.type: FUNC
+ * @tc.require: SR000H8DA6
+ */
 HWTEST_F(SecurityGuardUnitTest, TestDatabase001, TestSize.Level1)
 {
     DistributedKvDataManager kvDataManager;
@@ -455,6 +521,12 @@ HWTEST_F(SecurityGuardUnitTest, TestDatabase001, TestSize.Level1)
     EXPECT_EQ(status, Status::INVALID_ARGUMENT);
 }
 
+/**
+ * @tc.name: TestDatabaseWrapper001
+ * @tc.desc: Test DatabaseWrapper class with mock
+ * @tc.type: FUNC
+ * @tc.require: SR000H8DA6
+ */
 HWTEST_F(SecurityGuardUnitTest, TestDatabaseWrapper001, TestSize.Level1)
 {
     DistributedKvDataManager kvDataManager;

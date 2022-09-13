@@ -37,6 +37,12 @@ void RiskClassifyKitTest::TearDown()
 {
 }
 
+/**
+ * @tc.name: RequestSecurityModelResultSync001
+ * @tc.desc: RequestSecurityModelResultSync with wrong modelId
+ * @tc.type: FUNC
+ * @tc.require: SR000H9A70
+ */
 HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync001, TestSize.Level1)
 {
     static std::string devId;
@@ -49,6 +55,12 @@ HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync001, TestSize.Level1
     EXPECT_STREQ(result->GetResult().c_str(), "unknown");
 }
 
+/**
+ * @tc.name: RequestSecurityModelResultSync002
+ * @tc.desc: RequestSecurityModelResultSync with right modelId
+ * @tc.type: FUNC
+ * @tc.require: SR000H9A70
+ */
 HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync002, TestSize.Level1)
 {
     static std::string devId;
@@ -60,7 +72,13 @@ HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync002, TestSize.Level1
     EXPECT_EQ(result->GetModelId(), modelId);
 }
 
-HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultASync001, TestSize.Level1)
+/**
+ * @tc.name: RequestSecurityModelResultAsync001
+ * @tc.desc: RequestSecurityModelResultAsync with wrong modelId
+ * @tc.type: FUNC
+ * @tc.require: SR000H9A70
+ */
+HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultAsync001, TestSize.Level1)
 {
     static std::string devId;
     static uint32_t modelId = 0;
@@ -68,7 +86,13 @@ HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultASync001, TestSize.Level
     EXPECT_EQ(ret, SUCCESS);
 }
 
-HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultASync002, TestSize.Level1)
+/**
+ * @tc.name: RequestSecurityModelResultAsync002
+ * @tc.desc: RequestSecurityModelResultAsync with right modelId
+ * @tc.type: FUNC
+ * @tc.require: SR000H9A70
+ */
+HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultAsync002, TestSize.Level1)
 {
     static std::string devId;
     static uint32_t modelId = 3001000000;

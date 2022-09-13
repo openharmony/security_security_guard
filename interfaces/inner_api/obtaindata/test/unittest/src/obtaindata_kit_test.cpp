@@ -38,7 +38,12 @@ void ObtainDataKitTest::TearDown()
 {
 }
 
-// right test
+/**
+ * @tc.name: RequestSecurityEventInfoAsync001
+ * @tc.desc: RequestSecurityEventInfoAsync with right param
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync001, TestSize.Level1)
 {
     static std::string devId = "";
@@ -47,7 +52,12 @@ HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync001, TestSize.Level1)
     EXPECT_EQ(ret, SUCCESS);
 }
 
-// right test, all
+/**
+ * @tc.name: RequestSecurityEventInfoAsync002
+ * @tc.desc: RequestSecurityEventInfoAsync with right param, get all info
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync002, TestSize.Level1)
 {
     static std::string devId = "";
@@ -56,7 +66,12 @@ HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync002, TestSize.Level1)
     EXPECT_EQ(ret, SUCCESS);
 }
 
-// wrong: eventList key
+/**
+ * @tc.name: RequestSecurityEventInfoAsync003
+ * @tc.desc: RequestSecurityEventInfoAsync with wrong eventList key
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync003, TestSize.Level1)
 {
     static std::string devId = "";
@@ -65,7 +80,12 @@ HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync003, TestSize.Level1)
     EXPECT_EQ(ret, SUCCESS);
 }
 
-// wrong: eventList content
+/**
+ * @tc.name: RequestSecurityEventInfoAsync004
+ * @tc.desc: RequestSecurityEventInfoAsync with wrong eventList content
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync004, TestSize.Level1)
 {
     static std::string devId = "";
@@ -74,7 +94,12 @@ HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync004, TestSize.Level1)
     EXPECT_EQ(ret, SUCCESS);
 }
 
-// wrong: eventList null
+/**
+ * @tc.name: RequestSecurityEventInfoAsync005
+ * @tc.desc: RequestSecurityEventInfoAsync with wrong eventList null
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync005, TestSize.Level1)
 {
     static std::string devId = "";
@@ -83,7 +108,12 @@ HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync005, TestSize.Level1)
     EXPECT_EQ(ret, SUCCESS);
 }
 
-// wrong: eventList not contain eventId
+/**
+ * @tc.name: RequestSecurityEventInfoAsync006
+ * @tc.desc: RequestSecurityEventInfoAsync with wrong eventList not contain right eventId
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync006, TestSize.Level1)
 {
     static std::string devId = "";

@@ -41,7 +41,12 @@ void DataCollectKitTest::TearDown()
 {
 }
 
-// RIGHT TEST
+/**
+ * @tc.name: ReportSecurityInfo001
+ * @tc.desc: ReportSecurityInfo with right param
+ * @tc.type: FUNC
+ * @tc.require: SR000H96L5
+ */
 HWTEST_F(DataCollectKitTest, ReportSecurityInfo001, TestSize.Level1)
 {
     static int64_t eventId = 1011009000;
@@ -52,7 +57,12 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo001, TestSize.Level1)
     EXPECT_EQ(ret, SUCCESS);
 }
 
-// wrong test:cred
+/**
+ * @tc.name: ReportSecurityInfo002
+ * @tc.desc: ReportSecurityInfo with wrong cred
+ * @tc.type: FUNC
+ * @tc.require: SR000H96L5
+ */
 HWTEST_F(DataCollectKitTest, ReportSecurityInfo002, TestSize.Level1)
 {
     static int64_t eventId = 1011009000;
@@ -63,7 +73,12 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo002, TestSize.Level1)
     EXPECT_EQ(ret, BAD_PARAM);
 }
 
-// wrong test:extra
+/**
+ * @tc.name: ReportSecurityInfo003
+ * @tc.desc: ReportSecurityInfo with wrong extra
+ * @tc.type: FUNC
+ * @tc.require: SR000H96L5
+ */
 HWTEST_F(DataCollectKitTest, ReportSecurityInfo003, TestSize.Level1)
 {
     static int64_t eventId = 1011009000;
@@ -74,7 +89,12 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo003, TestSize.Level1)
     EXPECT_EQ(ret, BAD_PARAM);
 }
 
-// wrong test:status
+/**
+ * @tc.name: ReportSecurityInfo004
+ * @tc.desc: ReportSecurityInfo with wrong status
+ * @tc.type: FUNC
+ * @tc.require: SR000H96L5
+ */
 HWTEST_F(DataCollectKitTest, ReportSecurityInfo004, TestSize.Level1)
 {
     static int64_t eventId = 1011009000;
@@ -85,6 +105,12 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo004, TestSize.Level1)
     EXPECT_EQ(ret, BAD_PARAM);
 }
 
+/**
+ * @tc.name: ReportSecurityInfo005
+ * @tc.desc: ReportSecurityInfo with wrong eventId
+ * @tc.type: FUNC
+ * @tc.require: SR000H96L5
+ */
 HWTEST_F(DataCollectKitTest, ReportSecurityInfo005, TestSize.Level1)
 {
     static int64_t eventId = 0;
