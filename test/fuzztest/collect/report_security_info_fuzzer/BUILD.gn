@@ -17,7 +17,7 @@ import("//build/test.gni")
 
 module_output_path = "security_guard/collect"
 
-ohos_fuzztest("ReportSecurityInfoFuzzTest") {
+ohos_fuzztest("report_security_info") {
   module_out_path = module_output_path
   fuzz_config_file =
       "${sg_root_dir}/test/fuzztest/collect/report_security_info_fuzzer"

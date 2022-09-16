@@ -18,8 +18,6 @@
 
 #define FUZZ_PROJECT_NAME "generatecert_fuzzer"
 
-#include "sg_collect_client.h"
-
 namespace OHOS {}  // namespace OHOS
 
 #endif  // SECURITY_GUARD_REPORT_SECURITY_INFO_FUZZER_H

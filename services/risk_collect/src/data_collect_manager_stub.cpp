@@ -100,7 +100,7 @@ ErrorCode DataCollectManagerStub::HandleDataRequestCmd(MessageParcel &data, Mess
         SGLOGE("object is nullptr");
         return BAD_PARAM;
     }
-    SGLOGI("devId=%{public}s, eventList=%{public}s", devId.c_str(), eventList.c_str());
+    SGLOGI("eventList=%{public}s", eventList.c_str());
     std::shared_ptr<BaseTask> task = std::make_shared<DataDistributeTask>(devId, eventList, object);
     bool isSuccess = TaskManager::GetInstance().PushTask(task);
     if (!isSuccess) {

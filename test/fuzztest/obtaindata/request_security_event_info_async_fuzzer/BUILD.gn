@@ -17,7 +17,7 @@ import("//build/test.gni")
 
 module_output_path = "security_guard/obtaindata"
 
-ohos_fuzztest("RequestSecurityEventInfoAsyncFuzzTest") {
+ohos_fuzztest("request_security_event_info_async") {
   module_out_path = module_output_path
   fuzz_config_file =
       "${sg_root_dir}/test/fuzztest/obtaindata/request_security_event_info_async_fuzzer"

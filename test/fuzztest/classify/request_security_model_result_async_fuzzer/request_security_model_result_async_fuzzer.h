@@ -18,8 +18,6 @@
 
 #define FUZZ_PROJECT_NAME "request_security_model_result_async_fuzzer"
 
-#include "sg_classify_client.h"
-
 namespace OHOS {}  // namespace OHOS
 
 #endif  // SECURITY_GUARD_REQUEST_SECURITY_MODEL_RESULT_ASYNC_FUZZER_H

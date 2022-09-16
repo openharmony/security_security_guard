@@ -70,8 +70,8 @@ ErrorCode RiskAnalysisManagerStub::HandleGetSecurityModelResult(MessageParcel &d
     }
     auto promise = std::make_shared<std::promise<std::unique_ptr<SecurityModelResult>>>();
     auto future = promise->get_future();
-    SecurityModelCallBack func = [cap = std::move(promise)] (std::unique_ptr<SecurityModelResult> &callback) mutable {
-        cap->set_value(std::move(callback));
+    SecurityModelCallBack func = [promise] (std::unique_ptr<SecurityModelResult> &callback) mutable {
+        promise->set_value(std::move(callback));
     };
     std::unique_ptr<RiskAnalysis> riskAnalysis = std::make_unique<RiskAnalysis>();
     riskAnalysis->RequestSecurityModelResult(devId, modelId, func);
