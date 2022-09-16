@@ -14,19 +14,16 @@
  */
 
 #include "request_security_model_result_async_fuzzer.h"
-#include "risk_analysis_manager_callback.h"
+
 #include <string>
-#include "securec.h"
-#include "parcel.h"
-#include "risk_analysis_manager_stub.h"
-#include "risk_analysis_manager_callback_stub.h"
-#include "security_guard_log.h"
+
+#include "risk_analysis_manager_callback.h"
+#include "sg_classify_client.h"
+
 #undef private
 
 using namespace OHOS::Security::SecurityGuard;
 namespace OHOS {
-RiskAnalysisManagerStub riskAnalysisManagerStub;
-
 class RiskAnalysisManagerCallbackTest : public RiskAnalysisManagerCallback {
 public:
     RiskAnalysisManagerCallbackTest() = default;
@@ -40,54 +37,12 @@ public:
     }
 };
 
-static std::string Uint8ArrayToString(const uint8_t* buff, size_t size)
+bool RequestSecurityModelResultAsyncFuzzTest(const uint8_t* data, size_t size)
 {
-    std::string str;
-    for (size_t i = 0; i < size; i++) {
-        str += (33 + buff[i] % (126 - 33));  // Visible Character Range 33 - 126
-    }
-    return str;
-}
-
-// interface test
-static void FuzzTest(const uint8_t* data, size_t size)
-{
-    std::string devId = Uint8ArrayToString(data, size);
+    std::string devId(reinterpret_cast<const char*>(data), size);
     uint32_t modelId = rand() % (size + 1);
     std::shared_ptr<RiskAnalysisManagerCallback> callback = std::make_shared<RiskAnalysisManagerCallbackTest>();
     RiskAnalysisManagerKit::RequestSecurityModelResultAsync(devId, modelId, callback);
-}
-
-// classify SA test
-void OnRemoteRequestFuzzer(Parcel &parcel, size_t size)
-{
-    SGLOGE("Start Risk Classify SA(async) Fuzz Test");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    data.WriteInterfaceToken(IRiskAnalysisManager::GetDescriptor());
-    data.WriteString(parcel.ReadString());
-    data.WriteUint32(parcel.ReadUint32());
-    ResultCallback resultCallback = [](std::string &devId, uint32_t modelId, std::string &result) -> int32_t {
-        SGLOGE("RiskAnalysisManagerCallbackStub Called");
-        return 0;
-    };
-    sptr<IRemoteObject> callback = new (std::nothrow) RiskAnalysisManagerCallbackStub(resultCallback);
-    if (callback == nullptr) {
-        return;
-    }
-    data.WriteRemoteObject(callback);
-    const static int32_t getSecurityModelResultCmd = 2;
-    riskAnalysisManagerStub.OnRemoteRequest(getSecurityModelResultCmd, data, reply, option);
-    SGLOGE("end");
-}
-
-bool RequestSecurityModelResultAsyncFuzzTest(const uint8_t* data, size_t size)
-{
-    FuzzTest(data, size);
-    Parcel parcel;
-    parcel.WriteBuffer(data, size);
-    OnRemoteRequestFuzzer(parcel, size);
     return true;
 }
 }  // namespace OHOS

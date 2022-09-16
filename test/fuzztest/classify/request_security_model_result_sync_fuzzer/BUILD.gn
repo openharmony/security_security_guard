@@ -17,7 +17,7 @@ import("//build/test.gni")
 
 module_output_path = "security_guard/classify"
 
-ohos_fuzztest("RequestSecurityModelResultSyncFuzzTest") {
+ohos_fuzztest("request_security_model_result_sync") {
   module_out_path = module_output_path
   fuzz_config_file =
       "${sg_root_dir}/test/fuzztest/classify/request_security_model_result_sync_fuzzer"

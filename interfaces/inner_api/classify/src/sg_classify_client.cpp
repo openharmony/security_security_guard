@@ -33,14 +33,14 @@ int32_t RiskAnalysisManagerKit::RequestSecurityModelResultSync(std::string &devI
 {
     auto promise = std::make_shared<std::promise<SecurityModel>>();
     auto future = promise->get_future();
-    auto func = [cap = std::move(promise)] (std::string &devId, uint32_t modelId,
+    auto func = [promise] (std::string &devId, uint32_t modelId,
         std::string &result) mutable -> int32_t {
         SecurityModel model = {
             .devId = devId,
             .modelId = modelId,
             .result = result
         };
-        cap->set_value(model);
+        promise->set_value(model);
         return SUCCESS;
     };
 
