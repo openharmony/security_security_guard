@@ -25,9 +25,10 @@ using nlohmann::json;
 void to_json(json &jsonObj, const ModelCfgSt &modelCfg)
 {
     std::vector<std::string> threatList;
-    for (uint32_t threat : modelCfg.threatList) {
-        threatList.emplace_back(std::to_string(threat));
-    }
+    std::transform(modelCfg.threatList.begin(), modelCfg.threatList.end(),
+        std::back_inserter(threatList), [] (uint32_t threat) {
+        return std::to_string(threat);
+    });
     jsonObj = json {
         { MODEL_CFG_MODEL_ID_KEY, std::to_string(modelCfg.modelId) },
         { MODEL_CFG_MODEL_NAME_KEY, modelCfg.modelName },
@@ -63,14 +64,15 @@ void from_json(const json &jsonObj, ModelCfgSt &modelCfg)
 void to_json(json &jsonObj, const ThreatCfgSt &threatCfg)
 {
     std::vector<std::string> eventList;
-    for (uint32_t event : threatCfg.eventList) {
-        eventList.emplace_back(std::to_string(event));
-    }
+    std::transform(threatCfg.eventList.begin(), threatCfg.eventList.end(),
+        std::back_inserter(eventList), [] (uint32_t event) {
+        return std::to_string(event);
+    });
     jsonObj = json {
-        { THREAT_CFG_THREAT_ID_KEY, threatCfg.threatId },
+        { THREAT_CFG_THREAT_ID_KEY, std::to_string(threatCfg.threatId) },
         { THREAT_CFG_THREAT_NAME_KEY, threatCfg.threatName },
         { THREAT_CFG_VERSION_KEY, threatCfg.version },
-        { THREAT_CFG_EVENT_LIST_KEY, threatCfg.eventList },
+        { THREAT_CFG_EVENT_LIST_KEY, eventList },
         { THREAT_CFG_COMPUTE_MODEL_KEY, threatCfg.computeModel }
     };
 }

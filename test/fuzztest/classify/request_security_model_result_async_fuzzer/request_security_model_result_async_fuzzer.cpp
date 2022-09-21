@@ -28,7 +28,7 @@ class RiskAnalysisManagerCallbackTest : public RiskAnalysisManagerCallback {
 public:
     RiskAnalysisManagerCallbackTest() = default;
     ~RiskAnalysisManagerCallbackTest() override = default;
-    int32_t OnSecurityModelResult(std::string &devId, uint32_t modelId, std::string &result) override
+    int32_t OnSecurityModelResult(const std::string &devId, uint32_t modelId, const std::string &result) override
     {
         (void) devId;
         (void) modelId;

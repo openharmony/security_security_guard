@@ -25,7 +25,7 @@ public:
 
     virtual ~RiskAnalysisManagerCallback() = default;
 
-    virtual int32_t OnSecurityModelResult(std::string &devId, uint32_t modelId, std::string &result) = 0;
+    virtual int32_t OnSecurityModelResult(const std::string &devId, uint32_t modelId, const std::string &result) = 0;
 };
 } // namespace OHOS::Security::SecurityGuard
 

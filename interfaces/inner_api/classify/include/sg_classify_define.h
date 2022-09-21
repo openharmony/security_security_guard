@@ -20,7 +20,7 @@
 #include <string>
 
 namespace OHOS::Security::SecurityGuard {
-using ResultCallback = std::function<int32_t (std::string &devId, uint32_t modelId, std::string &result)>;
+using ResultCallback = std::function<int32_t (const std::string &devId, uint32_t modelId, const std::string &result)>;
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_SG_CLASSIFY_DEFINE_H

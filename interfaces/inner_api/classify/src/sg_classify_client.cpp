@@ -33,8 +33,8 @@ int32_t RiskAnalysisManagerKit::RequestSecurityModelResultSync(std::string &devI
 {
     auto promise = std::make_shared<std::promise<SecurityModel>>();
     auto future = promise->get_future();
-    auto func = [promise] (std::string &devId, uint32_t modelId,
-        std::string &result) mutable -> int32_t {
+    auto func = [promise] (const std::string &devId, uint32_t modelId,
+        const std::string &result) mutable -> int32_t {
         SecurityModel model = {
             .devId = devId,
             .modelId = modelId,
@@ -63,7 +63,7 @@ int32_t RiskAnalysisManagerKit::RequestSecurityModelResultSync(std::string &devI
 int32_t RiskAnalysisManagerKit::RequestSecurityModelResultAsync(std::string &devId, uint32_t modelId,
     std::shared_ptr<RiskAnalysisManagerCallback> &callback)
 {
-    auto func = [callback] (std::string &devId, uint32_t modelId, std::string &result)-> int32_t {
+    auto func = [callback] (const std::string &devId, uint32_t modelId, const std::string &result)-> int32_t {
         return callback->OnSecurityModelResult(devId, modelId, result);
     };
 
