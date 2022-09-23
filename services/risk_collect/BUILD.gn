@@ -26,14 +26,12 @@ ohos_source_set("sg_uevent_listener_stamp") {
     "${sg_root_dir}/frameworks/common/database/include",
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/services/model_analysis/include",
-    "${sg_root_dir}/frameworks/common/task/include",
-    "${sg_root_dir}/frameworks/common/threadpool/include",
+    "${sg_root_dir}/frameworks/common/task_handler/include",
     "${sg_root_dir}/frameworks/common/json/include",
   ]
 
   sources = [
     "${sg_root_dir}/services/risk_collect/src/data_format.cpp",
-    "${sg_root_dir}/frameworks/common/task/src/data_collect_task.cpp",
   ]
 
   cflags_cc = [
@@ -41,7 +39,7 @@ ohos_source_set("sg_uevent_listener_stamp") {
   ]
 
   deps = [
-    "${sg_root_dir}/frameworks/common/task:sg_task_stamp",
+    "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
   ]
 
   external_deps = [
@@ -62,8 +60,7 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/services/risk_collect/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/json/include",
-    "${sg_root_dir}/frameworks/common/task/include",
-    "${sg_root_dir}/frameworks/common/threadpool/include",
+    "${sg_root_dir}/frameworks/common/task_handler/include",
     "${sg_root_dir}/frameworks/common/database/include",
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/frameworks/common/utils/include",
@@ -73,8 +70,6 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/services/risk_collect/src/data_collect_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/risk_collect/src/data_collect_manager_service.cpp",
     "${sg_root_dir}/services/risk_collect/src/data_collect_manager_stub.cpp",
-    "${sg_root_dir}/frameworks/common/task/src/data_distribute_task.cpp",
-    "${sg_root_dir}/frameworks/common/task/src/load_db_task.cpp",
     "${sg_root_dir}/services/risk_collect/store/src/base_event_id.cpp",
     "${sg_root_dir}/services/risk_collect/store/src/base_event_id_storage.cpp",
     "${sg_root_dir}/services/risk_collect/store/src/data_manager.cpp",
@@ -93,7 +88,7 @@ ohos_shared_library("sg_collect_service") {
   deps = [
     ":sg_uevent_listener_stamp",
     "${sg_root_dir}/services/model_analysis:sg_model_analysis",
-    "${sg_root_dir}/frameworks/common/task:sg_task_stamp",
+    "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
   ]
 
   external_deps = [

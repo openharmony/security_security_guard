@@ -13,28 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef SECURITY_GUARD_REQUEST_SECURITY_MODEL_RESULT_TASK_H
-#define SECURITY_GUARD_REQUEST_SECURITY_MODEL_RESULT_TASK_H
+#ifndef SECURITY_GUARD_TASK_HANDLER_H
+#define SECURITY_GUARD_TASK_HANDLER_H
 
+#include <future>
 #include <string>
 
-#include "base_task.h"
+#include "singleton.h"
+#include "thread_pool.h"
 
 namespace OHOS::Security::SecurityGuard {
-class RequestSecurityModelResultTask final : public BaseTask,
-    public std::enable_shared_from_this<RequestSecurityModelResultTask> {
+class TaskHandler : public DelayedSingleton<TaskHandler> {
 public:
-    RequestSecurityModelResultTask(std::string &devId, int32_t modelId, TaskCallback callback);
-    void OnExecute() override;
-    std::string GetDevId() const;
-    uint32_t GetModelId() const;
-    std::string GetRiskStatus() const;
+    using Task = std::function<void()>;
+    TaskHandler();
+    ~TaskHandler() override;
+    void AddTask(Task &task);
 
 private:
-    std::string devId_{};
-    uint32_t modelId_{};
-    std::string riskStatus_{};
+    OHOS::ThreadPool pool_;
 };
 } // namespace OHOS::Security::SecurityGuard
 
-#endif // SECURITY_GUARD_REQUEST_SECURITY_MODEL_RESULT_TASK_H
+#endif // SECURITY_GUARD_TASK_HANDLER_H

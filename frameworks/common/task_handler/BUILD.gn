@@ -19,28 +19,18 @@ ohos_source_set("sg_task_stamp") {
   part_name = "security_guard"
 
   include_dirs = [
-    "${sg_root_dir}/frameworks/common/constants/include",
-    "${sg_root_dir}/frameworks/common/task/include",
-    "${sg_root_dir}/frameworks/common/threadpool/include",
-    "${sg_root_dir}/frameworks/common/log/include",
+    "${sg_root_dir}/frameworks/common/task_handler/include",
   ]
 
   sources = [
-    "${sg_root_dir}/frameworks/common/task/src/task_manager.cpp",
-    "${sg_root_dir}/frameworks/common/task/src/base_task.cpp",
-    "${sg_root_dir}/frameworks/common/threadpool/src/thread_pool.cpp",
+    "${sg_root_dir}/frameworks/common/task_handler/src/task_handler.cpp",
   ]
 
   cflags_cc = [
       "-DHILOG_ENABLE"
   ]
 
-  deps = [
-    #"${sg_root_dir}/services/model_analysis:sg_model_analysis",
-  ]
-
   external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
     "c_utils:utils",
   ]
 }

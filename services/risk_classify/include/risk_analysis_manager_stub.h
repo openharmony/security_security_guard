@@ -35,6 +35,7 @@ public:
 
 private:
     ErrorCode HandleGetSecurityModelResult(MessageParcel &data, MessageParcel &reply);
+    void PushRiskAnalysisTask(uint32_t modelId, std::shared_ptr<std::promise<std::string>> &promise);
 };
 } // namespace OHOS::Security::SecurityGuard
 
