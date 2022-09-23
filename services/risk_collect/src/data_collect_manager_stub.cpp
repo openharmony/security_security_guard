@@ -15,13 +15,16 @@
 
 #include "data_collect_manager_stub.h"
 
-#include "data_collect_task.h"
-#include "data_distribute_task.h"
+#include "data_collect_manager_callback_proxy.h"
 #include "data_format.h"
+#include "data_manager_wrapper.h"
 #include "i_data_collect_manager.h"
+#include "json_cfg.h"
+#include "model_analysis_define.h"
 #include "model_cfg_marshalling.h"
+#include "risk_collect_define.h"
 #include "security_guard_log.h"
-#include "task_manager.h"
+#include "task_handler.h"
 
 namespace OHOS::Security::SecurityGuard {
 int32_t DataCollectManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
@@ -74,19 +77,20 @@ ErrorCode DataCollectManagerStub::HandleDataCollectCmd(MessageParcel &data, Mess
         .date = time,
         .content = content
     };
-    std::shared_ptr<BaseTask> task = std::make_shared<DataCollectTask>(eventData);
-    bool isSuccess = TaskManager::GetInstance().PushTask(task);
-    if (!isSuccess) {
-        SGLOGE("TASK ERROR");
-        return TASK_ERR;
-    }
+    TaskHandler::Task task = [eventData] {
+        ErrorCode code = DataManagerWrapper::GetInstance().AddCollectInfo(eventData);
+        if (code != SUCCESS) {
+            SGLOGE("AddCollectInfo error, %{public}d", code);
+        }
+    };
+    TaskHandler::GetInstance()->AddTask(task);
     return SUCCESS;
 }
 
 ErrorCode DataCollectManagerStub::HandleDataRequestCmd(MessageParcel &data, MessageParcel &reply)
 {
     SGLOGD("%{public}s", __func__);
-    uint32_t expected = 0;
+    const uint32_t expected = 4;
     uint32_t actual = data.GetReadableBytes();
     if (expected >= actual) {
         SGLOGE("actual length error, value=%{public}u", actual);
@@ -101,12 +105,81 @@ ErrorCode DataCollectManagerStub::HandleDataRequestCmd(MessageParcel &data, Mess
         return BAD_PARAM;
     }
     SGLOGI("eventList=%{public}s", eventList.c_str());
-    std::shared_ptr<BaseTask> task = std::make_shared<DataDistributeTask>(devId, eventList, object);
-    bool isSuccess = TaskManager::GetInstance().PushTask(task);
-    if (!isSuccess) {
-        SGLOGE("TASK ERROR");
-        return TASK_ERR;
-    }
+    PushDataCollectTask(object, eventList, devId);
     return SUCCESS;
+}
+
+void DataCollectManagerStub::PushDataCollectTask(sptr<IRemoteObject> &object,
+    std::string eventList, std::string devId)
+{
+    TaskHandler::Task task = [=] () mutable {
+        auto proxy = new (std::nothrow) DataCollectManagerCallbackProxy(object);
+        if (proxy == nullptr) {
+            return;
+        }
+        std::vector<int64_t> eventListVec;
+        ErrorCode code = ParseEventList(eventList, eventListVec);
+        if (code != SUCCESS) {
+            SGLOGE("ParseEventList error, code=%{public}d", code);
+            std::string empty;
+            proxy->ResponseRiskData(devId, empty, FINISH);
+            return;
+        }
+
+        std::vector<EventDataSt> events;
+        DataManagerWrapper::GetInstance().GetEventDataById(eventListVec, events);
+        int32_t curIndex = 0;
+        int32_t lastIndex = curIndex + MAX_DISTRIBUTE_LENS;
+        auto maxIndex = static_cast<int32_t>(events.size());
+        SGLOGI("events size=%{public}d", maxIndex);
+        std::vector<EventDataSt> dispatchVec;
+
+        while (lastIndex < maxIndex) {
+            std::string dispatch;
+            dispatchVec.assign(events.begin() + curIndex, events.begin() + lastIndex);
+            for (const EventDataSt& event : dispatchVec) {
+                nlohmann::json jsonObj(event);
+                dispatch += jsonObj.dump();
+            }
+
+            (void) proxy->ResponseRiskData(devId, dispatch, CONTINUE);
+            curIndex = lastIndex;
+            lastIndex = curIndex + MAX_DISTRIBUTE_LENS;
+        }
+
+        // last dispatch
+        std::string dispatch;
+        dispatchVec.assign(events.begin() + curIndex, events.end());
+        for (const EventDataSt &event : dispatchVec) {
+            nlohmann::json jsonObj(event);
+            dispatch += jsonObj.dump();
+        }
+        (void) proxy->ResponseRiskData(devId, dispatch, FINISH);
+    };
+
+    TaskHandler::GetInstance()->AddTask(task);
+}
+
+ErrorCode DataCollectManagerStub::ParseEventList(std::string eventList, std::vector<int64_t> &eventListVec)
+{
+    nlohmann::json jsonObj = nlohmann::json::parse(eventList, nullptr, false);
+    if (jsonObj.is_discarded()) {
+        SGLOGE("json parse error");
+        return JSON_ERR;
+    }
+
+    JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, EVENT_CFG_EVENT_ID_KEY, array, JSON_ERR);
+    ErrorCode code = FAILED;
+    nlohmann::json &eventListJson = jsonObj[EVENT_CFG_EVENT_ID_KEY];
+    for (const auto& event : eventListJson) {
+        if (!event.is_number()) {
+            SGLOGE("event type is error");
+            continue;
+        }
+        eventListVec.emplace_back(event);
+        code = SUCCESS;
+    }
+
+    return code;
 }
 }

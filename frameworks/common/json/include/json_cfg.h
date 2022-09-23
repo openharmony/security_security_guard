@@ -18,8 +18,6 @@
 
 #include "nlohmann/json.hpp"
 
-#include "security_guard_define.h"
-
 namespace OHOS::Security::SecurityGuard {
 #define JSON_CHECK_HELPER_RETURN_IF_FAILED(json, key, type, code) \
     do { \

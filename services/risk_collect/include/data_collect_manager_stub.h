@@ -32,6 +32,8 @@ public:
 private:
     static ErrorCode HandleDataCollectCmd(MessageParcel &data, MessageParcel &reply);
     static ErrorCode HandleDataRequestCmd(MessageParcel &data, MessageParcel &reply);
+    static ErrorCode ParseEventList(std::string eventList, std::vector<int64_t> &eventListVec);
+    static void PushDataCollectTask(sptr<IRemoteObject> &object, std::string eventList, std::string devId);
 };
 } // namespace OHOS::Security::SecurityGuard
 

@@ -18,7 +18,6 @@
 #include <thread>
 
 #include "model_manager.h"
-#include "risk_analysis_manager_callback_proxy.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 

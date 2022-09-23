@@ -18,9 +18,9 @@
 #include <thread>
 #include <vector>
 
-#include "load_db_task.h"
 #include "security_guard_log.h"
-#include "task_manager.h"
+#include "task_handler.h"
+#include "data_manager_wrapper.h"
 
 namespace OHOS::Security::SecurityGuard {
 REGISTER_SYSTEM_ABILITY_BY_ID(DataCollectManagerService, DATA_COLLECT_MANAGER_SA_ID, true);
@@ -39,11 +39,10 @@ void DataCollectManagerService::OnStart()
         return;
     }
 
-    std::shared_ptr<BaseTask> loadDbTask = std::make_shared<LoadDbTask>();
-    bool isSuccess = TaskManager::GetInstance().PushTask(loadDbTask);
-    if (!isSuccess) {
-        SGLOGE("LOAD DB TASK ERROR");
-    }
+    TaskHandler::Task task = [] {
+        DataManagerWrapper::GetInstance().LoadCacheData();
+    };
+    TaskHandler::GetInstance()->AddTask(task);
 }
 
 void DataCollectManagerService::OnStop()

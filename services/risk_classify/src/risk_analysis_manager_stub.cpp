@@ -17,12 +17,12 @@
 
 #include <future>
 
-#include "risk_analysis.h"
 #include "risk_analysis_define.h"
 #include "risk_analysis_manager_callback_proxy.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
-#include "security_model_result.h"
+#include "task_handler.h"
+#include "model_manager.h"
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
@@ -68,14 +68,10 @@ ErrorCode RiskAnalysisManagerStub::HandleGetSecurityModelResult(MessageParcel &d
         SGLOGE("object is nullptr");
         return BAD_PARAM;
     }
-    auto promise = std::make_shared<std::promise<std::unique_ptr<SecurityModelResult>>>();
-    auto future = promise->get_future();
-    SecurityModelCallBack func = [promise] (std::unique_ptr<SecurityModelResult> &callback) mutable {
-        promise->set_value(std::move(callback));
-    };
-    std::unique_ptr<RiskAnalysis> riskAnalysis = std::make_unique<RiskAnalysis>();
-    riskAnalysis->RequestSecurityModelResult(devId, modelId, func);
 
+    auto promise = std::make_shared<std::promise<std::string>>();
+    auto future = promise->get_future();
+    PushRiskAnalysisTask(modelId, promise);
     std::chrono::milliseconds span(TIMEOUT_REPLY);
     ErrorCode ret;
     std::string result{};
@@ -83,10 +79,7 @@ ErrorCode RiskAnalysisManagerStub::HandleGetSecurityModelResult(MessageParcel &d
         SGLOGE("wait for result timeout");
         ret = TIME_OUT;
     } else {
-        std::unique_ptr<SecurityModelResult> resultPtr = future.get();
-        devId = resultPtr->GetDevId();
-        modelId = resultPtr->GetModelId();
-        result = resultPtr->GetResult();
+        result = future.get();
         ret =  SUCCESS;
     }
     auto proxy = new (std::nothrow) RiskAnalysisManagerCallbackProxy(object);
@@ -97,5 +90,29 @@ ErrorCode RiskAnalysisManagerStub::HandleGetSecurityModelResult(MessageParcel &d
     SGLOGI("get analysis result=%{public}s", result.c_str());
     reply.WriteInt32(ret);
     return ret;
+}
+
+void RiskAnalysisManagerStub::PushRiskAnalysisTask(uint32_t modelId,
+    std::shared_ptr<std::promise<std::string>> &promise)
+{
+    TaskHandler::Task task = [modelId, &promise] {
+        SGLOGD("modelId=%{public}u", modelId);
+        std::vector<int64_t> eventIds = ModelManager::GetInstance().GetEventIds(modelId);
+        if (eventIds.empty()) {
+            SGLOGE("eventIds is empty, no need to analyse");
+            promise->set_value(UNKNOWN_STATUS);
+            return;
+        }
+
+        int32_t ret = ModelManager::GetInstance().AnalyseRisk(eventIds);
+        if (ret != SUCCESS) {
+            SGLOGE("status is risk");
+            promise->set_value(RISK_STATUS);
+        } else {
+            SGLOGI("status is safe");
+            promise->set_value(SAFE_STATUS);
+        }
+    };
+    TaskHandler::GetInstance()->AddTask(task);
 }
 }

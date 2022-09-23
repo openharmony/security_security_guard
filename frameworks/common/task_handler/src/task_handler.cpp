@@ -13,17 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef SECURITY_GUARD_LOAD_DB_TASK_H
-#define SECURITY_GUARD_LOAD_DB_TASK_H
-
-#include "base_task.h"
+#include "task_handler.h"
 
 namespace OHOS::Security::SecurityGuard {
-class LoadDbTask : public BaseTask {
-public:
-    LoadDbTask() = default;
-    void OnExecute() override;
-};
+namespace {
+    const int THREAD_NUMS = 5;
+    const int MAX_TASK_NUMS = 1000;
 }
 
-#endif // SECURITY_GUARD_LOAD_DB_TASK_H
+TaskHandler::TaskHandler()
+{
+    pool_.Start(THREAD_NUMS);
+    pool_.SetMaxTaskNum(MAX_TASK_NUMS);
+}
+
+TaskHandler::~TaskHandler()
+{
+    pool_.Stop();
+}
+
+void TaskHandler::AddTask(Task &task)
+{
+    pool_.AddTask(task);
+}
+}
