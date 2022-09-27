@@ -13,7 +13,10 @@
     "name": "security_guard",
     "subsystem": "security",
     "syscap": [
-      "SystemCapability.Security.DeviceSecurityLevel"
+      "SystemCapability.Security.SecurityGuard"
+    ],
+    "hisysevent_config": [
+      "//base/security/security_guard/hisysevent.yaml"
     ],
     "adapted_system_type": [
       "standard"
@@ -34,7 +37,8 @@
         "napi",
         "safwk",
         "samgr",
-        "c_utils"
+        "c_utils",
+        "hisysevent_native"
       ]
     },
     "build": {

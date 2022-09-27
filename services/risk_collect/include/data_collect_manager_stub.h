@@ -18,6 +18,8 @@
 
 #include "iremote_stub.h"
 
+#include <future>
+
 #include "i_data_collect_manager.h"
 #include "security_guard_define.h"
 
@@ -33,7 +35,8 @@ private:
     static ErrorCode HandleDataCollectCmd(MessageParcel &data, MessageParcel &reply);
     static ErrorCode HandleDataRequestCmd(MessageParcel &data, MessageParcel &reply);
     static ErrorCode ParseEventList(std::string eventList, std::vector<int64_t> &eventListVec);
-    static void PushDataCollectTask(sptr<IRemoteObject> &object, std::string eventList, std::string devId);
+    static void PushDataCollectTask(sptr<IRemoteObject> &object, std::string eventList, std::string devId,
+        std::shared_ptr<std::promise<int32_t>> &promise);
 };
 } // namespace OHOS::Security::SecurityGuard
 
