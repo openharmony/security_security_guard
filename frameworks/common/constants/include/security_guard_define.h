@@ -43,6 +43,21 @@ using SecurityModel = struct {
     uint32_t modelId;
     std::string result;
 };
+
+using ObatinDataEvent = struct {
+    int32_t pid;
+    std::string time;
+    int32_t size;
+    std::string extend;
+};
+
+using ClassifyEvent = struct {
+    int32_t pid;
+    std::string time;
+    std::string eventInfo;
+    std::string status;
+    std::string extend;
+};
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_DEFINE_H

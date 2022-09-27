@@ -15,18 +15,26 @@
 
 #include "data_collect_manager_stub.h"
 
+#include "bigdata.h"
 #include "data_collect_manager_callback_proxy.h"
 #include "data_format.h"
 #include "data_manager_wrapper.h"
 #include "i_data_collect_manager.h"
+#include "ipc_skeleton.h"
 #include "json_cfg.h"
 #include "model_analysis_define.h"
 #include "model_cfg_marshalling.h"
 #include "risk_collect_define.h"
+#include "security_guard_define.h"
 #include "security_guard_log.h"
+#include "security_guard_utils.h"
 #include "task_handler.h"
 
 namespace OHOS::Security::SecurityGuard {
+namespace {
+    constexpr int32_t TIMEOUT_REPLY = 500;
+}
+
 int32_t DataCollectManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
     MessageParcel &reply, MessageOption &option)
 {
@@ -90,6 +98,10 @@ ErrorCode DataCollectManagerStub::HandleDataCollectCmd(MessageParcel &data, Mess
 ErrorCode DataCollectManagerStub::HandleDataRequestCmd(MessageParcel &data, MessageParcel &reply)
 {
     SGLOGD("%{public}s", __func__);
+    ObatinDataEvent event;
+    auto pid = IPCSkeleton::GetCallingPid();
+    event.pid = pid;
+    event.time = SecurityGuardUtils::GetData();
     const uint32_t expected = 4;
     uint32_t actual = data.GetReadableBytes();
     if (expected >= actual) {
@@ -105,16 +117,28 @@ ErrorCode DataCollectManagerStub::HandleDataRequestCmd(MessageParcel &data, Mess
         return BAD_PARAM;
     }
     SGLOGI("eventList=%{public}s", eventList.c_str());
-    PushDataCollectTask(object, eventList, devId);
+    auto promise = std::make_shared<std::promise<int32_t>>();
+    auto future = promise->get_future();
+    PushDataCollectTask(object, eventList, devId, promise);
+    std::chrono::milliseconds span(TIMEOUT_REPLY);
+    if (future.wait_for(span) == std::future_status::timeout) {
+        SGLOGE("wait for result timeout");
+        event.size = 0;
+    } else {
+        event.size = future.get();
+    }
+    SGLOGI("ReportObatinDataEvent");
+    BigData::ReportObatinDataEvent(event);
     return SUCCESS;
 }
 
 void DataCollectManagerStub::PushDataCollectTask(sptr<IRemoteObject> &object,
-    std::string eventList, std::string devId)
+    std::string eventList, std::string devId, std::shared_ptr<std::promise<int32_t>> &promise)
 {
-    TaskHandler::Task task = [=] () mutable {
+    TaskHandler::Task task = [=, &promise] () mutable {
         auto proxy = new (std::nothrow) DataCollectManagerCallbackProxy(object);
         if (proxy == nullptr) {
+            promise->set_value(0);
             return;
         }
         std::vector<int64_t> eventListVec;
@@ -123,6 +147,7 @@ void DataCollectManagerStub::PushDataCollectTask(sptr<IRemoteObject> &object,
             SGLOGE("ParseEventList error, code=%{public}d", code);
             std::string empty;
             proxy->ResponseRiskData(devId, empty, FINISH);
+            promise->set_value(0);
             return;
         }
 
@@ -131,6 +156,7 @@ void DataCollectManagerStub::PushDataCollectTask(sptr<IRemoteObject> &object,
         int32_t curIndex = 0;
         int32_t lastIndex = curIndex + MAX_DISTRIBUTE_LENS;
         auto maxIndex = static_cast<int32_t>(events.size());
+        promise->set_value(maxIndex);
         SGLOGI("events size=%{public}d", maxIndex);
         std::vector<EventDataSt> dispatchVec;
 

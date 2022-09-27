@@ -40,7 +40,12 @@ std::vector<int64_t> ModelManager::GetEventIds(uint32_t modelId)
     return ModelAnalysis::GetInstance().GetEventIds(modelId);
 }
 
-ErrorCode ModelManager::AnalyseRisk(const std::vector<int64_t> &events) const
+void ModelManager::SetEventInfo(int64_t eventId, std::string status, std::string &eventInfo)
+{
+    eventInfo += "[" + std::to_string(eventId) + ":" + status + "]";
+}
+
+ErrorCode ModelManager::AnalyseRisk(const std::vector<int64_t> &events, std::string &eventInfo) const
 {
     SGLOGD("size=%{public}u", static_cast<uint32_t>(events.size()));
     std::vector<EventDataSt> eventData;
@@ -59,14 +64,17 @@ ErrorCode ModelManager::AnalyseRisk(const std::vector<int64_t> &events) const
 
         auto content = jsonObj.get<EventContentSt>();
         if (content.cred != CREDIBLE) {
+            SetEventInfo(data.eventId, "INCREDIBLE", eventInfo);
             SGLOGE("not cred");
             continue;
         }
 
         if (content.status != SAFE) {
+            SetEventInfo(data.eventId, "RISK", eventInfo);
             SGLOGE("status error");
             return FAILED;
         }
+        SetEventInfo(data.eventId, "SAFE", eventInfo);
     }
 
     SGLOGI("no risk");

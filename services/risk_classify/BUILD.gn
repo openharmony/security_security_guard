@@ -20,6 +20,7 @@ ohos_shared_library("sg_classify_service") {
 
   include_dirs = [
     "//third_party/json/include",
+    "${sg_root_dir}/services/bigdata/include",
     "${sg_root_dir}/interfaces/inner_api/classify/include",
     "${sg_root_dir}/services/model_analysis/include",
     "${sg_root_dir}/services/risk_classify/include",
@@ -28,6 +29,7 @@ ohos_shared_library("sg_classify_service") {
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/task_handler/include",
+    "${sg_root_dir}/frameworks/common/utils/include",
   ]
 
   sources = [
@@ -36,6 +38,7 @@ ohos_shared_library("sg_classify_service") {
     "${sg_root_dir}/services/risk_classify/src/risk_analysis_manager_service.cpp",
     "${sg_root_dir}/services/risk_classify/src/risk_analysis_manager_stub.cpp",
     "${sg_root_dir}/interfaces/inner_api/classify/src/security_model_result.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
   ]
 
   cflags_cc = [
@@ -43,6 +46,7 @@ ohos_shared_library("sg_classify_service") {
   ]
 
   deps = [
+    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/model_analysis:sg_model_analysis",
     "${sg_root_dir}/services/risk_collect:sg_collect_service",
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp"

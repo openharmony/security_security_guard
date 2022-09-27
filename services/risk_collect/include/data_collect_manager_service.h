@@ -30,6 +30,10 @@ public:
     ~DataCollectManagerService() override = default;
     void OnStart() override;
     void OnStop() override;
+    int Dump(int fd, const std::vector<std::u16string>& args) override;
+
+private:
+    void DumpEventInfo(int fd, int64_t eventId);
 };
 } // namespace OHOS::Security::SecurityGuard
 

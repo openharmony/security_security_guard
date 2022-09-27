@@ -56,6 +56,7 @@ ohos_shared_library("sg_collect_service") {
 
   include_dirs = [
     "//third_party/json/include",
+    "${sg_root_dir}/services/bigdata/include",
     "${sg_root_dir}/services/model_analysis/include",
     "${sg_root_dir}/services/risk_collect/include",
     "${sg_root_dir}/frameworks/common/constants/include",
@@ -88,6 +89,7 @@ ohos_shared_library("sg_collect_service") {
   deps = [
     ":sg_uevent_listener_stamp",
     "${sg_root_dir}/services/model_analysis:sg_model_analysis",
+    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
   ]
 

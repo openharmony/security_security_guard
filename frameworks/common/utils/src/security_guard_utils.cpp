@@ -22,6 +22,7 @@
 namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr int32_t DEC_RADIX = 10;
+    constexpr int32_t TIME_BUF_LEN = 32;
 }
 
 bool SecurityGuardUtils::StrToU32(const std::string &str, uint32_t &value)
@@ -78,5 +79,18 @@ bool SecurityGuardUtils::StrToULL(const std::string &str, unsigned long long &va
     }
 
     return true;
+}
+
+std::string SecurityGuardUtils::GetData()
+{
+    time_t timestamp = time(nullptr);
+    struct tm timeInfo{};
+    localtime_r(&timestamp, &timeInfo);
+    char buf[TIME_BUF_LEN] = {};
+    if (strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", &timeInfo) == 0) {
+        return "";
+    }
+    std::string data(buf);
+    return data;
 }
 }
