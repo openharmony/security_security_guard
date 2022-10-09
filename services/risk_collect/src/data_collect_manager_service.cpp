@@ -20,10 +20,13 @@
 
 #include "string_ex.h"
 
+#include "data_manager_wrapper.h"
+#include "model_analysis.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 #include "task_handler.h"
-#include "data_manager_wrapper.h"
+#include "uevent_listener.h"
+#include "uevent_notify.h"
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
@@ -46,10 +49,25 @@ void DataCollectManagerService::OnStart()
         return;
     }
 
-    TaskHandler::Task task = [] {
+    TaskHandler::Task loadDbTask = [] {
         DataManagerWrapper::GetInstance().LoadCacheData();
     };
-    TaskHandler::GetInstance()->AddTask(task);
+    TaskHandler::GetInstance()->AddTask(loadDbTask);
+
+    TaskHandler::Task listenerTask = [] {
+        UeventListener listener;
+        listener.Start();
+    };
+    TaskHandler::GetInstance()->AddTask(listenerTask);
+
+    TaskHandler::Task notifyTask = [] {
+        UeventNotify notify;
+        notify.NotifyScan();
+
+        std::vector<int64_t> whiteList = ModelAnalysis::GetInstance().GetAllEventIds();
+        notify.AddWhiteList(whiteList);
+    };
+    TaskHandler::GetInstance()->AddTask(notifyTask);
 }
 
 void DataCollectManagerService::OnStop()
