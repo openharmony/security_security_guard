@@ -28,10 +28,14 @@ ohos_source_set("sg_uevent_listener_stamp") {
     "${sg_root_dir}/services/model_analysis/include",
     "${sg_root_dir}/frameworks/common/task_handler/include",
     "${sg_root_dir}/frameworks/common/json/include",
+    "${sg_root_dir}/frameworks/common/utils/include",
   ]
 
   sources = [
     "${sg_root_dir}/services/risk_collect/src/data_format.cpp",
+    "${sg_root_dir}/services/risk_collect/src/uevent_listener.cpp",
+    "${sg_root_dir}/services/risk_collect/src/uevent_notify.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
   ]
 
   cflags_cc = [
@@ -79,7 +83,6 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/services/risk_collect/store/src/database.cpp",
     "${sg_root_dir}/services/risk_collect/store/src/database_wrapper.cpp",
     "${sg_root_dir}/services/risk_collect/store/src/database_manager.cpp",
-    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
   ]
 
   cflags_cc = [
