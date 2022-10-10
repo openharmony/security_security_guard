@@ -83,7 +83,7 @@ int UeventListener::UeventListen(char *buffer, size_t length) const
             .events = POLLIN,
             .revents = 0,
         };
-        if ((poll(&fds, 1, -1) > 0) && (fds.revents >= 0) && (fds.revents & POLLIN)) {
+        if ((poll(&fds, 1, -1) > 0) && (fds.revents >= 0) && ((static_cast<uint32_t>(fds.revents) & POLLIN) != 0)) {
             int count = recv(ueventFd_, buffer, length, 0);
             if (count > 0) {
                 return count;
@@ -123,7 +123,10 @@ ErrorCode UeventListener::ParseSgEvent(char *buffer, size_t length, EventDataSt 
                 break;
             case SG_UEVENT_INDEX_CONTENT:
                 eventDataSt.content = std::string(subString);
-                SGLOGI("content len=%{public}u", static_cast<uint32_t>(eventDataSt.content.length()));
+                if (static_cast<uint32_t>(eventDataSt.content.length()) + 1 != contentLen) {
+                    SGLOGE("content len=%{public}u", static_cast<uint32_t>(eventDataSt.content.length()));
+                    return BAD_PARAM;
+                }
                 break;
             default:
                 SGLOGE("SG_UEVENT error");

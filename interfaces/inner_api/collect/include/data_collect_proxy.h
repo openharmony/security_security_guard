@@ -30,7 +30,6 @@ public:
     int32_t RequestDataSubmit(const std::shared_ptr<EventInfo> &info);
 
 private:
-    static std::string GetData();
     static inline BrokerDelegator<DataCollectProxy> delegator_;
 };
 } // namespace OHOS::Security::SecurityGuard
