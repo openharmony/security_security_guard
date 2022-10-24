@@ -55,19 +55,15 @@ void DataCollectManagerService::OnStart()
     TaskHandler::GetInstance()->AddTask(loadDbTask);
 
     TaskHandler::Task listenerTask = [] {
+        UeventNotify notify;
+        notify.NotifyScan();
+        std::vector<int64_t> whiteList = ModelAnalysis::GetInstance().GetAllEventIds();
+        notify.AddWhiteList(whiteList);
+
         UeventListener listener;
         listener.Start();
     };
     TaskHandler::GetInstance()->AddTask(listenerTask);
-
-    TaskHandler::Task notifyTask = [] {
-        UeventNotify notify;
-        notify.NotifyScan();
-
-        std::vector<int64_t> whiteList = ModelAnalysis::GetInstance().GetAllEventIds();
-        notify.AddWhiteList(whiteList);
-    };
-    TaskHandler::GetInstance()->AddTask(notifyTask);
 }
 
 void DataCollectManagerService::OnStop()
