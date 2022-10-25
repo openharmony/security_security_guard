@@ -20,6 +20,16 @@
 
 #include "event_info.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int32_t ReportSecurityInfo(const struct EventInfoSt *info);
+
+#ifdef __cplusplus
+}
+#endif
+
 namespace OHOS::Security::SecurityGuard {
 class NativeDataCollectKit {
 public:

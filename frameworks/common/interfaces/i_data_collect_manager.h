@@ -30,6 +30,10 @@ public:
         CMD_DATA_COLLECT = 1,
         CMD_DATA_REQUEST = 2,
     };
+
+    virtual int32_t RequestDataSubmit(int64_t eventId, std::string version, std::string time, std::string content) = 0;
+    virtual int32_t RequestRiskData(std::string &devId, std::string &eventList,
+        const sptr<IRemoteObject> &callback) = 0;
 };
 
 class IDataCollectManagerCallback : public IRemoteBroker {
@@ -38,6 +42,8 @@ public:
     enum {
         CMD_SET_REQUEST_DATA = 1,
     };
+
+    virtual int32_t ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status) = 0;
 };
 } // namespace OHOS::Security::SecurityGuard
 

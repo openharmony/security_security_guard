@@ -29,89 +29,40 @@ namespace OHOS::Security::SecurityGuard {
         } \
     } while (0)
 
-
-inline bool Unmarshal(uint64_t &data, nlohmann::json jsonObj, std::string key)
-{
-    JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, key, number, false);
-    data = jsonObj.at(key).get<uint64_t>();
-    return true;
-}
-
-inline bool Unmarshal(int64_t &data, nlohmann::json jsonObj, std::string key)
-{
-    JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, key, number, false);
-    data = jsonObj.at(key).get<int64_t>();
-    return true;
-}
-
-inline bool Unmarshal(uint32_t &data, nlohmann::json jsonObj, std::string key)
-{
-    JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, key, number, false);
-    data = jsonObj.at(key).get<uint32_t>();
-    return true;
-}
-
-inline bool Unmarshal(int32_t &data, nlohmann::json jsonObj, std::string key)
-{
-    JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, key, number, false);
-    data = jsonObj.at(key).get<int32_t>();
-    return true;
-}
-
-inline bool Unmarshal(std::string &data, nlohmann::json jsonObj, std::string key)
-{
-    JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, key, string, false);
-    data = jsonObj.at(key).get<std::string>();
-    return true;
-}
-
-inline bool Unmarshal(std::vector<int32_t> &data, nlohmann::json jsonObj, std::string key)
-{
-    JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, key, array, false);
-    nlohmann::json arrays = jsonObj.at(key);
-    for (const auto &element : arrays) {
-        if (!element.is_number()) {
-            return false;
-        }
-        data.emplace_back(element.get<int32_t>());
+class JsonCfg {
+public:
+    static bool Unmarshal(uint64_t &data, nlohmann::json jsonObj, std::string key);
+    static bool Unmarshal(int64_t &data, nlohmann::json jsonObj, std::string key);
+    static bool Unmarshal(uint32_t &data, nlohmann::json jsonObj, std::string key);
+    static bool Unmarshal(int32_t &data, nlohmann::json jsonObj, std::string key);
+    static bool Unmarshal(std::string &data, nlohmann::json jsonObj, std::string key);
+    static bool Unmarshal(std::vector<int32_t> &data, nlohmann::json jsonObj, std::string key);
+    static bool Unmarshal(std::vector<std::string> &data, nlohmann::json jsonObj, std::string key);
+    template<typename T>
+    static bool Unmarshal(T &data, nlohmann::json jsonObj, std::string key)
+    {
+        JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, key, object, false);
+        data = jsonObj.at(key).get<T>();
+        return true;
     }
-    return true;
-}
 
-inline bool Unmarshal(std::vector<std::string> &data, nlohmann::json jsonObj, std::string key)
-{
-    JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, key, array, false);
-    nlohmann::json arrays = jsonObj.at(key);
-    for (const auto &element : arrays) {
-        if (!element.is_string()) {
-            return false;
+    template<typename T>
+    static bool Unmarshal(std::vector<T> &data, nlohmann::json jsonObj, std::string key)
+    {
+        JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, key, array, false);
+        nlohmann::json arrays = jsonObj.at(key);
+        for (const auto &element : arrays) {
+            if (!element.is_object()) {
+                return false;
+            }
+            data.emplace_back(element.get<T>());
         }
-        data.emplace_back(element.get<std::string>());
+        return true;
     }
-    return true;
-}
 
-template<typename T>
-static bool Unmarshal(T &data, nlohmann::json jsonObj, std::string key)
-{
-    JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, key, object, false);
-    data = jsonObj.at(key).get<T>();
-    return true;
-}
-
-template<typename T>
-static bool Unmarshal(std::vector<T> &data, nlohmann::json jsonObj, std::string key)
-{
-    JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, key, array, false);
-    nlohmann::json arrays = jsonObj.at(key);
-    for (const auto &element : arrays) {
-        if (!element.is_object()) {
-            return false;
-        }
-        data.emplace_back(element.get<T>());
-    }
-    return true;
-}
+private:
+    JsonCfg() = default;
+};
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_JSON_CFG_H

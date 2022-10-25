@@ -16,6 +16,9 @@
 #ifndef SECURITY_GUARD_RISK_ANALYSIS_MANAGER_PROXY_H
 #define SECURITY_GUARD_RISK_ANALYSIS_MANAGER_PROXY_H
 
+#include <string>
+
+#include "iremote_object.h"
 #include "iremote_proxy.h"
 #include "nocopyable.h"
 
@@ -26,7 +29,8 @@ class RiskAnalysisManagerProxy : public IRemoteProxy<IRiskAnalysisManager>, publ
 public:
     explicit RiskAnalysisManagerProxy(const sptr<IRemoteObject> &impl);
     ~RiskAnalysisManagerProxy() override = default;
-    int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId, const sptr<IRemoteObject> &callback);
+    int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId,
+        const sptr<IRemoteObject> &callback) override;
 
 private:
     static inline BrokerDelegator<RiskAnalysisManagerProxy> delegator_;

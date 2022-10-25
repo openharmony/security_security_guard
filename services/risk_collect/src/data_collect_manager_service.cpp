@@ -18,19 +18,31 @@
 #include <thread>
 #include <vector>
 
+#include "accesstoken_kit.h"
+#include "ipc_skeleton.h"
 #include "string_ex.h"
 
+#include "bigdata.h"
+#include "data_collect_manager_callback_proxy.h"
+#include "data_format.h"
 #include "data_manager_wrapper.h"
+#include "kernel_interface_adapter.h"
 #include "model_analysis.h"
+#include "risk_collect_define.h"
+#include "security_guard_define.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 #include "task_handler.h"
 #include "uevent_listener.h"
+#include "uevent_listener_impl.h"
 #include "uevent_notify.h"
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
-    constexpr int TWO_ARGS = 2;
+    constexpr int32_t TWO_ARGS = 2;
+    constexpr int32_t TIMEOUT_REPLY = 500;
+    const std::string REPORT_PERMISSION = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
+    const std::string REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DataCollectManagerService, DATA_COLLECT_MANAGER_SA_ID, true);
@@ -55,12 +67,14 @@ void DataCollectManagerService::OnStart()
     TaskHandler::GetInstance()->AddTask(loadDbTask);
 
     TaskHandler::Task listenerTask = [] {
-        UeventNotify notify;
-        notify.NotifyScan();
+        KernelInterfaceAdapter adapter;
+        UeventNotify notify(adapter);
         std::vector<int64_t> whiteList = ModelAnalysis::GetInstance().GetAllEventIds();
         notify.AddWhiteList(whiteList);
+        notify.NotifyScan();
 
-        UeventListener listener;
+        UeventListenerImpl impl(adapter);
+        UeventListener listener(impl);
         listener.Start();
     };
     TaskHandler::GetInstance()->AddTask(listenerTask);
@@ -114,5 +128,118 @@ void DataCollectManagerService::DumpEventInfo(int fd, int64_t eventId)
     dprintf(fd, "eventId : %ld\n", eventData.at(0).eventId);
     dprintf(fd, "report time : %s\n", eventData.at(0).date.c_str());
     dprintf(fd, "report version : %s\n", eventData.at(0).version.c_str());
+}
+
+int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::string version, std::string time,
+    std::string content)
+{
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REPORT_PERMISSION);
+    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
+        SGLOGE("caller no permission");
+        return NO_PERMISSION;
+    }
+    if (!DataFormat::CheckRiskContent(content)) {
+        SGLOGE("CheckRiskContent error");
+        return BAD_PARAM;
+    }
+    SGLOGI("eventId=%{public}ld, version=%{public}s, date=%{public}s", eventId, version.c_str(), time.c_str());
+    EventDataSt eventData {
+        .eventId = eventId,
+        .version = version,
+        .date = time,
+        .content = content
+    };
+    TaskHandler::Task task = [eventData] {
+        ErrorCode code = DataManagerWrapper::GetInstance().AddCollectInfo(eventData);
+        if (code != SUCCESS) {
+            SGLOGE("AddCollectInfo error, %{public}d", code);
+        }
+    };
+    TaskHandler::GetInstance()->AddTask(task);
+    return SUCCESS;
+}
+
+int32_t DataCollectManagerService::RequestRiskData(std::string &devId, std::string &eventList,
+    const sptr<IRemoteObject> &callback)
+{
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
+    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
+        SGLOGE("caller no permission");
+        return NO_PERMISSION;
+    }
+    ObatinDataEvent event;
+    auto pid = IPCSkeleton::GetCallingPid();
+    event.pid = pid;
+    event.time = SecurityGuardUtils::GetData();
+    SGLOGI("eventList=%{public}s", eventList.c_str());
+    auto promise = std::make_shared<std::promise<int32_t>>();
+    auto future = promise->get_future();
+    PushDataCollectTask(callback, eventList, devId, promise);
+    std::chrono::milliseconds span(TIMEOUT_REPLY);
+    if (future.wait_for(span) == std::future_status::timeout) {
+        SGLOGE("wait for result timeout");
+        event.size = 0;
+    } else {
+        event.size = future.get();
+    }
+    SGLOGI("ReportObatinDataEvent");
+    BigData::ReportObatinDataEvent(event);
+    return SUCCESS;
+}
+
+void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &object,
+    std::string eventList, std::string devId, std::shared_ptr<std::promise<int32_t>> &promise)
+{
+    TaskHandler::Task task = [=, &promise] () mutable {
+        auto proxy = iface_cast<DataCollectManagerCallbackProxy>(object);
+        if (proxy == nullptr) {
+            promise->set_value(0);
+            return;
+        }
+        std::vector<int64_t> eventListVec;
+        ErrorCode code = DataFormat::ParseEventList(eventList, eventListVec);
+        if (code != SUCCESS) {
+            SGLOGE("ParseEventList error, code=%{public}d", code);
+            std::string empty;
+            proxy->ResponseRiskData(devId, empty, FINISH);
+            promise->set_value(0);
+            return;
+        }
+
+        std::vector<EventDataSt> events;
+        DataManagerWrapper::GetInstance().GetEventDataById(eventListVec, events);
+        int32_t curIndex = 0;
+        int32_t lastIndex = curIndex + MAX_DISTRIBUTE_LENS;
+        auto maxIndex = static_cast<int32_t>(events.size());
+        promise->set_value(maxIndex);
+        SGLOGI("events size=%{public}d", maxIndex);
+        std::vector<EventDataSt> dispatchVec;
+
+        while (lastIndex < maxIndex) {
+            std::string dispatch;
+            dispatchVec.assign(events.begin() + curIndex, events.begin() + lastIndex);
+            for (const EventDataSt& event : dispatchVec) {
+                nlohmann::json jsonObj(event);
+                dispatch += jsonObj.dump();
+            }
+
+            (void) proxy->ResponseRiskData(devId, dispatch, CONTINUE);
+            curIndex = lastIndex;
+            lastIndex = curIndex + MAX_DISTRIBUTE_LENS;
+        }
+
+        // last dispatch
+        std::string dispatch;
+        dispatchVec.assign(events.begin() + curIndex, events.end());
+        for (const EventDataSt &event : dispatchVec) {
+            nlohmann::json jsonObj(event);
+            dispatch += jsonObj.dump();
+        }
+        (void) proxy->ResponseRiskData(devId, dispatch, FINISH);
+    };
+
+    TaskHandler::GetInstance()->AddTask(task);
 }
 }

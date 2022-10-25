@@ -31,6 +31,9 @@ public:
     enum {
         CMD_GET_SECURITY_MODEL_RESULT = 2,
     };
+
+    virtual int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId,
+        const sptr<IRemoteObject> &callback) = 0;
 };
 
 class IRiskAnalysisManagerCallback : public IRemoteBroker {
@@ -39,6 +42,8 @@ public:
     enum {
         CMD_SET_SECURITY_MODEL_RESULT = 1,
     };
+
+    virtual int32_t ResponseSecurityModelResult(std::string &devId, uint32_t modelId, std::string &result) = 0;
 };
 } // namespace OHOS::Security::SecurityGuard
 

@@ -16,6 +16,8 @@
 #ifndef SECURITY_GUARD_DATA_COLLECT_MANAGER_SERVICE_H
 #define SECURITY_GUARD_DATA_COLLECT_MANAGER_SERVICE_H
 
+#include <future>
+
 #include "nocopyable.h"
 #include "system_ability.h"
 
@@ -31,9 +33,13 @@ public:
     void OnStart() override;
     void OnStop() override;
     int Dump(int fd, const std::vector<std::u16string>& args) override;
+    int32_t RequestDataSubmit(int64_t eventId, std::string version, std::string time, std::string content) override;
+    int32_t RequestRiskData(std::string &devId, std::string &eventList, const sptr<IRemoteObject> &callback) override;
 
 private:
     void DumpEventInfo(int fd, int64_t eventId);
+    static void PushDataCollectTask(const sptr<IRemoteObject> &object, std::string eventList, std::string devId,
+        std::shared_ptr<std::promise<int32_t>> &promise);
 };
 } // namespace OHOS::Security::SecurityGuard
 

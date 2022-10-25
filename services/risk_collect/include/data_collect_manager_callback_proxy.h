@@ -16,7 +16,7 @@
 #ifndef SECURITY_GUARD_DATA_COLLECT_MANAGER_CALLBACK_PROXY_H
 #define SECURITY_GUARD_DATA_COLLECT_MANAGER_CALLBACK_PROXY_H
 
-#include <cstring>
+#include <string>
 
 #include "iremote_object.h"
 #include "iremote_proxy.h"
@@ -29,7 +29,7 @@ class DataCollectManagerCallbackProxy : public IRemoteProxy<IDataCollectManagerC
 public:
     explicit DataCollectManagerCallbackProxy(const sptr<IRemoteObject> &impl);
     ~DataCollectManagerCallbackProxy() override = default;
-    int32_t ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status);
+    int32_t ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status) override;
 
 private:
     static inline BrokerDelegator<DataCollectManagerCallbackProxy> delegator_;

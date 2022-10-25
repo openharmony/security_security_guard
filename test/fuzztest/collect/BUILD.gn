@@ -13,7 +13,5 @@
 
 group("fuzztest") {
   testonly = true
-  deps = [
-    "report_security_info_fuzzer:report_security_info",
-  ]
+  deps = [ "reportsecurityinfo_fuzzer:ReportSecurityInfoFuzzTest" ]
 }

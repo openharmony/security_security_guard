@@ -34,15 +34,19 @@ namespace {
     const std::string SEP = ";";
 }
 
+UeventNotify::UeventNotify(KernelInterfaceAdapter &adapter) : adapter_(adapter)
+{
+}
+
 void UeventNotify::NotifyScan()
 {
-    int32_t fd = open(PROC_KERNEL_SG, O_WRONLY | O_NOFOLLOW | O_CLOEXEC);
+    int32_t fd = adapter_.Open(PROC_KERNEL_SG, O_WRONLY | O_NOFOLLOW | O_CLOEXEC);
     if (fd < 0) {
         SGLOGE("open error, %{public}s", strerror(errno));
         return;
     }
 
-    ssize_t ret = write(fd, START_SCAN, START_SCAN_LEN);
+    ssize_t ret = adapter_.Write(fd, START_SCAN, START_SCAN_LEN);
     if (ret != static_cast<ssize_t>(START_SCAN_LEN)) {
         SGLOGE("write error, %{public}s", strerror(errno));
         close(fd);
@@ -57,7 +61,7 @@ void UeventNotify::AddWhiteList(const std::vector<int64_t> &whitelist)
         SGLOGE("whitelist is empty");
         return;
     }
-    int32_t fd = open(PROC_KERNEL_SG, O_WRONLY | O_NOFOLLOW | O_CLOEXEC);
+    int32_t fd = adapter_.Open(PROC_KERNEL_SG, O_WRONLY | O_NOFOLLOW | O_CLOEXEC);
     if (fd < 0) {
         SGLOGE("open error, %{public}s", strerror(errno));
         return;
@@ -69,7 +73,7 @@ void UeventNotify::AddWhiteList(const std::vector<int64_t> &whitelist)
         buf += SEP + std::to_string(eventId);
     }
 
-    ssize_t ret = write(fd, buf.c_str(), buf.length());
+    ssize_t ret = adapter_.Write(fd, buf.c_str(), buf.length());
     if (ret != static_cast<ssize_t>(buf.length())) {
         SGLOGE("write error, %{public}s", strerror(errno));
         close(fd);

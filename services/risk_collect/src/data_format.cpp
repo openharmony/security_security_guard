@@ -18,6 +18,7 @@
 #include "json_cfg.h"
 #include "model_analysis_define.h"
 #include "model_cfg_marshalling.h"
+#include "security_guard_define.h"
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -40,18 +41,41 @@ bool DataFormat::CheckRiskContent(std::string content)
     }
 
     EventContentSt eventContentSt;
-    if (!Unmarshal(eventContentSt.status, jsonObj, EVENT_CONTENT_STATUS_KEY)) {
+    if (!JsonCfg::Unmarshal(eventContentSt.status, jsonObj, EVENT_CONTENT_STATUS_KEY)) {
         SGLOGE("status parse error");
         return false;
     }
-    if (!Unmarshal(eventContentSt.cred, jsonObj, EVENT_CONTENT_CRED_KEY)) {
+    if (!JsonCfg::Unmarshal(eventContentSt.cred, jsonObj, EVENT_CONTENT_CRED_KEY)) {
         SGLOGE("cred parse error");
         return false;
     }
-    if (!Unmarshal(eventContentSt.extra, jsonObj, EVENT_CONTENT_EXTRA_KEY)) {
+    if (!JsonCfg::Unmarshal(eventContentSt.extra, jsonObj, EVENT_CONTENT_EXTRA_KEY)) {
         SGLOGE("extra parse error");
         return false;
     }
     return true;
+}
+
+ErrorCode DataFormat::ParseEventList(std::string eventList, std::vector<int64_t> &eventListVec)
+{
+    nlohmann::json jsonObj = nlohmann::json::parse(eventList, nullptr, false);
+    if (jsonObj.is_discarded()) {
+        SGLOGE("json parse error");
+        return JSON_ERR;
+    }
+
+    JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, EVENT_CFG_EVENT_ID_KEY, array, JSON_ERR);
+    ErrorCode code = FAILED;
+    nlohmann::json &eventListJson = jsonObj[EVENT_CFG_EVENT_ID_KEY];
+    for (const auto& event : eventListJson) {
+        if (!event.is_number()) {
+            SGLOGE("event type is error");
+            continue;
+        }
+        eventListVec.emplace_back(event);
+        code = SUCCESS;
+    }
+
+    return code;
 }
 }

@@ -13,23 +13,33 @@
  * limitations under the License.
  */
 
-#include "request_security_model_result_sync_fuzzer.h"
+#include "request_security_model_result_async_fuzzer.h"
 
 #include <string>
 
-#include "security_model_result.h"
+#include "securec.h"
+
 #include "sg_classify_client.h"
 
 #undef private
 
-using namespace OHOS::Security::SecurityGuard;
+extern "C" int32_t RequestSecurityEventInfoAsync(const DeviceIdentify *devId, const char *eventJson,
+    RequestSecurityEventInfoCallBack callback);
+
 namespace OHOS {
+static void SecurityGuardRiskCallbackFunc(SecurityModelResult *result)
+{
+    (void)result;
+}
+
 bool RequestSecurityModelResultAsyncFuzzTest(const uint8_t* data, size_t size)
 {
-    std::string devId(reinterpret_cast<const char*>(data), size);
+    DeviceIdentify deviceIdentify = {};
+    uint32_t cpyLen = size > DEVICE_ID_MAX_LEN ? DEVICE_ID_MAX_LEN : static_cast<uint32_t>(size);
+    (void) memcpy_s(deviceIdentify.identity, DEVICE_ID_MAX_LEN, data, cpyLen);
+    deviceIdentify.length = cpyLen;
     uint32_t modelId = rand() % (size + 1);
-    std::shared_ptr<SecurityModelResult> result = std::make_shared<SecurityModelResult>();
-    RiskAnalysisManagerKit::RequestSecurityModelResultSync(devId, modelId, result);
+    RequestSecurityModelResultAsync(&deviceIdentify, modelId, SecurityGuardRiskCallbackFunc);
     return true;
 }
 }  // namespace OHOS

@@ -15,8 +15,6 @@
 
 #include "risk_analysis_manager_callback_proxy.h"
 
-#include "security_guard_log.h"
-
 namespace OHOS::Security::SecurityGuard {
 RiskAnalysisManagerCallbackProxy::RiskAnalysisManagerCallbackProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IRiskAnalysisManagerCallback>(impl)

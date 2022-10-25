@@ -16,7 +16,7 @@
 #ifndef SECURITY_GUARD_REPORT_SECURITY_INFO_FUZZER_H
 #define SECURITY_GUARD_REPORT_SECURITY_INFO_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "generatecert_fuzzer"
+#define FUZZ_PROJECT_NAME "report_security_info_fuzzer"
 
 namespace OHOS {}  // namespace OHOS
 

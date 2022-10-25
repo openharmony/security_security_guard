@@ -15,25 +15,30 @@
 
 #include "iservice_registry.h"
 
-#include "data_collect_proxy.h"
+#include "data_collect_manager_proxy.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
+#include "security_guard_utils.h"
 #include "sg_collect_client.h"
 
 namespace OHOS::Security::SecurityGuard {
 int32_t NativeDataCollectKit::ReportSecurityInfo(const std::shared_ptr<EventInfo> &info)
 {
+    if (info == nullptr) {
+        return BAD_PARAM;
+    }
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         return {};
     }
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = new (std::nothrow) DataCollectProxy(object);
+    auto proxy = iface_cast<DataCollectManagerProxy>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is nullptr");
         return NULL_OBJECT;
     }
-    int32_t ret = proxy->RequestDataSubmit(info);
+    int32_t ret = proxy->RequestDataSubmit(info->GetEventId(), info->GetVersion(),
+        SecurityGuardUtils::GetData(), info->GetContent());
     if (ret != SUCCESS) {
         SGLOGE("RequestSecurityInfo error, ret=%{public}d", ret);
         return ret;
@@ -41,3 +46,28 @@ int32_t NativeDataCollectKit::ReportSecurityInfo(const std::shared_ptr<EventInfo
     return SUCCESS;
 }
 }
+
+static int32_t ReportSecurityInfoImpl(const struct EventInfoSt *info)
+{
+    if (info == nullptr) {
+        return OHOS::Security::SecurityGuard::BAD_PARAM;
+    }
+    int64_t eventId = info->eventId;
+    std::string version(info->version);
+    std::string content(reinterpret_cast<const char *>(info->content));
+    auto eventInfo = std::make_shared<OHOS::Security::SecurityGuard::EventInfo>(eventId, version, content);
+    return OHOS::Security::SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(eventInfo);
+}
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int32_t ReportSecurityInfo(const struct EventInfoSt *info)
+{
+    return ReportSecurityInfoImpl(info);
+}
+
+#ifdef __cplusplus
+}
+#endif

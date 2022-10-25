@@ -19,8 +19,6 @@
 #include <memory>
 #include <mutex>
 
-#include "distributed_kv_data_manager.h"
-
 #include "database.h"
 
 namespace OHOS::Security::SecurityGuard {

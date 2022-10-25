@@ -18,10 +18,7 @@
 
 #include "iremote_stub.h"
 
-#include <future>
-
 #include "i_data_collect_manager.h"
-#include "security_guard_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 class DataCollectManagerStub : public IRemoteStub<IDataCollectManager> {
@@ -32,11 +29,8 @@ public:
         MessageOption& option) override;
 
 private:
-    static ErrorCode HandleDataCollectCmd(MessageParcel &data, MessageParcel &reply);
-    static ErrorCode HandleDataRequestCmd(MessageParcel &data, MessageParcel &reply);
-    static ErrorCode ParseEventList(std::string eventList, std::vector<int64_t> &eventListVec);
-    static void PushDataCollectTask(sptr<IRemoteObject> &object, std::string eventList, std::string devId,
-        std::shared_ptr<std::promise<int32_t>> &promise);
+    int32_t HandleDataCollectCmd(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleDataRequestCmd(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace OHOS::Security::SecurityGuard
 

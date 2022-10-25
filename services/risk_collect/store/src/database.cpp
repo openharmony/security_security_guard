@@ -56,7 +56,7 @@ bool Database::CheckKvStore()
 {
     std::lock_guard<std::mutex> lock(kvStorePtrMutex_);
     if (kvStorePtr_ != nullptr) {
-        SGLOGE("[sg_db] GetSingleKvStore not null!");
+        SGLOGD("[sg_db] GetSingleKvStore not null!");
         return true;
     }
 

@@ -16,6 +16,8 @@
 #ifndef SECURITY_GUARD_RISK_COLLECT_DEFINE_H
 #define SECURITY_GUARD_RISK_COLLECT_DEFINE_H
 
+#include <string>
+
 namespace OHOS::Security::SecurityGuard {
 using DISTRIBUTE_STATUS = enum {
     FINISH,

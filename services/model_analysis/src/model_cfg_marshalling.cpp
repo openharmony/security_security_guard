@@ -41,16 +41,16 @@ void to_json(json &jsonObj, const ModelCfgSt &modelCfg)
 void from_json(const json &jsonObj, ModelCfgSt &modelCfg)
 {
     std::string modelId;
-    Unmarshal(modelId, jsonObj, MODEL_CFG_MODEL_ID_KEY);
+    JsonCfg::Unmarshal(modelId, jsonObj, MODEL_CFG_MODEL_ID_KEY);
     uint32_t value = 0;
     if (!SecurityGuardUtils::StrToU32(modelId, value)) {
         return;
     }
     modelCfg.modelId = value;
-    Unmarshal(modelCfg.modelName, jsonObj, MODEL_CFG_MODEL_NAME_KEY);
-    Unmarshal(modelCfg.version, jsonObj, MODEL_CFG_VERSION_KEY);
+    JsonCfg::Unmarshal(modelCfg.modelName, jsonObj, MODEL_CFG_MODEL_NAME_KEY);
+    JsonCfg::Unmarshal(modelCfg.version, jsonObj, MODEL_CFG_VERSION_KEY);
     std::vector<std::string> threatList;
-    Unmarshal(threatList, jsonObj, MODEL_CFG_THREAT_LIST_KEY);
+    JsonCfg::Unmarshal(threatList, jsonObj, MODEL_CFG_THREAT_LIST_KEY);
     for (const std::string& threat : threatList) {
         uint32_t tmp = 0;
         if (!SecurityGuardUtils::StrToU32(threat, tmp)) {
@@ -58,7 +58,7 @@ void from_json(const json &jsonObj, ModelCfgSt &modelCfg)
         }
         modelCfg.threatList.emplace_back(tmp);
     }
-    Unmarshal(modelCfg.computeModel, jsonObj, MODEL_CFG_COMPUTE_MODEL_KEY);
+    JsonCfg::Unmarshal(modelCfg.computeModel, jsonObj, MODEL_CFG_COMPUTE_MODEL_KEY);
 }
 
 void to_json(json &jsonObj, const ThreatCfgSt &threatCfg)
@@ -80,16 +80,16 @@ void to_json(json &jsonObj, const ThreatCfgSt &threatCfg)
 void from_json(const json &jsonObj, ThreatCfgSt &threatCfg)
 {
     std::string threatId;
-    Unmarshal(threatId, jsonObj, THREAT_CFG_THREAT_ID_KEY);
+    JsonCfg::Unmarshal(threatId, jsonObj, THREAT_CFG_THREAT_ID_KEY);
     uint32_t value = 0;
     if (!SecurityGuardUtils::StrToU32(threatId, value)) {
         return;
     }
     threatCfg.threatId = value;
-    Unmarshal(threatCfg.threatName, jsonObj, THREAT_CFG_THREAT_NAME_KEY);
-    Unmarshal(threatCfg.version, jsonObj, THREAT_CFG_VERSION_KEY);
+    JsonCfg::Unmarshal(threatCfg.threatName, jsonObj, THREAT_CFG_THREAT_NAME_KEY);
+    JsonCfg::Unmarshal(threatCfg.version, jsonObj, THREAT_CFG_VERSION_KEY);
     std::vector<std::string> eventList;
-    Unmarshal(eventList, jsonObj, THREAT_CFG_EVENT_LIST_KEY);
+    JsonCfg::Unmarshal(eventList, jsonObj, THREAT_CFG_EVENT_LIST_KEY);
     for (const std::string& event : eventList) {
         int64_t tmp = 0;
         if (!SecurityGuardUtils::StrToI64(event, tmp)) {
@@ -97,7 +97,7 @@ void from_json(const json &jsonObj, ThreatCfgSt &threatCfg)
         }
         threatCfg.eventList.emplace_back(tmp);
     }
-    Unmarshal(threatCfg.computeModel, jsonObj, THREAT_CFG_COMPUTE_MODEL_KEY);
+    JsonCfg::Unmarshal(threatCfg.computeModel, jsonObj, THREAT_CFG_COMPUTE_MODEL_KEY);
 }
 
 void to_json(json &jsonObj, const EventCfgSt &eventCfg)
@@ -116,18 +116,18 @@ void to_json(json &jsonObj, const EventCfgSt &eventCfg)
 void from_json(const json &jsonObj, EventCfgSt &eventCfg)
 {
     std::string eventId;
-    Unmarshal(eventId, jsonObj, EVENT_CFG_EVENT_ID_KEY);
+    JsonCfg::Unmarshal(eventId, jsonObj, EVENT_CFG_EVENT_ID_KEY);
     int64_t value = 0;
     if (!SecurityGuardUtils::StrToI64(eventId, value)) {
         return;
     }
     eventCfg.eventId = value;
-    Unmarshal(eventCfg.eventName, jsonObj, EVENT_CFG_EVENT_NAME_KEY);
-    Unmarshal(eventCfg.version, jsonObj, EVENT_CFG_VERSION_KEY);
-    Unmarshal(eventCfg.eventType, jsonObj, EVENT_CFG_EVENT_TYPE_KEY);
-    Unmarshal(eventCfg.dataSensitivityLevel, jsonObj, EVENT_CFG_DATA_SENSITIVITY_LEVEL_KEY);
-    Unmarshal(eventCfg.storageRamNums, jsonObj, EVENT_CFG_STORAGE_RAM_NUM_KEY);
-    Unmarshal(eventCfg.storageRomNums, jsonObj, EVENT_CFG_STORAGE_ROM_NUM_KEY);
+    JsonCfg::Unmarshal(eventCfg.eventName, jsonObj, EVENT_CFG_EVENT_NAME_KEY);
+    JsonCfg::Unmarshal(eventCfg.version, jsonObj, EVENT_CFG_VERSION_KEY);
+    JsonCfg::Unmarshal(eventCfg.eventType, jsonObj, EVENT_CFG_EVENT_TYPE_KEY);
+    JsonCfg::Unmarshal(eventCfg.dataSensitivityLevel, jsonObj, EVENT_CFG_DATA_SENSITIVITY_LEVEL_KEY);
+    JsonCfg::Unmarshal(eventCfg.storageRamNums, jsonObj, EVENT_CFG_STORAGE_RAM_NUM_KEY);
+    JsonCfg::Unmarshal(eventCfg.storageRomNums, jsonObj, EVENT_CFG_STORAGE_ROM_NUM_KEY);
 }
 
 void to_json(json &jsonObj, const DataMgrCfgSt &dataMgrCfg)
@@ -142,10 +142,10 @@ void to_json(json &jsonObj, const DataMgrCfgSt &dataMgrCfg)
 
 void from_json(const json &jsonObj, DataMgrCfgSt &dataMgrCfg)
 {
-    Unmarshal(dataMgrCfg.deviceRam, jsonObj, DATA_MGR_DEVICE_RAM_KEY);
-    Unmarshal(dataMgrCfg.deviceRom, jsonObj, DATA_MGR_DEVICE_ROM_KEY);
-    Unmarshal(dataMgrCfg.eventMaxRamNum, jsonObj, DATA_MGR_EVENT_MAX_RAM_NUM_KEY);
-    Unmarshal(dataMgrCfg.eventMaxRomNum, jsonObj, DATA_MGR_EVENT_MAX_ROM_NUM_KEY);
+    JsonCfg::Unmarshal(dataMgrCfg.deviceRam, jsonObj, DATA_MGR_DEVICE_RAM_KEY);
+    JsonCfg::Unmarshal(dataMgrCfg.deviceRom, jsonObj, DATA_MGR_DEVICE_ROM_KEY);
+    JsonCfg::Unmarshal(dataMgrCfg.eventMaxRamNum, jsonObj, DATA_MGR_EVENT_MAX_RAM_NUM_KEY);
+    JsonCfg::Unmarshal(dataMgrCfg.eventMaxRomNum, jsonObj, DATA_MGR_EVENT_MAX_ROM_NUM_KEY);
 }
 
 void to_json(json &jsonObj, const EventDataSt &eventDataSt)
@@ -160,10 +160,10 @@ void to_json(json &jsonObj, const EventDataSt &eventDataSt)
 
 void from_json(const json &jsonObj, EventDataSt &eventDataSt)
 {
-    Unmarshal(eventDataSt.eventId, jsonObj, EVENT_DATA_EVENT_ID_KEY);
-    Unmarshal(eventDataSt.version, jsonObj, EVENT_DATA_VERSION_KEY);
-    Unmarshal(eventDataSt.date, jsonObj, EVENT_DATA_DATE_KEY);
-    Unmarshal(eventDataSt.content, jsonObj, EVENT_DATA_EVENT_CONTENT_KEY);
+    JsonCfg::Unmarshal(eventDataSt.eventId, jsonObj, EVENT_DATA_EVENT_ID_KEY);
+    JsonCfg::Unmarshal(eventDataSt.version, jsonObj, EVENT_DATA_VERSION_KEY);
+    JsonCfg::Unmarshal(eventDataSt.date, jsonObj, EVENT_DATA_DATE_KEY);
+    JsonCfg::Unmarshal(eventDataSt.content, jsonObj, EVENT_DATA_EVENT_CONTENT_KEY);
 }
 
 void to_json(json &jsonObj, const EventContentSt &eventContentSt)
@@ -177,8 +177,8 @@ void to_json(json &jsonObj, const EventContentSt &eventContentSt)
 
 void from_json(const json &jsonObj, EventContentSt &eventContentSt)
 {
-    Unmarshal(eventContentSt.status, jsonObj, EVENT_CONTENT_STATUS_KEY);
-    Unmarshal(eventContentSt.cred, jsonObj, EVENT_CONTENT_CRED_KEY);
-    Unmarshal(eventContentSt.extra, jsonObj, EVENT_CONTENT_EXTRA_KEY);
+    JsonCfg::Unmarshal(eventContentSt.status, jsonObj, EVENT_CONTENT_STATUS_KEY);
+    JsonCfg::Unmarshal(eventContentSt.cred, jsonObj, EVENT_CONTENT_CRED_KEY);
+    JsonCfg::Unmarshal(eventContentSt.extra, jsonObj, EVENT_CONTENT_EXTRA_KEY);
 }
 }

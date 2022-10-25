@@ -18,8 +18,6 @@
 
 #define FUZZ_PROJECT_NAME "request_security_event_info_async_fuzzer"
 
-#include "sg_obtaindata_client.h"
-
 namespace OHOS {}  // namespace OHOS
 
 #endif  // SECURITY_GUARD_REQUEST_SECURITY_EVENT_INFO_ASYNC_FUZZER_H

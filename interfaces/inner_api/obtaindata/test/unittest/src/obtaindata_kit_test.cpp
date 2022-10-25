@@ -14,11 +14,20 @@
  */
 
 #include "obtaindata_kit_test.h"
-#include "security_guard_define.h"
+
+#include "sg_obtaindata_client.h"
 
 using namespace testing::ext;
 using namespace OHOS::Security::SecurityGuardTest;
-using namespace OHOS::Security::SecurityGuard;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    int32_t RequestSecurityModelResultAsync(const DeviceIdentify *devId, uint32_t modelId,
+        SecurityGuardRiskCallback callback);
+#ifdef __cplusplus
+}
+#endif
 
 namespace OHOS::Security::SecurityGuardTest {
 void ObtainDataKitTest::SetUpTestCase()
@@ -31,11 +40,17 @@ void ObtainDataKitTest::TearDownTestCase()
 
 void ObtainDataKitTest::SetUp()
 {
-    callback_ = std::make_shared<RequestSecurityEventInfoCallbackMock>();
 }
 
 void ObtainDataKitTest::TearDown()
 {
+}
+
+void ObtainDataKitTest::RequestSecurityEventInfoCallBackFunc(const DeviceIdentify *devId, const char *eventBuffList,
+    uint32_t status)
+{
+    EXPECT_TRUE(devId != nullptr);
+    EXPECT_TRUE(eventBuffList != nullptr);
 }
 
 /**
@@ -46,10 +61,10 @@ void ObtainDataKitTest::TearDown()
  */
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync001, TestSize.Level1)
 {
-    static std::string devId = "";
+    DeviceIdentify deviceIdentify = {};
     static std::string eventList = "{\"eventId\":[1011009000]}";
-    int ret = ObtainDataKit::RequestSecurityEventInfoAsync(devId, eventList, callback_);
-    EXPECT_EQ(ret, SUCCESS);
+    int ret = RequestSecurityEventInfoAsync(&deviceIdentify, eventList.c_str(), RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
 
 /**
@@ -60,10 +75,10 @@ HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync001, TestSize.Level1)
  */
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync002, TestSize.Level1)
 {
-    static std::string devId = "";
+    DeviceIdentify deviceIdentify = {};
     static std::string eventList = "{\"eventId\":[-1]}";
-    int ret = ObtainDataKit::RequestSecurityEventInfoAsync(devId, eventList, callback_);
-    EXPECT_EQ(ret, SUCCESS);
+    int ret = RequestSecurityEventInfoAsync(&deviceIdentify, eventList.c_str(), RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
 
 /**
@@ -74,10 +89,10 @@ HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync002, TestSize.Level1)
  */
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync003, TestSize.Level1)
 {
-    static std::string devId = "";
+    DeviceIdentify deviceIdentify = {};
     static std::string eventList = "{\"eventIds\":[1011009000]}";
-    int ret = ObtainDataKit::RequestSecurityEventInfoAsync(devId, eventList, callback_);
-    EXPECT_EQ(ret, SUCCESS);
+    int ret = RequestSecurityEventInfoAsync(&deviceIdentify, eventList.c_str(), RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
 
 /**
@@ -88,10 +103,10 @@ HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync003, TestSize.Level1)
  */
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync004, TestSize.Level1)
 {
-    static std::string devId = "";
+    DeviceIdentify deviceIdentify = {};
     static std::string eventList = "{eventId:[1011009000]}";
-    int ret = ObtainDataKit::RequestSecurityEventInfoAsync(devId, eventList, callback_);
-    EXPECT_EQ(ret, SUCCESS);
+    int ret = RequestSecurityEventInfoAsync(&deviceIdentify, eventList.c_str(), RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
 
 /**
@@ -102,10 +117,10 @@ HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync004, TestSize.Level1)
  */
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync005, TestSize.Level1)
 {
-    static std::string devId = "";
+    DeviceIdentify deviceIdentify = {};
     static std::string eventList = "{\"eventIds\":[]}";
-    int ret = ObtainDataKit::RequestSecurityEventInfoAsync(devId, eventList, callback_);
-    EXPECT_EQ(ret, SUCCESS);
+    int ret = RequestSecurityEventInfoAsync(&deviceIdentify, eventList.c_str(), RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
 
 /**
@@ -116,9 +131,35 @@ HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync005, TestSize.Level1)
  */
 HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync006, TestSize.Level1)
 {
-    static std::string devId = "";
+    DeviceIdentify deviceIdentify = {};
     static std::string eventList = "{\"eventIds\":[0]}";
-    int ret = ObtainDataKit::RequestSecurityEventInfoAsync(devId, eventList, callback_);
-    EXPECT_EQ(ret, SUCCESS);
+    int ret = RequestSecurityEventInfoAsync(&deviceIdentify, eventList.c_str(), RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+}
+
+/**
+ * @tc.name: RequestSecurityEventInfoAsync007
+ * @tc.desc: RequestSecurityEventInfoAsync with null devId
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
+HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync007, TestSize.Level1)
+{
+    static std::string eventList = "{\"eventIds\":[0]}";
+    int ret = RequestSecurityEventInfoAsync(nullptr, eventList.c_str(), RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+}
+
+/**
+ * @tc.name: RequestSecurityEventInfoAsync008
+ * @tc.desc: RequestSecurityEventInfoAsync with null eventList
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
+HWTEST_F(ObtainDataKitTest, RequestSecurityEventInfoAsync008, TestSize.Level1)
+{
+    DeviceIdentify deviceIdentify = {};
+    int ret = RequestSecurityEventInfoAsync(&deviceIdentify, nullptr, RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
 }
 }

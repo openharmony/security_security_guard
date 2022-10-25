@@ -27,10 +27,12 @@ ohos_unittest("SecurityGuardUnitTest") {
     "${sg_root_dir}/services/risk_classify/include",
     "${sg_root_dir}/services/risk_collect/include",
     "${sg_root_dir}/frameworks/common/constants/include",
+    "${sg_root_dir}/frameworks/common/interfaces",
     "${sg_root_dir}/frameworks/common/json/include",
     "${sg_root_dir}/frameworks/common/task_handler/include",
     "${sg_root_dir}/frameworks/common/database/include",
     "${sg_root_dir}/frameworks/common/log/include",
+    "${sg_root_dir}/frameworks/common/utils/include",
     "${sg_root_dir}/services/model_analysis/include",
     "${sg_root_dir}/services/risk_classify/include",
     "${sg_root_dir}/services/risk_collect/include",
@@ -40,28 +42,29 @@ ohos_unittest("SecurityGuardUnitTest") {
   ]
 
   sources = [
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "security_guard_test.cpp",
   ]
 
   cflags_cc = [ "-DHILOG_ENABLE" ]
 
   deps = [
-    "//third_party/googletest:gmock",
-    "${sg_root_dir}/services/model_analysis:sg_model_analysis",
-    "${sg_root_dir}/services/risk_classify:sg_classify_service",
-    "${sg_root_dir}/services/risk_collect:sg_collect_service",
     "${sg_root_dir}/interfaces/inner_api/classify:libsg_classify_sdk",
     "${sg_root_dir}/interfaces/inner_api/collect:libsg_collect_sdk",
     "${sg_root_dir}/interfaces/inner_api/obtaindata:libsg_obtaindata_sdk",
+    "${sg_root_dir}/services/model_analysis:sg_model_analysis",
+    "${sg_root_dir}/services/risk_classify:sg_classify_service",
+    "${sg_root_dir}/services/risk_collect:sg_collect_service",
+    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
-    "kv_store:distributeddata_inner",
-    "hiviewdfx_hilog_native:libhilog",
     "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "samgr:samgr_proxy",
+    "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 }
 

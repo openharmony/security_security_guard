@@ -28,21 +28,20 @@ ohos_shared_library("sg_model_analysis") {
   ]
 
   sources = [
+    "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/model_analysis/src/data_mgr_cfg.cpp",
     "${sg_root_dir}/services/model_analysis/src/event_config.cpp",
     "${sg_root_dir}/services/model_analysis/src/model_analysis.cpp",
     "${sg_root_dir}/services/model_analysis/src/model_cfg_marshalling.cpp",
     "${sg_root_dir}/services/model_analysis/src/model_config.cpp",
     "${sg_root_dir}/services/model_analysis/src/threat_config.cpp",
-    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
   ]
 
-  cflags_cc = [
-    "-DHILOG_ENABLE"
-  ]
+  cflags_cc = [ "-DHILOG_ENABLE" ]
 
   external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
     "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
   ]
 }

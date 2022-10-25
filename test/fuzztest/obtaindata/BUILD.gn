@@ -13,7 +13,5 @@
 
 group("fuzztest") {
   testonly = true
-  deps = [
-    "request_security_event_info_async_fuzzer:request_security_event_info_async",
-  ]
+  deps = [ "requestsecurityeventinfoasync_fuzzer:RequestSecurityEventInfoAsyncFuzzTest" ]
 }

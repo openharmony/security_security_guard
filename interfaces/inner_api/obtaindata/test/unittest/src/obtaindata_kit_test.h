@@ -18,7 +18,6 @@
 
 #include <gtest/gtest.h>
 
-#include "sg_obtaindata_client.h"
 #include "security_guard_define.h"
 
 namespace OHOS::Security::SecurityGuardTest {
@@ -32,17 +31,8 @@ public:
 
     void TearDown() override;
 
-    class RequestSecurityEventInfoCallbackMock : public SecurityGuard::RequestSecurityEventInfoCallback {
-    public:
-        RequestSecurityEventInfoCallbackMock() = default;
-        ~RequestSecurityEventInfoCallbackMock() override = default;
-        int32_t OnSecurityEventInfoResult(std::string &devId, std::string &riskData, uint32_t status) override
-        {
-            return SecurityGuard::ErrorCode::SUCCESS;
-        }
-    };
-
-    std::shared_ptr<SecurityGuard::RequestSecurityEventInfoCallback> callback_;
+    static void RequestSecurityEventInfoCallBackFunc(const DeviceIdentify *devId, const char *eventBuffList,
+        uint32_t status);
 };
 } // namespace OHOS::Security::SecurityGuardTest
 

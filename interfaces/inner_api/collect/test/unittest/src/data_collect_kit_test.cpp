@@ -15,18 +15,41 @@
 
 #include "data_collect_kit_test.h"
 
-#include "sg_collect_client.h"
-#include "event_info.h"
+#include "nativetoken_kit.h"
+#include "securec.h"
+#include "token_setproc.h"
+
 #include "security_guard_define.h"
-#include "security_guard_log.h"
+#include "sg_collect_client.h"
 
 using namespace testing::ext;
 using namespace OHOS::Security::SecurityGuardTest;
-using namespace OHOS::Security::SecurityGuard;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    int32_t ReportSecurityInfo(const struct EventInfoSt *info);
+#ifdef __cplusplus
+}
+#endif
 
 namespace OHOS::Security::SecurityGuardTest {
 void DataCollectKitTest::SetUpTestCase()
 {
+    static const char *PERMISSION[] = { "ohos.permission.securityguard.REPORT_SECURITY_INFO" };
+    uint64_t tokenId;
+    NativeTokenInfoParams infoParams = {
+        .dcapsNum = 0,
+        .permsNum = 1,
+        .aclsNum = 0,
+        .dcaps = nullptr,
+        .perms = PERMISSION,
+        .acls = nullptr,
+        .processName = "security_guard",
+        .aplStr = "system_basic",
+    };
+    tokenId = GetAccessTokenId(&infoParams);
+    SetSelfTokenID(tokenId);
 }
 
 void DataCollectKitTest::TearDownTestCase()
@@ -52,9 +75,15 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo001, TestSize.Level1)
     static int64_t eventId = 1011009000;
     static std::string version = "0";
     static std::string content = "{\"cred\":0,\"extra\":\"\",\"status\":0}";
-    std::shared_ptr<EventInfo> eventInfo = std::make_shared<EventInfo>(eventId, version, content);
-    int ret = NativeDataCollectKit::ReportSecurityInfo(eventInfo);
-    EXPECT_EQ(ret, SUCCESS);
+    EventInfoSt info;
+    info.eventId = eventId;
+    info.version = version.c_str();
+    (void) memset_s(info.content, CONTENT_MAX_LEN, 0, CONTENT_MAX_LEN);
+    errno_t rc = memcpy_s(info.content, CONTENT_MAX_LEN, content.c_str(), content.length());
+    EXPECT_TRUE(rc == EOK);
+    info.contentLen = static_cast<uint32_t>(content.length());
+    int ret = ReportSecurityInfo(&info);
+    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
 }
 
 /**
@@ -68,9 +97,15 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo002, TestSize.Level1)
     static int64_t eventId = 1011009000;
     static std::string version = "0";
     static std::string content = "{\"cred\":\"0\",\"extra\":\"\",\"status\":0}";
-    std::shared_ptr<EventInfo> eventInfo = std::make_shared<EventInfo>(eventId, version, content);
-    int ret = NativeDataCollectKit::ReportSecurityInfo(eventInfo);
-    EXPECT_EQ(ret, BAD_PARAM);
+    EventInfoSt info;
+    info.eventId = eventId;
+    info.version = version.c_str();
+    (void) memset_s(info.content, CONTENT_MAX_LEN, 0, CONTENT_MAX_LEN);
+    errno_t rc = memcpy_s(info.content, CONTENT_MAX_LEN, content.c_str(), content.length());
+    EXPECT_TRUE(rc == EOK);
+    info.contentLen = static_cast<uint32_t>(content.length());
+    int ret = ReportSecurityInfo(&info);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
 }
 
 /**
@@ -84,9 +119,15 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo003, TestSize.Level1)
     static int64_t eventId = 1011009000;
     static std::string version = "0";
     static std::string content = "{\"cred\":0,\"extra\":0,\"status\":0}";
-    std::shared_ptr<EventInfo> eventInfo = std::make_shared<EventInfo>(eventId, version, content);
-    int ret = NativeDataCollectKit::ReportSecurityInfo(eventInfo);
-    EXPECT_EQ(ret, BAD_PARAM);
+    EventInfoSt info;
+    info.eventId = eventId;
+    info.version = version.c_str();
+    (void) memset_s(info.content, CONTENT_MAX_LEN, 0, CONTENT_MAX_LEN);
+    errno_t rc = memcpy_s(info.content, CONTENT_MAX_LEN, content.c_str(), content.length());
+    EXPECT_TRUE(rc == EOK);
+    info.contentLen = static_cast<uint32_t>(content.length());
+    int ret = ReportSecurityInfo(&info);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
 }
 
 /**
@@ -100,9 +141,15 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo004, TestSize.Level1)
     static int64_t eventId = 1011009000;
     static std::string version = "0";
     static std::string content = "{\"cred\":0,\"extra\":\"\",\"status\":\"0\"}";
-    std::shared_ptr<EventInfo> eventInfo = std::make_shared<EventInfo>(eventId, version, content);
-    int ret = NativeDataCollectKit::ReportSecurityInfo(eventInfo);
-    EXPECT_EQ(ret, BAD_PARAM);
+    EventInfoSt info;
+    info.eventId = eventId;
+    info.version = version.c_str();
+    (void) memset_s(info.content, CONTENT_MAX_LEN, 0, CONTENT_MAX_LEN);
+    errno_t rc = memcpy_s(info.content, CONTENT_MAX_LEN, content.c_str(), content.length());
+    EXPECT_TRUE(rc == EOK);
+    info.contentLen = static_cast<uint32_t>(content.length());
+    int ret = ReportSecurityInfo(&info);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
 }
 
 /**
@@ -116,8 +163,26 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo005, TestSize.Level1)
     static int64_t eventId = 0;
     static std::string version = "0";
     static std::string content = "{\"cred\":0,\"extra\":\"\",\"status\":0}";
-    std::shared_ptr<EventInfo> eventInfo = std::make_shared<EventInfo>(eventId, version, content);
-    int ret = NativeDataCollectKit::ReportSecurityInfo(eventInfo);
-    EXPECT_EQ(ret, SUCCESS);
+    EventInfoSt info;
+    info.eventId = eventId;
+    info.version = version.c_str();
+    (void) memset_s(info.content, CONTENT_MAX_LEN, 0, CONTENT_MAX_LEN);
+    errno_t rc = memcpy_s(info.content, CONTENT_MAX_LEN, content.c_str(), content.length());
+    EXPECT_TRUE(rc == EOK);
+    info.contentLen = static_cast<uint32_t>(content.length());
+    int ret = ReportSecurityInfo(&info);
+    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
+}
+
+/**
+ * @tc.name: ReportSecurityInfo006
+ * @tc.desc: ReportSecurityInfo with null info
+ * @tc.type: FUNC
+ * @tc.require: SR000H96L5
+ */
+HWTEST_F(DataCollectKitTest, ReportSecurityInfo006, TestSize.Level1)
+{
+    int ret = ReportSecurityInfo(nullptr);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
 }
 }

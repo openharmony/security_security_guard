@@ -19,29 +19,17 @@
 #include <string>
 #include <unistd.h>
 
-#include "model_cfg_marshalling.h"
-#include "security_guard_define.h"
+#include "uevent_listener_impl.h"
 
 namespace OHOS::Security::SecurityGuard {
-using SgUeventFiled = enum {
-    SG_UEVENT_INDEX_EVENT_ID,
-    SG_UEVENT_INDEX_VERSION,
-    SG_UEVENT_INDEX_CONTENT_LEN,
-    SG_UEVENT_INDEX_CONTENT,
-};
-
 class UeventListener {
 public:
-    UeventListener() = default;
-    ~UeventListener();
+    UeventListener(UeventListenerImpl &impl);
+    ~UeventListener() = default;
     void Start();
 
 private:
-    bool InitUevent();
-    int UeventListen(char *buffer, size_t length) const;
-    void ParseEvent(char *buffer, size_t length);
-    ErrorCode ParseSgEvent(char *buffer, size_t length, EventDataSt &eventDataSt);
-    int ueventFd_{-1};
+    UeventListenerImpl &impl_;
 };
 } // namespace OHOS::Security::SecurityGuard
 

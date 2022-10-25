@@ -16,14 +16,21 @@
 #ifndef SECURITY_GUARD_UEVENT_NOTIFY_H
 #define SECURITY_GUARD_UEVENT_NOTIFY_H
 
+#include "kernel_interface_adapter.h"
+
 #include <cstdint>
 #include <vector>
 
 namespace OHOS::Security::SecurityGuard {
 class UeventNotify {
 public:
+    UeventNotify(KernelInterfaceAdapter &adapter);
+    ~UeventNotify() = default;
     void NotifyScan();
     void AddWhiteList(const std::vector<int64_t> &whitelist);
+
+private:
+    KernelInterfaceAdapter &adapter_;
 };
 } // namespace OHOS::Security::SecurityGuard
 

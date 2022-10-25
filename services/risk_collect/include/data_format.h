@@ -18,13 +18,14 @@
 
 #include <string>
 
-#include "model_cfg_marshalling.h"
+#include "security_guard_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 class DataFormat {
 public:
     DataFormat() = delete;
     static bool CheckRiskContent(std::string content);
+    static ErrorCode ParseEventList(std::string eventList, std::vector<int64_t> &eventListVec);
 };
 } // namespace OHOS::Security::SecurityGuard
 

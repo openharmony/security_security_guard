@@ -15,7 +15,6 @@
 
 #include "data_collect_manager_callback_proxy.h"
 
-#include "security_guard_define.h"
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {

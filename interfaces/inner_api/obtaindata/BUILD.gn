@@ -28,23 +28,26 @@ ohos_shared_library("libsg_obtaindata_sdk") {
 
   include_dirs = [
     "include",
-    "${sg_root_dir}/services/risk_collect/include",
+    "${sg_root_dir}/frameworks/common/interfaces",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/interfaces/inner_api/obtaindata/include",
+    "${sg_root_dir}/interfaces/inner_api/collect/include",
+    "${sg_root_dir}/interfaces/inner_api/data_collect_manager/include",
     "${sg_root_dir}/frameworks/common/log/include",
   ]
 
   sources = [
-    "src/obtaindata_callback_stub.cpp",
-    "src/obtaindata_proxy.cpp",
+    "${sg_root_dir}/interfaces/inner_api/data_collect_manager/src/data_collect_manager_callback_service.cpp",
+    "${sg_root_dir}/interfaces/inner_api/data_collect_manager/src/data_collect_manager_callback_stub.cpp",
+    "${sg_root_dir}/interfaces/inner_api/data_collect_manager/src/data_collect_manager_proxy.cpp",
     "src/sg_obtaindata_client.cpp",
   ]
 
   external_deps = [
+    "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
-    "c_utils:utils",
   ]
 
   cflags_cc = [ "-DHILOG_ENABLE" ]

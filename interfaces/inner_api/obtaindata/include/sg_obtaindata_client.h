@@ -16,22 +16,17 @@
 #ifndef SECURITY_GUARD_SG_OBTAINDATA_CLIENT_H
 #define SECURITY_GUARD_SG_OBTAINDATA_CLIENT_H
 
-#include <functional>
-#include <memory>
-#include <string>
+#include "security_guard_define.h"
 
-#include "obtaindata_callback.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-namespace OHOS::Security::SecurityGuard {
-class ObtainDataKit {
-public:
-    static int32_t RequestSecurityEventInfoAsync(std::string &devId, std::string &eventList,
-        std::shared_ptr<RequestSecurityEventInfoCallback> &callback);
+int32_t RequestSecurityEventInfoAsync(const DeviceIdentify *devId, const char *eventJson,
+    RequestSecurityEventInfoCallBack callback);
 
-private:
-    static int32_t RequestSecurityEventInfo(std::string &devId, std::string &eventList,
-        std::function<int32_t(std::string &, std::string &, uint32_t)> callback);
-};
-} // namespace OHOS::Security::SecurityGuard
+#ifdef __cplusplus
+}
+#endif
 
 #endif // SECURITY_GUARD_SG_OBTAINDATA_CLIENT_H

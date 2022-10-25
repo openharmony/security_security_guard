@@ -55,14 +55,12 @@
           "name": "//base/security/security_guard/interfaces/inner_api/classify:libsg_classify_sdk",
           "header": {
             "header_files": [
-              "sg_classify_client.h",
-              "security_model_result.h",
-              "risk_analysis_manager_callback.h"
+              "sg_classify_client.h"
             ],
             "header_base": "//base/security/security_guard/interfaces/inner_api/classify/include"
           }
         },
-	{
+        {
           "name": "//base/security/security_guard/interfaces/inner_api/collect:libsg_collect_sdk",
           "header": {
             "header_files": [
@@ -72,12 +70,11 @@
             "header_base": "//base/security/security_guard/interfaces/inner_api/collect/include"
           }
         },
-	{
+        {
           "name": "//base/security/security_guard/interfaces/inner_api/obtaindata:libsg_obtaindata_sdk",
           "header": {
             "header_files": [
-              "sg_obtaindata_client.h",
-              "obtaindata_callback.h"
+              "sg_obtaindata_client.h"
             ],
             "header_base": "//base/security/security_guard/interfaces/inner_api/obtaindata/include"
           }

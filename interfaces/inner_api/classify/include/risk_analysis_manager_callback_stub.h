@@ -20,14 +20,12 @@
 #include "nocopyable.h"
 
 #include "i_risk_analysis_manager.h"
-#include "risk_analysis_manager_callback.h"
-#include "security_guard_define.h"
 #include "sg_classify_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 class RiskAnalysisManagerCallbackStub : public IRemoteStub<IRiskAnalysisManagerCallback>, public NoCopyable {
 public:
-    explicit RiskAnalysisManagerCallbackStub(ResultCallback &callback);
+    RiskAnalysisManagerCallbackStub() = default;
     ~RiskAnalysisManagerCallbackStub() override = default;
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
