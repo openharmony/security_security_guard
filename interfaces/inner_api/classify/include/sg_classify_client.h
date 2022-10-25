@@ -16,26 +16,19 @@
 #ifndef SECURITY_GUARD_SG_CLASSIFY_CLIENT_H
 #define SECURITY_GUARD_SG_CLASSIFY_CLIENT_H
 
-#include <cstdint>
-#include <future>
-#include <memory>
+#include "security_guard_define.h"
 
-#include "risk_analysis_manager_callback.h"
-#include "security_model_result.h"
-#include "sg_classify_define.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-namespace OHOS::Security::SecurityGuard {
-class RiskAnalysisManagerKit {
-public:
-    static int32_t RequestSecurityModelResultSync(std::string &devId, uint32_t modelId,
-        std::shared_ptr<SecurityModelResult> &result);
-    static int32_t RequestSecurityModelResultAsync(std::string &devId, uint32_t modelId,
-        std::shared_ptr<RiskAnalysisManagerCallback> &callback);
+int32_t RequestSecurityModelResultSync(const DeviceIdentify *devId, uint32_t modelId, SecurityModelResult *result);
 
-private:
-    static int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId,
-        ResultCallback callback);
-};
-} // namespace OHOS::Security::SecurityGuard
+int32_t RequestSecurityModelResultAsync(const DeviceIdentify *devId, uint32_t modelId,
+    SecurityGuardRiskCallback callback);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // SECURITY_GUARD_SG_CLASSIFY_CLIENT_H

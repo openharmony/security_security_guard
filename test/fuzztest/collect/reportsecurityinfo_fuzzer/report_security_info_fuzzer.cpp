@@ -17,20 +17,26 @@
 
 #include <string>
 
-#include "event_info.h"
+#include "securec.h"
+
+#include "security_guard_define.h"
 #include "sg_collect_client.h"
 
 #undef private
 
-using namespace OHOS::Security::SecurityGuard;
+extern "C" int32_t ReportSecurityInfo(const struct EventInfoSt *info);
+
 namespace OHOS {
 bool ReportSecurityInfoFuzzTest(const uint8_t* data, size_t size)
 {
     int64_t eventId = rand() % (size + 1);
-    std::string version(reinterpret_cast<const char*>(data), size);
-    std::string content(reinterpret_cast<const char*>(data), size);
-    std::shared_ptr<EventInfo> eventInfo = std::make_shared<EventInfo>(eventId, version, content);
-    NativeDataCollectKit::ReportSecurityInfo(eventInfo);
+    EventInfoSt info;
+    info.eventId = eventId;
+    info.version = reinterpret_cast<const char*>(data);
+    uint32_t cpyLen = size > CONTENT_MAX_LEN ? CONTENT_MAX_LEN : static_cast<uint32_t>(size);
+    (void) memcpy_s(info.content, CONTENT_MAX_LEN, data, cpyLen);
+    info.contentLen = cpyLen;
+    ReportSecurityInfo(&info);
     return true;
 }
 }  // namespace OHOS

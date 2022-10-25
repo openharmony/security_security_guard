@@ -17,32 +17,31 @@
 
 #include <string>
 
-#include "obtaindata_callback.h"
+#include "securec.h"
+
+#include "sg_obtaindata_client.h"
 
 #undef private
 
-using namespace OHOS::Security::SecurityGuard;
+extern "C" int32_t RequestSecurityEventInfoAsync(const DeviceIdentify *devId, const char *eventJson,
+    RequestSecurityEventInfoCallBack callback);
+
 namespace OHOS {
-class RequestSecurityEventInfoCallbackTest : public RequestSecurityEventInfoCallback {
-public:
-    RequestSecurityEventInfoCallbackTest() = default;
-    ~RequestSecurityEventInfoCallbackTest() override = default;
-    int32_t OnSecurityEventInfoResult(std::string &devId, std::string &riskData, uint32_t status) override
-    {
-        (void) devId;
-        (void) riskData;
-        (void) status;
-        return 0;
-    }
-};
+static void RequestSecurityEventInfoCallBackFunc(const DeviceIdentify *devId, const char *eventBuffList,
+    uint32_t status)
+{
+    (void) devId;
+    (void) eventBuffList;
+}
 
 bool RequestSecurityEventInfoAsyncFuzzTest(const uint8_t* data, size_t size)
 {
-    std::string devId(reinterpret_cast<const char*>(data), size);
-    std::string eventList(reinterpret_cast<const char*>(data), size);
-    std::shared_ptr<RequestSecurityEventInfoCallback> callback =
-        std::make_shared<RequestSecurityEventInfoCallbackTest>();
-    ObtainDataKit::RequestSecurityEventInfoAsync(devId, eventList, callback);
+    DeviceIdentify deviceIdentify = {};
+    uint32_t cpyLen = size > DEVICE_ID_MAX_LEN ? DEVICE_ID_MAX_LEN : static_cast<uint32_t>(size);
+    (void) memcpy_s(deviceIdentify.identity, DEVICE_ID_MAX_LEN, data, cpyLen);
+    deviceIdentify.length = cpyLen;
+    RequestSecurityEventInfoAsync(&deviceIdentify, reinterpret_cast<const char*>(data),
+        RequestSecurityEventInfoCallBackFunc);
     return true;
 }
 }  // namespace OHOS

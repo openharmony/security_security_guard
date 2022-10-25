@@ -16,7 +16,6 @@
 #include "base_event_id.h"
 
 #include "model_analysis.h"
-#include "model_analysis_define.h"
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {

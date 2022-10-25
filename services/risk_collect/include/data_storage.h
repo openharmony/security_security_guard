@@ -20,9 +20,7 @@
 #include <map>
 #include <mutex>
 
-#include "database.h"
 #include "database_wrapper.h"
-#include "distributed_kv_data_manager.h"
 #include "i_collect_info.h"
 #include "security_guard_define.h"
 

@@ -24,7 +24,6 @@
 
 #include "base_event_id.h"
 #include "base_event_id_storage.h"
-#include "database.h"
 #include "event_config.h"
 #include "security_guard_define.h"
 

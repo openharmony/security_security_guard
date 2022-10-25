@@ -18,8 +18,7 @@
 
 #include <functional>
 #include <memory>
-
-#include "security_model_result.h"
+#include <string>
 
 namespace OHOS::Security::SecurityGuard {
 const std::string RISK_STATUS = "risk";
@@ -35,8 +34,6 @@ using CONTENT_RELIABLITY = enum {
     INCREDIBLE,
     CREDIBLE
 };
-
-using SecurityModelCallBack = std::function<void(std::unique_ptr<SecurityModelResult> &result)>;
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_RISK_ANALYSIS_DEFINE_H

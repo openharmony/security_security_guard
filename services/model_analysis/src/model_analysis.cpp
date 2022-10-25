@@ -66,7 +66,7 @@ ErrorCode ModelAnalysis::ParseConfig(const nlohmann::json &json)
 {
     SGLOGD("parse ModelCfgSt: ");
     std::vector<ModelCfgSt> modelCfgs;
-    if (!Unmarshal<ModelCfgSt>(modelCfgs, json, MODEL_CFG_KEY)) {
+    if (!JsonCfg::Unmarshal<ModelCfgSt>(modelCfgs, json, MODEL_CFG_KEY)) {
         return JSON_ERR;
     }
     for (const ModelCfgSt& config : modelCfgs) {
@@ -79,7 +79,7 @@ ErrorCode ModelAnalysis::ParseConfig(const nlohmann::json &json)
 
     SGLOGD("parse ThreatCfgSt: ");
     std::vector<ThreatCfgSt> threatCfgs;
-    if (!Unmarshal<ThreatCfgSt>(threatCfgs, json, THREAT_CFG_KEY)) {
+    if (!JsonCfg::Unmarshal<ThreatCfgSt>(threatCfgs, json, THREAT_CFG_KEY)) {
         return JSON_ERR;
     }
     for (const ThreatCfgSt& config : threatCfgs) {
@@ -92,7 +92,7 @@ ErrorCode ModelAnalysis::ParseConfig(const nlohmann::json &json)
 
     SGLOGD("parse EventCfgSt: ");
     std::vector<EventCfgSt> eventCfgs;
-    if (!Unmarshal<EventCfgSt>(eventCfgs, json, EVENT_CFG_KEY)) {
+    if (!JsonCfg::Unmarshal<EventCfgSt>(eventCfgs, json, EVENT_CFG_KEY)) {
         return JSON_ERR;
     }
     for (const EventCfgSt& config : eventCfgs) {
@@ -217,7 +217,7 @@ ErrorCode ModelAnalysis::InitDataMgrCfg()
 
     SGLOGD("parse DataMgrCfgSt: ");
     DataMgrCfgSt dataMgrCfg;
-    if (!Unmarshal<DataMgrCfgSt>(dataMgrCfg, json, DATA_MGR_CFG_KEY)) {
+    if (!JsonCfg::Unmarshal<DataMgrCfgSt>(dataMgrCfg, json, DATA_MGR_CFG_KEY)) {
         return JSON_ERR;
     }
     DataMgrCfg::GetInstance().SetDeviceRam(dataMgrCfg.deviceRam);

@@ -16,11 +16,9 @@
 #ifndef SECURITY_GUARD_RISK_ANALYSIS_MANAGER_SERVICE_H
 #define SECURITY_GUARD_RISK_ANALYSIS_MANAGER_SERVICE_H
 
-#include "iremote_stub.h"
 #include "nocopyable.h"
 #include "system_ability.h"
 
-#include "i_risk_analysis_manager.h"
 #include "risk_analysis_manager_stub.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -32,6 +30,12 @@ public:
     ~RiskAnalysisManagerService() override = default;
     void OnStart() override;
     void OnStop() override;
+    int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId,
+        const sptr<IRemoteObject> &callback) override;
+
+private:
+    void PushRiskAnalysisTask(uint32_t modelId, std::shared_ptr<std::promise<std::string>> &promise,
+        ClassifyEvent &event);
 };
 } // namespace OHOS::Security::SecurityGuard
 

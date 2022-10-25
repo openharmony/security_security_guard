@@ -19,7 +19,6 @@
 #include <memory>
 #include <mutex>
 
-#include "distributed_kv_data_manager.h"
 #include "types.h"
 
 #include "database_manager.h"

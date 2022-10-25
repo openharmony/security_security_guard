@@ -14,6 +14,7 @@
  */
 
 #include "risk_analysis_manager_proxy.h"
+
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 
@@ -43,7 +44,6 @@ int32_t RiskAnalysisManagerProxy::RequestSecurityModelResult(std::string &devId,
         SGLOGE("ret=%{public}d", ret);
         return ret;
     }
-
     ret = reply.ReadInt32();
     SGLOGD("reply=%{public}d", ret);
     return ret;

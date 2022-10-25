@@ -15,9 +15,22 @@
 
 #include "risk_classify_kit_test.h"
 
+#include "securec.h"
+
+#include "sg_classify_client.h"
+
 using namespace testing::ext;
 using namespace OHOS::Security::SecurityGuardTest;
-using namespace OHOS::Security::SecurityGuard;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    int32_t RequestSecurityEventInfoAsync(const DeviceIdentify *devId, const char *eventJson,
+        RequestSecurityEventInfoCallBack callback);
+    int32_t RequestSecurityModelResultSync(const DeviceIdentify *devId, uint32_t modelId, SecurityModelResult *result);
+#ifdef __cplusplus
+}
+#endif
 
 namespace OHOS::Security::SecurityGuardTest {
 void RiskClassifyKitTest::SetUpTestCase()
@@ -30,11 +43,15 @@ void RiskClassifyKitTest::TearDownTestCase()
 
 void RiskClassifyKitTest::SetUp()
 {
-    callback_ = std::make_shared<RiskAnalysisManagerCallbackMock>();
 }
 
 void RiskClassifyKitTest::TearDown()
 {
+}
+
+void RiskClassifyKitTest::SecurityGuardRiskCallbackFunc(SecurityModelResult *result)
+{
+    EXPECT_TRUE(result != nullptr);
 }
 
 /**
@@ -45,14 +62,16 @@ void RiskClassifyKitTest::TearDown()
  */
 HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync001, TestSize.Level1)
 {
-    static std::string devId;
+    DeviceIdentify deviceIdentify = {};
     static uint32_t modelId = 0;
-    std::shared_ptr<SecurityModelResult> result = std::make_shared<SecurityModelResult>();
-    int ret = RiskAnalysisManagerKit::RequestSecurityModelResultSync(devId, modelId, result);
-    EXPECT_EQ(ret, SUCCESS);
-    EXPECT_STREQ(result->GetDevId().c_str(), devId.c_str());
-    EXPECT_EQ(result->GetModelId(), modelId);
-    EXPECT_STREQ(result->GetResult().c_str(), "unknown");
+    SecurityModelResult result;
+    (void) memset_s(&result, sizeof(SecurityModelResult), 0, sizeof(SecurityModelResult));
+    int ret = RequestSecurityModelResultSync(&deviceIdentify, modelId, &result);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+    EXPECT_STREQ(reinterpret_cast<const char *>(result.devId.identity),
+        reinterpret_cast<const char *>(deviceIdentify.identity));
+    EXPECT_EQ(result.modelId, modelId);
+    EXPECT_STREQ(reinterpret_cast<const char *>(result.result), "");
 }
 
 /**
@@ -63,13 +82,45 @@ HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync001, TestSize.Level1
  */
 HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync002, TestSize.Level1)
 {
-    static std::string devId;
+    DeviceIdentify deviceIdentify = {};
     static uint32_t modelId = 3001000000;
-    std::shared_ptr<SecurityModelResult> result = std::make_shared<SecurityModelResult>();
-    int ret = RiskAnalysisManagerKit::RequestSecurityModelResultSync(devId, modelId, result);
-    EXPECT_EQ(ret, SUCCESS);
-    EXPECT_STREQ(result->GetDevId().c_str(), devId.c_str());
-    EXPECT_EQ(result->GetModelId(), modelId);
+    SecurityModelResult result;
+    (void) memset_s(&result, sizeof(SecurityModelResult), 0, sizeof(SecurityModelResult));
+    int ret = RequestSecurityModelResultSync(&deviceIdentify, modelId, &result);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+    EXPECT_STREQ(reinterpret_cast<const char *>(result.devId.identity),
+        reinterpret_cast<const char *>(deviceIdentify.identity));
+    EXPECT_TRUE(result.modelId == 0);
+    EXPECT_STRNE(reinterpret_cast<const char *>(result.result), "unknown");
+}
+
+/**
+ * @tc.name: RequestSecurityModelResultSync003
+ * @tc.desc: RequestSecurityModelResultSync with null devId
+ * @tc.type: FUNC
+ * @tc.require: SR000H9A70
+ */
+HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync003, TestSize.Level1)
+{
+    static uint32_t modelId = 3001000000;
+    SecurityModelResult result;
+    (void) memset_s(&result, sizeof(SecurityModelResult), 0, sizeof(SecurityModelResult));
+    int ret = RequestSecurityModelResultSync(nullptr, modelId, &result);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+}
+
+/**
+ * @tc.name: RequestSecurityModelResultSync004
+ * @tc.desc: RequestSecurityModelResultSync with null result
+ * @tc.type: FUNC
+ * @tc.require: SR000H9A70
+ */
+HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync004, TestSize.Level1)
+{
+    DeviceIdentify deviceIdentify = {};
+    static uint32_t modelId = 3001000000;
+    int ret = RequestSecurityModelResultSync(&deviceIdentify, modelId, nullptr);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
 }
 
 /**
@@ -80,10 +131,10 @@ HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync002, TestSize.Level1
  */
 HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultAsync001, TestSize.Level1)
 {
-    static std::string devId;
+    DeviceIdentify deviceIdentify = {};
     static uint32_t modelId = 0;
-    int ret = RiskAnalysisManagerKit::RequestSecurityModelResultAsync(devId, modelId, callback_);
-    EXPECT_EQ(ret, SUCCESS);
+    int ret = RequestSecurityModelResultAsync(&deviceIdentify, modelId, SecurityGuardRiskCallbackFunc);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
 
 /**
@@ -94,9 +145,22 @@ HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultAsync001, TestSize.Level
  */
 HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultAsync002, TestSize.Level1)
 {
-    static std::string devId;
+    DeviceIdentify deviceIdentify = {};
     static uint32_t modelId = 3001000000;
-    int ret = RiskAnalysisManagerKit::RequestSecurityModelResultAsync(devId, modelId, callback_);
-    EXPECT_EQ(ret, SUCCESS);
+    int ret = RequestSecurityModelResultAsync(&deviceIdentify, modelId, SecurityGuardRiskCallbackFunc);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+}
+
+/**
+ * @tc.name: RequestSecurityModelResultAsync003
+ * @tc.desc: RequestSecurityModelResultAsync with null devId
+ * @tc.type: FUNC
+ * @tc.require: SR000H9A70
+ */
+HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultAsync003, TestSize.Level1)
+{
+    static uint32_t modelId = 3001000000;
+    int ret = RequestSecurityModelResultAsync(nullptr, modelId, SecurityGuardRiskCallbackFunc);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
 }
 }

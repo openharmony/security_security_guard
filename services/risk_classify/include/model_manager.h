@@ -28,9 +28,6 @@ public:
     ErrorCode InitModel() const;
     std::vector<int64_t> GetEventIds(uint32_t modelId);
     ErrorCode AnalyseRisk(const std::vector<int64_t> &events, std::string &eventInfo) const;
-
-private:
-    static void SetEventInfo(int64_t eventId, std::string status, std::string &eventInfo);
 };
 } // namespace OHOS::Security::SecurityGuard
 

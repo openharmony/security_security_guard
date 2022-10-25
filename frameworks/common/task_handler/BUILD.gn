@@ -18,19 +18,12 @@ ohos_source_set("sg_task_stamp") {
   subsystem_name = "security"
   part_name = "security_guard"
 
-  include_dirs = [
-    "${sg_root_dir}/frameworks/common/task_handler/include",
-  ]
+  include_dirs = [ "${sg_root_dir}/frameworks/common/task_handler/include" ]
 
-  sources = [
-    "${sg_root_dir}/frameworks/common/task_handler/src/task_handler.cpp",
-  ]
+  sources =
+      [ "${sg_root_dir}/frameworks/common/task_handler/src/task_handler.cpp" ]
 
-  cflags_cc = [
-      "-DHILOG_ENABLE"
-  ]
+  cflags_cc = [ "-DHILOG_ENABLE" ]
 
-  external_deps = [
-    "c_utils:utils",
-  ]
+  external_deps = [ "c_utils:utils" ]
 }

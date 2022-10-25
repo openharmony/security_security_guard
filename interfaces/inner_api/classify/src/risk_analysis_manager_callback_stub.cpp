@@ -15,18 +15,14 @@
 
 #include "risk_analysis_manager_callback_stub.h"
 
+#include "security_guard_define.h"
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
-RiskAnalysisManagerCallbackStub::RiskAnalysisManagerCallbackStub(ResultCallback &callback)
-    : callback_(callback)
-{
-}
-
 int32_t RiskAnalysisManagerCallbackStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
-    if (IRiskAnalysisManagerCallback::GetDescriptor() != data.ReadInterfaceToken()) {
+    if (RiskAnalysisManagerCallbackStub::GetDescriptor() != data.ReadInterfaceToken()) {
         SGLOGE("Descriptor error");
         return NO_PERMISSION;
     }
@@ -42,11 +38,7 @@ int32_t RiskAnalysisManagerCallbackStub::OnRemoteRequest(uint32_t code, MessageP
         uint32_t modelId = data.ReadUint32();
         std::string devId = data.ReadString();
         std::string result = data.ReadString();
-        SGLOGI("modelId=%{public}u, result=%{public}s", modelId, result.c_str());
-        if (callback_ != nullptr) {
-            callback_(devId, modelId, result);
-        }
-        return SUCCESS;
+        return ResponseSecurityModelResult(devId, modelId, result);
     }
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }

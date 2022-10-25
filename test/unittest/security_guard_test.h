@@ -21,7 +21,6 @@
 #include "sg_obtaindata_client.h"
 #include "security_guard_define.h"
 #include "sg_classify_client.h"
-#include "security_model_result.h"
 
 namespace OHOS::Security::SecurityGuardTest {
 class SecurityGuardUnitTest : public testing::Test {

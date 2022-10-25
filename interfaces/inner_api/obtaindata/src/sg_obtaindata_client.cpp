@@ -13,26 +13,22 @@
  * limitations under the License.
  */
 
-#include "iservice_registry.h"
-
-#include "obtaindata_callback.h"
-#include "obtaindata_callback_stub.h"
-#include "obtaindata_proxy.h"
-#include "security_guard_define.h"
-#include "security_guard_log.h"
 #include "sg_obtaindata_client.h"
 
-namespace OHOS::Security::SecurityGuard {
-int32_t ObtainDataKit::RequestSecurityEventInfoAsync(std::string &devId, std::string &eventList,
-    std::shared_ptr<RequestSecurityEventInfoCallback> &callback)
-{
-    auto func = [callback] (std::string &devId, std::string &riskData, uint32_t status)-> int32_t {
-        return callback->OnSecurityEventInfoResult(devId, riskData, status);
-    };
-    return RequestSecurityEventInfo(devId, eventList, func);
-}
+#include "iservice_registry.h"
+#include "securec.h"
 
-int32_t ObtainDataKit::RequestSecurityEventInfo(std::string &devId, std::string &eventList,
+#include "data_collect_manager_callback_service.h"
+#include "data_collect_manager_proxy.h"
+#include "security_guard_define.h"
+#include "security_guard_log.h"
+
+using namespace OHOS;
+using namespace OHOS::Security::SecurityGuard;
+
+static std::mutex g_mutex;
+
+static int32_t RequestSecurityEventInfo(std::string &devId, std::string &eventList,
     RequestRiskDataCallback callback)
 {
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -42,23 +38,64 @@ int32_t ObtainDataKit::RequestSecurityEventInfo(std::string &devId, std::string 
     }
 
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = new (std::nothrow) ObtainDataProxy(object);
+    auto proxy = iface_cast<DataCollectManagerProxy>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
     }
 
-    OHOS::sptr<ObtainDataCallbackStub> stub = new (std::nothrow) ObtainDataCallbackStub(callback);
-    if (stub == nullptr) {
+    auto obj = new (std::nothrow) DataCollectManagerCallbackService(callback);
+    if (obj == nullptr) {
         SGLOGE("stub is null");
         return NULL_OBJECT;
     }
-    int32_t ret = proxy->RequestRiskData(devId, eventList, stub);
+    int32_t ret = proxy->RequestRiskData(devId, eventList, obj);
     if (ret != 0) {
         SGLOGE("RequestSecurityEventInfo error, ret=%{public}d", ret);
         return ret;
     }
     return SUCCESS;
 }
+
+static int32_t RequestSecurityEventInfoAsyncImpl(const DeviceIdentify *devId, const char *eventJson,
+    RequestSecurityEventInfoCallBack callback)
+{
+    if (devId == nullptr || eventJson == nullptr) {
+        return BAD_PARAM;
+    }
+    std::unique_lock<std::mutex> lock(g_mutex);
+    std::string identity(reinterpret_cast<const char *>(devId->identity));
+    std::string eventList(eventJson);
+    auto func = [callback] (std::string &devId, std::string &riskData, uint32_t status)-> int32_t {
+        SGLOGI("devId=%{public}s, riskData=%{public}s, status=%{public}u", devId.c_str(), riskData.c_str(), status);
+        if (devId.length() >= DEVICE_ID_MAX_LEN) {
+            return BAD_PARAM;
+        }
+
+        struct DeviceIdentify identity;
+        (void) memset_s(&identity, sizeof(DeviceIdentify), 0, sizeof(DeviceIdentify));
+        errno_t rc = memcpy_s(identity.identity, DEVICE_ID_MAX_LEN, devId.c_str(), devId.length());
+        if (rc != EOK) {
+            return NULL_OBJECT;
+        }
+        identity.length = devId.length();
+        callback(&identity, riskData.c_str(), status);
+        return SUCCESS;
+    };
+    return RequestSecurityEventInfo(identity, eventList, func);
 }
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int32_t RequestSecurityEventInfoAsync(const DeviceIdentify *devId, const char *eventJson,
+    RequestSecurityEventInfoCallBack callback)
+{
+    return RequestSecurityEventInfoAsyncImpl(devId, eventJson, callback);
+}
+
+#ifdef __cplusplus
+}
+#endif

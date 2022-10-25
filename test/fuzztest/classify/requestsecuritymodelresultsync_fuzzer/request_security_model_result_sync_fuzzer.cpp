@@ -13,36 +13,29 @@
  * limitations under the License.
  */
 
-#include "request_security_model_result_async_fuzzer.h"
+#include "request_security_model_result_sync_fuzzer.h"
 
 #include <string>
 
-#include "risk_analysis_manager_callback.h"
+#include "securec.h"
+
 #include "sg_classify_client.h"
 
 #undef private
 
-using namespace OHOS::Security::SecurityGuard;
-namespace OHOS {
-class RiskAnalysisManagerCallbackTest : public RiskAnalysisManagerCallback {
-public:
-    RiskAnalysisManagerCallbackTest() = default;
-    ~RiskAnalysisManagerCallbackTest() override = default;
-    int32_t OnSecurityModelResult(const std::string &devId, uint32_t modelId, const std::string &result) override
-    {
-        (void) devId;
-        (void) modelId;
-        (void) result;
-        return 0;
-    }
-};
+extern "C" int32_t RequestSecurityModelResultSync(const DeviceIdentify *devId, uint32_t modelId,
+    SecurityModelResult *result);
 
+namespace OHOS {
 bool RequestSecurityModelResultAsyncFuzzTest(const uint8_t* data, size_t size)
 {
-    std::string devId(reinterpret_cast<const char*>(data), size);
+    DeviceIdentify deviceIdentify = {};
+    uint32_t cpyLen = size > DEVICE_ID_MAX_LEN ? DEVICE_ID_MAX_LEN : static_cast<uint32_t>(size);
+    (void) memcpy_s(deviceIdentify.identity, DEVICE_ID_MAX_LEN, data, cpyLen);
+    deviceIdentify.length = cpyLen;
     uint32_t modelId = rand() % (size + 1);
-    std::shared_ptr<RiskAnalysisManagerCallback> callback = std::make_shared<RiskAnalysisManagerCallbackTest>();
-    RiskAnalysisManagerKit::RequestSecurityModelResultAsync(devId, modelId, callback);
+    SecurityModelResult result = {};
+    RequestSecurityModelResultSync(&deviceIdentify, modelId, &result);
     return true;
 }
 }  // namespace OHOS

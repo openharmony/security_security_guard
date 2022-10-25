@@ -17,12 +17,10 @@
 #define SECURITY_GUARD_RISK_RISK_ANALYSIS_MANAGER_STUB_H
 
 #include "iremote_stub.h"
-#include "nocopyable.h"
 
 #include <future>
 
 #include "i_risk_analysis_manager.h"
-#include "risk_analysis_define.h"
 #include "security_guard_define.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -34,7 +32,7 @@ public:
         MessageOption& option) override;
 
 private:
-    ErrorCode HandleGetSecurityModelResult(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleGetSecurityModelResult(MessageParcel &data, MessageParcel &reply);
     void PushRiskAnalysisTask(uint32_t modelId, std::shared_ptr<std::promise<std::string>> &promise,
         ClassifyEvent &eventInfo);
 };

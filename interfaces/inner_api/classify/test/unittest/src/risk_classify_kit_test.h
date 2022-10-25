@@ -18,8 +18,6 @@
 
 #include <gtest/gtest.h>
 
-#include "sg_classify_client.h"
-#include "security_model_result.h"
 #include "security_guard_define.h"
 
 namespace OHOS::Security::SecurityGuardTest {
@@ -33,17 +31,7 @@ public:
 
     void TearDown() override;
 
-    class RiskAnalysisManagerCallbackMock : public SecurityGuard::RiskAnalysisManagerCallback {
-    public:
-        RiskAnalysisManagerCallbackMock() = default;
-        ~RiskAnalysisManagerCallbackMock() override = default;
-        int32_t OnSecurityModelResult(const std::string &devId, uint32_t modelId, const std::string &result) override
-        {
-            return SecurityGuard::ErrorCode::SUCCESS;
-        }
-    };
-
-    std::shared_ptr<SecurityGuard::RiskAnalysisManagerCallback> callback_;
+    static void SecurityGuardRiskCallbackFunc(SecurityModelResult *result);
 };
 }  // namespace OHOS::Security::SecurityGuardTest
 

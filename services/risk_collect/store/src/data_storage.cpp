@@ -113,7 +113,7 @@ ErrorCode DataStorage::GetValueFromKvStore(const std::string &keyStr, std::strin
     OHOS::DistributedKv::Value value;
     Status status = database_->Get(key, value);
     if (status != Status::SUCCESS) {
-        SGLOGE("[sg_db] put value to kvStore_ error, status = %{public}d", status);
+        SGLOGE("[sg_db] get value to kvStore_ error, status = %{public}d", status);
         return DB_OPT_ERR;
     }
     valueStr = value.ToString();

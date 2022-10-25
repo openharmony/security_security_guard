@@ -15,9 +15,6 @@
 
 #include "data_mgr_cfg.h"
 
-#include "json_cfg.h"
-#include "model_analysis_define.h"
-
 namespace OHOS::Security::SecurityGuard {
 DataMgrCfg &DataMgrCfg::GetInstance()
 {

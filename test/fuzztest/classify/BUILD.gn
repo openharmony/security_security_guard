@@ -14,7 +14,7 @@
 group("fuzztest") {
   testonly = true
   deps = [
-    "request_security_model_result_async_fuzzer:request_security_model_result_async",
-    "request_security_model_result_sync_fuzzer:request_security_model_result_sync",
+    "requestsecuritymodelresultasync_fuzzer:RequestSecurityModelResultAsyncFuzzTest",
+    "requestsecuritymodelresultsync_fuzzer:RequestSecurityModelResultSyncFuzzTest",
   ]
 }
