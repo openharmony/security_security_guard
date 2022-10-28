@@ -36,14 +36,14 @@ extern "C" {
 namespace OHOS::Security::SecurityGuardTest {
 void DataCollectKitTest::SetUpTestCase()
 {
-    static const char *PERMISSION[] = { "ohos.permission.securityguard.REPORT_SECURITY_INFO" };
+    static const char *permission[] = { "ohos.permission.securityguard.REPORT_SECURITY_INFO" };
     uint64_t tokenId;
     NativeTokenInfoParams infoParams = {
         .dcapsNum = 0,
         .permsNum = 1,
         .aclsNum = 0,
         .dcaps = nullptr,
-        .perms = PERMISSION,
+        .perms = permission,
         .acls = nullptr,
         .processName = "security_guard",
         .aplStr = "system_basic",
