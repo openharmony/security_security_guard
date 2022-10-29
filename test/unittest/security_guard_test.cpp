@@ -1655,4 +1655,83 @@ HWTEST_F(SecurityGuardUnitTest, TestUeventNotify002, TestSize.Level1)
     notify.AddWhiteList(whitelist);
     notify.AddWhiteList(whitelist);
 }
+
+/**
+ * @tc.name: TestKernelInterfaceAdapter001
+ * @tc.desc: Test KernelInterfaceAdapter bind interface
+ * @tc.type: FUNC
+ * @tc.require: SR000H9A70
+ */
+HWTEST_F(SecurityGuardUnitTest, TestKernelInterfaceAdapter001, TestSize.Level1)
+{
+    KernelInterfaceAdapter adapter;
+    struct sockaddr_nl addr = {};
+    int ret = adapter.Bind(0, reinterpret_cast<const struct sockaddr *>(&addr), sizeof(addr));
+    EXPECT_FALSE(ret == 0);
+    ret = adapter.Bind(0, nullptr, 0);
+    EXPECT_TRUE(ret == -1);
+}
+
+/**
+ * @tc.name: TestKernelInterfaceAdapter002
+ * @tc.desc: Test KernelInterfaceAdapter poll interface
+ * @tc.type: FUNC
+ * @tc.require: SR000H9A70
+ */
+HWTEST_F(SecurityGuardUnitTest, TestKernelInterfaceAdapter002, TestSize.Level1)
+{
+    KernelInterfaceAdapter adapter;
+    struct pollfd fds = {};
+    int ret = adapter.Poll(&fds, 1, -1);
+    EXPECT_FALSE(ret == 0);
+    ret = adapter.Poll(nullptr, 0, -1);
+    EXPECT_TRUE(ret == 0);
+}
+
+/**
+ * @tc.name: TestKernelInterfaceAdapter003
+ * @tc.desc: Test KernelInterfaceAdapter recv interface
+ * @tc.type: FUNC
+ * @tc.require: SR000H9A70
+ */
+HWTEST_F(SecurityGuardUnitTest, TestKernelInterfaceAdapter003, TestSize.Level1)
+{
+    KernelInterfaceAdapter adapter;
+    char buffer[1] = {};
+    int ret = adapter.Recv(0, buffer, sizeof(buffer), 0);
+    EXPECT_FALSE(ret == 0);
+    ret = adapter.Recv(0, nullptr, 0, 0);
+    EXPECT_TRUE(ret == 0);
+}
+
+/**
+ * @tc.name: TestKernelInterfaceAdapter004
+ * @tc.desc: Test KernelInterfaceAdapter open interface
+ * @tc.type: FUNC
+ * @tc.require: SR000H9A70
+ */
+HWTEST_F(SecurityGuardUnitTest, TestKernelInterfaceAdapter004, TestSize.Level1)
+{
+    KernelInterfaceAdapter adapter;
+    int ret = adapter.Open("/proc/kernel_sg", 0);
+    EXPECT_TRUE(ret == 0);
+    ret = adapter.Open("test", 0);
+    EXPECT_TRUE(ret == -1);
+}
+
+/**
+ * @tc.name: TestKernelInterfaceAdapter005
+ * @tc.desc: Test KernelInterfaceAdapter write interface
+ * @tc.type: FUNC
+ * @tc.require: SR000H9A70
+ */
+HWTEST_F(SecurityGuardUnitTest, TestKernelInterfaceAdapter005, TestSize.Level1)
+{
+    KernelInterfaceAdapter adapter;
+    char buffer[1] = {};
+    int ret = adapter.Write(0, buffer, sizeof(buffer));
+    EXPECT_FALSE(ret == 0);
+    ret = adapter.Write(0, nullptr, 0);
+    EXPECT_TRUE(ret == 0);
+}
 }
