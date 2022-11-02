@@ -106,6 +106,9 @@ ErrorCode UeventListenerImpl::ParseSgEvent(char *buffer, size_t length, EventDat
 {
     char *savePoint = nullptr;
     char *subString = strtok_r(buffer, "=", &savePoint);
+    if (subString == nullptr) {
+        return BAD_PARAM;
+    }
 
     uint32_t contentLen;
     int index = 0;
