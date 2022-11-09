@@ -22,7 +22,6 @@ namespace OHOS::Security::SecurityGuard {
 class ModelConfig {
 public:
     explicit ModelConfig(const ModelCfgSt &config);
-    ModelConfig(const ModelConfig &config) = default;
     uint32_t GetModelId() const;
     const std::string &GetModelName() const;
     uint32_t GetVersion() const;

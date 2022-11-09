@@ -19,11 +19,11 @@
 #include "hilog/log.h"
 
 namespace OHOS::Security::SecurityGuard {
-    static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
-        LOG_CORE,
-        0xD002F10,
-        "SG_Service"
-    };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
+    LOG_CORE,
+    0xD002F10,
+    "SG_Service"
+};
 
 #define SGLOGD(fmt, ...) \
     (void)OHOS::HiviewDFX::HiLog::Debug(LABEL, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)

@@ -24,7 +24,7 @@
 namespace OHOS::Security::SecurityGuard {
 class UeventNotify {
 public:
-    UeventNotify(KernelInterfaceAdapter &adapter);
+    explicit UeventNotify(KernelInterfaceAdapter &adapter);
     ~UeventNotify() = default;
     void NotifyScan();
     void AddWhiteList(const std::vector<int64_t> &whitelist);
