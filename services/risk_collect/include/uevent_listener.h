@@ -24,7 +24,7 @@
 namespace OHOS::Security::SecurityGuard {
 class UeventListener {
 public:
-    UeventListener(UeventListenerImpl &impl);
+    explicit UeventListener(UeventListenerImpl &impl);
     ~UeventListener() = default;
     void Start();
 

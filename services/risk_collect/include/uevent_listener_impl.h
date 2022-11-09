@@ -30,7 +30,7 @@ using SgUeventFiled = enum {
 
 class UeventListenerImpl {
 public:
-    UeventListenerImpl(KernelInterfaceAdapter &adapter);
+    explicit UeventListenerImpl(KernelInterfaceAdapter &adapter);
     virtual ~UeventListenerImpl();
     virtual bool InitUevent();
     virtual int UeventListen(char *buffer, size_t length);

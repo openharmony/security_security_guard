@@ -23,7 +23,6 @@ class EventConfig {
 public:
     explicit EventConfig(const EventCfgSt& config);
     EventConfig() = default;
-    EventConfig(const EventConfig &config) = default;
     int64_t GetEventId() const;
     const std::string &GetEventName() const;
     uint32_t GetVersion() const;
