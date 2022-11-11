@@ -22,7 +22,6 @@ namespace OHOS::Security::SecurityGuard {
 class ThreatConfig {
 public:
     explicit ThreatConfig(const ThreatCfgSt &config);
-    ThreatConfig(const ThreatConfig &config) = default;
     uint32_t GetThreatId() const;
     const std::string &GetThreatName() const;
     uint32_t GetVersion() const;
