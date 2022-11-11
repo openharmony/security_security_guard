@@ -23,7 +23,6 @@ namespace OHOS::Security::SecurityGuard {
 class EventInfo {
 public:
     EventInfo() = default;
-    EventInfo(const EventInfo& eventIfo) = default;
     EventInfo(int64_t &eventId, std::string version, std::string &content)
         : eventId_(eventId),
           version_(version),
