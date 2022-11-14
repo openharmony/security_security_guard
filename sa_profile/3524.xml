@@ -17,6 +17,8 @@
     <systemability>
         <name>3524</name>
         <libpath>libsg_collect_service.z.so</libpath>
+        <depend>3523</depend>
+        <depend-time-out>60000</depend-time-out>
         <run-on-create>true</run-on-create>
         <distributed>false</distributed>
         <dump-level>1</dump-level>
