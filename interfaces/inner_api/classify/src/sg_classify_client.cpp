@@ -61,38 +61,8 @@ static int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId,
     return ret;
 }
 
-static int32_t RequestSecurityModelResultSyncImpl(const DeviceIdentify *devId,
-    uint32_t modelId, SecurityModelResult *result)
+static int32_t FillingRequestResult(const SecurityModel &model, SecurityModelResult *result)
 {
-    if (devId == nullptr || result == nullptr) {
-        return BAD_PARAM;
-    }
-    std::unique_lock<std::mutex> lock(g_mutex);
-    auto promise = std::make_shared<std::promise<SecurityModel>>();
-    auto future = promise->get_future();
-    auto func = [promise] (const std::string &devId, uint32_t modelId,
-        const std::string &result) mutable -> int32_t {
-        SecurityModel model = {
-            .devId = devId,
-            .modelId = modelId,
-            .result = result
-        };
-        promise->set_value(model);
-        return SUCCESS;
-    };
-
-    std::string identify(reinterpret_cast<const char *>(devId->identity));
-    int32_t code = RequestSecurityModelResult(identify, modelId, func);
-    if (code != SUCCESS) {
-        SGLOGE("RequestSecurityModelResult error, code=%{public}d", code);
-        return code;
-    }
-    std::chrono::milliseconds span(TIMEOUT_REPLY);
-    if (future.wait_for(span) == std::future_status::timeout) {
-        SGLOGE("wait timeout");
-        return TIME_OUT;
-    }
-    SecurityModel model = future.get();
     if (model.devId.length() >= DEVICE_ID_MAX_LEN || model.result.length() >= RESULT_MAX_LEN) {
         return BAD_PARAM;
     }
@@ -114,14 +84,63 @@ static int32_t RequestSecurityModelResultSyncImpl(const DeviceIdentify *devId,
     return SUCCESS;
 }
 
-static int32_t RequestSecurityModelResultAsyncImpl(const DeviceIdentify *devId, uint32_t modelId,
-    SecurityGuardRiskCallback callback)
+static int32_t RequestSecurityModelResultSyncImpl(const DeviceIdentify *devId,
+    uint32_t modelId, SecurityModelResult *result)
 {
-    if (devId == nullptr) {
+    if (devId == nullptr || result == nullptr || devId->length >= DEVICE_ID_MAX_LEN) {
         return BAD_PARAM;
     }
     std::unique_lock<std::mutex> lock(g_mutex);
-    std::string identity(reinterpret_cast<const char *>(devId->identity));
+    auto promise = std::make_shared<std::promise<SecurityModel>>();
+    auto future = promise->get_future();
+    auto func = [promise] (const std::string &devId, uint32_t modelId,
+        const std::string &result) mutable -> int32_t {
+        SecurityModel model = {
+            .devId = devId,
+            .modelId = modelId,
+            .result = result
+        };
+        promise->set_value(model);
+        return SUCCESS;
+    };
+
+    uint8_t tmp[DEVICE_ID_MAX_LEN] = {};
+    (void) memset_s(tmp, DEVICE_ID_MAX_LEN, 0, DEVICE_ID_MAX_LEN);
+    errno_t rc = memcpy_s(tmp, DEVICE_ID_MAX_LEN, devId->identity, devId->length);
+    if (rc != EOK) {
+        SGLOGE("identity memcpy error, code=%{public}d", rc);
+        return NULL_OBJECT;
+    }
+    std::string identify(reinterpret_cast<const char *>(tmp));
+    int32_t code = RequestSecurityModelResult(identify, modelId, func);
+    if (code != SUCCESS) {
+        SGLOGE("RequestSecurityModelResult error, code=%{public}d", code);
+        return code;
+    }
+    std::chrono::milliseconds span(TIMEOUT_REPLY);
+    if (future.wait_for(span) == std::future_status::timeout) {
+        SGLOGE("wait timeout");
+        return TIME_OUT;
+    }
+    SecurityModel model = future.get();
+    return FillingRequestResult(model, result);
+}
+
+static int32_t RequestSecurityModelResultAsyncImpl(const DeviceIdentify *devId, uint32_t modelId,
+    SecurityGuardRiskCallback callback)
+{
+    if (devId == nullptr || devId->length >= DEVICE_ID_MAX_LEN) {
+        return BAD_PARAM;
+    }
+    std::unique_lock<std::mutex> lock(g_mutex);
+    uint8_t tmp[DEVICE_ID_MAX_LEN] = {};
+    (void) memset_s(tmp, DEVICE_ID_MAX_LEN, 0, DEVICE_ID_MAX_LEN);
+    errno_t rc = memcpy_s(tmp, DEVICE_ID_MAX_LEN, devId->identity, devId->length);
+    if (rc != EOK) {
+        SGLOGE("identity memcpy error, code=%{public}d", rc);
+        return NULL_OBJECT;
+    }
+    std::string identify(reinterpret_cast<const char *>(tmp));
     auto func = [callback] (const std::string &devId, uint32_t modelId, const std::string &result)-> int32_t {
         if (devId.length() >= DEVICE_ID_MAX_LEN || result.length() >= RESULT_MAX_LEN) {
             return BAD_PARAM;
@@ -144,7 +163,7 @@ static int32_t RequestSecurityModelResultAsyncImpl(const DeviceIdentify *devId, 
         return SUCCESS;
     };
 
-    return RequestSecurityModelResult(identity, modelId, func);
+    return RequestSecurityModelResult(identify, modelId, func);
 }
 
 #ifdef __cplusplus

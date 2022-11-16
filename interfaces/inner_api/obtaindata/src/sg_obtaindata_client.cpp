@@ -60,14 +60,21 @@ static int32_t RequestSecurityEventInfo(std::string &devId, std::string &eventLi
 static int32_t RequestSecurityEventInfoAsyncImpl(const DeviceIdentify *devId, const char *eventJson,
     RequestSecurityEventInfoCallBack callback)
 {
-    if (devId == nullptr || eventJson == nullptr) {
+    if (devId == nullptr || eventJson == nullptr || devId->length >= DEVICE_ID_MAX_LEN) {
         return BAD_PARAM;
     }
     std::unique_lock<std::mutex> lock(g_mutex);
-    std::string identity(reinterpret_cast<const char *>(devId->identity));
+    uint8_t tmp[DEVICE_ID_MAX_LEN] = {};
+    (void) memset_s(tmp, DEVICE_ID_MAX_LEN, 0, DEVICE_ID_MAX_LEN);
+    errno_t rc = memcpy_s(tmp, DEVICE_ID_MAX_LEN, devId->identity, devId->length);
+    if (rc != EOK) {
+        SGLOGE("identity memcpy error, code=%{public}d", rc);
+        return NULL_OBJECT;
+    }
+    std::string identity(reinterpret_cast<const char *>(tmp));
     std::string eventList(eventJson);
     auto func = [callback] (std::string &devId, std::string &riskData, uint32_t status)-> int32_t {
-        SGLOGI("devId=%{public}s, riskData=%{public}s, status=%{public}u", devId.c_str(), riskData.c_str(), status);
+        SGLOGI("riskData=%{public}s, status=%{public}u", riskData.c_str(), status);
         if (devId.length() >= DEVICE_ID_MAX_LEN) {
             return BAD_PARAM;
         }
