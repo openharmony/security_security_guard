@@ -40,8 +40,8 @@ bool RequestSecurityEventInfoAsyncFuzzTest(const uint8_t* data, size_t size)
     uint32_t cpyLen = size > DEVICE_ID_MAX_LEN ? DEVICE_ID_MAX_LEN : static_cast<uint32_t>(size);
     (void) memcpy_s(deviceIdentify.identity, DEVICE_ID_MAX_LEN, data, cpyLen);
     deviceIdentify.length = cpyLen;
-    RequestSecurityEventInfoAsync(&deviceIdentify, reinterpret_cast<const char*>(data),
-        RequestSecurityEventInfoCallBackFunc);
+    std::string eventJson(reinterpret_cast<const char*>(data), size);
+    RequestSecurityEventInfoAsync(&deviceIdentify, eventJson.c_str(), RequestSecurityEventInfoCallBackFunc);
     return true;
 }
 }  // namespace OHOS

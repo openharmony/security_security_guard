@@ -14,6 +14,7 @@
  */
 
 #include "iservice_registry.h"
+#include "securec.h"
 
 #include "data_collect_manager_proxy.h"
 #include "security_guard_define.h"
@@ -49,12 +50,18 @@ int32_t NativeDataCollectKit::ReportSecurityInfo(const std::shared_ptr<EventInfo
 
 static int32_t ReportSecurityInfoImpl(const struct EventInfoSt *info)
 {
-    if (info == nullptr) {
+    if (info == nullptr || info->contentLen >= CONTENT_MAX_LEN) {
         return OHOS::Security::SecurityGuard::BAD_PARAM;
     }
     int64_t eventId = info->eventId;
-    std::string version(info->version);
-    std::string content(reinterpret_cast<const char *>(info->content));
+    std::string version = reinterpret_cast<const char *>(info->version);
+    uint8_t tmp[CONTENT_MAX_LEN] = {};
+    (void) memset_s(tmp, CONTENT_MAX_LEN, 0, CONTENT_MAX_LEN);
+    errno_t rc = memcpy_s(tmp, CONTENT_MAX_LEN, info->content, info->contentLen);
+    if (rc != EOK) {
+        return OHOS::Security::SecurityGuard::NULL_OBJECT;
+    }
+    std::string content(reinterpret_cast<const char *>(tmp));
     auto eventInfo = std::make_shared<OHOS::Security::SecurityGuard::EventInfo>(eventId, version, content);
     return OHOS::Security::SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(eventInfo);
 }

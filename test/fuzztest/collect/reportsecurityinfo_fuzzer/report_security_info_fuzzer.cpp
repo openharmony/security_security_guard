@@ -32,8 +32,9 @@ bool ReportSecurityInfoFuzzTest(const uint8_t* data, size_t size)
     int64_t eventId = rand() % (size + 1);
     EventInfoSt info;
     info.eventId = eventId;
-    info.version = reinterpret_cast<const char*>(data);
-    uint32_t cpyLen = size > CONTENT_MAX_LEN ? CONTENT_MAX_LEN : static_cast<uint32_t>(size);
+    std::string version(reinterpret_cast<const char*>(data), size);
+    info.version = version.c_str();
+    uint32_t cpyLen = size >= CONTENT_MAX_LEN ? CONTENT_MAX_LEN - 1: static_cast<uint32_t>(size);
     (void) memcpy_s(info.content, CONTENT_MAX_LEN, data, cpyLen);
     info.contentLen = cpyLen;
     ReportSecurityInfo(&info);
