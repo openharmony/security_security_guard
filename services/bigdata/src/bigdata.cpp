@@ -28,14 +28,14 @@ namespace {
 
 void BigData::ReportObatinDataEvent(const ObatinDataEvent &event)
 {
-    HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "OBTAIN_DATA",
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "OBTAIN_DATA",
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid,
         CALL_TIME, event.time, EVENT_SIZE, event.size);
 }
 
 void BigData::ReportClassifyEvent(const ClassifyEvent &event)
 {
-    HiviewDFX::HiSysEvent::Write(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "RISK_ANALYSIS",
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "RISK_ANALYSIS",
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid,
         CALL_TIME, event.time, EVENT_INFO, event.eventInfo, RISK_STATUS, event.status);
 }
