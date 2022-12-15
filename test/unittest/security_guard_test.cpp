@@ -22,6 +22,7 @@
 #include <poll.h>
 #include <sys/socket.h>
 
+#include "file_ex.h"
 #include "securec.h"
 #include "string_ex.h"
 
@@ -69,10 +70,12 @@ namespace {
 
 void SecurityGuardUnitTest::SetUpTestCase()
 {
+    SaveStringToFile("/sys/fs/selinux/enforce", "0");
 }
 
 void SecurityGuardUnitTest::TearDownTestCase()
 {
+    SaveStringToFile("/sys/fs/selinux/enforce", "1");
 }
 
 void SecurityGuardUnitTest::SetUp()
