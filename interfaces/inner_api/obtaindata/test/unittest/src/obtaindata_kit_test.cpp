@@ -15,6 +15,8 @@
 
 #include "obtaindata_kit_test.h"
 
+#include "file_ex.h"
+
 #include "sg_obtaindata_client.h"
 
 using namespace testing::ext;
@@ -32,10 +34,12 @@ extern "C" {
 namespace OHOS::Security::SecurityGuardTest {
 void ObtainDataKitTest::SetUpTestCase()
 {
+    SaveStringToFile("/sys/fs/selinux/enforce", "0");
 }
 
 void ObtainDataKitTest::TearDownTestCase()
 {
+    SaveStringToFile("/sys/fs/selinux/enforce", "1");
 }
 
 void ObtainDataKitTest::SetUp()

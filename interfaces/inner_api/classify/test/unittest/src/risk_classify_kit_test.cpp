@@ -15,6 +15,7 @@
 
 #include "risk_classify_kit_test.h"
 
+#include "file_ex.h"
 #include "securec.h"
 
 #include "sg_classify_client.h"
@@ -35,10 +36,12 @@ extern "C" {
 namespace OHOS::Security::SecurityGuardTest {
 void RiskClassifyKitTest::SetUpTestCase()
 {
+    SaveStringToFile("/sys/fs/selinux/enforce", "0");
 }
 
 void RiskClassifyKitTest::TearDownTestCase()
 {
+    SaveStringToFile("/sys/fs/selinux/enforce", "1");
 }
 
 void RiskClassifyKitTest::SetUp()

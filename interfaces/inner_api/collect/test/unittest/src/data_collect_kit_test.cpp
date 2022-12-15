@@ -15,6 +15,7 @@
 
 #include "data_collect_kit_test.h"
 
+#include "file_ex.h"
 #include "nativetoken_kit.h"
 #include "securec.h"
 #include "token_setproc.h"
@@ -50,10 +51,12 @@ void DataCollectKitTest::SetUpTestCase()
     };
     tokenId = GetAccessTokenId(&infoParams);
     SetSelfTokenID(tokenId);
+    SaveStringToFile("/sys/fs/selinux/enforce", "0");
 }
 
 void DataCollectKitTest::TearDownTestCase()
 {
+    SaveStringToFile("/sys/fs/selinux/enforce", "1");
 }
 
 void DataCollectKitTest::SetUp()
