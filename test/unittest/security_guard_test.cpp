@@ -68,14 +68,19 @@ namespace {
     const std::string TEST_STORE_ID = "test_store_id";
 }
 
+std::string g_enforceValue = "0";
+
 void SecurityGuardUnitTest::SetUpTestCase()
 {
-    SaveStringToFile("/sys/fs/selinux/enforce", "0");
+    bool isSuccess = LoadStringFromFile("/sys/fs/selinux/enforce", g_enforceValue);
+    if (isSuccess && g_enforceValue == "1") {
+        SaveStringToFile("/sys/fs/selinux/enforce", "0");
+    }
 }
 
 void SecurityGuardUnitTest::TearDownTestCase()
 {
-    SaveStringToFile("/sys/fs/selinux/enforce", "1");
+    SaveStringToFile("/sys/fs/selinux/enforce", g_enforceValue);
 }
 
 void SecurityGuardUnitTest::SetUp()

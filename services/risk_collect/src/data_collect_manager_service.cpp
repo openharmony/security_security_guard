@@ -26,6 +26,7 @@
 #include "data_collect_manager_callback_proxy.h"
 #include "data_format.h"
 #include "data_manager_wrapper.h"
+#include "hiview_collector.h"
 #include "kernel_interface_adapter.h"
 #include "model_analysis.h"
 #include "risk_collect_define.h"
@@ -78,6 +79,11 @@ void DataCollectManagerService::OnStart()
         listener.Start();
     };
     TaskHandler::GetInstance()->AddTask(listenerTask);
+    TaskHandler::Task hiviewListenerTask = [] {
+        auto collector = std::make_shared<HiviewCollector>();
+        collector->Collect("SECURITY_GUARD", "RISK_ANALYSIS");
+    };
+    TaskHandler::GetInstance()->AddTask(hiviewListenerTask);
 }
 
 void DataCollectManagerService::OnStop()

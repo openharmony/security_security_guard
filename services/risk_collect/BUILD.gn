@@ -62,6 +62,7 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/frameworks/common/interfaces",
     "${sg_root_dir}/services/bigdata/include",
     "${sg_root_dir}/services/model_analysis/include",
+    "${sg_root_dir}/services/risk_collect/collect/hiview",
     "${sg_root_dir}/services/risk_collect/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/json/include",
@@ -92,11 +93,14 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/model_analysis:sg_model_analysis",
+    "${sg_root_dir}/services/risk_collect/collect/hiview:sg_hiview_listener_stamp",
   ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
+    "hisysevent_native:libhisysevent",
+    "hisysevent_native:libhisyseventmanager",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "kv_store:distributeddata_inner",
