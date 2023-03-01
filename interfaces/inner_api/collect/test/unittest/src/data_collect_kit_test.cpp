@@ -35,6 +35,8 @@ extern "C" {
 #endif
 
 namespace OHOS::Security::SecurityGuardTest {
+std::string g_enforceValue = "0";
+
 void DataCollectKitTest::SetUpTestCase()
 {
     static const char *permission[] = { "ohos.permission.securityguard.REPORT_SECURITY_INFO" };
@@ -51,12 +53,15 @@ void DataCollectKitTest::SetUpTestCase()
     };
     tokenId = GetAccessTokenId(&infoParams);
     SetSelfTokenID(tokenId);
-    SaveStringToFile("/sys/fs/selinux/enforce", "0");
+    bool isSuccess = LoadStringFromFile("/sys/fs/selinux/enforce", g_enforceValue);
+    if (isSuccess && g_enforceValue == "1") {
+        SaveStringToFile("/sys/fs/selinux/enforce", "0");
+    }
 }
 
 void DataCollectKitTest::TearDownTestCase()
 {
-    SaveStringToFile("/sys/fs/selinux/enforce", "1");
+    SaveStringToFile("/sys/fs/selinux/enforce", g_enforceValue);
 }
 
 void DataCollectKitTest::SetUp()

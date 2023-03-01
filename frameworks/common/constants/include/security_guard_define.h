@@ -30,7 +30,7 @@ typedef struct EventInfoSt {
     int64_t eventId;
     const char *version;
     uint32_t contentLen;
-    uint32_t content[CONTENT_MAX_LEN];
+    uint8_t content[CONTENT_MAX_LEN];
 } EventInfoSt;
 
 typedef struct DeviceIdentify {
