@@ -39,11 +39,10 @@ Status Database::GetKvStore()
         .createIfMissing = true,
         .encrypt = false,
         .autoSync = false,
-        .kvStoreType = KvStoreType::SINGLE_VERSION,
         .area = EL1,
+        .kvStoreType = KvStoreType::SINGLE_VERSION,
         .baseDir = std::string("/data/service/el1/public/database/") + appId_.appId
     };
-
     Status status = dataManager_->GetSingleKvStore(options, appId_, storeId_, kvStorePtr_);
     if (status != Status::SUCCESS || kvStorePtr_ == nullptr) {
         SGLOGE("[sg_db] GetSingleKvStore failed! status %{public}d, kvStore_ is nullptr", status);
