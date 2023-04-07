@@ -16,7 +16,7 @@
 #ifndef SECURITY_GUARD_SG_CLASSIFY_CLIENT_H
 #define SECURITY_GUARD_SG_CLASSIFY_CLIENT_H
 
-#include "security_guard_define.h"
+#include "security_guard_api.h"
 
 #ifdef __cplusplus
 extern "C" {
