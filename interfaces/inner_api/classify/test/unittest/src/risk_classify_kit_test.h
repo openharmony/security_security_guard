@@ -18,6 +18,7 @@
 
 #include <gtest/gtest.h>
 
+#include "security_guard_api.h"
 #include "security_guard_define.h"
 
 namespace OHOS::Security::SecurityGuardTest {

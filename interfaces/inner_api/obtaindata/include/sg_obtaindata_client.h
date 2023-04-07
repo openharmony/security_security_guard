@@ -16,6 +16,7 @@
 #ifndef SECURITY_GUARD_SG_OBTAINDATA_CLIENT_H
 #define SECURITY_GUARD_SG_OBTAINDATA_CLIENT_H
 
+#include "security_guard_api.h"
 #include "security_guard_define.h"
 
 #ifdef __cplusplus

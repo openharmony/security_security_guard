@@ -16,9 +16,8 @@
 #ifndef SECURITY_GUARD_SG_COLLECT_CLIENT_H
 #define SECURITY_GUARD_SG_COLLECT_CLIENT_H
 
-#include <memory>
-
 #include "event_info.h"
+#include "security_guard_api.h"
 
 #ifdef __cplusplus
 extern "C" {

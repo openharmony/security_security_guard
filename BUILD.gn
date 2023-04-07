@@ -57,3 +57,9 @@ group("security_guard_fuzz_test") {
     ]
   }
 }
+
+group("security_guard_capi") {
+  if (is_standard_system) {
+    deps = [ "${sg_root_dir}/interfaces/kits/c:securityguard_ndk" ]
+  }
+}
