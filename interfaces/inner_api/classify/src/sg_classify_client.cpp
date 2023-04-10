@@ -41,7 +41,7 @@ static int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId,
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         SGLOGE("GetSystemAbilityManager error");
-        return {};
+        return NULL_OBJECT;
     }
 
     auto object = registry->GetSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID);

@@ -34,7 +34,7 @@ static int32_t RequestSecurityEventInfo(std::string &devId, std::string &eventLi
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         SGLOGE("GetSystemAbilityManager error");
-        return {};
+        return NULL_OBJECT;
     }
 
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);

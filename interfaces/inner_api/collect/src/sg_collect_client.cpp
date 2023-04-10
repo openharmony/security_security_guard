@@ -30,7 +30,7 @@ int32_t NativeDataCollectKit::ReportSecurityInfo(const std::shared_ptr<EventInfo
     }
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
-        return {};
+        return NULL_OBJECT;
     }
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
     auto proxy = iface_cast<DataCollectManagerProxy>(object);

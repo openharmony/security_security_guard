@@ -39,20 +39,6 @@ bool DataFormat::CheckRiskContent(std::string content)
         SGLOGE("json parse error");
         return false;
     }
-
-    EventContentSt eventContentSt;
-    if (!JsonCfg::Unmarshal(eventContentSt.status, jsonObj, EVENT_CONTENT_STATUS_KEY)) {
-        SGLOGE("status parse error");
-        return false;
-    }
-    if (!JsonCfg::Unmarshal(eventContentSt.cred, jsonObj, EVENT_CONTENT_CRED_KEY)) {
-        SGLOGE("cred parse error");
-        return false;
-    }
-    if (!JsonCfg::Unmarshal(eventContentSt.extra, jsonObj, EVENT_CONTENT_EXTRA_KEY)) {
-        SGLOGE("extra parse error");
-        return false;
-    }
     return true;
 }
 

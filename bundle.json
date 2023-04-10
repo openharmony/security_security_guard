@@ -47,8 +47,10 @@
         "//base/security/security_guard/sa_profile:security_guard.init",
         "//base/security/security_guard/oem_property:security_guard_cfg",
         "//base/security/security_guard/oem_property:security_guard_model_cfg",
+        "//base/security/security_guard/oem_property:security_guard_event_cfg",
         "//base/security/security_guard:sg_classify_service_build_module",
         "//base/security/security_guard:sg_collect_service_build_module",
+        "//base/security/security_guard:security_guard_napi",
         "//base/security/security_guard:security_guard_capi"
       ],
       "inner_kits": [

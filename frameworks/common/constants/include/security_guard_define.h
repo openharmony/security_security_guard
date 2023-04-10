@@ -58,6 +58,9 @@ using ClassifyEvent = struct {
     std::string status;
     std::string extend;
 };
+
+using RequestRiskDataCallback = std::function<int32_t(std::string &, std::string &, uint32_t)>;
+using ResultCallback = std::function<int32_t (const std::string &devId, uint32_t modelId, const std::string &result)>;
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_DEFINE_H

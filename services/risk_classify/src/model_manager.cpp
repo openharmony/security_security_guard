@@ -17,8 +17,9 @@
 
 #include <nlohmann/json.hpp>
 
+#include "config_data_manager.h"
+#include "config_manager.h"
 #include "data_manager_wrapper.h"
-#include "model_analysis.h"
 #include "model_cfg_marshalling.h"
 #include "risk_analysis_model.h"
 #include "security_guard_log.h"
@@ -32,12 +33,22 @@ ModelManager &ModelManager::GetInstance()
 
 ErrorCode ModelManager::InitModel() const
 {
-    return ModelAnalysis::GetInstance().AnalyseModel();
+    bool success = ConfigManager::InitConfig<EventConfig>();
+    if (!success) {
+        return FAILED;
+    }
+    success = ConfigManager::InitConfig<ModelConfig>();
+    if (!success) {
+        return FAILED;
+    }
+
+    ConfigManager::GetInstance()->StartUpdate();
+    return SUCCESS;
 }
 
 std::vector<int64_t> ModelManager::GetEventIds(uint32_t modelId)
 {
-    return ModelAnalysis::GetInstance().GetEventIds(modelId);
+    return ConfigDataManager::GetInstance()->GetEventIds(modelId);
 }
 
 ErrorCode ModelManager::AnalyseRisk(const std::vector<int64_t> &events, std::string &eventInfo) const
