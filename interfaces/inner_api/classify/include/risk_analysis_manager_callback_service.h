@@ -17,7 +17,6 @@
 #define SECURITY_GUARD_RISK_ANALYSIS_MANAGER_CALBACK_SERVICE_H
 
 #include "risk_analysis_manager_callback_stub.h"
-#include "sg_classify_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 class RiskAnalysisManagerCallbackService : public RiskAnalysisManagerCallbackStub {

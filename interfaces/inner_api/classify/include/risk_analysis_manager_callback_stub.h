@@ -20,7 +20,7 @@
 #include "nocopyable.h"
 
 #include "i_risk_analysis_manager.h"
-#include "sg_classify_define.h"
+#include "security_guard_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 class RiskAnalysisManagerCallbackStub : public IRemoteStub<IRiskAnalysisManagerCallback>, public NoCopyable {

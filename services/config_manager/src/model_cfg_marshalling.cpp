@@ -22,23 +22,35 @@
 namespace OHOS::Security::SecurityGuard {
 using nlohmann::json;
 
-void to_json(json &jsonObj, const ModelCfgSt &modelCfg)
+void to_json(json &jsonObj, const ModelCfg &modelCfg)
 {
-    std::vector<std::string> threatList;
-    std::transform(modelCfg.threatList.begin(), modelCfg.threatList.end(),
-        std::back_inserter(threatList), [] (uint32_t threat) {
-        return std::to_string(threat);
+    std::vector<std::string> preLoads;
+    std::transform(modelCfg.preload.begin(), modelCfg.preload.end(),
+        std::back_inserter(preLoads), [] (uint32_t eventId) {
+        return std::to_string(eventId);
     });
+
+    std::vector<std::string> eventList;
+    std::transform(modelCfg.eventList.begin(), modelCfg.eventList.end(),
+        std::back_inserter(eventList), [] (uint32_t eventId) {
+        return std::to_string(eventId);
+    });
+
     jsonObj = json {
         { MODEL_CFG_MODEL_ID_KEY, std::to_string(modelCfg.modelId) },
-        { MODEL_CFG_MODEL_NAME_KEY, modelCfg.modelName },
-        { MODEL_CFG_VERSION_KEY, modelCfg.version },
-        { MODEL_CFG_THREAT_LIST_KEY,  threatList},
-        { MODEL_CFG_COMPUTE_MODEL_KEY, modelCfg.computeModel }
+        { MODEL_CFG_PATH_KEY, modelCfg.path },
+        { MODEL_CFG_FORMAT_KEY, modelCfg.format },
+        { MODEL_CFG_START_MODE_KEY, modelCfg.startMode },
+        { MODEL_CFG_PRELOAD_KEY, preLoads },
+        { MODEL_CFG_EVENT_LIST_KEY, eventList },
+        { MODEL_CFG_PERMISSIONS_KEY, modelCfg.permissions },
+        { MODEL_CFG_DB_TABLE_KEY, modelCfg.dbTable },
+        { MODEL_CFG_RUNNING_CNTL_KEY, modelCfg.runningCntl },
+        { MODEL_CFG_CALLER_KEY, modelCfg.caller }
     };
 }
 
-void from_json(const json &jsonObj, ModelCfgSt &modelCfg)
+void from_json(const json &jsonObj, ModelCfg &modelCfg)
 {
     std::string modelId;
     JsonCfg::Unmarshal(modelId, jsonObj, MODEL_CFG_MODEL_ID_KEY);
@@ -47,60 +59,36 @@ void from_json(const json &jsonObj, ModelCfgSt &modelCfg)
         return;
     }
     modelCfg.modelId = value;
-    JsonCfg::Unmarshal(modelCfg.modelName, jsonObj, MODEL_CFG_MODEL_NAME_KEY);
-    JsonCfg::Unmarshal(modelCfg.version, jsonObj, MODEL_CFG_VERSION_KEY);
-    std::vector<std::string> threatList;
-    JsonCfg::Unmarshal(threatList, jsonObj, MODEL_CFG_THREAT_LIST_KEY);
-    for (const std::string& threat : threatList) {
+    JsonCfg::Unmarshal(modelCfg.path, jsonObj, MODEL_CFG_PATH_KEY);
+    JsonCfg::Unmarshal(modelCfg.format, jsonObj, MODEL_CFG_FORMAT_KEY);
+    JsonCfg::Unmarshal(modelCfg.startMode, jsonObj, MODEL_CFG_START_MODE_KEY);
+
+    std::vector<std::string> preLoads;
+    JsonCfg::Unmarshal(preLoads, jsonObj, MODEL_CFG_PRELOAD_KEY);
+    for (const std::string& eventId : preLoads) {
         uint32_t tmp = 0;
-        if (!SecurityGuardUtils::StrToU32(threat, tmp)) {
-            return;
+        if (!SecurityGuardUtils::StrToU32(eventId, tmp)) {
+            continue;
         }
-        modelCfg.threatList.emplace_back(tmp);
+        modelCfg.preload.emplace_back(tmp);
     }
-    JsonCfg::Unmarshal(modelCfg.computeModel, jsonObj, MODEL_CFG_COMPUTE_MODEL_KEY);
-}
 
-void to_json(json &jsonObj, const ThreatCfgSt &threatCfg)
-{
     std::vector<std::string> eventList;
-    std::transform(threatCfg.eventList.begin(), threatCfg.eventList.end(),
-        std::back_inserter(eventList), [] (uint32_t event) {
-        return std::to_string(event);
-    });
-    jsonObj = json {
-        { THREAT_CFG_THREAT_ID_KEY, std::to_string(threatCfg.threatId) },
-        { THREAT_CFG_THREAT_NAME_KEY, threatCfg.threatName },
-        { THREAT_CFG_VERSION_KEY, threatCfg.version },
-        { THREAT_CFG_EVENT_LIST_KEY, eventList },
-        { THREAT_CFG_COMPUTE_MODEL_KEY, threatCfg.computeModel }
-    };
-}
-
-void from_json(const json &jsonObj, ThreatCfgSt &threatCfg)
-{
-    std::string threatId;
-    JsonCfg::Unmarshal(threatId, jsonObj, THREAT_CFG_THREAT_ID_KEY);
-    uint32_t value = 0;
-    if (!SecurityGuardUtils::StrToU32(threatId, value)) {
-        return;
-    }
-    threatCfg.threatId = value;
-    JsonCfg::Unmarshal(threatCfg.threatName, jsonObj, THREAT_CFG_THREAT_NAME_KEY);
-    JsonCfg::Unmarshal(threatCfg.version, jsonObj, THREAT_CFG_VERSION_KEY);
-    std::vector<std::string> eventList;
-    JsonCfg::Unmarshal(eventList, jsonObj, THREAT_CFG_EVENT_LIST_KEY);
-    for (const std::string& event : eventList) {
-        int64_t tmp = 0;
-        if (!SecurityGuardUtils::StrToI64(event, tmp)) {
-            return;
+    JsonCfg::Unmarshal(eventList, jsonObj, MODEL_CFG_EVENT_LIST_KEY);
+    for (const std::string& eventId : eventList) {
+        uint32_t tmp = 0;
+        if (!SecurityGuardUtils::StrToU32(eventId, tmp)) {
+            continue;
         }
-        threatCfg.eventList.emplace_back(tmp);
+        modelCfg.eventList.emplace_back(tmp);
     }
-    JsonCfg::Unmarshal(threatCfg.computeModel, jsonObj, THREAT_CFG_COMPUTE_MODEL_KEY);
+    JsonCfg::Unmarshal(modelCfg.permissions, jsonObj, MODEL_CFG_PERMISSIONS_KEY);
+    JsonCfg::Unmarshal(modelCfg.dbTable, jsonObj, MODEL_CFG_DB_TABLE_KEY);
+    JsonCfg::Unmarshal(modelCfg.runningCntl, jsonObj, MODEL_CFG_RUNNING_CNTL_KEY);
+    JsonCfg::Unmarshal(modelCfg.caller, jsonObj, MODEL_CFG_CALLER_KEY);
 }
 
-void to_json(json &jsonObj, const EventCfgSt &eventCfg)
+void to_json(json &jsonObj, const EventCfg &eventCfg)
 {
     jsonObj = json {
         { EVENT_CFG_EVENT_ID_KEY, std::to_string(eventCfg.eventId) },
@@ -109,11 +97,13 @@ void to_json(json &jsonObj, const EventCfgSt &eventCfg)
         { EVENT_CFG_EVENT_TYPE_KEY, eventCfg.eventType },
         { EVENT_CFG_DATA_SENSITIVITY_LEVEL_KEY, eventCfg.dataSensitivityLevel },
         { EVENT_CFG_STORAGE_RAM_NUM_KEY, eventCfg.storageRamNums },
-        { EVENT_CFG_STORAGE_ROM_NUM_KEY, eventCfg.storageRomNums }
+        { EVENT_CFG_STORAGE_ROM_NUM_KEY, eventCfg.storageRomNums },
+        { EVENT_CFG_STORAGE_TIME_KEY, eventCfg.storageTime },
+        { EVENT_CFG_OWNER_KEY, eventCfg.owner }
     };
 }
 
-void from_json(const json &jsonObj, EventCfgSt &eventCfg)
+void from_json(const json &jsonObj, EventCfg &eventCfg)
 {
     std::string eventId;
     JsonCfg::Unmarshal(eventId, jsonObj, EVENT_CFG_EVENT_ID_KEY);
@@ -128,6 +118,8 @@ void from_json(const json &jsonObj, EventCfgSt &eventCfg)
     JsonCfg::Unmarshal(eventCfg.dataSensitivityLevel, jsonObj, EVENT_CFG_DATA_SENSITIVITY_LEVEL_KEY);
     JsonCfg::Unmarshal(eventCfg.storageRamNums, jsonObj, EVENT_CFG_STORAGE_RAM_NUM_KEY);
     JsonCfg::Unmarshal(eventCfg.storageRomNums, jsonObj, EVENT_CFG_STORAGE_ROM_NUM_KEY);
+    JsonCfg::Unmarshal(eventCfg.storageTime, jsonObj, EVENT_CFG_STORAGE_TIME_KEY);
+    JsonCfg::Unmarshal(eventCfg.owner, jsonObj, EVENT_CFG_OWNER_KEY);
 }
 
 void to_json(json &jsonObj, const DataMgrCfgSt &dataMgrCfg)

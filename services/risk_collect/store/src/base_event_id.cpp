@@ -15,7 +15,7 @@
 
 #include "base_event_id.h"
 
-#include "model_analysis.h"
+#include "config_data_manager.h"
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -53,14 +53,9 @@ bool BaseEventId::Push(const EventDataSt &eventDataSt)
         return false;
     }
 
-    std::shared_ptr<EventConfig> config = std::make_shared<EventConfig>();
-    ErrorCode code = ModelAnalysis::GetInstance().GetEventConfig(eventId_, config);
-    if (code != SUCCESS) {
-        SGLOGE("the eventId %{public}ld does not exist in config", eventId_);
-        return false;
-    }
-
-    uint32_t storageNum = config->GetStorageRomNums();
+    EventCfg config;
+    ConfigDataManager::GetInstance()->GetEventConfig(eventId_, config);
+    uint32_t storageNum = config.storageRomNums;
     if (storageNum == 0) {
         SGLOGE("the eventId %{public}ld does not need to storage in config", eventId_);
         return false;
@@ -88,13 +83,9 @@ void BaseEventId::ReplaceOldestData(const EventDataSt &eventDataSt)
 bool BaseEventId::GetCacheData(std::vector<EventDataSt>& vector)
 {
     vector.clear();
-    std::shared_ptr<EventConfig> config = std::make_shared<EventConfig>();
-    ErrorCode code = ModelAnalysis::GetInstance().GetEventConfig(eventId_, config);
-    if (code != SUCCESS) {
-        SGLOGE("the eventId %{public}ld does not exist in config", eventId_);
-        return false;
-    }
-    uint32_t size = config->GetStorageRamNums();
+    EventCfg config;
+    ConfigDataManager::GetInstance()->GetEventConfig(eventId_, config);
+    uint32_t size = config.storageRamNums;
     if (size == 0) {
         SGLOGE("the eventId %{public}ld does not need to cache in config", eventId_);
         return false;

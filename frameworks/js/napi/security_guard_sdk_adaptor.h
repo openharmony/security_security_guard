@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,24 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef SECURITY_GUARD_DATA_COLLECT_MANAGER_CALLBACK_SERVICE_H
-#define SECURITY_GUARD_DATA_COLLECT_MANAGER_CALLBACK_SERVICE_H
+#ifndef REQUEST_SECURITY_EVENT_INFO_NAPI_H
+#define REQUEST_SECURITY_EVENT_INFO_NAPI_H
 
-#include <string>
-
-#include "data_collect_manager_callback_stub.h"
+#include "event_info.h"
 #include "security_guard_define.h"
 
 namespace OHOS::Security::SecurityGuard {
-class DataCollectManagerCallbackService : public DataCollectManagerCallbackStub {
+class SecurityGuardSdkAdaptor {
 public:
-    explicit DataCollectManagerCallbackService(RequestRiskDataCallback &callback);
-    ~DataCollectManagerCallbackService() override = default;
-    int32_t ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status) override;
+    static int32_t RequestSecurityEventInfo(std::string &devId, std::string &eventList,
+        RequestRiskDataCallback callback);
+    static int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId, ResultCallback callback);
+    static int32_t ReportSecurityInfo(const std::shared_ptr<EventInfo> &info);
 
 private:
-    RequestRiskDataCallback callback_;
+    SecurityGuardSdkAdaptor() = delete;
+    ~SecurityGuardSdkAdaptor() = delete;
 };
 } // OHOS::Security::SecurityGuard
 
-#endif // SECURITY_GUARD_DATA_COLLECT_MANAGER_CALLBACK_SERVICE_H
+#endif // REQUEST_SECURITY_EVENT_INFO_NAPI_H

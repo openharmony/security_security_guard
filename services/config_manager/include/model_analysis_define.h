@@ -26,10 +26,15 @@ namespace OHOS::Security::SecurityGuard {
 
     // model config key
     const std::string MODEL_CFG_MODEL_ID_KEY = "modelId";
-    const std::string MODEL_CFG_MODEL_NAME_KEY = "modelName";
-    const std::string MODEL_CFG_VERSION_KEY = "version";
-    const std::string MODEL_CFG_THREAT_LIST_KEY = "threatList";
-    const std::string MODEL_CFG_COMPUTE_MODEL_KEY = "computeModel";
+    const std::string MODEL_CFG_PATH_KEY = "path";
+    const std::string MODEL_CFG_FORMAT_KEY = "format";
+    const std::string MODEL_CFG_START_MODE_KEY = "start-mode";
+    const std::string MODEL_CFG_PRELOAD_KEY = "preload";
+    const std::string MODEL_CFG_EVENT_LIST_KEY = "eventList";
+    const std::string MODEL_CFG_PERMISSIONS_KEY = "permissions";
+    const std::string MODEL_CFG_DB_TABLE_KEY = "db_table";
+    const std::string MODEL_CFG_RUNNING_CNTL_KEY = "running_cntl";
+    const std::string MODEL_CFG_CALLER_KEY = "caller";
 
     // threat config key
     const std::string THREAT_CFG_THREAT_ID_KEY = "threatId";
@@ -46,6 +51,8 @@ namespace OHOS::Security::SecurityGuard {
     const std::string EVENT_CFG_DATA_SENSITIVITY_LEVEL_KEY = "dataSensitivityLevel";
     const std::string EVENT_CFG_STORAGE_RAM_NUM_KEY = "storageRamNums";
     const std::string EVENT_CFG_STORAGE_ROM_NUM_KEY = "storageRomNums";
+    const std::string EVENT_CFG_STORAGE_TIME_KEY = "storageTime";
+    const std::string EVENT_CFG_OWNER_KEY = "owner";
 
     // date manager key
     const std::string DATA_MGR_DEVICE_ROM_KEY = "deviceRom";

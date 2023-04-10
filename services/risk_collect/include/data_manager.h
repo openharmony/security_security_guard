@@ -24,7 +24,7 @@
 
 #include "base_event_id.h"
 #include "base_event_id_storage.h"
-#include "event_config.h"
+#include "config_define.h"
 #include "security_guard_define.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -41,7 +41,7 @@ public:
     ErrorCode DeleteKvStore();
 
 private:
-    ErrorCode CacheData(std::shared_ptr<ICollectInfo> &info, std::shared_ptr<EventConfig> &config);
+    ErrorCode CacheData(std::shared_ptr<ICollectInfo> &info);
     std::map<std::string, std::string> eventIdToCacheDataMap_;
     std::mutex mapMutex_;
     std::shared_ptr<DataStorage> storage_;

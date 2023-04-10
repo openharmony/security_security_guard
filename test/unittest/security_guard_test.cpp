@@ -26,13 +26,13 @@
 #include "securec.h"
 #include "string_ex.h"
 
-#include "data_mgr_cfg.h"
+#include "config_define.h"
+#include "config_manager.h"
+#include "event_config.h"
 #include "model_cfg_marshalling.h"
 #include "event_config.h"
-#include "model_analysis.h"
 #include "security_guard_define.h"
 #include "model_config.h"
-#include "threat_config.h"
 #include "security_guard_utils.h"
 #include "base_event_id.h"
 #include "data_storage.h"
@@ -154,194 +154,6 @@ public:
 };
 
 /**
- * @tc.name: TestDataMgrCfg001
- * @tc.desc: Test DataMgrCfg setter and getter
- * @tc.type: FUNC
- * @tc.require: SR000H8DA6
- */
-HWTEST_F(SecurityGuardUnitTest, TestDataMgrCfg001, TestSize.Level1)
-{
-    static const uint32_t actualValue = 1;
-    DataMgrCfg::GetInstance().SetEventMaxRamNum(actualValue);
-    DataMgrCfg::GetInstance().SetDeviceRam(actualValue);
-    DataMgrCfg::GetInstance().SetDeviceRom(actualValue);
-    DataMgrCfg::GetInstance().SetEventMaxRomNum(actualValue);
-    uint32_t expectValue = DataMgrCfg::GetInstance().GetEventMaxRamNum();
-    EXPECT_EQ(expectValue, actualValue);
-    expectValue = DataMgrCfg::GetInstance().GetDeviceRam();
-    EXPECT_EQ(expectValue, actualValue);
-    expectValue = DataMgrCfg::GetInstance().GetDeviceRom();
-    EXPECT_EQ(expectValue, actualValue);
-    expectValue = DataMgrCfg::GetInstance().GetEventMaxRomNum();
-    EXPECT_EQ(expectValue, actualValue);
-}
-
-/**
- * @tc.name: TestEventConfig001
- * @tc.desc: Test EventConfig getter
- * @tc.type: FUNC
- * @tc.require: SR000H8DA6
- */
-HWTEST_F(SecurityGuardUnitTest, TestEventConfig001, TestSize.Level1)
-{
-    EventCfgSt config = {
-        .eventId = 000000001,
-        .eventName = "test eventId",
-        .version = 1,
-        .eventType = 1,
-        .dataSensitivityLevel = 1,
-        .storageRamNums = 1,
-        .storageRomNums = 5
-    };
-    std::shared_ptr<EventConfig> eventConfig = std::make_shared<EventConfig>(config);
-    EXPECT_EQ(eventConfig->GetEventId(), config.eventId);
-    EXPECT_EQ(eventConfig->GetEventType(), config.eventType);
-    EXPECT_STREQ(eventConfig->GetEventName().c_str(), config.eventName.c_str());
-    EXPECT_EQ(eventConfig->GetVersion(), config.version);
-    EXPECT_EQ(eventConfig->GetDataSensitivityLevel(), config.dataSensitivityLevel);
-    EXPECT_EQ(eventConfig->GetStorageRamNums(), config.storageRamNums);
-    EXPECT_EQ(eventConfig->GetStorageRomNums(), config.storageRomNums);
-}
-
-/**
- * @tc.name: TestModelConfig001
- * @tc.desc: Test ModelConfig getter
- * @tc.type: FUNC
- * @tc.require: SR000H8DA6
- */
-HWTEST_F(SecurityGuardUnitTest, TestModelConfig001, TestSize.Level1)
-{
-    ModelCfgSt config = {
-        .modelId = 3001000000,
-        .modelName = "test modelId",
-        .version = 1,
-        .threatList = {},
-        .computeModel = ""
-    };
-    std::shared_ptr<ModelConfig> modelConfig = std::make_shared<ModelConfig>(config);
-    EXPECT_EQ(modelConfig->GetModelId(), config.modelId);
-    EXPECT_STREQ(modelConfig->GetModelName().c_str(), config.modelName.c_str());
-    EXPECT_EQ(modelConfig->GetVersion(), config.version);
-    std::vector<uint32_t> vec = modelConfig->GetThreatList();
-    EXPECT_TRUE(vec.empty());
-    EXPECT_EQ(modelConfig->GetComputeModel(), config.computeModel);
-}
-
-/**
- * @tc.name: TestThreatConfig001
- * @tc.desc: Test ThreatConfig getter
- * @tc.type: FUNC
- * @tc.require: SR000H8DA6
- */
-HWTEST_F(SecurityGuardUnitTest, TestThreatConfig001, TestSize.Level1)
-{
-    ThreatCfgSt config = {
-        .threatId = 3000000000,
-        .threatName = "test threatId",
-        .version = 1,
-        .eventList = {},
-        .computeModel = ""
-    };
-    std::shared_ptr<ThreatConfig> threatConfig = std::make_shared<ThreatConfig>(config);
-    EXPECT_EQ(threatConfig->GetThreatId(), config.threatId);
-    EXPECT_STREQ(threatConfig->GetThreatName().c_str(), config.threatName.c_str());
-    EXPECT_EQ(threatConfig->GetVersion(), config.version);
-    std::vector<int64_t> vec = threatConfig->GetEventList();
-    EXPECT_TRUE(vec.empty());
-    EXPECT_EQ(threatConfig->GetComputeModel(), config.computeModel);
-}
-
-/**
- * @tc.name: TestModelAnalysis001
- * @tc.desc: Test ModelAnalysis GetEventIds and GetModelConfig
- * @tc.type: FUNC
- * @tc.require: SR000H8DA6
- */
-HWTEST_F(SecurityGuardUnitTest, TestModelAnalysis001, TestSize.Level1)
-{
-    std::vector<int64_t> vec = ModelAnalysis::GetInstance().GetAllEventIds();
-    EXPECT_TRUE(vec.empty());
-    ErrorCode code = ModelAnalysis::GetInstance().AnalyseModel();
-    EXPECT_EQ(code, ErrorCode::SUCCESS);
-    vec = ModelAnalysis::GetInstance().GetAllEventIds();
-    EXPECT_FALSE(vec.empty());
-
-    uint32_t modelId = 0;
-    vec = ModelAnalysis::GetInstance().GetEventIds(modelId);
-    EXPECT_TRUE(vec.empty());
-    ModelCfgSt modelSt = {
-        .modelId = 3001000000,
-        .modelName = "test modelId",
-        .version = 1,
-        .threatList = {},
-        .computeModel = ""
-    };
-    auto modelConfig = std::make_shared<ModelConfig>(modelSt);
-    code = ModelAnalysis::GetInstance().GetModelConfig(modelId, modelConfig);
-    EXPECT_NE(code, ErrorCode::SUCCESS);
-
-    modelId = 3001000000;
-    vec = ModelAnalysis::GetInstance().GetEventIds(modelId);
-    EXPECT_FALSE(vec.empty());
-    code = ModelAnalysis::GetInstance().GetModelConfig(modelId, modelConfig);
-    EXPECT_EQ(code, ErrorCode::SUCCESS);
-}
-
-/**
- * @tc.name: TestModelAnalysis002
- * @tc.desc: Test ModelAnalysis GetEventIds and GetEventConfig
- * @tc.type: FUNC
- * @tc.require: SR000H8DA6
- */
-HWTEST_F(SecurityGuardUnitTest, TestModelAnalysis002, TestSize.Level1)
-{
-    EventCfgSt eventSt = {
-        .eventId = 000000001,
-        .eventName = "test eventId",
-        .version = 1,
-        .eventType = 1,
-        .dataSensitivityLevel = 1,
-        .storageRamNums = 1,
-        .storageRomNums = 5
-    };
-    auto eventConfig = std::make_shared<EventConfig>(eventSt);
-    int64_t eventId = 0;
-    ErrorCode code = ModelAnalysis::GetInstance().GetEventConfig(eventId, eventConfig);
-    EXPECT_NE(code, ErrorCode::SUCCESS);
-
-    eventId = 1011009000;
-    code = ModelAnalysis::GetInstance().GetEventConfig(eventId, eventConfig);
-    EXPECT_EQ(code, ErrorCode::SUCCESS);
-    EXPECT_EQ(eventConfig->GetEventId(), eventId);
-}
-
-/**
- * @tc.name: TestModelAnalysis003
- * @tc.desc: Test ModelAnalysis GetThreatConfig
- * @tc.type: FUNC
- * @tc.require: SR000H8DA6
- */
-HWTEST_F(SecurityGuardUnitTest, TestModelAnalysis003, TestSize.Level1)
-{
-    ThreatCfgSt threatSt = {
-        .threatId = 3000000000,
-        .threatName = "test threatId",
-        .version = 1,
-        .eventList = {},
-        .computeModel = ""
-    };
-    auto threatConfig = std::make_shared<ThreatConfig>(threatSt);
-    uint32_t threatId = 0;
-    ErrorCode code = ModelAnalysis::GetInstance().GetThreatConfig(threatId, threatConfig);
-    EXPECT_NE(code, ErrorCode::SUCCESS);
-
-    threatId = 3000000000;
-    code = ModelAnalysis::GetInstance().GetThreatConfig(threatId, threatConfig);
-    EXPECT_EQ(code, ErrorCode::SUCCESS);
-    EXPECT_EQ(threatConfig->GetThreatId(), threatId);
-}
-
-/**
  * @tc.name: TestBaseEventId001
  * @tc.desc: Test BaseEventId class
  * @tc.type: FUNC
@@ -349,8 +161,8 @@ HWTEST_F(SecurityGuardUnitTest, TestModelAnalysis003, TestSize.Level1)
  */
 HWTEST_F(SecurityGuardUnitTest, TestBaseEventId001, TestSize.Level1)
 {
-    ErrorCode code = ModelAnalysis::GetInstance().AnalyseModel();
-    EXPECT_EQ(code, ErrorCode::SUCCESS);
+    bool success = ConfigManager::GetInstance()->InitConfig<EventConfig>();
+    EXPECT_TRUE(success);
 
     BaseEventId fakeEventId(0);
     EventDataSt eventData = {
@@ -523,8 +335,8 @@ HWTEST_F(SecurityGuardUnitTest, TestDataFormat002, TestSize.Level1)
  */
 HWTEST_F(SecurityGuardUnitTest, TestDataManager001, TestSize.Level1)
 {
-    ErrorCode code = ModelAnalysis::GetInstance().AnalyseModel();
-    EXPECT_EQ(code, ErrorCode::SUCCESS);
+    bool success = ConfigManager::GetInstance()->InitConfig<EventConfig>();
+    EXPECT_TRUE(success);
 
     DistributedKvDataManager kvDataManager;
     std::shared_ptr<DatabaseManager> dataManager = std::make_shared<DatabaseManager>(kvDataManager);
@@ -543,7 +355,7 @@ HWTEST_F(SecurityGuardUnitTest, TestDataManager001, TestSize.Level1)
         .content = "test content"
     };
     std::shared_ptr<DataManager> manager = std::make_shared<DataManager>(storage);
-    code = manager->LoadCacheData();
+    ErrorCode code = manager->LoadCacheData();
     EXPECT_EQ(code, NULL_OBJECT);
     code = manager->AddCollectInfo(eventData);
     EXPECT_EQ(code, NULL_OBJECT);
@@ -563,8 +375,8 @@ HWTEST_F(SecurityGuardUnitTest, TestDataManager001, TestSize.Level1)
  */
 HWTEST_F(SecurityGuardUnitTest, TestDataManager002, TestSize.Level1)
 {
-    ErrorCode code = ModelAnalysis::GetInstance().AnalyseModel();
-    EXPECT_EQ(code, ErrorCode::SUCCESS);
+    bool success = ConfigManager::GetInstance()->InitConfig<EventConfig>();
+    EXPECT_TRUE(success);
 
     DistributedKvDataManager kvDataManager;
     std::shared_ptr<DatabaseManager> dataManager = std::make_shared<DatabaseManager>(kvDataManager);
@@ -596,7 +408,7 @@ HWTEST_F(SecurityGuardUnitTest, TestDataManager002, TestSize.Level1)
             infos = info;
         });
     DataManager managerObj(mockStorage);
-    code = managerObj.LoadCacheData();
+    ErrorCode code = managerObj.LoadCacheData();
     EXPECT_EQ(code, FAILED);
     code = managerObj.LoadCacheData();
     EXPECT_EQ(code, FAILED);
@@ -962,13 +774,7 @@ HWTEST_F(SecurityGuardUnitTest, TestJsonCfg007, TestSize.Level1)
  */
 HWTEST_F(SecurityGuardUnitTest, TestJsonCfg008, TestSize.Level1)
 {
-    ModelCfgSt modelCfg = {
-        .modelId = 0,
-        .modelName = "",
-        .version = 0,
-        .threatList = {},
-        .computeModel = ""
-    };
+    ModelCfg modelCfg = {};
     nlohmann::json json;
     json["int32"] = 0;
     json["object"] = modelCfg;
@@ -988,14 +794,8 @@ HWTEST_F(SecurityGuardUnitTest, TestJsonCfg008, TestSize.Level1)
  */
 HWTEST_F(SecurityGuardUnitTest, TestJsonCfg009, TestSize.Level1)
 {
-    ModelCfgSt modelCfg = {
-        .modelId = 0,
-        .modelName = "",
-        .version = 0,
-        .threatList = {},
-        .computeModel = ""
-    };
-    std::vector<ModelCfgSt> vec {modelCfg};
+    ModelCfg modelCfg = {};
+    std::vector<ModelCfg> vec {modelCfg};
     nlohmann::json json;
     json["int32"] = 0;
     json["object"] = modelCfg;
@@ -1020,36 +820,10 @@ HWTEST_F(SecurityGuardUnitTest, TestJsonCfg009, TestSize.Level1)
  */
 HWTEST_F(SecurityGuardUnitTest, TestModelCfgMarshalling001, TestSize.Level1)
 {
-    ModelCfgSt modelCfg = {
-        .modelId = 0,
-        .modelName = "",
-        .version = 0,
-        .threatList = {},
-        .computeModel = ""
-    };
+    ModelCfg modelCfg = {};
     nlohmann::json jsonObj(modelCfg);
-    ModelCfgSt modelCfg1 = jsonObj.get<ModelCfgSt>();
+    ModelCfg modelCfg1 = jsonObj.get<ModelCfg>();
     EXPECT_EQ(modelCfg1.modelId, modelCfg.modelId);
-}
-
-/**
- * @tc.name: TestModelCfgMarshalling002
- * @tc.desc: Test Marshalling with ThreatCfgSt
- * @tc.type: FUNC
- * @tc.require: SR000H96L5
- */
-HWTEST_F(SecurityGuardUnitTest, TestModelCfgMarshalling002, TestSize.Level1)
-{
-    ThreatCfgSt threatCfg = {
-        .threatId = 0,
-        .threatName = "",
-        .version = 0,
-        .eventList = {},
-        .computeModel = ""
-    };
-    nlohmann::json jsonObj(threatCfg);
-    ThreatCfgSt threatCfg1 = jsonObj.get<ThreatCfgSt>();
-    EXPECT_EQ(threatCfg1.threatId, threatCfg.threatId);
 }
 
 /**
@@ -1060,17 +834,9 @@ HWTEST_F(SecurityGuardUnitTest, TestModelCfgMarshalling002, TestSize.Level1)
  */
 HWTEST_F(SecurityGuardUnitTest, TestModelCfgMarshalling003, TestSize.Level1)
 {
-    EventCfgSt eventCfg = {
-        .eventId = 0,
-        .eventName = "",
-        .version = 0,
-        .eventType = 0,
-        .dataSensitivityLevel = 0,
-        .storageRamNums = 0,
-        .storageRomNums = 0
-    };
+    EventCfg eventCfg = {};
     nlohmann::json jsonObj(eventCfg);
-    EventCfgSt eventCfg1 = jsonObj.get<EventCfgSt>();
+    EventCfg eventCfg1 = jsonObj.get<EventCfg>();
     EXPECT_EQ(eventCfg1.eventId, eventCfg.eventId);
 }
 

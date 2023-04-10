@@ -17,7 +17,8 @@
 
 #include <vector>
 
-#include "model_analysis.h"
+#include "config_data_manager.h"
+#include "model_cfg_marshalling.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 
@@ -46,19 +47,13 @@ ErrorCode DataManager::LoadCacheData()
     }
 
     for (auto &entry : eventIdToDataMap) {
-        std::shared_ptr<EventConfig> config = std::make_shared<EventConfig>();
         int64_t value = 0;
         bool isSuccess = SecurityGuardUtils::StrToI64(entry.first, value);
         if (!isSuccess) {
             continue;
         }
-        ErrorCode code = ModelAnalysis::GetInstance().GetEventConfig(value, config);
-        if (code != SUCCESS) {
-            SGLOGE("get config error, eventId=%{public}ld", value);
-            continue;
-        }
         SGLOGE("get config ok, eventId=%{public}ld", value);
-        CacheData(entry.second, config);
+        CacheData(entry.second);
     }
     return SUCCESS;
 }
@@ -163,7 +158,7 @@ ErrorCode DataManager::GetCachedEventDataById(const std::vector<int64_t> &eventI
     return SUCCESS;
 }
 
-ErrorCode DataManager::CacheData(std::shared_ptr<ICollectInfo> &info, std::shared_ptr<EventConfig> &config)
+ErrorCode DataManager::CacheData(std::shared_ptr<ICollectInfo> &info)
 {
     auto eventId = std::static_pointer_cast<BaseEventId>(info);
     std::vector<EventDataSt> vector;

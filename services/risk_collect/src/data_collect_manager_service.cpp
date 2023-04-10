@@ -23,12 +23,12 @@
 #include "string_ex.h"
 
 #include "bigdata.h"
+#include "config_data_manager.h"
 #include "data_collect_manager_callback_proxy.h"
 #include "data_format.h"
 #include "data_manager_wrapper.h"
 #include "hiview_collector.h"
 #include "kernel_interface_adapter.h"
-#include "model_analysis.h"
 #include "risk_collect_define.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
@@ -70,7 +70,7 @@ void DataCollectManagerService::OnStart()
     TaskHandler::Task listenerTask = [] {
         KernelInterfaceAdapter adapter;
         UeventNotify notify(adapter);
-        std::vector<int64_t> whiteList = ModelAnalysis::GetInstance().GetAllEventIds();
+        std::vector<int64_t> whiteList = ConfigDataManager::GetInstance()->GetAllEventIds();
         notify.AddWhiteList(whiteList);
         notify.NotifyScan();
 
