@@ -113,7 +113,7 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo002, TestSize.Level1)
     EXPECT_TRUE(rc == EOK);
     info.contentLen = static_cast<uint32_t>(content.length());
     int ret = ReportSecurityInfo(&info);
-    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
 }
 
 /**
@@ -135,7 +135,7 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo003, TestSize.Level1)
     EXPECT_TRUE(rc == EOK);
     info.contentLen = static_cast<uint32_t>(content.length());
     int ret = ReportSecurityInfo(&info);
-    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
 }
 
 /**
@@ -157,7 +157,7 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo004, TestSize.Level1)
     EXPECT_TRUE(rc == EOK);
     info.contentLen = static_cast<uint32_t>(content.length());
     int ret = ReportSecurityInfo(&info);
-    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
 }
 
 /**

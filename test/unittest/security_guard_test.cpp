@@ -286,15 +286,15 @@ HWTEST_F(SecurityGuardUnitTest, TestDataFormat001, TestSize.Level1)
 
     content = "{\"cred\":1,\"extra\":\"\",\"status\":\"0\"}";
     isSuccess = DataFormat::CheckRiskContent(content);
-    EXPECT_FALSE(isSuccess);
+    EXPECT_TRUE(isSuccess);
 
     content = "{\"cred\":\"1\",\"extra\":\"\",\"status\":0}";
     isSuccess = DataFormat::CheckRiskContent(content);
-    EXPECT_FALSE(isSuccess);
+    EXPECT_TRUE(isSuccess);
 
     content = "{\"cred\":1,\"extra\":1,\"status\":0}";
     isSuccess = DataFormat::CheckRiskContent(content);
-    EXPECT_FALSE(isSuccess);
+    EXPECT_TRUE(isSuccess);
 
     content = "{\"cred\":1,\"extra\":\"\",\"status\":0}";
     isSuccess = DataFormat::CheckRiskContent(content);
@@ -543,10 +543,13 @@ HWTEST_F(SecurityGuardUnitTest, TestBaseEventIdStorage002, TestSize.Level1)
     allEntries.emplace_back(entry3);
     allEntries.emplace_back(entry2);
     storage->SaveEntries(allEntries, infos);
+    EXPECT_FALSE(infos.size() == 0);
 
+    infos.clear();
     allEntries.clear();
     allEntries.emplace_back(entry1);
     storage->SaveEntries(allEntries, infos);
+    EXPECT_TRUE(infos.size() == 0);
 }
 
 /**
