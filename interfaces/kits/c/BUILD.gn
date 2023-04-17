@@ -52,6 +52,7 @@ ohos_shared_library("securityguard_ndk") {
 
     cflags_cc = []
 
+    relative_install_dir = "ndk"
     part_name = "security_guard"
     subsystem_name = "security"
 }
