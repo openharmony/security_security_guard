@@ -37,7 +37,7 @@ public:
     virtual void ParseEvent(char *buffer, size_t length);
 
 private:
-    ErrorCode ParseSgEvent(char *buffer, size_t length, EventDataSt &eventDataSt);
+    ErrorCode ParseSgEvent(char *buffer, size_t length, SecEvent &eventDataSt);
     int ueventFd_{-1};
     KernelInterfaceAdapter &adapter_;
 };

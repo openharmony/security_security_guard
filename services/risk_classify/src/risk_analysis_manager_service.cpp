@@ -28,6 +28,9 @@
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 #include "task_handler.h"
+#include "model_manager.h"
+#include "config_manager.h"
+#include "config_data_manager.h"
 
 namespace OHOS::Security::SecurityGuard {
 REGISTER_SYSTEM_ABILITY_BY_ID(RiskAnalysisManagerService, RISK_ANALYSIS_MANAGER_SA_ID, true);
@@ -49,7 +52,20 @@ void RiskAnalysisManagerService::OnStart()
     if (!Publish(this)) {
         SGLOGE("Publish error");
     }
-    ModelManager::GetInstance().InitModel();
+    bool success = ConfigManager::InitConfig<EventConfig>();
+    if (!success) {
+        return;
+    }
+    success = ConfigManager::InitConfig<ModelConfig>();
+    if (!success) {
+        return;
+    }
+
+    TaskHandler::Task task = [] {
+        ConfigManager::GetInstance()->StartUpdate();
+        ModelManager::GetInstance().Init();
+    };
+    TaskHandler::GetInstance()->AddTask(task);
 }
 
 void RiskAnalysisManagerService::OnStop()
@@ -98,7 +114,7 @@ void RiskAnalysisManagerService::PushRiskAnalysisTask(uint32_t modelId,
 {
     TaskHandler::Task task = [modelId, &promise, &event] {
         SGLOGD("modelId=%{public}u", modelId);
-        std::vector<int64_t> eventIds = ModelManager::GetInstance().GetEventIds(modelId);
+        std::vector<int64_t> eventIds = ConfigDataManager::GetInstance()->GetEventIds(modelId);
         if (eventIds.empty()) {
             SGLOGE("eventIds is empty, no need to analyse");
             event.status = UNKNOWN_STATUS;
@@ -106,16 +122,10 @@ void RiskAnalysisManagerService::PushRiskAnalysisTask(uint32_t modelId,
             return;
         }
 
-        int32_t ret = ModelManager::GetInstance().AnalyseRisk(eventIds, event.eventInfo);
-        if (ret != SUCCESS) {
-            SGLOGE("status is risk");
-            event.status = RISK_STATUS;
-            promise->set_value(RISK_STATUS);
-        } else {
-            SGLOGI("status is safe");
-            event.status = SAFE_STATUS;
-            promise->set_value(SAFE_STATUS);
-        }
+        std::string result = ModelManager::GetInstance().GetResult(modelId);
+        SGLOGI("result is %{public}s", result.c_str());
+        event.status = result;
+        promise->set_value(result);
     };
     TaskHandler::GetInstance()->AddTask(task);
 }

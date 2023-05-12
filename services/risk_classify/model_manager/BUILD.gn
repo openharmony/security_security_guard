@@ -1,0 +1,55 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/security/security_guard/security_guard.gni")
+import("//build/test.gni")
+
+ohos_source_set("sg_model_manager_stamp") {
+  part_name = "security_guard"
+  subsystem_name = "security"
+
+  configs =
+      [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
+
+  include_dirs = [
+    "//third_party/json/include",
+    "include",
+    "${sg_root_dir}/frameworks/common/constants/include",
+    "${sg_root_dir}/frameworks/common/interfaces",
+    "${sg_root_dir}/frameworks/common/json/include",
+    "${sg_root_dir}/frameworks/common/task_handler/include",
+    "${sg_root_dir}/frameworks/common/database/include",
+    "${sg_root_dir}/frameworks/common/log/include",
+    "${sg_root_dir}/frameworks/common/utils/include",
+    "${sg_root_dir}/services/config_manager/include",
+    "${sg_root_dir}/services/data_collect/store/include",
+    "${sg_root_dir}/services/risk_classify/model_manager",
+  ]
+
+  sources = [
+    "${sg_root_dir}/services/risk_classify/model_manager/src/db_operate.cpp",
+    "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager.cpp",
+    "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager_impl.cpp",
+  ]
+
+  deps = [
+    "${sg_root_dir}/services/config_manager:sg_config_manager",
+    "${sg_root_dir}/services/data_collect:sg_collect_service",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "relational_store:native_rdb",
+  ]
+}

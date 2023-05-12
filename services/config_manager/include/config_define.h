@@ -28,7 +28,7 @@ using ModelCfg = struct {
     std::vector<int64_t> preload;
     std::vector<int64_t> eventList;
     std::string permissions;
-    std::vector<std::string> dbTable;
+    std::string dbTable;
     uint32_t runningCntl;
     std::vector<std::string> caller;
 };
@@ -43,6 +43,7 @@ using EventCfg = struct {
     uint32_t storageRomNums;
     int32_t storageTime;
     std::vector<std::string> owner;
+    uint32_t source;
 };
 
 using DataMgrCfgSt = struct {
@@ -52,17 +53,35 @@ using DataMgrCfgSt = struct {
     uint32_t eventMaxRomNum;
 };
 
-using EventDataSt = struct {
-    int64_t eventId;
-    std::string version;
-    std::string date;
-    std::string content;
-};
-
 using EventContentSt = struct {
     uint32_t status;
     uint32_t cred;
     std::string extra;
+};
+
+using SecEvent = struct {
+    int64_t eventId;
+    std::string version;
+    std::string date;
+    std::string content;
+    int32_t eventType;
+    int32_t dataSensitivityLevel;
+    std::string owner;
+    int32_t userId;
+    std::string deviceId;
+};
+
+using StartMode = enum {
+    NOT_SUPPORT,
+    START_ON_STARTUP,
+    START_ON_DEMAND
+};
+
+using DataSource = enum {
+    USER_SOURCE,
+    KERNEL_SOURCE,
+    MODEL_SOURCE,
+    HIVIEW_SOURCE
 };
 
 using LoadMode = enum {
@@ -89,6 +108,8 @@ const std::vector<std::string> CONFIG_PRESET_FILES = {
     "/system/etc/security_guard_event.cfg",
     "/system/etc/security_guard_model.cfg"
 };
+
+const std::string CONFIG_ROOT_PATH = "/data/app/el1/100/base/com.ohos.security.hsdr/cache/";
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_CONFIG_DEFINE_H

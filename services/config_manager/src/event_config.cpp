@@ -24,6 +24,11 @@
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
+namespace {
+    constexpr const char *AUDIT_MODEL_ID = "3001000003";
+    constexpr const int32_t DB_MAX_VALUE = 100000;
+}
+
 bool EventConfig::Load(int mode)
 {
     std::string path;
@@ -112,7 +117,19 @@ bool EventConfig::Update()
 
 bool EventConfig::ParseEventConfig(std::vector<EventCfg> &configs, nlohmann::json &jsonObj)
 {
-    return JsonCfg::Unmarshal<EventCfg>(configs, jsonObj, EVENT_CFG_KEY);
+    bool success = JsonCfg::Unmarshal<EventCfg>(configs, jsonObj, EVENT_CFG_KEY);
+    if (success) {
+        for (EventCfg &config : configs) {
+            uint32_t maxValue = 5;
+            if (!config.owner.empty() && config.owner.at(0) == AUDIT_MODEL_ID) {
+                maxValue = DB_MAX_VALUE;
+            }
+            if (config.storageRomNums >= maxValue) {
+                config.storageRomNums = maxValue;
+            }
+        }
+    }
+    return success;
 }
 
 void EventConfig::CacheEventConfig(const std::vector<EventCfg> &configs)

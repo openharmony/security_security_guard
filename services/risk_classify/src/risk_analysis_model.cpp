@@ -26,9 +26,9 @@ void RiskAnalysisModel::SetEventInfo(int64_t eventId, std::string status, std::s
     eventInfo += "[" + std::to_string(eventId) + ":" + status + "]";
 }
 
-ErrorCode RiskAnalysisModel::RiskAnalysis(std::vector<EventDataSt> &eventData, std::string &eventInfo)
+ErrorCode RiskAnalysisModel::RiskAnalysis(std::vector<SecEvent> &eventData, std::string &eventInfo)
 {
-    for (const EventDataSt &data : eventData) {
+    for (const SecEvent &data : eventData) {
         nlohmann::json jsonObj = nlohmann::json::parse(data.content, nullptr, false);
         if (jsonObj.is_discarded()) {
             SGLOGE("json err");

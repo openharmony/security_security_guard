@@ -39,6 +39,4 @@ ohos_source_set("sg_collect_stamp") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
-
-  cflags_cc = [ "-DHILOG_ENABLE" ]
 }

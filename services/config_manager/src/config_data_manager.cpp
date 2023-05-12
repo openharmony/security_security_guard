@@ -15,8 +15,6 @@
 
 #include "config_data_manager.h"
 
-#include "securec.h"
-
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -35,6 +33,11 @@ void ConfigDataManager::InsertModelToEventMap(uint32_t modelId, std::set<int64_t
     modelToEventMap_[modelId] = eventIds;
 }
 
+void ConfigDataManager::InsertEventToTableMap(int64_t eventId, std::string table)
+{
+    eventToTableMap_[eventId] = table;
+}
+
 void ConfigDataManager::ResetModelMap()
 {
     modelMap_.clear();
@@ -48,6 +51,11 @@ void ConfigDataManager::ResetEventMap()
 void ConfigDataManager::ResetModelToEventMap()
 {
     modelToEventMap_.clear();
+}
+
+void ConfigDataManager::ResetEventToTableMap()
+{
+    eventToTableMap_.clear();
 }
 
 std::vector<int64_t> ConfigDataManager::GetEventIds(uint32_t modelId)
@@ -71,6 +79,16 @@ std::vector<int64_t> ConfigDataManager::GetAllEventIds() const
     return vector;
 }
 
+std::vector<uint32_t> ConfigDataManager::GetAllModelIds() const
+{
+    std::vector<uint32_t> vector;
+    for (const auto &entry : modelMap_) {
+        SGLOGD("modelId=%{public}u", entry.first);
+        vector.emplace_back(entry.first);
+    }
+    return vector;
+}
+
 bool ConfigDataManager::GetModelConfig(uint32_t modelId, ModelCfg &config) const
 {
     auto it = modelMap_.find(modelId);
@@ -89,5 +107,10 @@ bool ConfigDataManager::GetEventConfig(int64_t eventId, EventCfg &config) const
         return true;
     }
     return false;
+}
+
+std::string ConfigDataManager::GetTableFromEventId(int64_t eventId)
+{
+    return eventToTableMap_[eventId];
 }
 } // OHOS::Security::SecurityGuard

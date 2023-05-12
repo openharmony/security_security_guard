@@ -53,6 +53,4 @@ ohos_shared_library("libsg_obtaindata_sdk") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
-
-  cflags_cc = [ "-DHILOG_ENABLE" ]
 }

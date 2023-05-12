@@ -17,9 +17,9 @@
 
 #include "json_cfg.h"
 #include "model_analysis_define.h"
-#include "model_cfg_marshalling.h"
-#include "security_guard_define.h"
 #include "security_guard_log.h"
+#include "config_data_manager.h"
+#include "store_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
@@ -42,26 +42,53 @@ bool DataFormat::CheckRiskContent(std::string content)
     return true;
 }
 
-ErrorCode DataFormat::ParseEventList(std::string eventList, std::vector<int64_t> &eventListVec)
+std::pair<std::vector<std::vector<int64_t>>, std::string> DataFormat::ParseConditions(std::string conditions)
 {
-    nlohmann::json jsonObj = nlohmann::json::parse(eventList, nullptr, false);
+    nlohmann::json jsonObj = nlohmann::json::parse(conditions, nullptr, false);
     if (jsonObj.is_discarded()) {
         SGLOGE("json parse error");
-        return JSON_ERR;
+        return {};
     }
-
-    JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, EVENT_CFG_EVENT_ID_KEY, array, JSON_ERR);
-    ErrorCode code = FAILED;
-    nlohmann::json &eventListJson = jsonObj[EVENT_CFG_EVENT_ID_KEY];
-    for (const auto& event : eventListJson) {
-        if (!event.is_number()) {
-            SGLOGE("event type is error");
-            continue;
+    std::set<int64_t> set;
+    auto iter = jsonObj.find(EVENT_CFG_EVENT_ID_KEY);
+    if (iter != jsonObj.end() && (*iter).is_array()) {
+        for (const auto &event : *iter) {
+            if (!event.is_number()) {
+                SGLOGE("event type is error");
+                continue;
+            }
+            set.emplace(event);
         }
-        eventListVec.emplace_back(event);
-        code = SUCCESS;
     }
 
-    return code;
+    iter = jsonObj.find(MODEL_CFG_MODEL_ID_KEY);
+    if (iter != jsonObj.end() && (*iter).is_array()) {
+        for (const auto &model : *iter) {
+            if (!model.is_number()) {
+                SGLOGE("model type is error");
+                continue;
+            }
+            std::vector<int64_t> vector = ConfigDataManager::GetInstance()->GetEventIds(model);
+            set.insert(vector.begin(), vector.end());
+        }
+    }
+
+    std::string date;
+    iter = jsonObj.find("date");
+    if (iter != jsonObj.end() && (*iter).is_string()) {
+        date = *iter;
+    }
+    std::vector<int64_t> riskEvent;
+    std::vector<int64_t> auditEvent;
+    for (auto iter = set.begin(); iter != set.end(); iter++) {
+        std::string table = ConfigDataManager::GetInstance()->GetTableFromEventId(*iter);
+        if (table == RISK_TABLE) {
+            riskEvent.emplace_back(*iter);
+        } else if (table == AUDIT_TABLE) {
+            auditEvent.emplace_back(*iter);
+        }
+    }
+    std::vector<std::vector<int64_t>> vector { riskEvent, auditEvent };
+    return std::make_pair(vector, date);
 }
 }

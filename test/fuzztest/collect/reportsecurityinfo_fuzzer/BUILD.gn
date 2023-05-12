@@ -34,11 +34,9 @@ ohos_fuzztest("ReportSecurityInfoFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
 
-  cflags_cc = [ "-DHILOG_ENABLE" ]
-
   sources = [ "report_security_info_fuzzer.cpp" ]
 
-  deps = [ "${sg_root_dir}/services/risk_collect:sg_collect_service" ]
+  deps = [ "${sg_root_dir}/services/data_collect:sg_collect_service" ]
 
   external_deps = [
     "c_utils:utils",

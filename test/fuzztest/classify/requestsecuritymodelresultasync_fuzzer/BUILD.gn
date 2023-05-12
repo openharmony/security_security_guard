@@ -33,8 +33,6 @@ ohos_fuzztest("RequestSecurityModelResultAsyncFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
 
-  cflags_cc = [ "-DHILOG_ENABLE" ]
-
   sources = [ "request_security_model_result_async_fuzzer.cpp" ]
 
   deps = [ "${sg_root_dir}/services/risk_classify:sg_classify_service" ]

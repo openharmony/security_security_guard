@@ -53,6 +53,9 @@ namespace OHOS::Security::SecurityGuard {
     const std::string EVENT_CFG_STORAGE_ROM_NUM_KEY = "storageRomNums";
     const std::string EVENT_CFG_STORAGE_TIME_KEY = "storageTime";
     const std::string EVENT_CFG_OWNER_KEY = "owner";
+    const std::string EVENT_CFG_SOURCE_KEY = "source";
+    const std::string EVENT_CFG_USER_ID_KEY = "userId";
+    const std::string EVENT_CFG_DEVICE_ID_KEY = "deviceId";
 
     // date manager key
     const std::string DATA_MGR_DEVICE_ROM_KEY = "deviceRom";

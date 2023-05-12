@@ -30,8 +30,7 @@ void to_json(nlohmann::json &jsonObj, const EventCfg &eventCfg);
 void from_json(const nlohmann::json &jsonObj, EventCfg &eventCfg);
 void to_json(nlohmann::json &jsonObj, const DataMgrCfgSt &dataMgrCfg);
 void from_json(const nlohmann::json &jsonObj, DataMgrCfgSt &dataMgrCfg);
-void to_json(nlohmann::json &jsonObj, const EventDataSt &eventDataSt);
-void from_json(const nlohmann::json &jsonObj, EventDataSt &eventDataSt);
+void to_json(nlohmann::json &jsonObj, const SecEvent &eventDataSt);
 void to_json(nlohmann::json &jsonObj, const EventContentSt &eventContentSt);
 void from_json(const nlohmann::json &jsonObj, EventContentSt &eventContentSt);
 } // namespace OHOS::Security::SecurityGuard

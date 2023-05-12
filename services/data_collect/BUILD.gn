@@ -1,0 +1,122 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/security/security_guard/security_guard.gni")
+import("//build/ohos.gni")
+
+ohos_source_set("sg_uevent_listener_stamp") {
+  subsystem_name = "security"
+  part_name = "security_guard"
+
+  configs =
+      [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
+
+  include_dirs = [
+    "//third_party/json/include",
+    "${sg_root_dir}/services/risk_collect/include",
+    "${sg_root_dir}/frameworks/common/constants/include",
+    "${sg_root_dir}/frameworks/common/database/include",
+    "${sg_root_dir}/frameworks/common/log/include",
+    "${sg_root_dir}/services/config_manager/include",
+    "${sg_root_dir}/frameworks/common/task_handler/include",
+    "${sg_root_dir}/frameworks/common/json/include",
+    "${sg_root_dir}/frameworks/common/utils/include",
+    "${sg_root_dir}/services/data_collect/store/include",
+  ]
+
+  sources = [
+    "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
+    "${sg_root_dir}/services/risk_collect/src/data_format.cpp",
+    "${sg_root_dir}/services/risk_collect/src/kernel_interface_adapter.cpp",
+    "${sg_root_dir}/services/risk_collect/src/uevent_listener.cpp",
+    "${sg_root_dir}/services/risk_collect/src/uevent_listener_impl.cpp",
+    "${sg_root_dir}/services/risk_collect/src/uevent_notify.cpp",
+  ]
+
+  deps = [ "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "hdf_core:libhdf_ipc_adapter",
+    "hiviewdfx_hilog_native:libhilog",
+    "kv_store:distributeddata_inner",
+    "relational_store:native_rdb",
+  ]
+}
+
+ohos_shared_library("sg_collect_service") {
+  subsystem_name = "security"
+  part_name = "security_guard"
+
+  configs =
+      [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
+
+  include_dirs = [
+    "//third_party/json/include",
+    "${sg_root_dir}/interfaces/inner_api/collect/include",
+    "${sg_root_dir}/frameworks/common/interfaces",
+    "${sg_root_dir}/services/bigdata/include",
+    "${sg_root_dir}/services/config_manager/include",
+    "${sg_root_dir}/services/data_collect/collect/hiview",
+    "${sg_root_dir}/services/data_collect/store/include",
+    "${sg_root_dir}/services/risk_collect/include",
+    "${sg_root_dir}/frameworks/common/constants/include",
+    "${sg_root_dir}/frameworks/common/json/include",
+    "${sg_root_dir}/frameworks/common/task_handler/include",
+    "${sg_root_dir}/frameworks/common/database/include",
+    "${sg_root_dir}/frameworks/common/log/include",
+    "${sg_root_dir}/frameworks/common/utils/include",
+  ]
+
+  sources = [
+    "${sg_root_dir}/services/data_collect/collect/hiview/hiview_collector.cpp",
+    "${sg_root_dir}/services/data_collect/collect/hiview/hiview_listener.cpp",
+    "${sg_root_dir}/services/data_collect/sa/data_collect_manager_callback_proxy.cpp",
+    "${sg_root_dir}/services/data_collect/sa/data_collect_manager_service.cpp",
+    "${sg_root_dir}/services/data_collect/sa/data_collect_manager_stub.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/audit_event_mem_rdb_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/audit_event_rdb_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/database.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/preferences_wrapper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/rdb_event_store_callback.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
+  ]
+
+  deps = [
+    "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
+    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
+    "${sg_root_dir}/services/config_manager:sg_config_manager",
+    "${sg_root_dir}/services/data_collect:sg_uevent_listener_stamp",
+  ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "device_manager:devicemanagersdk",
+    "hisysevent_native:libhisysevent",
+    "hisysevent_native:libhisyseventmanager",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "kv_store:distributeddata_inner",
+    "os_account:os_account_innerkits",
+    "preferences:native_preferences",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+}
