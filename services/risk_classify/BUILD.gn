@@ -14,6 +14,13 @@
 import("//base/security/security_guard/security_guard.gni")
 import("//build/ohos.gni")
 
+config("security_guard_model_configs") {
+  include_dirs = [
+    "${sg_root_dir}/services/risk_classify/model_manager/include",
+    "${sg_root_dir}/services/config_manager/include",
+  ]
+}
+
 ohos_shared_library("sg_classify_service") {
   subsystem_name = "security"
   part_name = "security_guard"
@@ -24,7 +31,9 @@ ohos_shared_library("sg_classify_service") {
     "${sg_root_dir}/interfaces/inner_api/classify/include",
     "${sg_root_dir}/services/config_manager/include",
     "${sg_root_dir}/services/risk_classify/include",
+    "${sg_root_dir}/services/risk_classify/model_manager/include",
     "${sg_root_dir}/services/risk_collect/include",
+    "${sg_root_dir}/services/data_collect/store/include",
     "${sg_root_dir}/frameworks/common/database/include",
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/frameworks/common/constants/include",
@@ -36,20 +45,18 @@ ohos_shared_library("sg_classify_service") {
 
   sources = [
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
-    "${sg_root_dir}/services/risk_classify/src/model_manager.cpp",
     "${sg_root_dir}/services/risk_classify/src/risk_analysis_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/risk_classify/src/risk_analysis_manager_service.cpp",
     "${sg_root_dir}/services/risk_classify/src/risk_analysis_manager_stub.cpp",
     "${sg_root_dir}/services/risk_classify/src/risk_analysis_model.cpp",
   ]
 
-  cflags_cc = [ "-DHILOG_ENABLE" ]
-
   deps = [
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
-    "${sg_root_dir}/services/risk_collect:sg_collect_service",
+    "${sg_root_dir}/services/data_collect:sg_collect_service",
+    "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
   ]
 
   external_deps = [
@@ -59,6 +66,7 @@ ohos_shared_library("sg_classify_service") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "kv_store:distributeddata_inner",
+    "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

@@ -31,7 +31,6 @@ std::shared_ptr<ConfigSubscriber> subscriber_ = nullptr;
 
 namespace {
     const std::string HSDR_EVENT = "usual.event.HSDR_EVENT";
-    const std::string CONFIG_ROOT_PATH = "/data/app/el1/100/base/com.ohos.security.hsdr/cache/";
     const std::string PATH_SEP = "/";
     const std::string PARAM_SEP = "|";
     const std::string NAME_SEP = ".";

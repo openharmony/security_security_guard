@@ -480,12 +480,6 @@ static napi_value NapiRequestSecurityModelResult(napi_env env, napi_callback_inf
         return nullptr;
     }
 
-    RequestSecurityModelResultContext *context = new (std::nothrow) RequestSecurityModelResultContext();
-    if (context == nullptr) {
-        SGLOGE("context new failed, no memory left.");
-        napi_throw(env, GenerateBusinessError(env, NULL_OBJECT));
-        return nullptr;
-    }
     size_t index = 0;
     char deviceId[DEVICE_ID_MAX_LEN];
     size_t len = DEVICE_ID_MAX_LEN;
@@ -493,14 +487,22 @@ static napi_value NapiRequestSecurityModelResult(napi_env env, napi_callback_inf
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
         return nullptr;
     }
-    context->deviceId = deviceId;
 
     index++;
-    if (ParseUint32(env, argv[index], context->modelId) == nullptr) {
+    uint32_t modelId = 0;
+    if (ParseUint32(env, argv[index], modelId) == nullptr) {
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
         return nullptr;
     }
 
+    RequestSecurityModelResultContext *context = new (std::nothrow) RequestSecurityModelResultContext();
+    if (context == nullptr) {
+        SGLOGE("context new failed, no memory left.");
+        napi_throw(env, GenerateBusinessError(env, NULL_OBJECT));
+        return nullptr;
+    }
+    context->deviceId = deviceId;
+    context->modelId = modelId;
     index++;
     if (index < argc) {
         napi_create_reference(env, argv[index], 1, &context->ref);

@@ -25,7 +25,7 @@
 namespace OHOS::Security::SecurityGuard {
 class RiskAnalysisModel {
 public:
-    static ErrorCode RiskAnalysis(std::vector<EventDataSt> &eventData, std::string &eventInfo);
+    static ErrorCode RiskAnalysis(std::vector<SecEvent> &eventData, std::string &eventInfo);
 
 private:
     RiskAnalysisModel() = default;

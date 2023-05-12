@@ -24,11 +24,14 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "database_manager.h"
 #include "data_format.h"
-#include "data_manager_wrapper.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 #include "task_handler.h"
+
+#include "risk_event_rdb_helper.h"
+#include "config_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
@@ -102,7 +105,7 @@ int UeventListenerImpl::UeventListen(char *buffer, size_t length)
     return 0;
 }
 
-ErrorCode UeventListenerImpl::ParseSgEvent(char *buffer, size_t length, EventDataSt &eventDataSt)
+ErrorCode UeventListenerImpl::ParseSgEvent(char *buffer, size_t length, SecEvent &eventDataSt)
 {
     char *savePoint = nullptr;
     char *subString = strtok_r(buffer, "=", &savePoint);
@@ -118,15 +121,12 @@ ErrorCode UeventListenerImpl::ParseSgEvent(char *buffer, size_t length, EventDat
         switch (index) {
             case SG_UEVENT_INDEX_EVENT_ID:
                 eventDataSt.eventId = static_cast<int64_t>(atoi(subString));
-                SGLOGI("eventId=%{public}ld", eventDataSt.eventId);
                 break;
             case SG_UEVENT_INDEX_VERSION:
                 eventDataSt.version = std::string(subString);
-                SGLOGI("version=%{public}s", eventDataSt.version.c_str());
                 break;
             case SG_UEVENT_INDEX_CONTENT_LEN:
                 contentLen = static_cast<uint32_t>(atoi(subString));
-                SGLOGI("content length=%{public}u", contentLen);
                 break;
             case SG_UEVENT_INDEX_CONTENT:
                 eventDataSt.content = std::string(subString);
@@ -160,14 +160,13 @@ void UeventListenerImpl::ParseEvent(char *buffer, size_t length)
     char *end = buffer + length + 1;
     do {
         if (strstr(data, SG_UEVENT_TAG) != nullptr) {
-            EventDataSt eventDataSt;
-            if (ParseSgEvent(data, length, eventDataSt) != SUCCESS) {
+            SecEvent event;
+            if (ParseSgEvent(data, length, event) != SUCCESS) {
                 return;
             }
 
-            TaskHandler::Task task = [eventDataSt] {
-                ErrorCode code = DataManagerWrapper::GetInstance().AddCollectInfo(eventDataSt);
-                SGLOGI("kernel AddCollectInfo eventId %{public}ld code is %{public}d", eventDataSt.eventId, code);
+            TaskHandler::Task task = [event] () mutable {
+                (void) DatabaseManager::GetInstance().InsertEvent(KERNEL_SOURCE, event);
             };
             TaskHandler::GetInstance()->AddTask(task);
         }

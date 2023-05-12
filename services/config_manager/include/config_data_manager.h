@@ -29,18 +29,23 @@ public:
     void InsertModelMap(uint32_t modelId, const ModelCfg &config);
     void InsertEventMap(int64_t eventId, const EventCfg &config);
     void InsertModelToEventMap(uint32_t modelId, std::set<int64_t> eventIds);
+    void InsertEventToTableMap(int64_t eventId, std::string table);
     void ResetModelMap();
     void ResetEventMap();
     void ResetModelToEventMap();
+    void ResetEventToTableMap();
     std::vector<int64_t> GetEventIds(uint32_t modelId);
     std::vector<int64_t> GetAllEventIds() const;
+    std::vector<uint32_t> GetAllModelIds() const;
     bool GetModelConfig(uint32_t modelId, ModelCfg &config) const;
     bool GetEventConfig(int64_t eventId, EventCfg &config) const;
+    std::string GetTableFromEventId(int64_t eventId);
 
 private:
     std::unordered_map<uint32_t, std::set<int64_t>> modelToEventMap_;
     std::unordered_map<uint32_t, ModelCfg> modelMap_;
     std::unordered_map<int64_t, EventCfg> eventMap_;
+    std::unordered_map<int64_t, std::string> eventToTableMap_;
 };
 } // OHOS::Security::SecurityGuard
 

@@ -40,8 +40,6 @@ ohos_shared_library("sg_config_manager") {
     "${sg_root_dir}/services/config_manager/src/model_config.cpp",
   ]
 
-  cflags_cc = [ "-DHILOG_ENABLE" ]
-
   external_deps = [
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",

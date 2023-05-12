@@ -26,11 +26,7 @@ ohos_unittest("libsg_classify_sdk_test") {
     "${sg_root_dir}/frameworks/common/constants/include",
   ]
 
-  sources = [
-    "unittest/src/risk_classify_kit_test.cpp",
-  ]
-
-  cflags_cc = [ "-DHILOG_ENABLE" ]
+  sources = [ "unittest/src/risk_classify_kit_test.cpp" ]
 
   deps = [
     "${sg_root_dir}/interfaces/inner_api/classify:libsg_classify_sdk",
@@ -38,8 +34,8 @@ ohos_unittest("libsg_classify_sdk_test") {
   ]
 
   external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
     "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
   ]
 }
 

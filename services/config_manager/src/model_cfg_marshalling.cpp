@@ -26,13 +26,13 @@ void to_json(json &jsonObj, const ModelCfg &modelCfg)
 {
     std::vector<std::string> preLoads;
     std::transform(modelCfg.preload.begin(), modelCfg.preload.end(),
-        std::back_inserter(preLoads), [] (uint32_t eventId) {
+        std::back_inserter(preLoads), [] (int64_t eventId) {
         return std::to_string(eventId);
     });
 
     std::vector<std::string> eventList;
     std::transform(modelCfg.eventList.begin(), modelCfg.eventList.end(),
-        std::back_inserter(eventList), [] (uint32_t eventId) {
+        std::back_inserter(eventList), [] (int64_t eventId) {
         return std::to_string(eventId);
     });
 
@@ -66,8 +66,8 @@ void from_json(const json &jsonObj, ModelCfg &modelCfg)
     std::vector<std::string> preLoads;
     JsonCfg::Unmarshal(preLoads, jsonObj, MODEL_CFG_PRELOAD_KEY);
     for (const std::string& eventId : preLoads) {
-        uint32_t tmp = 0;
-        if (!SecurityGuardUtils::StrToU32(eventId, tmp)) {
+        int64_t tmp = 0;
+        if (!SecurityGuardUtils::StrToI64(eventId, tmp)) {
             continue;
         }
         modelCfg.preload.emplace_back(tmp);
@@ -76,8 +76,8 @@ void from_json(const json &jsonObj, ModelCfg &modelCfg)
     std::vector<std::string> eventList;
     JsonCfg::Unmarshal(eventList, jsonObj, MODEL_CFG_EVENT_LIST_KEY);
     for (const std::string& eventId : eventList) {
-        uint32_t tmp = 0;
-        if (!SecurityGuardUtils::StrToU32(eventId, tmp)) {
+        int64_t tmp = 0;
+        if (!SecurityGuardUtils::StrToI64(eventId, tmp)) {
             continue;
         }
         modelCfg.eventList.emplace_back(tmp);
@@ -99,7 +99,8 @@ void to_json(json &jsonObj, const EventCfg &eventCfg)
         { EVENT_CFG_STORAGE_RAM_NUM_KEY, eventCfg.storageRamNums },
         { EVENT_CFG_STORAGE_ROM_NUM_KEY, eventCfg.storageRomNums },
         { EVENT_CFG_STORAGE_TIME_KEY, eventCfg.storageTime },
-        { EVENT_CFG_OWNER_KEY, eventCfg.owner }
+        { EVENT_CFG_OWNER_KEY, eventCfg.owner },
+        { EVENT_CFG_SOURCE_KEY, eventCfg.source }
     };
 }
 
@@ -120,6 +121,7 @@ void from_json(const json &jsonObj, EventCfg &eventCfg)
     JsonCfg::Unmarshal(eventCfg.storageRomNums, jsonObj, EVENT_CFG_STORAGE_ROM_NUM_KEY);
     JsonCfg::Unmarshal(eventCfg.storageTime, jsonObj, EVENT_CFG_STORAGE_TIME_KEY);
     JsonCfg::Unmarshal(eventCfg.owner, jsonObj, EVENT_CFG_OWNER_KEY);
+    JsonCfg::Unmarshal(eventCfg.source, jsonObj, EVENT_CFG_SOURCE_KEY);
 }
 
 void to_json(json &jsonObj, const DataMgrCfgSt &dataMgrCfg)
@@ -140,22 +142,16 @@ void from_json(const json &jsonObj, DataMgrCfgSt &dataMgrCfg)
     JsonCfg::Unmarshal(dataMgrCfg.eventMaxRomNum, jsonObj, DATA_MGR_EVENT_MAX_ROM_NUM_KEY);
 }
 
-void to_json(json &jsonObj, const EventDataSt &eventDataSt)
+void to_json(json &jsonObj, const SecEvent &eventDataSt)
 {
     jsonObj = json {
         { EVENT_DATA_EVENT_ID_KEY, eventDataSt.eventId },
         { EVENT_DATA_VERSION_KEY, eventDataSt.version },
         { EVENT_DATA_DATE_KEY, eventDataSt.date },
-        { EVENT_DATA_EVENT_CONTENT_KEY, eventDataSt.content }
+        { EVENT_DATA_EVENT_CONTENT_KEY, eventDataSt.content },
+        { EVENT_CFG_USER_ID_KEY, eventDataSt.userId },
+        { EVENT_CFG_DEVICE_ID_KEY, eventDataSt.deviceId },
     };
-}
-
-void from_json(const json &jsonObj, EventDataSt &eventDataSt)
-{
-    JsonCfg::Unmarshal(eventDataSt.eventId, jsonObj, EVENT_DATA_EVENT_ID_KEY);
-    JsonCfg::Unmarshal(eventDataSt.version, jsonObj, EVENT_DATA_VERSION_KEY);
-    JsonCfg::Unmarshal(eventDataSt.date, jsonObj, EVENT_DATA_DATE_KEY);
-    JsonCfg::Unmarshal(eventDataSt.content, jsonObj, EVENT_DATA_EVENT_CONTENT_KEY);
 }
 
 void to_json(json &jsonObj, const EventContentSt &eventContentSt)

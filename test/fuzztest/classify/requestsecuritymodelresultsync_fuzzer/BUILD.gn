@@ -34,8 +34,6 @@ ohos_fuzztest("RequestSecurityModelResultSyncFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
 
-  cflags_cc = [ "-DHILOG_ENABLE" ]
-
   sources = [ "request_security_model_result_sync_fuzzer.cpp" ]
 
   deps = [
