@@ -17,6 +17,8 @@
 
 #include <dlfcn.h>
 
+#include "directory_ex.h"
+
 #include "config_data_manager.h"
 #include "preferences_wrapper.h"
 #include "security_guard_log.h"
@@ -28,6 +30,7 @@ std::shared_ptr<IModelManager> ModelManager::modelManagerApi_ = std::make_shared
 
 namespace {
     constexpr const char *AUDIT_SWITCH = "audit_switch";
+    constexpr const char *PREFIX_MODEL_PATH = "/system/lib64/lib";
     constexpr const int32_t AUDIT_SWITCH_OFF = 0;
     constexpr const int32_t AUDIT_SWITCH_ON = 1;
     constexpr const uint32_t AUDIT_MODEL = 3001000003;
@@ -72,11 +75,15 @@ int32_t ModelManager::InitModel(uint32_t modelId)
 
     ModelCfg cfg;
     bool success = ConfigDataManager::GetInstance()->GetModelConfig(modelId, cfg);
-    if (!success) {
+    if (!success || cfg.path.find(PREFIX_MODEL_PATH) != 0) {
         SGLOGE("the model not support, modelId=%{public}u", modelId);
         return NOT_FOUND;
     }
-    void *handle = dlopen(cfg.path.c_str(), RTLD_LAZY);
+    std::string realPath;
+    if (!PathToRealPath(cfg.path, realPath)) {
+        return FILE_ERR;
+    }
+    void *handle = dlopen(realPath.c_str(), RTLD_LAZY);
     if (handle == nullptr) {
         SGLOGE("modelId=%{public}u, open failed, reason:%{public}s", modelId, dlerror());
         return FAILED;
