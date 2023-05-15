@@ -204,16 +204,18 @@ int DatabaseHelper::DeleteOldEventByEventId(int64_t eventId, int64_t count)
         SGLOGI("failed to get event, eventId=%{public}ld", eventId);
         return DB_OPT_ERR;
     }
-    int32_t primaryKey = -1;
-    if (resultSet->GoToLastRow() == NativeRdb::E_OK) {
-        resultSet->GetInt(0, primaryKey);
+    int64_t primaryKey = -1;
+    std::vector<std::string> primaryKeyVec;
+    while (resultSet->GoToNextRow() == NativeRdb::E_OK) {
+        resultSet->GetLong(0, primaryKey);
+        primaryKeyVec.emplace_back(std::to_string(primaryKey));
     }
     resultSet->Close();
     int rowId;
     NativeRdb::RdbPredicates deletePredicates(dbTable_);
-    deletePredicates.LessThan(ID, std::to_string(primaryKey));
+    deletePredicates.In(ID, primaryKeyVec);
     deletePredicates.EqualTo(EVENT_ID, std::to_string(eventId));
-    int ret = Delete(rowId, queryPredicates);
+    int ret = Delete(rowId, deletePredicates);
     if (ret != NativeRdb::E_OK) {
         SGLOGE("failed to delete event, eventId=%{public}ld, ret=%{public}d", eventId, ret);
         return DB_OPT_ERR;
@@ -248,6 +250,8 @@ int DatabaseHelper::QueryEventBase(const NativeRdb::RdbPredicates &predicates, s
         return DB_OPT_ERR;
     }
     SecEventTableInfo table;
+    table.userIdIndex = INVALID_INDEX;
+    table.deviceIdIndex = INVALID_INDEX;
     int32_t ret = GetResultSetTableInfo(resultSet, table);
     if (ret != SUCCESS) {
         return ret;
@@ -258,10 +262,10 @@ int DatabaseHelper::QueryEventBase(const NativeRdb::RdbPredicates &predicates, s
         resultSet->GetString(table.versionIndex, event.version);
         resultSet->GetString(table.dateIndex, event.date);
         resultSet->GetString(table.contentIndex, event.content);
-        if (table.deviceIdIndex != -1) {
+        if (table.deviceIdIndex != INVALID_INDEX) {
             resultSet->GetString(table.deviceIdIndex, event.deviceId);
         }
-        if (table.userIdIndex != -1) {
+        if (table.userIdIndex != INVALID_INDEX) {
             resultSet->GetInt(table.userIdIndex, event.userId);
         }
         events.emplace_back(event);
@@ -282,7 +286,7 @@ int32_t DatabaseHelper::GetResultSetTableInfo(const std::unique_ptr<NativeRdb::A
         SGLOGE("get table info failed");
         return DB_LOAD_ERR;
     }
-    int32_t columnNamesCount = columnNames.size();
+    int32_t columnNamesCount = static_cast<int32_t>(columnNames.size());
     for (int32_t i = 0; i < columnNamesCount; i++) {
         std::string columnName = columnNames.at(i);
         if (columnName == ID) {
@@ -309,7 +313,7 @@ int32_t DatabaseHelper::GetResultSetTableInfo(const std::unique_ptr<NativeRdb::A
     }
     table.rowCount = rowCount;
     table.columnCount = columnCount;
-    SGLOGI("info: row=%{public}d col=%{public}d eventIdIdx=%{public}d versionIdx=%{public}d "
+    SGLOGD("info: row=%{public}d col=%{public}d eventIdIdx=%{public}d versionIdx=%{public}d "
         "dateIdx=%{public}d contentIdx=%{public}d", rowCount, columnCount,
         table.eventIdIndex, table.versionIndex, table.dateIndex, table.contentIndex);
     return SUCCESS;

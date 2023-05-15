@@ -92,6 +92,7 @@ int DatabaseManager::InsertEvent(uint32_t source, SecEvent& event)
     if (config.source == source) {
         std::string table = ConfigDataManager::GetInstance()->GetTableFromEventId(event.eventId);
         SGLOGD("table=%{public}s, eventId=%{public}ld", table.c_str(), config.eventId);
+        std::lock_guard<std::mutex> lock(dbMutex_);
         if (table == AUDIT_TABLE) {
             SGLOGD("audit event insert");
 
@@ -99,18 +100,17 @@ int DatabaseManager::InsertEvent(uint32_t source, SecEvent& event)
             int64_t count = AuditEventMemRdbHelper::GetInstance().CountEventByEventId(event.eventId);
             if (count >= config.storageRomNums) {
                 (void) AuditEventMemRdbHelper::GetInstance().DeleteOldEventByEventId(event.eventId,
-                    count + 1 - config.storageRamNums);
+                    count + 1 - config.storageRomNums);
             }
             FillUserIdAndDeviceId(event);
             return AuditEventMemRdbHelper::GetInstance().InsertEvent(event);
         }
-
         SGLOGD("risk event insert, eventId=%{public}ld", event.eventId);
         // Check whether the upper limit is reached.
         int64_t count = RiskEventRdbHelper::GetInstance().CountEventByEventId(event.eventId);
         if (count >= config.storageRomNums) {
             (void) RiskEventRdbHelper::GetInstance().DeleteOldEventByEventId(event.eventId,
-                count + 1 - config.storageRamNums);
+                count + 1 - config.storageRomNums);
         }
         return RiskEventRdbHelper::GetInstance().InsertEvent(event);
     }

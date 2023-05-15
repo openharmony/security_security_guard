@@ -137,7 +137,7 @@ void AuditEventMemRdbHelper::DeleteRedundantData(const std::unordered_map<int64_
         int64_t count = AuditEventRdbHelper::GetInstance().CountEventByEventId(entry.first);
         if (count + entry.second >= config.storageRomNums) {
             (void) AuditEventRdbHelper::GetInstance().DeleteOldEventByEventId(entry.first,
-                count + entry.second - config.storageRamNums);
+                count + entry.second - config.storageRomNums);
         }
     }
 }

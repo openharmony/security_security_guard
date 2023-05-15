@@ -38,6 +38,7 @@ REGISTER_SYSTEM_ABILITY_BY_ID(RiskAnalysisManagerService, RISK_ANALYSIS_MANAGER_
 namespace {
     constexpr int32_t TIMEOUT_REPLY = 500;
     const std::string PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
+    const std::vector<uint32_t> MODELIDS = { 3001000000, 3001000001, 3001000002 };
 }
 
 RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnCreate)
@@ -114,14 +115,12 @@ void RiskAnalysisManagerService::PushRiskAnalysisTask(uint32_t modelId,
 {
     TaskHandler::Task task = [modelId, &promise, &event] {
         SGLOGD("modelId=%{public}u", modelId);
-        std::vector<int64_t> eventIds = ConfigDataManager::GetInstance()->GetEventIds(modelId);
-        if (eventIds.empty()) {
-            SGLOGE("eventIds is empty, no need to analyse");
+        if (std::count(MODELIDS.begin(), MODELIDS.end(), modelId) == 0) {
+            SGLOGE("model not support, no need to analyse, modelId=%{public}u", modelId);
             event.status = UNKNOWN_STATUS;
             promise->set_value(UNKNOWN_STATUS);
             return;
         }
-
         std::string result = ModelManager::GetInstance().GetResult(modelId);
         SGLOGI("result is %{public}s", result.c_str());
         event.status = result;
