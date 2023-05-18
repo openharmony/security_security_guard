@@ -25,7 +25,7 @@ public:
     static bool StrToI64(const std::string &str, int64_t &value);
     static bool StrToLL(const std::string &str, long long &value);
     static bool StrToULL(const std::string &str, unsigned long long &value);
-    static std::string GetData();
+    static std::string GetDate();
 
 private:
     SecurityGuardUtils() = default;

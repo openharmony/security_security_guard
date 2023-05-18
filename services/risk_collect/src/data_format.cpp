@@ -80,12 +80,12 @@ std::pair<std::vector<std::vector<int64_t>>, std::string> DataFormat::ParseCondi
     }
     std::vector<int64_t> riskEvent;
     std::vector<int64_t> auditEvent;
-    for (auto iter = set.begin(); iter != set.end(); iter++) {
-        std::string table = ConfigDataManager::GetInstance()->GetTableFromEventId(*iter);
+    for (auto it = set.begin(); it != set.end(); it++) {
+        std::string table = ConfigDataManager::GetInstance()->GetTableFromEventId(*it);
         if (table == RISK_TABLE) {
-            riskEvent.emplace_back(*iter);
+            riskEvent.emplace_back(*it);
         } else if (table == AUDIT_TABLE) {
-            auditEvent.emplace_back(*iter);
+            auditEvent.emplace_back(*it);
         }
     }
     std::vector<std::vector<int64_t>> vector { riskEvent, auditEvent };

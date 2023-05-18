@@ -85,7 +85,7 @@ int32_t RiskAnalysisManagerService::RequestSecurityModelResult(std::string &devI
     SGLOGD("%{public}s", __func__);
     ClassifyEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
-    event.time = SecurityGuardUtils::GetData();
+    event.time = SecurityGuardUtils::GetDate();
     auto promise = std::make_shared<std::promise<std::string>>();
     auto future = promise->get_future();
     PushRiskAnalysisTask(modelId, promise, event);

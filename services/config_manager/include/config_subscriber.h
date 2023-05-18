@@ -31,6 +31,8 @@ public:
 
 private:
     static bool UnSubscribe(void);
+    static std::shared_ptr<ConfigSubscriber> subscriber_;
+    static std::mutex mutex_;
 };
 } // OHOS::Security::SecurityGuard
 

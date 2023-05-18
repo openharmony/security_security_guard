@@ -16,6 +16,7 @@
 #include "config_subscriber.h"
 
 #include <fstream>
+#include <mutex>
 
 #include "directory_ex.h"
 #include "string_ex.h"
@@ -27,7 +28,8 @@
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
-std::shared_ptr<ConfigSubscriber> subscriber_ = nullptr;
+std::shared_ptr<ConfigSubscriber> ConfigSubscriber::subscriber_{nullptr};
+std::mutex ConfigSubscriber::mutex_{};
 
 namespace {
     const std::string HSDR_EVENT = "usual.event.HSDR_EVENT";
@@ -39,6 +41,7 @@ namespace {
 
 bool ConfigSubscriber::Subscribe(void)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (subscriber_ == nullptr) {
         EventFwk::MatchingSkills matchingSkills;
         matchingSkills.AddEvent(HSDR_EVENT);
@@ -52,10 +55,15 @@ bool ConfigSubscriber::Subscribe(void)
 
 bool ConfigSubscriber::UnSubscribe(void)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (subscriber_ == nullptr) {
         return true;
     }
-    return EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
+    bool success = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
+    if (success) {
+        subscriber_ = nullptr;
+    }
+    return success;
 };
 
 void ConfigSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)

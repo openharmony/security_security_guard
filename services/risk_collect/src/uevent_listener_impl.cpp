@@ -115,7 +115,7 @@ ErrorCode UeventListenerImpl::ParseSgEvent(char *buffer, size_t length, SecEvent
 
     uint32_t contentLen;
     int index = 0;
-    eventDataSt.date = SecurityGuardUtils::GetData();
+    eventDataSt.date = SecurityGuardUtils::GetDate();
     subString = strtok_r(nullptr, "-", &savePoint);
     while (subString != nullptr) {
         switch (index) {

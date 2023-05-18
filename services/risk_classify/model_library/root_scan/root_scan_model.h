@@ -71,7 +71,7 @@ public:
     void Release() override;
 
 private:
-    std::string RiskAnalysis(std::vector<SecEvent> &eventData);
+    std::string RiskAnalysis(const std::vector<SecEvent> &eventData);
     std::shared_ptr<IDbOperate> dbOpt_;
 };
 } // OHOS::Security::SecurityGuard

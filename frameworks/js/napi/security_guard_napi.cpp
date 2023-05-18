@@ -216,7 +216,7 @@ static napi_value GenerateBusinessError(napi_env env, int32_t code)
         napi_value errCode = NapiCreateInt32(env, jsErrCode);
 
         std::string errMsgStr = ConvertToJsErrMsg(code);
-        napi_value errMsg = NapiCreateString(env, errMsgStr.c_str());
+        napi_value errMsg = NapiCreateString(env, errMsgStr);
 
         napi_create_error(env, nullptr, errMsg, &result);
         napi_set_named_property(env, result, "code", errCode);

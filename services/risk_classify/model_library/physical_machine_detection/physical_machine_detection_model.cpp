@@ -70,7 +70,7 @@ void PhysicalMachineDetectionModel::Release()
     HiLog::Info(LABEL, "func=%{public}s", __func__);
 }
 
-std::string GetData()
+std::string GetDate()
 {
     time_t timestamp = time(nullptr);
     struct tm timeInfo{};
@@ -83,7 +83,7 @@ std::string GetData()
     return data;
 }
 
-std::string PhysicalMachineDetectionModel::RiskAnalysis(std::vector<SecEvent> &eventData)
+std::string PhysicalMachineDetectionModel::RiskAnalysis(const std::vector<SecEvent> &eventData)
 {
     std::string result = SAFE_STATUS;
     for (const SecEvent &data : eventData) {
@@ -114,7 +114,7 @@ std::string PhysicalMachineDetectionModel::RiskAnalysis(std::vector<SecEvent> &e
     SecEvent event {
         .eventId = 1011009202,
         .version = "1.0",
-        .date = GetData(),
+        .date = GetDate(),
         .content = jsonObj.dump()
     };
     int32_t ret = dbOpt_->InsertEvent(event);
