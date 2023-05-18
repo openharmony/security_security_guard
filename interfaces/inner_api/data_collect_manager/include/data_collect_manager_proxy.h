@@ -30,7 +30,7 @@ public:
     explicit DataCollectManagerProxy(const sptr<IRemoteObject> &impl);
     ~DataCollectManagerProxy() override = default;
     int32_t RequestRiskData(std::string &devId, std::string &eventList, const sptr<IRemoteObject> &callback) override;
-    int32_t RequestDataSubmit(int64_t eventId, std::string version, std::string time, std::string content) override;
+    int32_t RequestDataSubmit(int64_t eventId, std::string &version, std::string &time, std::string &content) override;
 
 private:
     static inline BrokerDelegator<DataCollectManagerProxy> delegator_;

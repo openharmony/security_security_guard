@@ -131,8 +131,8 @@ void DataCollectManagerService::DumpEventInfo(int fd, int64_t eventId)
     dprintf(fd, "report version : %s\n", secEvent.version.c_str());
 }
 
-int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::string version, std::string time,
-    std::string content)
+int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
+    std::string &content)
 {
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REPORT_PERMISSION);
@@ -173,7 +173,7 @@ int32_t DataCollectManagerService::RequestRiskData(std::string &devId, std::stri
     ObatinDataEvent event;
     auto pid = IPCSkeleton::GetCallingPid();
     event.pid = pid;
-    event.time = SecurityGuardUtils::GetData();
+    event.time = SecurityGuardUtils::GetDate();
     SGLOGI("eventList=%{public}s", eventList.c_str());
     auto promise = std::make_shared<std::promise<int32_t>>();
     auto future = promise->get_future();

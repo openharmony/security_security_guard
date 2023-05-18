@@ -34,7 +34,7 @@ public:
     void OnStart() override;
     void OnStop() override;
     int Dump(int fd, const std::vector<std::u16string>& args) override;
-    int32_t RequestDataSubmit(int64_t eventId, std::string version, std::string time, std::string content) override;
+    int32_t RequestDataSubmit(int64_t eventId, std::string &version, std::string &time, std::string &content) override;
     int32_t RequestRiskData(std::string &devId, std::string &eventList, const sptr<IRemoteObject> &callback) override;
 
 private:

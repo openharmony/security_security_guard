@@ -40,9 +40,8 @@ void ModelManager::Init()
 {
     std::vector<uint32_t> modelIds = ConfigDataManager::GetInstance()->GetAllModelIds();
     ModelCfg cfg;
-    bool success = false;
     for (uint32_t modelId : modelIds) {
-        success = ConfigDataManager::GetInstance()->GetModelConfig(modelId, cfg);
+        bool success = ConfigDataManager::GetInstance()->GetModelConfig(modelId, cfg);
         if (!success) {
             continue;
         }
@@ -75,12 +74,12 @@ int32_t ModelManager::InitModel(uint32_t modelId)
 
     ModelCfg cfg;
     bool success = ConfigDataManager::GetInstance()->GetModelConfig(modelId, cfg);
-    if (!success || cfg.path.find(PREFIX_MODEL_PATH) != 0) {
+    if (!success) {
         SGLOGE("the model not support, modelId=%{public}u", modelId);
         return NOT_FOUND;
     }
     std::string realPath;
-    if (!PathToRealPath(cfg.path, realPath)) {
+    if (!PathToRealPath(cfg.path, realPath) || realPath.find(PREFIX_MODEL_PATH) != 0) {
         return FILE_ERR;
     }
     void *handle = dlopen(realPath.c_str(), RTLD_LAZY);

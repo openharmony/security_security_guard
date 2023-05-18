@@ -173,7 +173,7 @@ int AuditEventMemRdbHelper::FlushAllEvent()
 {
     SGLOGD("begin flush event from mem to file");
     std::vector<SecEvent> events;
-    std::string date = SecurityGuardUtils::GetData();
+    std::string date = SecurityGuardUtils::GetDate();
     int ret = QueryEventFromMemByDate(events, date);
     if (ret != NativeRdb::E_OK) {
         SGLOGI("failed to query event, ret=%{public}d", ret);

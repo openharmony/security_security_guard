@@ -38,8 +38,11 @@ int32_t NativeDataCollectKit::ReportSecurityInfo(const std::shared_ptr<EventInfo
         SGLOGE("proxy is nullptr");
         return NULL_OBJECT;
     }
-    int32_t ret = proxy->RequestDataSubmit(info->GetEventId(), info->GetVersion(),
-        SecurityGuardUtils::GetData(), info->GetContent());
+    int64_t eventId = info->GetEventId();
+    std::string version = info->GetVersion();
+    std::string content = info->GetContent();
+    std::string date = SecurityGuardUtils::GetDate();
+    int32_t ret = proxy->RequestDataSubmit(eventId, version, date, content);
     if (ret != SUCCESS) {
         SGLOGE("RequestSecurityInfo error, ret=%{public}d", ret);
         return ret;

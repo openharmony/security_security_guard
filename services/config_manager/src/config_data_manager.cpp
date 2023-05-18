@@ -20,47 +20,56 @@
 namespace OHOS::Security::SecurityGuard {
 void ConfigDataManager::InsertModelMap(uint32_t modelId, const ModelCfg &config)
 {
+    std::lock_guard<std::mutex> lock(modelMutex_);
     modelMap_[modelId] = config;
 }
 
 void ConfigDataManager::InsertEventMap(int64_t eventId, const EventCfg &config)
 {
+    std::lock_guard<std::mutex> lock(eventMutex_);
     eventMap_[eventId] = config;
 }
 
 void ConfigDataManager::InsertModelToEventMap(uint32_t modelId, std::set<int64_t> eventIds)
 {
+    std::lock_guard<std::mutex> lock(modelToEventMutex_);
     modelToEventMap_[modelId] = eventIds;
 }
 
 void ConfigDataManager::InsertEventToTableMap(int64_t eventId, std::string table)
 {
+    std::lock_guard<std::mutex> lock(eventToTableMutex_);
     eventToTableMap_[eventId] = table;
 }
 
 void ConfigDataManager::ResetModelMap()
 {
+    std::lock_guard<std::mutex> lock(modelMutex_);
     modelMap_.clear();
 }
 
 void ConfigDataManager::ResetEventMap()
 {
+    std::lock_guard<std::mutex> lock(eventMutex_);
     eventMap_.clear();
 }
 
 void ConfigDataManager::ResetModelToEventMap()
 {
+    std::lock_guard<std::mutex> lock(modelToEventMutex_);
     modelToEventMap_.clear();
 }
 
 void ConfigDataManager::ResetEventToTableMap()
 {
+    std::lock_guard<std::mutex> lock(eventToTableMutex_);
     eventToTableMap_.clear();
 }
 
 std::vector<int64_t> ConfigDataManager::GetEventIds(uint32_t modelId)
 {
-    SGLOGI("modelId=%{public}u", modelId);
+    SGLOGD("modelId=%{public}u", modelId);
+    std::lock_guard<std::mutex> lock(modelToEventMutex_);
     std::vector<int64_t> vector;
     if (modelToEventMap_.find(modelId) != modelToEventMap_.end()) {
         SGLOGD("map contains modelId=%{public}u", modelId);
@@ -69,8 +78,9 @@ std::vector<int64_t> ConfigDataManager::GetEventIds(uint32_t modelId)
     return vector;
 }
 
-std::vector<int64_t> ConfigDataManager::GetAllEventIds() const
+std::vector<int64_t> ConfigDataManager::GetAllEventIds()
 {
+    std::lock_guard<std::mutex> lock(eventMutex_);
     std::vector<int64_t> vector;
     for (const auto &entry : eventMap_) {
         SGLOGD("eventId=%{public}ld", entry.first);
@@ -79,8 +89,9 @@ std::vector<int64_t> ConfigDataManager::GetAllEventIds() const
     return vector;
 }
 
-std::vector<uint32_t> ConfigDataManager::GetAllModelIds() const
+std::vector<uint32_t> ConfigDataManager::GetAllModelIds()
 {
+    std::lock_guard<std::mutex> lock(modelMutex_);
     std::vector<uint32_t> vector;
     for (const auto &entry : modelMap_) {
         SGLOGD("modelId=%{public}u", entry.first);
@@ -89,8 +100,9 @@ std::vector<uint32_t> ConfigDataManager::GetAllModelIds() const
     return vector;
 }
 
-bool ConfigDataManager::GetModelConfig(uint32_t modelId, ModelCfg &config) const
+bool ConfigDataManager::GetModelConfig(uint32_t modelId, ModelCfg &config)
 {
+    std::lock_guard<std::mutex> lock(modelMutex_);
     auto it = modelMap_.find(modelId);
     if (it != modelMap_.end()) {
         config = it->second;
@@ -99,8 +111,9 @@ bool ConfigDataManager::GetModelConfig(uint32_t modelId, ModelCfg &config) const
     return false;
 }
 
-bool ConfigDataManager::GetEventConfig(int64_t eventId, EventCfg &config) const
+bool ConfigDataManager::GetEventConfig(int64_t eventId, EventCfg &config)
 {
+    std::lock_guard<std::mutex> lock(eventMutex_);
     auto it = eventMap_.find(eventId);
     if (it != eventMap_.end()) {
         config = it->second;
@@ -111,6 +124,7 @@ bool ConfigDataManager::GetEventConfig(int64_t eventId, EventCfg &config) const
 
 std::string ConfigDataManager::GetTableFromEventId(int64_t eventId)
 {
+    std::lock_guard<std::mutex> lock(eventToTableMutex_);
     return eventToTableMap_[eventId];
 }
 } // OHOS::Security::SecurityGuard

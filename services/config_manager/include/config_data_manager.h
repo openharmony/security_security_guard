@@ -16,6 +16,7 @@
 #ifndef SECURITY_GUARD_CONFIG_DATA_MANAGER_H
 #define SECURITY_GUARD_CONFIG_DATA_MANAGER_H
 
+#include <mutex>
 #include <set>
 #include <unordered_map>
 
@@ -35,10 +36,10 @@ public:
     void ResetModelToEventMap();
     void ResetEventToTableMap();
     std::vector<int64_t> GetEventIds(uint32_t modelId);
-    std::vector<int64_t> GetAllEventIds() const;
-    std::vector<uint32_t> GetAllModelIds() const;
-    bool GetModelConfig(uint32_t modelId, ModelCfg &config) const;
-    bool GetEventConfig(int64_t eventId, EventCfg &config) const;
+    std::vector<int64_t> GetAllEventIds();
+    std::vector<uint32_t> GetAllModelIds();
+    bool GetModelConfig(uint32_t modelId, ModelCfg &config);
+    bool GetEventConfig(int64_t eventId, EventCfg &config);
     std::string GetTableFromEventId(int64_t eventId);
 
 private:
@@ -46,6 +47,10 @@ private:
     std::unordered_map<uint32_t, ModelCfg> modelMap_;
     std::unordered_map<int64_t, EventCfg> eventMap_;
     std::unordered_map<int64_t, std::string> eventToTableMap_;
+    std::mutex modelToEventMutex_;
+    std::mutex modelMutex_;
+    std::mutex eventMutex_;
+    std::mutex eventToTableMutex_;
 };
 } // OHOS::Security::SecurityGuard
 
