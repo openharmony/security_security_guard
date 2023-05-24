@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_OH_SG_TYPE_H
-#define NATIVE_OH_SG_TYPE_H
+#ifndef NATIVE_HMS_SG_TYPE_H
+#define NATIVE_HMS_SG_TYPE_H
 
 /**
  * @addtogroup SgTypeApi
@@ -23,8 +23,7 @@
  * @brief Defines the macros, error codes, enumerated values, data structures
  * used by SecurityGuard APIs.
  *
- * @since 10
- * @version 1.0
+ * @since 4.0.0(10)
  */
 
  /**
@@ -33,8 +32,7 @@
  * @brief Defines the macros, error codes, enumerated values, data structures
  * used by SecurityGuard APIs.
  *
- * @since 10
- * @version 1.0
+ * @since 4.0.0(10)
  */
 
 #include <stdint.h>
@@ -48,53 +46,70 @@ extern "C" {
  *
  * The max length is 64 bytes, including the terminating null byte.
  */
-#define OH_SG_DEVICE_ID_MAX_LEN 64
+#define HMS_SG_DEVICE_ID_MAX_LEN 64
 
 /**
  * @brief The max length of the security model result.
  *
  * The max length is 20 bytes, including the terminating null byte.
  */
-#define OH_SG_RESULT_MAX_LEN 20
+#define HMS_SG_RESULT_MAX_LEN 20
+
+/**
+ * @brief The model result "safe".
+ */
+#define HMS_SG_MODEL_RESULT_SAFE "safe"
+
+/**
+ * @brief The model result "risk".
+ */
+#define HMS_SG_MODEL_RESULT_RISK "risk"
+
+/**
+ * @brief The model result "unknown".
+ */
+#define HMS_SG_MODEL_RESULT_UNKNOWN "unknown"
 
 /**
  * @brief Enumerates the error codes.
  */
-enum OH_SG_ErrCode {
+enum HMS_SG_ErrCode {
     /** The result is successful. */
-    OH_SG_SUCCESS = 0,
-    /** The result is failed. */
-    OH_SG_FAILED,
+    HMS_SG_SUCCESS = 0,
     /** Permission verification failed. */
-    OH_SG_NO_PERMISSION,
-    /** Failed to operate the file. */
-    OH_SG_FILE_ERR,
+    HMS_SG_PERMISSION_FAIL = 201,
     /** The parameter is incorrect. */
-    OH_SG_BAD_PARAM,
-    /** Failed to parse the JSON file. */
-    OH_SG_JSON_ERR,
-    /** Null pointer exception occurs. */
-    OH_SG_NULL_OBJECT,
-    /** The operation timed out. */
-    OH_SG_TIME_OUT,
+    HMS_SG_BAD_PARAM = 401,
+};
+
+/**
+ * @brief The model Id.
+ */
+enum HMS_SG_ModelId {
+    /** The root scan model Id */
+    HMS_SG_ROOT_SCAN_MODEL_ID = 3001000000,
+    /** The device completeness model Id. */
+    HMS_SG_DEVICE_COMPLETENESS_MODEL_ID = 3001000001,
+    /** The physical machine dection model Id. */
+    HMS_SG_PHYSICAL_MACHINE_DETECTION_MODEL_ID = 3001000002,
 };
 
 /**
  * @brief Defines the structure for the device identify.
  */
-struct OH_SG_DeviceIdentify {
+struct HMS_SG_DeviceIdentify {
     /** The length of device identity. */
     uint32_t length;
     /** The device identity. */
-    uint8_t identity[OH_SG_DEVICE_ID_MAX_LEN];
+    uint8_t identity[HMS_SG_DEVICE_ID_MAX_LEN];
 };
 
 /**
  * @brief Defines the structure for the security model result.
  */
-struct OH_SG_SecurityModelResult {
+struct HMS_SG_SecurityModelResult {
     /** The device identity. */
-    struct OH_SG_DeviceIdentify devId;
+    struct HMS_SG_DeviceIdentify devId;
 
     /** The model id. */
     uint32_t modelId;
@@ -108,20 +123,20 @@ struct OH_SG_SecurityModelResult {
      * "risk" indicates the security model result is risk.
      * "unknown" indicates an internal error.
      */
-    uint8_t result[OH_SG_RESULT_MAX_LEN];
+    uint8_t result[HMS_SG_RESULT_MAX_LEN];
 };
 
 /**
  * @brief The calbback is used to receive the security model result.
  *
  * @param result The security model result.
- * @see OH_SG_RequestSecurityModelResultAsync
+ * @see HMS_SG_RequestSecurityModelResultAsync
  */
-typedef void OH_SG_SecurityGuardRiskCallback(struct OH_SG_SecurityModelResult *result);
+typedef void HMS_SG_SecurityGuardRiskCallback(struct HMS_SG_SecurityModelResult *result);
 
 #ifdef __cplusplus
 }
 #endif
 
 /** @} */
-#endif /* NATIVE_OH_SG_TYPE_H */
+#endif /* NATIVE_HMS_SG_TYPE_H */
