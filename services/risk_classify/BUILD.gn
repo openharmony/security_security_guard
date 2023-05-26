@@ -65,7 +65,6 @@ ohos_shared_library("sg_classify_service") {
     "common_event_service:cesfwk_innerkits",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "kv_store:distributeddata_inner",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
