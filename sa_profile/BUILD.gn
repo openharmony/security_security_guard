@@ -16,8 +16,8 @@ import("//build/ohos/sa_profile/sa_profile.gni")
 
 ohos_sa_profile("sg_sa_profile_standard") {
   sources = [
-    "3523.xml",
-    "3524.xml",
+    "3523.json",
+    "3524.json",
   ]
   part_name = "security_guard"
 }

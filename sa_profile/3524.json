@@ -1,0 +1,16 @@
+{
+    "process": "security_guard",
+    "systemability": [
+        {
+            "name": 3524,
+            "libpath": "libsg_collect_service.z.so",
+            "run-on-create": true,
+            "depend": [
+                3523
+            ],
+            "depend_time_out": 60000,
+            "distributed": false,
+            "dump_level": 1
+        }
+    ]
+}
