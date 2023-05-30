@@ -15,6 +15,8 @@
 
 #include "database.h"
 
+#include <thread>
+
 #include "abs_shared_result_set.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -22,6 +24,11 @@
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
+namespace {
+    constexpr int32_t MAX_TIMES = 5;
+    constexpr int32_t SLEEP_INTERVAL = 500;
+}
+
 void Database::CreateRdbStore(const NativeRdb::RdbStoreConfig &config, int version,
     NativeRdb::RdbOpenCallback &openCallback, int &errCode)
 {
@@ -145,6 +152,19 @@ int Database::Attach(const std::string &alias, const std::string &pathName,
 
 int Database::IsExistStore()
 {
+    if (store_ != nullptr) {
+        return NativeRdb::E_OK;
+    }
+    int32_t tryTimes = MAX_TIMES;
+    while (tryTimes > 0) {
+        if (store_ != nullptr) {
+            return NativeRdb::E_OK;
+        }
+
+        SGLOGW("tryTimes = %{public}d", tryTimes);
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+        tryTimes--;
+    }
     if (store_ == nullptr) {
         SGLOGE("EventStore::IsExistStore NativeRdb::RdbStore is null!");
         return NativeRdb::E_ERROR;
