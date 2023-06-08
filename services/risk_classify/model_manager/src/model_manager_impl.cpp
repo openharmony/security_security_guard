@@ -35,6 +35,6 @@ int32_t ModelManagerImpl::SubscribeDb(std::vector<int64_t> eventIds, std::shared
 
 int32_t ModelManagerImpl::UnSubscribeDb(std::vector<int64_t> eventIds, std::shared_ptr<IDbListener> listener)
 {
-    return DatabaseManager::GetInstance().SubscribeDb(eventIds, listener);
+    return DatabaseManager::GetInstance().UnSubscribeDb(eventIds, listener);
 }
 } // namespace OHOS::Security::SecurityGuard

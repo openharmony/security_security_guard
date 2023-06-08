@@ -25,10 +25,13 @@
     "ram": "5102KB",
     "deps": {
       "components": [
+        "ability_base",
+        "ability_runtime",
         "access_token",
         "c_utils",
         "common_event_service",
         "device_manager",
+        "device_usage_statistics",
         "hdf_core",
         "hisysevent_native",
         "hiviewdfx_hilog_native",
@@ -38,7 +41,8 @@
         "preferences",
         "relational_store",
         "safwk",
-        "samgr"
+        "samgr",
+        "time_service"
       ]
     },
     "build": {

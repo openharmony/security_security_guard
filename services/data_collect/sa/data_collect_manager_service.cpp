@@ -228,12 +228,9 @@ void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &o
         SGLOGI("events size=%{public}d", maxIndex);
         std::vector<SecEvent> dispatchVec;
         while (lastIndex < maxIndex) {
-            std::string dispatch;
             dispatchVec.assign(events.begin() + curIndex, events.begin() + lastIndex);
-            for (const SecEvent& event : dispatchVec) {
-                nlohmann::json jsonObj(event);
-                dispatch += jsonObj.dump();
-            }
+            nlohmann::json jsonObj(dispatchVec);
+            std::string dispatch = jsonObj.dump();
             SGLOGI("dispatch size=%{public}d", (int)dispatch.size());
             (void) proxy->ResponseRiskData(devId, dispatch, CONTINUE);
             curIndex = lastIndex;
@@ -241,12 +238,9 @@ void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &o
         }
 
         // last dispatch
-        std::string dispatch;
         dispatchVec.assign(events.begin() + curIndex, events.end());
-        for (const SecEvent &event : dispatchVec) {
-            nlohmann::json jsonObj(event);
-            dispatch += jsonObj.dump();
-        }
+        nlohmann::json jsonObj(dispatchVec);
+        std::string dispatch = jsonObj.dump();
         (void) proxy->ResponseRiskData(devId, dispatch, FINISH);
         SGLOGI("ResponseRiskData FINIESH");
     };

@@ -33,6 +33,7 @@ namespace {
     constexpr const char *AUDIT_SWITCH = "audit_switch";
     constexpr const int32_t AUDIT_SWITCH_OFF = 0;
     constexpr const int32_t AUDIT_SWITCH_ON = 1;
+    constexpr const int64_t ACCOUNT_ID = 1011015001;
 }
 
 class InitCallback : public DistributedHardware::DmInitCallback {
@@ -49,23 +50,58 @@ void DatabaseManager::Init()
 
     // init audit according to audit switch state
     if (PreferenceWrapper::GetInt(AUDIT_SWITCH, AUDIT_SWITCH_OFF) == AUDIT_SWITCH_ON) {
-        ret = AuditEventRdbHelper::GetInstance().Init();
-        SGLOGI("audit event rdb init result is %{public}d", ret);
-        ret = AuditEventMemRdbHelper::GetInstance().Init();
-        SGLOGI("audit event mem rdb init result is %{public}d", ret);
-        auto callback = std::make_shared<InitCallback>();
-        ret = DistributedHardware::DeviceManager::GetInstance().InitDeviceManager(PKG_NAME, callback);
-        if (ret != SUCCESS) {
-            SGLOGI("init device manager failed, result is %{public}d", ret);
-        }
-
-        DistributedHardware::DmDeviceInfo deviceInfo;
-        ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceInfo(PKG_NAME, deviceInfo);
-        if (ret != SUCCESS) {
-            SGLOGE("get local device info error, code=%{public}d", ret);
-        }
-        deviceId_ = deviceInfo.deviceId;
+        (void)OpenAudit();
     }
+}
+
+int32_t DatabaseManager::OpenAudit()
+{
+    int32_t ret = AuditEventRdbHelper::GetInstance().Init();
+    SGLOGI("audit event rdb init result is %{public}d", ret);
+    ret = AuditEventMemRdbHelper::GetInstance().Init();
+    SGLOGI("audit event mem rdb init result is %{public}d", ret);
+    auto callback = std::make_shared<InitCallback>();
+    ret = DistributedHardware::DeviceManager::GetInstance().InitDeviceManager(PKG_NAME, callback);
+    if (ret != SUCCESS) {
+        SGLOGI("init device manager failed, result is %{public}d", ret);
+    }
+
+    DistributedHardware::DmDeviceInfo deviceInfo;
+    ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceInfo(PKG_NAME, deviceInfo);
+    if (ret != SUCCESS) {
+        SGLOGE("get local device info error, code=%{public}d", ret);
+    }
+    deviceId_ = deviceInfo.deviceId;
+    return SUCCESS;
+}
+
+int32_t DatabaseManager::CloseAudit()
+{
+    AuditEventRdbHelper::GetInstance().Release();
+    AuditEventMemRdbHelper::GetInstance().Release();
+    auto callback = std::make_shared<InitCallback>();
+    int ret = DistributedHardware::DeviceManager::GetInstance().UnInitDeviceManager(PKG_NAME);
+    if (ret != SUCCESS) {
+        SGLOGI("init device manager failed, result is %{public}d", ret);
+    }
+    return SUCCESS;
+}
+
+int32_t DatabaseManager::SetAuditState(bool enable)
+{
+    int state = PreferenceWrapper::GetInt(AUDIT_SWITCH, AUDIT_SWITCH_OFF);
+    if ((state == AUDIT_SWITCH_OFF && !enable) || (state == AUDIT_SWITCH_ON && enable)) {
+        SGLOGI("the switch state does not change.");
+        return SUCCESS;
+    }
+    if (enable) {
+        PreferenceWrapper::PutInt(AUDIT_SWITCH, AUDIT_SWITCH_ON);
+        OpenAudit();
+    } else {
+        CloseAudit();
+        PreferenceWrapper::PutInt(AUDIT_SWITCH, AUDIT_SWITCH_OFF);
+    }
+    return SUCCESS;
 }
 
 void DatabaseManager::FillUserIdAndDeviceId(SecEvent& event)
@@ -92,10 +128,16 @@ int DatabaseManager::InsertEvent(uint32_t source, SecEvent& event)
     if (config.source == source) {
         std::string table = ConfigDataManager::GetInstance()->GetTableFromEventId(event.eventId);
         SGLOGD("table=%{public}s, eventId=%{public}ld", table.c_str(), config.eventId);
+        if (event.eventId == ACCOUNT_ID) {
+            DbChanged(IDbListener::INSERT, event);
+        }
         std::lock_guard<std::mutex> lock(dbMutex_);
         if (table == AUDIT_TABLE) {
             SGLOGD("audit event insert");
-
+            if (PreferenceWrapper::GetInt(AUDIT_SWITCH, AUDIT_SWITCH_OFF) == AUDIT_SWITCH_OFF) {
+                SGLOGE("the audit function is not supported");
+                return NOT_SUPPORT;
+            }
             // Check whether the upper limit is reached.
             int64_t count = AuditEventMemRdbHelper::GetInstance().CountEventByEventId(event.eventId);
             if (count >= config.storageRomNums) {

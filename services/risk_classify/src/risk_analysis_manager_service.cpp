@@ -17,10 +17,16 @@
 
 #include <thread>
 
+#include "ability_connect_callback_stub.h"
+#include "ability_manager_client.h"
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
 
 #include "bigdata.h"
+#include "bundle_active_client.h"
+#include "bundle_active_group_common.h"
+#include "database_manager.h"
+#include "errors.h"
 #include "model_manager.h"
 #include "risk_analysis_define.h"
 #include "risk_analysis_manager_callback_proxy.h"
@@ -30,7 +36,6 @@
 #include "task_handler.h"
 #include "model_manager.h"
 #include "config_manager.h"
-#include "config_data_manager.h"
 
 namespace OHOS::Security::SecurityGuard {
 REGISTER_SYSTEM_ABILITY_BY_ID(RiskAnalysisManagerService, RISK_ANALYSIS_MANAGER_SA_ID, true);
@@ -39,6 +44,9 @@ namespace {
     constexpr int32_t TIMEOUT_REPLY = 500;
     const std::string PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
     const std::vector<uint32_t> MODELIDS = { 3001000000, 3001000001, 3001000002 };
+    constexpr uint32_t AUDIT_MODEL_ID = 3001000003;
+    constexpr char HSDR_BUNDLE_NAME[] = "com.huawei.hmos.hsdr";
+    constexpr int32_t HSDR_USER_ID = 100;
 }
 
 RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnCreate)
@@ -46,6 +54,15 @@ RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnC
 {
     SGLOGW("%{public}s", __func__);
 }
+
+class AbilityConnection : public AAFwk::AbilityConnectionStub {
+public:
+    AbilityConnection() = default;
+    ~AbilityConnection() = default;
+    void OnAbilityConnectDone(const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject,
+        int resultCode) override {}
+    void OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode) override {}
+};
 
 void RiskAnalysisManagerService::OnStart()
 {
@@ -67,6 +84,21 @@ void RiskAnalysisManagerService::OnStart()
         ModelManager::GetInstance().Init();
     };
     TaskHandler::GetInstance()->AddTask(task);
+
+    TaskHandler::Task activeTask = [] {
+        AAFwk::Want want;
+        std::string bundleName = HSDR_BUNDLE_NAME;
+        std::string abilityName = "HSDRService";
+        want.SetAction("security_guard");
+        want.SetElementName(bundleName, abilityName);
+        sptr<AbilityConnection> abilityConnection = new AbilityConnection();
+        auto ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, abilityConnection, HSDR_USER_ID);
+        SGLOGI("connect result ret: %{public}d", ret);
+        ErrCode code = DeviceUsageStats::BundleActiveClient::GetInstance().SetAppGroup(HSDR_BUNDLE_NAME,
+            DeviceUsageStats::DeviceUsageStatsGroupConst::ACTIVE_GROUP_DAILY, HSDR_USER_ID);
+        SGLOGI("SetAppGroup code=%{public}d", code);
+    };
+    TaskHandler::GetInstance()->AddTask(activeTask);
 }
 
 void RiskAnalysisManagerService::OnStop()
@@ -127,5 +159,24 @@ void RiskAnalysisManagerService::PushRiskAnalysisTask(uint32_t modelId,
         promise->set_value(result);
     };
     TaskHandler::GetInstance()->AddTask(task);
+}
+
+int32_t RiskAnalysisManagerService::SetModelState(uint32_t modelId, bool enable)
+{
+    SGLOGI("begin set model state");
+    if (modelId != AUDIT_MODEL_ID) {
+        return BAD_PARAM;
+    }
+    DatabaseManager::GetInstance().SetAuditState(enable);
+    if (!enable) {
+        ModelManager::GetInstance().Release(modelId);
+        return SUCCESS;
+    }
+
+    int32_t ret = ModelManager::GetInstance().InitModel(modelId);
+    if (ret != SUCCESS) {
+        DatabaseManager::GetInstance().SetAuditState(false);
+    }
+    return ret;
 }
 }

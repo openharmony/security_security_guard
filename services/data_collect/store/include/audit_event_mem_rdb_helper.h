@@ -30,6 +30,7 @@ class AuditEventMemRdbHelper : public DatabaseHelper {
 public:
     static DatabaseHelper &GetInstance();
     int Init() override;
+    void Release() override;
     int QueryAllEvent(std::vector<SecEvent> &events) override;
     int QueryAllEventFromMem(std::vector<SecEvent> &events) override;
     int FlushAllEvent() override;

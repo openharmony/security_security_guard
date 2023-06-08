@@ -28,6 +28,7 @@ namespace OHOS::Security::SecurityGuard {
 class DatabaseManager : public Singleton<DatabaseManager> {
 public:
     void Init();
+    int32_t SetAuditState(bool enable);
     int InsertEvent(uint32_t source, SecEvent& event);
     int QueryAllEvent(std::string table, std::vector<SecEvent> &events);
     int QueryAllEventFromMem(std::vector<SecEvent> &events);
@@ -54,6 +55,8 @@ private:
     std::string deviceId_;
     void FillUserIdAndDeviceId(SecEvent& event);
     void DbChanged(int32_t optType, const SecEvent &event);
+    int32_t OpenAudit();
+    int32_t CloseAudit();
 };
 } // namespace OHOS::Security::SecurityGuard {
 #endif // SECURITY_GUARD_DATABASE_MANAGER_H

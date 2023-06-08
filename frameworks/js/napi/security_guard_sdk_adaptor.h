@@ -26,6 +26,7 @@ public:
         RequestRiskDataCallback callback);
     static int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId, ResultCallback callback);
     static int32_t ReportSecurityInfo(const std::shared_ptr<EventInfo> &info);
+    static int32_t SetModelState(uint32_t modelId, bool enable);
 
 private:
     SecurityGuardSdkAdaptor() = delete;

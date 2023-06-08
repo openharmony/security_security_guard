@@ -108,4 +108,24 @@ int32_t SecurityGuardSdkAdaptor::ReportSecurityInfo(const std::shared_ptr<EventI
     }
     return SUCCESS;
 }
+
+int32_t SecurityGuardSdkAdaptor::SetModelState(uint32_t modelId, bool enable)
+{
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return NULL_OBJECT;
+    }
+
+    auto object = registry->GetSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID);
+    auto proxy = iface_cast<RiskAnalysisManagerProxy>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+
+    int32_t ret = proxy->SetModelState(modelId, enable);
+    SGLOGI("SetModelState result, ret=%{public}d", ret);
+    return ret;
+}
 } // OHOS::Security::SecurityGuard

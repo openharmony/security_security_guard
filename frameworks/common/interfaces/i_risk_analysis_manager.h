@@ -30,10 +30,12 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Security.RiskAnalysisManager");
     enum {
         CMD_GET_SECURITY_MODEL_RESULT = 2,
+        CMD_SET_MODEL_STATE = 3,
     };
 
     virtual int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId,
         const sptr<IRemoteObject> &callback) = 0;
+    virtual int32_t SetModelState(uint32_t modelId, bool enable) = 0;
 };
 
 class IRiskAnalysisManagerCallback : public IRemoteBroker {

@@ -66,10 +66,10 @@ int32_t ModelManager::InitModel(uint32_t modelId)
     {
         std::lock_guard<std::mutex> lock(mutex_);
         iter = modelIdApiMap_.find(modelId);
-    }
-    if (iter != modelIdApiMap_.end() && iter->second != nullptr && iter->second->GetModelApi() != nullptr) {
-        SGLOGI("the model has been initialized, modelId=%{public}u", modelId);
-        return SUCCESS;
+        if (iter != modelIdApiMap_.end() && iter->second != nullptr && iter->second->GetModelApi() != nullptr) {
+            iter->second->GetModelApi()->Release();
+            modelIdApiMap_.erase(iter);
+        }
     }
 
     ModelCfg cfg;

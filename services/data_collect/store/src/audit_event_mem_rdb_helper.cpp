@@ -45,10 +45,7 @@ AuditEventMemRdbHelper::AuditEventMemRdbHelper() : DatabaseHelper("audit_event_m
 
 AuditEventMemRdbHelper::~AuditEventMemRdbHelper()
 {
-    if (timerId_ != 0) {
-        timer_.Unregister(timerId_);
-    }
-    timer_.Shutdown();
+    Release();
 }
 
 int AuditEventMemRdbHelper::Init()
@@ -75,6 +72,15 @@ int AuditEventMemRdbHelper::Init()
     timer_.Setup();
     timerId_ = timer_.Register([this] { this->FlushAllEvent(); }, FLUSH_INTERVAL);
     return errCode;
+}
+
+void AuditEventMemRdbHelper::Release()
+{
+    if (timerId_ != 0) {
+        timer_.Unregister(timerId_);
+    }
+    timer_.Shutdown();
+    (void)FlushAllEvent();
 }
 
 int AuditEventMemRdbHelper::QueryAllEvent(std::vector<SecEvent> &events)

@@ -48,4 +48,25 @@ int32_t RiskAnalysisManagerProxy::RequestSecurityModelResult(std::string &devId,
     SGLOGD("reply=%{public}d", ret);
     return ret;
 }
+
+int32_t RiskAnalysisManagerProxy::SetModelState(uint32_t modelId, bool enable)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        SGLOGE("WriteInterfaceToken error");
+        return WRITE_ERR;
+    }
+    data.WriteUint32(modelId);
+    data.WriteBool(enable);
+
+    MessageOption option = { MessageOption::TF_SYNC };
+    int ret = Remote()->SendRequest(CMD_SET_MODEL_STATE, data, reply, option);
+    if (ret != ERR_NONE) {
+        SGLOGE("ret=%{public}d", ret);
+        return ret;
+    }
+    return reply.ReadInt32();
+}
 }

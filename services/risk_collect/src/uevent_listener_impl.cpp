@@ -28,6 +28,7 @@
 #include "data_format.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
+#include "string_ex.h"
 #include "task_handler.h"
 
 #include "risk_event_rdb_helper.h"
@@ -107,41 +108,38 @@ int UeventListenerImpl::UeventListen(char *buffer, size_t length)
 
 ErrorCode UeventListenerImpl::ParseSgEvent(char *buffer, size_t length, SecEvent &eventDataSt)
 {
-    char *savePoint = nullptr;
-    char *subString = strtok_r(buffer, "=", &savePoint);
-    if (subString == nullptr) {
+    size_t len = length;
+    std::string buf(reinterpret_cast<const char *>(buffer), len);
+    auto pos = buf.find_first_of("=");
+    if (pos == std::string::npos) {
+        SGLOGE("not found separator =");
         return BAD_PARAM;
     }
-
-    uint32_t contentLen;
-    int index = 0;
-    eventDataSt.date = SecurityGuardUtils::GetDate();
-    subString = strtok_r(nullptr, "-", &savePoint);
-    while (subString != nullptr) {
-        switch (index) {
-            case SG_UEVENT_INDEX_EVENT_ID:
-                eventDataSt.eventId = static_cast<int64_t>(atoi(subString));
-                break;
-            case SG_UEVENT_INDEX_VERSION:
-                eventDataSt.version = std::string(subString);
-                break;
-            case SG_UEVENT_INDEX_CONTENT_LEN:
-                contentLen = static_cast<uint32_t>(atoi(subString));
-                break;
-            case SG_UEVENT_INDEX_CONTENT:
-                eventDataSt.content = std::string(subString);
-                if (static_cast<uint32_t>(eventDataSt.content.length()) + 1 != contentLen) {
-                    SGLOGE("content len=%{public}u", static_cast<uint32_t>(eventDataSt.content.length()));
-                    return BAD_PARAM;
-                }
-                break;
-            default:
-                SGLOGE("SG_UEVENT error");
-                return BAD_PARAM;
-        }
-        subString = strtok_r(nullptr, "-", &savePoint);
-        index++;
+    len = len - pos;
+    buf = buf.substr(pos + 1, len);
+    pos = buf.find_first_of("{");
+    if (pos == std::string::npos) {
+        SGLOGE("not found separator {");
+        return BAD_PARAM;
     }
+    eventDataSt.content = buf.substr(pos, len);
+    buf = buf.substr(0, pos - 1);
+    std::vector<std::string> strs;
+    SplitStr(buf, "-", strs);
+    if (strs.size() != SG_UEVENT_INDEX_CONTENT) {
+        SGLOGE("str len error, %{public}u", static_cast<uint32_t>(strs.size()));
+        return BAD_PARAM;
+    }
+    (void)SecurityGuardUtils::StrToI64(strs[SG_UEVENT_INDEX_EVENT_ID], eventDataSt.eventId);
+    eventDataSt.version = strs[SG_UEVENT_INDEX_VERSION];
+    uint32_t contentLen = 0;
+    SecurityGuardUtils::StrToU32(strs[SG_UEVENT_INDEX_CONTENT_LEN], contentLen);
+    if (static_cast<uint32_t>(len) < contentLen) {
+        SGLOGE("len error, actual len=%{public}u, expect len==%{public}u", static_cast<uint32_t>(len), contentLen);
+        return BAD_PARAM;
+    }
+    eventDataSt.content = eventDataSt.content.substr(0, contentLen);
+    eventDataSt.date = SecurityGuardUtils::GetDate();
 
     if (!DataFormat::CheckRiskContent(eventDataSt.content)) {
         SGLOGE("check risk content error");

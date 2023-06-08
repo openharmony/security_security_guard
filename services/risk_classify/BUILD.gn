@@ -60,9 +60,12 @@ ohos_shared_library("sg_classify_service") {
   ]
 
   external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_manager",
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "device_usage_statistics:usagestatsinner",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "relational_store:native_rdb",

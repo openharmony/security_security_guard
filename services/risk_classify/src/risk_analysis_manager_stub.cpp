@@ -35,6 +35,9 @@ int32_t RiskAnalysisManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &d
             case CMD_GET_SECURITY_MODEL_RESULT: {
                 return HandleGetSecurityModelResult(data, reply);
             }
+            case CMD_SET_MODEL_STATE: {
+                return HandleSetModelState(data, reply);
+            }
             default:
                 return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
         }
@@ -60,6 +63,23 @@ int32_t RiskAnalysisManagerStub::HandleGetSecurityModelResult(MessageParcel &dat
         return BAD_PARAM;
     }
     int32_t ret = RequestSecurityModelResult(devId, modelId, object);
+    reply.WriteInt32(ret);
+    return ret;
+}
+
+int32_t RiskAnalysisManagerStub::HandleSetModelState(MessageParcel &data, MessageParcel &reply)
+{
+    // MODELID + ENABLE
+    uint32_t expected = sizeof(uint32_t) + sizeof(bool);
+    uint32_t actual = data.GetReadableBytes();
+    if (expected >= actual) {
+        SGLOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    uint32_t modelId = data.ReadUint32();
+    bool enable = data.ReadBool();
+    int32_t ret = SetModelState(modelId, enable);
     reply.WriteInt32(ret);
     return ret;
 }

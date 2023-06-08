@@ -33,6 +33,10 @@ int DatabaseHelper::Init()
     return SUCCESS;
 }
 
+void DatabaseHelper::Release()
+{
+}
+
 int DatabaseHelper::InsertEvent(const SecEvent& event)
 {
     NativeRdb::ValuesBucket values;
