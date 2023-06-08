@@ -31,6 +31,7 @@ public:
     ~RiskAnalysisManagerProxy() override = default;
     int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId,
         const sptr<IRemoteObject> &callback) override;
+    int32_t SetModelState(uint32_t modelId, bool enable) override;
 
 private:
     static inline BrokerDelegator<RiskAnalysisManagerProxy> delegator_;

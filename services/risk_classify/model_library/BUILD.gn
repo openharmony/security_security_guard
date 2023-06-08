@@ -65,10 +65,31 @@ ohos_shared_library("sg_root_scan") {
   ]
 }
 
+ohos_shared_library("sg_threat_detection") {
+  subsystem_name = "security"
+  part_name = "security_guard"
+
+  include_dirs = [ "//third_party/json/include" ]
+
+  configs =
+      [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
+
+  sources = [ "${sg_root_dir}/services/risk_classify/model_library/threat_detection/threat_detection_model.cpp" ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:wantagent_innerkits",
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "time_service:time_client",
+  ]
+}
+
 group("security_guard_model") {
   deps = [
     ":sg_device_completeness",
     ":sg_physical_machine_detection",
     ":sg_root_scan",
+    ":sg_threat_detection",
   ]
 }

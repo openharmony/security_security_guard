@@ -25,6 +25,7 @@ public:
     explicit DatabaseHelper(std::string dbTable);
     ~DatabaseHelper() = default;
     virtual int Init();
+    virtual void Release();
     virtual int InsertEvent(const SecEvent& event);
     virtual int QueryAllEvent(std::vector<SecEvent> &events);
     virtual int QueryAllEventFromMem(std::vector<SecEvent> &events);

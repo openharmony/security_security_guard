@@ -32,6 +32,7 @@ constexpr int NAPI_REPORT_EVENT_INFO_ARGS_CNT = 1;
 constexpr int NAPI_REQUEST_SECURITY_EVENT_INFO_ARGS_CNT = 3;
 constexpr int NAPI_REQUEST_SECURITY_MODEL_RESULT_ARGS_MIN_CNT = 2;
 constexpr int NAPI_REQUEST_SECURITY_MODEL_RESULT_ARGS_MAX_CNT = 3;
+constexpr int NAPI_SET_MODEL_STATE_ARGS_MAX_CNT = 2;
 constexpr int VERSION_MAX_LEN = 50;
 
 static const std::unordered_map<int32_t, std::pair<int32_t, std::string>> g_errorStringMap = {
@@ -113,6 +114,19 @@ static napi_value NapiCreateUint32(const napi_env env, uint32_t value)
     return result;
 }
 
+static napi_value ParseBool(napi_env env, napi_value object, bool &value)
+{
+    napi_valuetype type;
+    NAPI_CALL(env, napi_typeof(env, object, &type));
+    if (type != napi_boolean) {
+        SGLOGE("type of param is not bool");
+        return nullptr;
+    }
+
+    NAPI_CALL(env, napi_get_value_bool(env, object, &value));
+    return NapiCreateInt32(env, ConvertToJsErrCode(SUCCESS));
+}
+
 static napi_value ParseInt64(napi_env env, napi_value object, const std::string &key, int64_t &value)
 {
     napi_value result;
@@ -130,7 +144,7 @@ static napi_value ParseInt64(napi_env env, napi_value object, const std::string 
     }
 
     NAPI_CALL(env, napi_get_value_int64(env, result, &value));
-    return NapiCreateInt32(env, SUCCESS);
+    return NapiCreateInt32(env, ConvertToJsErrCode(SUCCESS));
 }
 
 static napi_value ParseUint32(napi_env env, napi_value object, uint32_t &value)
@@ -550,6 +564,38 @@ static napi_value ModelIdTypeConstructor(napi_env env)
     return modelIdType;
 }
 
+static napi_value NapiSetModelState(napi_env env, napi_callback_info info)
+{
+    size_t argc = NAPI_SET_MODEL_STATE_ARGS_MAX_CNT;
+    napi_value argv[NAPI_SET_MODEL_STATE_ARGS_MAX_CNT] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    if (argc != NAPI_SET_MODEL_STATE_ARGS_MAX_CNT) {
+        SGLOGE("set model state arguments count is not expected");
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
+        return nullptr;
+    }
+
+    size_t index = 0;
+    uint32_t modelId = 0;
+    if (ParseUint32(env, argv[index], modelId) == nullptr) {
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
+        return nullptr;
+    }
+
+    index++;
+    bool enable = false;
+    if (ParseBool(env, argv[index], enable) == nullptr) {
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
+        return nullptr;
+    }
+
+    int32_t code = SecurityGuardSdkAdaptor::SetModelState(modelId, enable);
+    if (code != SUCCESS) {
+        SGLOGE("set model state error, code=%{public}d", code);
+    }
+    return NapiCreateInt32(env, ConvertToJsErrCode(code));
+}
+
 EXTERN_C_START
 static napi_value SecurityGuardNapiRegister(napi_env env, napi_value exports)
 {
@@ -559,6 +605,7 @@ static napi_value SecurityGuardNapiRegister(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("reportSecurityInfo", NapiReportSecurityInfo),
         DECLARE_NAPI_FUNCTION("requestSecurityEventInfo", NapiRequestSecurityEventInfo),
         DECLARE_NAPI_FUNCTION("requestSecurityModelResult", NapiRequestSecurityModelResult),
+        DECLARE_NAPI_FUNCTION("setModelState", NapiSetModelState),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
     return exports;
