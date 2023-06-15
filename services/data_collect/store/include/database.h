@@ -36,7 +36,7 @@ public:
         const std::vector<NativeRdb::ValuesBucket> &initialBatchValues);
     int Update(int &changedRows, const NativeRdb::ValuesBucket &values, const NativeRdb::AbsRdbPredicates &predicates);
     int Delete(int &deletedRows, const NativeRdb::AbsRdbPredicates &predicates);
-    std::unique_ptr<NativeRdb::AbsSharedResultSet> Query(
+    std::shared_ptr<NativeRdb::ResultSet> Query(
         const NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> columns);
     int ExecuteSql(const std::string &sql);
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql,

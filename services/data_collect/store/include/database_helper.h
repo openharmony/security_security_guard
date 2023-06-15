@@ -47,7 +47,7 @@ public:
 protected:
     int QueryEventBase(const NativeRdb::RdbPredicates &predicates, std::vector<SecEvent> &events);
     std::string CreateTable();
-    int32_t GetResultSetTableInfo(const std::unique_ptr<NativeRdb::AbsSharedResultSet> &resultSet,
+    int32_t GetResultSetTableInfo(const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
         SecEventTableInfo &table);
     void SetValuesBucket(const SecEvent &event, NativeRdb::ValuesBucket &values);
     std::string dbPath_{};

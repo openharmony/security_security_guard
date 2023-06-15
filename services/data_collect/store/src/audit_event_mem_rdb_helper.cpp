@@ -111,7 +111,7 @@ int AuditEventMemRdbHelper::QueryEventFromMemByDate(std::vector<SecEvent> &event
     NativeRdb::RdbPredicates predicates(dbTable_);
     predicates.LessThan(DATE, date);
     std::vector<std::string> columns { EVENT_ID, VERSION, DATE, CONTENT, USER_ID, DEVICE_ID };
-    std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet = Query(predicates, columns);
+    std::shared_ptr<NativeRdb::ResultSet> resultSet = Query(predicates, columns);
     if (resultSet == nullptr) {
         SGLOGI("failed to get event");
         return DB_OPT_ERR;

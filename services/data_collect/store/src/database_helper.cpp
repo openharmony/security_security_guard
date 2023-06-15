@@ -68,7 +68,7 @@ int DatabaseHelper::QueryRecentEventByEventId(int64_t eventId, SecEvent &event)
     predicates.EqualTo(EVENT_ID, std::to_string(eventId));
     predicates.OrderByDesc(ID);
     predicates.Limit(1);
-    std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet = Query(predicates, columns);
+    std::shared_ptr<NativeRdb::ResultSet> resultSet = Query(predicates, columns);
     if (resultSet == nullptr) {
         SGLOGI("failed to get event");
         return DB_OPT_ERR;
@@ -203,7 +203,7 @@ int DatabaseHelper::DeleteOldEventByEventId(int64_t eventId, int64_t count)
     queryPredicates.OrderByAsc(ID);
     queryPredicates.Limit(count);
     std::vector<std::string> columns { ID };
-    std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet = Query(queryPredicates, columns);
+    std::shared_ptr<NativeRdb::ResultSet> resultSet = Query(queryPredicates, columns);
     if (resultSet == nullptr) {
         SGLOGI("failed to get event, eventId=%{public}ld", eventId);
         return DB_OPT_ERR;
@@ -248,7 +248,7 @@ int DatabaseHelper::FlushAllEvent()
 int DatabaseHelper::QueryEventBase(const NativeRdb::RdbPredicates &predicates, std::vector<SecEvent> &events)
 {
     std::vector<std::string> columns { EVENT_ID, VERSION, DATE, CONTENT, USER_ID, DEVICE_ID };
-    std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet = Query(predicates, columns);
+    std::shared_ptr<NativeRdb::ResultSet> resultSet = Query(predicates, columns);
     if (resultSet == nullptr) {
         SGLOGI("failed to get event");
         return DB_OPT_ERR;
@@ -278,7 +278,7 @@ int DatabaseHelper::QueryEventBase(const NativeRdb::RdbPredicates &predicates, s
     return SUCCESS;
 }
 
-int32_t DatabaseHelper::GetResultSetTableInfo(const std::unique_ptr<NativeRdb::AbsSharedResultSet> &resultSet,
+int32_t DatabaseHelper::GetResultSetTableInfo(const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
     SecEventTableInfo &table)
 {
     int32_t rowCount = 0;

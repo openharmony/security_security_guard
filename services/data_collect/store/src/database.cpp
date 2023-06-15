@@ -74,15 +74,14 @@ int Database::Delete(int &deletedRows, const NativeRdb::AbsRdbPredicates &predic
     return ret;
 }
 
-std::unique_ptr<NativeRdb::AbsSharedResultSet> Database::Query(
+std::shared_ptr<NativeRdb::ResultSet> Database::Query(
     const NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> columns)
 {
-    std::unique_ptr<NativeRdb::AbsSharedResultSet> resultSet;
     int ret = IsExistStore();
     if (ret == NativeRdb::E_OK) {
-        resultSet = store_->Query(predicates, columns);
+        return store_->Query(predicates, columns);
     }
-    return resultSet;
+    return nullptr;
 }
 
 int Database::ExecuteSql(const std::string &sql)
