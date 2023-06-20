@@ -42,7 +42,7 @@ ohos_fuzztest("RequestSecurityEventInfoAsyncFuzzTest") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
     "security_guard:libsg_obtaindata_sdk",
