@@ -54,6 +54,7 @@ group("security_guard_fuzz_test") {
       "${sg_root_dir}/test/fuzztest/classify:fuzztest",
       "${sg_root_dir}/test/fuzztest/collect:fuzztest",
       "${sg_root_dir}/test/fuzztest/obtaindata:fuzztest",
+      "${sg_root_dir}/test/fuzztest/ipc:fuzztest",
     ]
   }
 }
