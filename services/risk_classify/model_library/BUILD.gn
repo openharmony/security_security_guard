@@ -27,7 +27,7 @@ ohos_shared_library("sg_device_completeness") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 }
 
@@ -44,7 +44,7 @@ ohos_shared_library("sg_physical_machine_detection") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 }
 
@@ -61,7 +61,7 @@ ohos_shared_library("sg_root_scan") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 }
 
@@ -80,7 +80,7 @@ ohos_shared_library("sg_threat_detection") {
     "ability_base:want",
     "ability_runtime:wantagent_innerkits",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "time_service:time_client",
   ]
 }
