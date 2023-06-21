@@ -43,6 +43,7 @@ REGISTER_SYSTEM_ABILITY_BY_ID(RiskAnalysisManagerService, RISK_ANALYSIS_MANAGER_
 namespace {
     constexpr int32_t TIMEOUT_REPLY = 500;
     const std::string PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
+    const std::string SET_MODEL_PERMISSION = "ohos.permission.securityguard.SET_MODEL_STATE";
     const std::vector<uint32_t> MODELIDS = { 3001000000, 3001000001, 3001000002 };
     constexpr uint32_t AUDIT_MODEL_ID = 3001000003;
     constexpr char HSDR_BUNDLE_NAME[] = "com.huawei.hmos.hsdr";
@@ -164,6 +165,12 @@ void RiskAnalysisManagerService::PushRiskAnalysisTask(uint32_t modelId,
 int32_t RiskAnalysisManagerService::SetModelState(uint32_t modelId, bool enable)
 {
     SGLOGI("begin set model state");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, SET_MODEL_PERMISSION);
+    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
+        SGLOGE("caller no permission");
+        return NO_PERMISSION;
+    }
     if (modelId != AUDIT_MODEL_ID) {
         return BAD_PARAM;
     }
