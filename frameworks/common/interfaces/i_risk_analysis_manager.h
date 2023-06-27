@@ -22,15 +22,18 @@
 #include "iremote_broker.h"
 #include "message_parcel.h"
 
+#include "risk_analysis_manager_service_ipc_interface_code.h"
+
 namespace OHOS::Security::SecurityGuard {
 constexpr int32_t RISK_ANALYSIS_MANAGER_SA_ID = 3523;
 
 class IRiskAnalysisManager : public IRemoteBroker {
 public:
+    using InterfaceCode = RiskAnalysisManagerInterfaceCode;
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Security.RiskAnalysisManager");
     enum {
-        CMD_GET_SECURITY_MODEL_RESULT = 2,
-        CMD_SET_MODEL_STATE = 3,
+        CMD_GET_SECURITY_MODEL_RESULT = static_cast<uint32_t>(InterfaceCode::CMD_GET_SECURITY_MODEL_RESULT),
+        CMD_SET_MODEL_STATE = static_cast<uint32_t>(InterfaceCode::CMD_SET_MODEL_STATE),
     };
 
     virtual int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId,
@@ -40,9 +43,10 @@ public:
 
 class IRiskAnalysisManagerCallback : public IRemoteBroker {
 public:
+    using InterfaceCode = RiskAnalysisManagerCallbackInterfaceCode;
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Security.RiskAnalysisManager.Callback");
     enum {
-        CMD_SET_SECURITY_MODEL_RESULT = 1,
+        CMD_SET_SECURITY_MODEL_RESULT = static_cast<uint32_t>(InterfaceCode::CMD_SET_SECURITY_MODEL_RESULT),
     };
 
     virtual int32_t ResponseSecurityModelResult(std::string &devId, uint32_t modelId, std::string &result) = 0;

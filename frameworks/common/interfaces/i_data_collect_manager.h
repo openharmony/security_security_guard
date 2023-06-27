@@ -20,15 +20,18 @@
 
 #include "iremote_broker.h"
 
+#include "data_collect_manager_service_ipc_interface_code.h"
+
 namespace OHOS::Security::SecurityGuard {
 constexpr int32_t DATA_COLLECT_MANAGER_SA_ID = 3524;
 
 class IDataCollectManager : public IRemoteBroker {
 public:
+    using InterfaceCode = DataCollectManagerInterfaceCode;
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Security.DataCollectManager");
     enum {
-        CMD_DATA_COLLECT = 1,
-        CMD_DATA_REQUEST = 2,
+        CMD_DATA_COLLECT = static_cast<uint32_t>(InterfaceCode::CMD_DATA_COLLECT),
+        CMD_DATA_REQUEST = static_cast<uint32_t>(InterfaceCode::CMD_DATA_REQUEST),
     };
 
     virtual int32_t RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
@@ -39,9 +42,10 @@ public:
 
 class IDataCollectManagerCallback : public IRemoteBroker {
 public:
+    using InterfaceCode = DataCollectManagerCallbackInterfaceCode;
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Security.DataCollectManager.Callback");
     enum {
-        CMD_SET_REQUEST_DATA = 1,
+        CMD_SET_REQUEST_DATA = static_cast<uint32_t>(InterfaceCode::CMD_SET_REQUEST_DATA),
     };
 
     virtual int32_t ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status) = 0;
