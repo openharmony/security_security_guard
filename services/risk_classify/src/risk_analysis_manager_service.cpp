@@ -17,8 +17,6 @@
 
 #include <thread>
 
-#include "ability_connect_callback_stub.h"
-#include "ability_manager_client.h"
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
 
@@ -46,8 +44,6 @@ namespace {
     const std::string SET_MODEL_PERMISSION = "ohos.permission.securityguard.SET_MODEL_STATE";
     const std::vector<uint32_t> MODELIDS = { 3001000000, 3001000001, 3001000002 };
     constexpr uint32_t AUDIT_MODEL_ID = 3001000003;
-    constexpr char HSDR_BUNDLE_NAME[] = "com.huawei.hmos.hsdr";
-    constexpr int32_t HSDR_USER_ID = 100;
 }
 
 RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnCreate)
@@ -55,15 +51,6 @@ RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnC
 {
     SGLOGW("%{public}s", __func__);
 }
-
-class AbilityConnection : public AAFwk::AbilityConnectionStub {
-public:
-    AbilityConnection() = default;
-    ~AbilityConnection() = default;
-    void OnAbilityConnectDone(const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject,
-        int resultCode) override {}
-    void OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode) override {}
-};
 
 void RiskAnalysisManagerService::OnStart()
 {
@@ -85,21 +72,6 @@ void RiskAnalysisManagerService::OnStart()
         ModelManager::GetInstance().Init();
     };
     TaskHandler::GetInstance()->AddTask(task);
-
-    TaskHandler::Task activeTask = [] {
-        AAFwk::Want want;
-        std::string bundleName = HSDR_BUNDLE_NAME;
-        std::string abilityName = "HSDRService";
-        want.SetAction("security_guard");
-        want.SetElementName(bundleName, abilityName);
-        sptr<AbilityConnection> abilityConnection = new AbilityConnection();
-        auto ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, abilityConnection, HSDR_USER_ID);
-        SGLOGI("connect result ret: %{public}d", ret);
-        ErrCode code = DeviceUsageStats::BundleActiveClient::GetInstance().SetAppGroup(HSDR_BUNDLE_NAME,
-            DeviceUsageStats::DeviceUsageStatsGroupConst::ACTIVE_GROUP_DAILY, HSDR_USER_ID);
-        SGLOGI("SetAppGroup code=%{public}d", code);
-    };
-    TaskHandler::GetInstance()->AddTask(activeTask);
 }
 
 void RiskAnalysisManagerService::OnStop()
