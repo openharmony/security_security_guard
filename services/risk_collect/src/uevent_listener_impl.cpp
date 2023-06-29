@@ -116,14 +116,15 @@ ErrorCode UeventListenerImpl::ParseSgEvent(char *buffer, size_t length, SecEvent
         return BAD_PARAM;
     }
     len = len - pos;
-    buf = buf.substr(pos + 1, len);
+    buf = buf.substr(pos + 1);
     pos = buf.find_first_of("{");
     if (pos == std::string::npos) {
         SGLOGE("not found separator {");
         return BAD_PARAM;
     }
-    eventDataSt.content = buf.substr(pos, len);
-    buf = buf.substr(0, pos - 1);
+    len = len - pos;
+    eventDataSt.content = buf.substr(pos);
+    buf.resize(pos - 1);
     std::vector<std::string> strs;
     SplitStr(buf, "-", strs);
     if (strs.size() != SG_UEVENT_INDEX_CONTENT) {
@@ -138,7 +139,7 @@ ErrorCode UeventListenerImpl::ParseSgEvent(char *buffer, size_t length, SecEvent
         SGLOGE("len error, actual len=%{public}u, expect len==%{public}u", static_cast<uint32_t>(len), contentLen);
         return BAD_PARAM;
     }
-    eventDataSt.content = eventDataSt.content.substr(0, contentLen);
+    eventDataSt.content.resize(contentLen);
     eventDataSt.date = SecurityGuardUtils::GetDate();
 
     if (!DataFormat::CheckRiskContent(eventDataSt.content)) {

@@ -54,8 +54,11 @@ int32_t ThreatDetectionModel::Init(std::shared_ptr<IModelManager> api)
     listener_ = std::make_shared<DbListener>();
     listener_->model_ = this;
     helper_ = api_->GetDbOperate("audit_event");
-    int32_t ret = api_->SubscribeDb(EVENTIDS, listener_);
-    return ret;
+    if (helper_ == nullptr) {
+        HiLog::Error(LABEL, "get db operate error");
+        return FAILED;
+    }
+    return api_->SubscribeDb(EVENTIDS, listener_);
 }
 
 std::string ThreatDetectionModel::GetResult()
@@ -89,6 +92,14 @@ void ThreatDetectionModel::DbListener::OnChange(uint32_t optType, const SecEvent
         default: {
             HiLog::Info(LABEL, "error event, id=%{public}ld", events.eventId);
         }
+    }
+}
+
+ThreatDetectionModel::DbListener::~DbListener()
+{
+    if (model_ != nullptr) {
+        delete model_;
+        model_ = nullptr;
     }
 }
 
