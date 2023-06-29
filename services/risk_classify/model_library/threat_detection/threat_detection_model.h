@@ -45,8 +45,8 @@ public:
     void Release() override;
 
 private:
-    std::shared_ptr<IModelManager> api_;
-    std::shared_ptr<IDbOperate> helper_;
+    std::shared_ptr<IModelManager> api_{};
+    std::shared_ptr<IDbOperate> helper_{};
     static std::string GetDate();
     void ParseAccountAndReport(const SecurityGuard::SecEvent &events);
     void GetAccountConetnt(const nlohmann::json &jsonObj, AuditContent &content);
@@ -54,10 +54,10 @@ private:
     class DbListener : public IDbListener {
     public:
         DbListener() = default;
-        ~DbListener() override = default;
+        ~DbListener();
         void OnChange(uint32_t optType, const SecEvent &events) override;
 
-        ThreatDetectionModel *model_;
+        ThreatDetectionModel *model_{};
     };
     std::shared_ptr<DbListener> listener_{};
 };
