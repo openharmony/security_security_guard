@@ -31,6 +31,7 @@
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
+#include "system_ability_definition.h"
 #include "task_handler.h"
 #include "model_manager.h"
 #include "config_manager.h"
@@ -68,10 +69,11 @@ void RiskAnalysisManagerService::OnStart()
     }
 
     TaskHandler::Task task = [] {
-        ConfigManager::GetInstance()->StartUpdate();
         ModelManager::GetInstance().Init();
     };
     TaskHandler::GetInstance()->AddTask(task);
+
+    AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
 }
 
 void RiskAnalysisManagerService::OnStop()
@@ -157,5 +159,18 @@ int32_t RiskAnalysisManagerService::SetModelState(uint32_t modelId, bool enable)
         DatabaseManager::GetInstance().SetAuditState(false);
     }
     return ret;
+}
+
+void RiskAnalysisManagerService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
+{
+    SGLOGI("OnAddSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
+    if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
+        ConfigManager::GetInstance()->StartUpdate();
+    }
+}
+
+void RiskAnalysisManagerService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
+{
+    SGLOGW("OnRemoveSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
 }
 }
