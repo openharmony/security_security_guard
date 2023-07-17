@@ -33,6 +33,7 @@
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
+#include "system_ability_definition.h"
 #include "task_handler.h"
 #include "uevent_listener.h"
 #include "uevent_listener_impl.h"
@@ -67,18 +68,8 @@ void DataCollectManagerService::OnStart()
 
     DatabaseManager::GetInstance().Init(); // Make sure the database is ready
 
-    TaskHandler::Task listenerTask = [] {
-        KernelInterfaceAdapter adapter;
-        UeventNotify notify(adapter);
-        std::vector<int64_t> whiteList = ConfigDataManager::GetInstance()->GetAllEventIds();
-        notify.AddWhiteList(whiteList);
-        notify.NotifyScan();
+    AddSystemAbilityListener(RISK_ANALYSIS_MANAGER_SA_ID);
 
-        UeventListenerImpl impl(adapter);
-        UeventListener listener(impl);
-        listener.Start();
-    };
-    TaskHandler::GetInstance()->AddTask(listenerTask);
     TaskHandler::Task hiviewListenerTask = [] {
         auto collector = std::make_shared<HiviewCollector>();
         collector->Collect("PASTEBOARD", "USE_BEHAVIOUR");
@@ -245,5 +236,29 @@ void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &o
         SGLOGI("ResponseRiskData FINIESH");
     };
     TaskHandler::GetInstance()->AddTask(task);
+}
+
+void DataCollectManagerService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
+{
+    SGLOGI("OnAddSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
+    if (systemAbilityId == RISK_ANALYSIS_MANAGER_SA_ID) {
+        TaskHandler::Task listenerTask = [] {
+            KernelInterfaceAdapter adapter;
+            UeventNotify notify(adapter);
+            std::vector<int64_t> whiteList = ConfigDataManager::GetInstance()->GetAllEventIds();
+            notify.AddWhiteList(whiteList);
+            notify.NotifyScan();
+
+            UeventListenerImpl impl(adapter);
+            UeventListener listener(impl);
+            listener.Start();
+        };
+        TaskHandler::GetInstance()->AddTask(listenerTask);
+    }
+}
+
+void DataCollectManagerService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
+{
+    SGLOGW("OnRemoveSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
 }
 }
