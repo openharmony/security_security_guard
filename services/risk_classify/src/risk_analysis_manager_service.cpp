@@ -95,7 +95,7 @@ int32_t RiskAnalysisManagerService::RequestSecurityModelResult(std::string &devI
     event.time = SecurityGuardUtils::GetDate();
     auto promise = std::make_shared<std::promise<std::string>>();
     auto future = promise->get_future();
-    PushRiskAnalysisTask(modelId, promise, event);
+    PushRiskAnalysisTask(modelId, promise);
     std::chrono::milliseconds span(TIMEOUT_REPLY);
     ErrorCode ret;
     std::string result{};
@@ -107,6 +107,7 @@ int32_t RiskAnalysisManagerService::RequestSecurityModelResult(std::string &devI
         ret =  SUCCESS;
     }
     SGLOGI("ReportClassifyEvent");
+    event.status = result;
     BigData::ReportClassifyEvent(event);
     auto proxy = iface_cast<RiskAnalysisManagerCallbackProxy>(callback);
     if (proxy == nullptr) {
@@ -118,19 +119,17 @@ int32_t RiskAnalysisManagerService::RequestSecurityModelResult(std::string &devI
 }
 
 void RiskAnalysisManagerService::PushRiskAnalysisTask(uint32_t modelId,
-    std::shared_ptr<std::promise<std::string>> &promise, ClassifyEvent &event)
+    std::shared_ptr<std::promise<std::string>> promise)
 {
-    TaskHandler::Task task = [modelId, &promise, &event] {
+    TaskHandler::Task task = [modelId, promise] {
         SGLOGD("modelId=%{public}u", modelId);
         if (std::count(MODELIDS.begin(), MODELIDS.end(), modelId) == 0) {
             SGLOGE("model not support, no need to analyse, modelId=%{public}u", modelId);
-            event.status = UNKNOWN_STATUS;
             promise->set_value(UNKNOWN_STATUS);
             return;
         }
         std::string result = ModelManager::GetInstance().GetResult(modelId);
         SGLOGI("result is %{public}s", result.c_str());
-        event.status = result;
         promise->set_value(result);
     };
     TaskHandler::GetInstance()->AddTask(task);

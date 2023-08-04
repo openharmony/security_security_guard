@@ -196,16 +196,16 @@ std::vector<SecEvent> DataCollectManagerService::GetSecEventsFromConditions(std:
 }
 
 void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &object,
-    std::string conditions, std::string devId, std::shared_ptr<std::promise<int32_t>> &promise)
+    std::string conditions, std::string devId, std::shared_ptr<std::promise<int32_t>> promise)
 {
-    TaskHandler::Task task = [=, &promise] () mutable {
+    TaskHandler::Task task = [object, conditions, devId, promise] () mutable {
         auto proxy = iface_cast<DataCollectManagerCallbackProxy>(object);
         if (proxy == nullptr) {
             promise->set_value(0);
             return;
         }
         auto cond = DataFormat::ParseConditions(conditions);
-        if (cond.first.size() != EVENTID_VECTOR_SIZE && cond.first.at(0).empty() && cond.first.at(1).empty()) {
+        if (cond.first.size() != EVENTID_VECTOR_SIZE || (cond.first.at(0).empty() && cond.first.at(1).empty())) {
             std::string empty;
             proxy->ResponseRiskData(devId, empty, FINISH);
             promise->set_value(0);
