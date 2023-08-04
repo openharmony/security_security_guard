@@ -44,7 +44,7 @@ private:
     static std::vector<SecEvent> GetSecEventsFromConditions(std::vector<std::vector<int64_t>> eventIds,
         std::string date);
     static void PushDataCollectTask(const sptr<IRemoteObject> &object, std::string conditions, std::string devId,
-        std::shared_ptr<std::promise<int32_t>> &promise);
+        std::shared_ptr<std::promise<int32_t>> promise);
 };
 } // namespace OHOS::Security::SecurityGuard
 

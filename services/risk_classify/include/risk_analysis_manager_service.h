@@ -37,8 +37,7 @@ public:
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
 
 private:
-    void PushRiskAnalysisTask(uint32_t modelId, std::shared_ptr<std::promise<std::string>> &promise,
-        ClassifyEvent &event);
+    void PushRiskAnalysisTask(uint32_t modelId, std::shared_ptr<std::promise<std::string>> promise);
 };
 } // namespace OHOS::Security::SecurityGuard
 
