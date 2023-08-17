@@ -599,7 +599,7 @@ static napi_value NapiSetModelState(napi_env env, napi_callback_info info)
 EXTERN_C_START
 static napi_value SecurityGuardNapiRegister(napi_env env, napi_value exports)
 {
-    static napi_property_descriptor desc[] = {
+    napi_property_descriptor desc[] = {
         DECLARE_NAPI_PROPERTY("EventIdType", EventIdTypeConstructor(env)),
         DECLARE_NAPI_PROPERTY("ModelIdType", ModelIdTypeConstructor(env)),
         DECLARE_NAPI_FUNCTION("reportSecurityInfo", NapiReportSecurityInfo),
