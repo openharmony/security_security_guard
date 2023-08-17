@@ -21,8 +21,6 @@
 #include "ipc_skeleton.h"
 
 #include "bigdata.h"
-#include "bundle_active_client.h"
-#include "bundle_active_group_common.h"
 #include "database_manager.h"
 #include "errors.h"
 #include "model_manager.h"

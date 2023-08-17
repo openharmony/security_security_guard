@@ -31,7 +31,6 @@
         "c_utils",
         "common_event_service",
         "device_manager",
-        "device_usage_statistics",
         "hdf_core",
         "hisysevent",
         "hilog",

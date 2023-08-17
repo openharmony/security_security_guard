@@ -65,7 +65,6 @@ ohos_shared_library("sg_classify_service") {
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "device_usage_statistics:usagestatsinner",
     "hilog:libhilog",
     "ipc:ipc_core",
     "relational_store:native_rdb",
