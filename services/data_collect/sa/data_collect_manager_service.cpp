@@ -69,12 +69,9 @@ void DataCollectManagerService::OnStart()
     DatabaseManager::GetInstance().Init(); // Make sure the database is ready
 
     AddSystemAbilityListener(RISK_ANALYSIS_MANAGER_SA_ID);
-
-    TaskHandler::Task hiviewListenerTask = [] {
-        auto collector = std::make_shared<HiviewCollector>();
-        collector->Collect("PASTEBOARD", "USE_BEHAVIOUR");
-    };
-    TaskHandler::GetInstance()->AddTask(hiviewListenerTask);
+    AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
+    AddSystemAbilityListener(DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID);
+    AddSystemAbilityListener(DFX_SYS_HIVIEW_ABILITY_ID);
 }
 
 void DataCollectManagerService::OnStop()
@@ -254,6 +251,19 @@ void DataCollectManagerService::OnAddSystemAbility(int32_t systemAbilityId, cons
             listener.Start();
         };
         TaskHandler::GetInstance()->AddTask(listenerTask);
+        return;
+    }
+    if (systemAbilityId == SOFTBUS_SERVER_SA_ID || systemAbilityId == DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID) {
+        (void)DatabaseManager::GetInstance().InitDeviceId();
+        return;
+    }
+    if (systemAbilityId == DFX_SYS_HIVIEW_ABILITY_ID) {
+        TaskHandler::Task hiviewListenerTask = [] {
+            auto collector = std::make_shared<HiviewCollector>();
+            collector->Collect("PASTEBOARD", "USE_BEHAVIOUR");
+        };
+        TaskHandler::GetInstance()->AddTask(hiviewListenerTask);
+        return;
     }
 }
 
