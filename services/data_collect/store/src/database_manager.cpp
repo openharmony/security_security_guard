@@ -54,25 +54,37 @@ void DatabaseManager::Init()
     }
 }
 
-int32_t DatabaseManager::OpenAudit()
+int32_t DatabaseManager::InitDeviceId()
 {
-    int32_t ret = AuditEventRdbHelper::GetInstance().Init();
-    SGLOGI("audit event rdb init result is %{public}d", ret);
-    ret = AuditEventMemRdbHelper::GetInstance().Init();
-    SGLOGI("audit event mem rdb init result is %{public}d", ret);
+    if (PreferenceWrapper::GetInt(AUDIT_SWITCH, AUDIT_SWITCH_OFF) == AUDIT_SWITCH_OFF || !deviceId_.empty()) {
+        SGLOGI("audit function not open, or already init device info");
+        return SUCCESS;
+    }
     auto callback = std::make_shared<InitCallback>();
-    ret = DistributedHardware::DeviceManager::GetInstance().InitDeviceManager(PKG_NAME, callback);
+    int32_t ret = DistributedHardware::DeviceManager::GetInstance().InitDeviceManager(PKG_NAME, callback);
     if (ret != SUCCESS) {
         SGLOGI("init device manager failed, result is %{public}d", ret);
+        return ret;
     }
 
     DistributedHardware::DmDeviceInfo deviceInfo;
     ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceInfo(PKG_NAME, deviceInfo);
     if (ret != SUCCESS) {
         SGLOGE("get local device info error, code=%{public}d", ret);
+        return ret;
     }
     deviceId_ = deviceInfo.deviceId;
+    SGLOGI("init device info success");
     return SUCCESS;
+}
+
+int32_t DatabaseManager::OpenAudit()
+{
+    int32_t ret = AuditEventRdbHelper::GetInstance().Init();
+    SGLOGI("audit event rdb init result is %{public}d", ret);
+    ret = AuditEventMemRdbHelper::GetInstance().Init();
+    SGLOGI("audit event mem rdb init result is %{public}d", ret);
+    return InitDeviceId();
 }
 
 int32_t DatabaseManager::CloseAudit()
