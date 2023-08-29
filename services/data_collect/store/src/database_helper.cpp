@@ -132,7 +132,7 @@ int DatabaseHelper::QueryEventByEventId(std::vector<int64_t> &eventIds, std::vec
 }
 
 int DatabaseHelper::QueryEventByEventIdAndDate(std::vector<int64_t> &eventIds, std::vector<SecEvent> &events,
-    std::string date)
+    std::string beginTime, std::string endTime)
 {
     int size = static_cast<int>(eventIds.size());
     if (size == 0) {
@@ -147,8 +147,14 @@ int DatabaseHelper::QueryEventByEventIdAndDate(std::vector<int64_t> &eventIds, s
         predicates.EqualTo(EVENT_ID, std::to_string(eventIds[i]));
     }
     predicates.EndWrap();
-    predicates.And();
-    predicates.GreaterThanOrEqualTo(DATE, date);
+    if (!beginTime.empty()) {
+        predicates.And();
+        predicates.GreaterThanOrEqualTo(DATE, beginTime);
+    }
+    if (!endTime.empty()) {
+        predicates.And();
+        predicates.LessThan(DATE, endTime);
+    }
     return QueryEventBase(predicates, events);
 }
 

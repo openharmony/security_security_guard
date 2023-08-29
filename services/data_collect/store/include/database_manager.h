@@ -35,7 +35,7 @@ public:
     int QueryRecentEventByEventId(int64_t eventId, SecEvent &event);
     int QueryRecentEventByEventId(std::string table, const std::vector<int64_t> &eventId, std::vector<SecEvent> &event);
     int QueryEventByEventIdAndDate(std::string table, std::vector<int64_t> &eventIds, std::vector<SecEvent> &events,
-        std::string date);
+        std::string beginTime, std::string endTime);
     int QueryEventByEventId(int64_t eventId, std::vector<SecEvent> &events);
     int QueryEventByEventId(std::string table, std::vector<int64_t> &eventIds, std::vector<SecEvent> &events);
     int QueryEventByEventType(std::string table, int32_t eventType, std::vector<SecEvent> &events);

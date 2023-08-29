@@ -44,7 +44,6 @@
 namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr int32_t TWO_ARGS = 2;
-    constexpr int32_t EVENTID_VECTOR_SIZE = 2;
     constexpr int32_t TIMEOUT_REPLY = 10000;
     const std::string REPORT_PERMISSION = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
     const std::string REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
@@ -178,16 +177,17 @@ int32_t DataCollectManagerService::RequestRiskData(std::string &devId, std::stri
     return SUCCESS;
 }
 
-std::vector<SecEvent> DataCollectManagerService::GetSecEventsFromConditions(std::vector<std::vector<int64_t>> eventIds,
-    std::string date)
+std::vector<SecEvent> DataCollectManagerService::GetSecEventsFromConditions(RequestCondition &condition)
 {
     std::vector<SecEvent> events;
-    if (date.empty()) {
-        (void) DatabaseManager::GetInstance().QueryEventByEventId(RISK_TABLE, eventIds[0], events);
-        (void) DatabaseManager::GetInstance().QueryEventByEventId(AUDIT_TABLE, eventIds[1], events);
+    if (condition.beginTime.empty() && condition.endTime.empty()) {
+        (void) DatabaseManager::GetInstance().QueryEventByEventId(RISK_TABLE, condition.riskEvent, events);
+        (void) DatabaseManager::GetInstance().QueryEventByEventId(AUDIT_TABLE, condition.auditEvent, events);
     } else {
-        (void) DatabaseManager::GetInstance().QueryEventByEventIdAndDate(RISK_TABLE, eventIds[0], events, date);
-        (void) DatabaseManager::GetInstance().QueryEventByEventIdAndDate(AUDIT_TABLE, eventIds[1], events, date);
+        (void) DatabaseManager::GetInstance().QueryEventByEventIdAndDate(RISK_TABLE, condition.riskEvent, events,
+            condition.beginTime, condition.endTime);
+        (void) DatabaseManager::GetInstance().QueryEventByEventIdAndDate(AUDIT_TABLE, condition.auditEvent, events,
+            condition.beginTime, condition.endTime);
     }
     return events;
 }
@@ -201,14 +201,15 @@ void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &o
             promise->set_value(0);
             return;
         }
-        auto cond = DataFormat::ParseConditions(conditions);
-        if (cond.first.size() != EVENTID_VECTOR_SIZE || (cond.first.at(0).empty() && cond.first.at(1).empty())) {
+        RequestCondition reqCondition {};
+        DataFormat::ParseConditions(conditions, reqCondition);
+        if ((reqCondition.riskEvent.empty() && reqCondition.auditEvent.empty())) {
             std::string empty;
             proxy->ResponseRiskData(devId, empty, FINISH);
             promise->set_value(0);
             return;
         }
-        std::vector<SecEvent> events = GetSecEventsFromConditions(cond.first, cond.second);
+        std::vector<SecEvent> events = GetSecEventsFromConditions(reqCondition);
         int32_t curIndex = 0;
         int32_t lastIndex = curIndex + MAX_DISTRIBUTE_LENS;
         auto maxIndex = static_cast<int32_t>(events.size());
@@ -219,7 +220,7 @@ void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &o
             dispatchVec.assign(events.begin() + curIndex, events.begin() + lastIndex);
             nlohmann::json jsonObj(dispatchVec);
             std::string dispatch = jsonObj.dump();
-            SGLOGI("dispatch size=%{public}d", (int)dispatch.size());
+            SGLOGD("dispatch size=%{public}d", (int)dispatch.size());
             (void) proxy->ResponseRiskData(devId, dispatch, CONTINUE);
             curIndex = lastIndex;
             lastIndex = curIndex + MAX_DISTRIBUTE_LENS;
