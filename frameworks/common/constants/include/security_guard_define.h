@@ -59,6 +59,13 @@ using ClassifyEvent = struct {
     std::string extend;
 };
 
+using RequestCondition = struct {
+    std::vector<int64_t> riskEvent;
+    std::vector<int64_t> auditEvent;
+    std::string beginTime;
+    std::string endTime;
+};
+
 using RequestRiskDataCallback = std::function<int32_t(std::string &, std::string &, uint32_t)>;
 using ResultCallback = std::function<int32_t (const std::string &devId, uint32_t modelId, const std::string &result)>;
 } // namespace OHOS::Security::SecurityGuard

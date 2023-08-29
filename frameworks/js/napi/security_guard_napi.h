@@ -38,6 +38,13 @@ struct RequestSecurityEventInfoContext {
     pid_t threadId;
     std::string devId;
     std::string info;
+    std::vector<int64_t> eventIds;
+    std::string beginTime;
+    std::string endTime;
+    std::string conditions;
+    napi_ref dataCallback = nullptr;
+    napi_ref endCallback = nullptr;
+    napi_ref errorCallback = nullptr;
 };
 
 struct RequestSecurityModelResultContext {

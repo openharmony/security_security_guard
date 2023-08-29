@@ -25,7 +25,7 @@ class DataFormat {
 public:
     DataFormat() = delete;
     static bool CheckRiskContent(std::string content);
-    static std::pair<std::vector<std::vector<int64_t>>, std::string> ParseConditions(std::string conditions);
+    static void ParseConditions(std::string conditions, RequestCondition &reqCondition);
 };
 } // namespace OHOS::Security::SecurityGuard
 

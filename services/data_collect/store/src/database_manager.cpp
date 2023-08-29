@@ -212,12 +212,12 @@ int DatabaseManager::QueryRecentEventByEventId(std::string table, const std::vec
 }
 
 int DatabaseManager::QueryEventByEventIdAndDate(std::string table, std::vector<int64_t> &eventIds,
-    std::vector<SecEvent> &events, std::string date)
+    std::vector<SecEvent> &events, std::string beginTime, std::string endTime)
 {
     if (table == AUDIT_TABLE) {
-        return AuditEventRdbHelper::GetInstance().QueryEventByEventIdAndDate(eventIds, events, date);
+        return AuditEventRdbHelper::GetInstance().QueryEventByEventIdAndDate(eventIds, events, beginTime, endTime);
     } else if (table == RISK_TABLE) {
-        return RiskEventRdbHelper::GetInstance().QueryEventByEventIdAndDate(eventIds, events, date);
+        return RiskEventRdbHelper::GetInstance().QueryEventByEventIdAndDate(eventIds, events, beginTime, endTime);
     }
     return NOT_SUPPORT;
 }

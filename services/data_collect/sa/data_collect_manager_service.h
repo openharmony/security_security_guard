@@ -23,6 +23,7 @@
 
 #include "config_define.h"
 #include "data_collect_manager_stub.h"
+#include "security_guard_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 class DataCollectManagerService : public SystemAbility, public DataCollectManagerStub, public NoCopyable {
@@ -41,8 +42,7 @@ public:
 
 private:
     void DumpEventInfo(int fd, int64_t eventId);
-    static std::vector<SecEvent> GetSecEventsFromConditions(std::vector<std::vector<int64_t>> eventIds,
-        std::string date);
+    static std::vector<SecEvent> GetSecEventsFromConditions(RequestCondition &condition);
     static void PushDataCollectTask(const sptr<IRemoteObject> &object, std::string conditions, std::string devId,
         std::shared_ptr<std::promise<int32_t>> promise);
 };
