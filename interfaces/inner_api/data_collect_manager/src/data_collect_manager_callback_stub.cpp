@@ -38,7 +38,8 @@ int32_t DataCollectManagerCallbackStub::OnRemoteRequest(uint32_t code, MessagePa
         std::string riskData = data.ReadString();
         uint32_t status = data.ReadUint32();
         SGLOGI("status=%{public}u", status);
-        ResponseRiskData(devId, riskData, status);
+        std::string errMsg = data.ReadString();
+        ResponseRiskData(devId, riskData, status, errMsg);
         return SUCCESS;
     }
 

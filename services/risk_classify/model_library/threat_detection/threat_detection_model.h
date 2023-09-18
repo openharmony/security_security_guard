@@ -40,7 +40,7 @@ class ThreatDetectionModel : public IModel {
 public:
     ~ThreatDetectionModel() override;
     int32_t Init(std::shared_ptr<IModelManager> api) override;
-    std::string GetResult() override;
+    std::string GetResult(uint32_t modelId) override;
     int32_t SubscribeResult(std::shared_ptr<IModelResultListener> listener) override;
     void Release() override;
 

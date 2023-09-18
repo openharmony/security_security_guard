@@ -109,7 +109,7 @@ bool EventConfig::Update()
     }
     stream << jsonObj;
     stream.close();
-    ConfigDataManager::GetInstance()->ResetEventMap();
+    ConfigDataManager::GetInstance().ResetEventMap();
     EventConfig::CacheEventConfig(configs);
     SGLOGI("cache EventConfig success");
     return true;
@@ -135,7 +135,7 @@ bool EventConfig::ParseEventConfig(std::vector<EventCfg> &configs, nlohmann::jso
 void EventConfig::CacheEventConfig(const std::vector<EventCfg> &configs)
 {
     for (const EventCfg &config : configs) {
-        ConfigDataManager::GetInstance()->InsertEventMap(config.eventId, config);
+        ConfigDataManager::GetInstance().InsertEventMap(config.eventId, config);
     }
 }
 } // OHOS::Security::SecurityGuard

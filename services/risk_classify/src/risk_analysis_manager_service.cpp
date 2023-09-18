@@ -41,7 +41,7 @@ namespace {
     constexpr int32_t TIMEOUT_REPLY = 500;
     const std::string PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
     const std::string SET_MODEL_PERMISSION = "ohos.permission.securityguard.SET_MODEL_STATE";
-    const std::vector<uint32_t> MODELIDS = { 3001000000, 3001000001, 3001000002 };
+    const std::vector<uint32_t> MODELIDS = { 3001000000, 3001000001, 3001000002, 3001000005 };
     constexpr uint32_t AUDIT_MODEL_ID = 3001000003;
 }
 

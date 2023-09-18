@@ -131,14 +131,14 @@ void DatabaseManager::FillUserIdAndDeviceId(SecEvent& event)
 int DatabaseManager::InsertEvent(uint32_t source, SecEvent& event)
 {
     EventCfg config;
-    bool success = ConfigDataManager::GetInstance()->GetEventConfig(event.eventId, config);
+    bool success = ConfigDataManager::GetInstance().GetEventConfig(event.eventId, config);
     if (!success) {
         SGLOGE("not found event, id=%{public}ld", event.eventId);
         return NOT_FOUND;
     }
 
     if (config.source == source) {
-        std::string table = ConfigDataManager::GetInstance()->GetTableFromEventId(event.eventId);
+        std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(event.eventId);
         SGLOGD("table=%{public}s, eventId=%{public}ld", table.c_str(), config.eventId);
         if (event.eventId == ACCOUNT_ID) {
             DbChanged(IDbListener::INSERT, event);
@@ -191,7 +191,7 @@ int DatabaseManager::QueryAllEventFromMem(std::vector<SecEvent> &events)
 
 int DatabaseManager::QueryRecentEventByEventId(int64_t eventId, SecEvent &event)
 {
-    std::string table = ConfigDataManager::GetInstance()->GetTableFromEventId(eventId);
+    std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(eventId);
     if (table == AUDIT_TABLE) {
         return AuditEventRdbHelper::GetInstance().QueryRecentEventByEventId(eventId, event);
     } else if (table == RISK_TABLE) {
@@ -224,7 +224,7 @@ int DatabaseManager::QueryEventByEventIdAndDate(std::string table, std::vector<i
 
 int DatabaseManager::QueryEventByEventId(int64_t eventId, std::vector<SecEvent> &events)
 {
-    std::string table = ConfigDataManager::GetInstance()->GetTableFromEventId(eventId);
+    std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(eventId);
     if (table == AUDIT_TABLE) {
         return AuditEventRdbHelper::GetInstance().QueryEventByEventId(eventId, events);
     } else if (table == RISK_TABLE) {
@@ -286,7 +286,7 @@ int64_t DatabaseManager::CountAllEvent(std::string table)
 
 int64_t DatabaseManager::CountEventByEventId(int64_t eventId)
 {
-    std::string table = ConfigDataManager::GetInstance()->GetTableFromEventId(eventId);
+    std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(eventId);
     if (table == AUDIT_TABLE) {
         return AuditEventRdbHelper::GetInstance().CountEventByEventId(eventId);
     } else if (table == RISK_TABLE) {
@@ -297,7 +297,7 @@ int64_t DatabaseManager::CountEventByEventId(int64_t eventId)
 
 int DatabaseManager::DeleteOldEventByEventId(int64_t eventId, int64_t count)
 {
-    std::string table = ConfigDataManager::GetInstance()->GetTableFromEventId(eventId);
+    std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(eventId);
     if (table == AUDIT_TABLE) {
         return AuditEventRdbHelper::GetInstance().DeleteOldEventByEventId(eventId, count);
     } else if (table == RISK_TABLE) {
@@ -308,7 +308,7 @@ int DatabaseManager::DeleteOldEventByEventId(int64_t eventId, int64_t count)
 
 int DatabaseManager::DeleteAllEventByEventId(int64_t eventId)
 {
-    std::string table = ConfigDataManager::GetInstance()->GetTableFromEventId(eventId);
+    std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(eventId);
     if (table == AUDIT_TABLE) {
         return AuditEventRdbHelper::GetInstance().DeleteAllEventByEventId(eventId);
     } else if (table == RISK_TABLE) {

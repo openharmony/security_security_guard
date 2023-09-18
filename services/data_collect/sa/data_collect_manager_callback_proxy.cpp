@@ -24,7 +24,7 @@ DataCollectManagerCallbackProxy::DataCollectManagerCallbackProxy(const sptr<OHOS
 }
 
 int32_t DataCollectManagerCallbackProxy::ResponseRiskData(std::string &devId, std::string &riskData,
-    uint32_t status)
+    uint32_t status, const std::string& errMsg)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -36,6 +36,7 @@ int32_t DataCollectManagerCallbackProxy::ResponseRiskData(std::string &devId, st
     data.WriteString(devId);
     data.WriteString(riskData);
     data.WriteUint32(status);
+    data.WriteString(errMsg);
     MessageOption option = { MessageOption::TF_ASYNC };
     return Remote()->SendRequest(CMD_SET_REQUEST_DATA, data, reply, option);
 }

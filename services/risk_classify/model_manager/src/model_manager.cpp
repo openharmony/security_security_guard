@@ -23,6 +23,7 @@
 #include "preferences_wrapper.h"
 #include "security_guard_log.h"
 #include "model_manager_impl.h"
+#include "database_manager.h"
 #include "security_guard_define.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -38,10 +39,10 @@ namespace {
 
 void ModelManager::Init()
 {
-    std::vector<uint32_t> modelIds = ConfigDataManager::GetInstance()->GetAllModelIds();
+    std::vector<uint32_t> modelIds = ConfigDataManager::GetInstance().GetAllModelIds();
     ModelCfg cfg;
     for (uint32_t modelId : modelIds) {
-        bool success = ConfigDataManager::GetInstance()->GetModelConfig(modelId, cfg);
+        bool success = ConfigDataManager::GetInstance().GetModelConfig(modelId, cfg);
         if (!success) {
             continue;
         }
@@ -73,7 +74,7 @@ int32_t ModelManager::InitModel(uint32_t modelId)
     }
 
     ModelCfg cfg;
-    bool success = ConfigDataManager::GetInstance()->GetModelConfig(modelId, cfg);
+    bool success = ConfigDataManager::GetInstance().GetModelConfig(modelId, cfg);
     if (!success) {
         SGLOGE("the model not support, modelId=%{public}u", modelId);
         return NOT_FOUND;
@@ -128,10 +129,10 @@ std::string ModelManager::GetResult(uint32_t modelId)
             SGLOGI("the model has not been initialized, begin init, modelId=%{public}u", modelId);
             return result;
         }
-        result = iter->second->GetModelApi()->GetResult();
+        result = iter->second->GetModelApi()->GetResult(modelId);
     }
     ModelCfg config;
-    bool success = ConfigDataManager::GetInstance()->GetModelConfig(modelId, config);
+    bool success = ConfigDataManager::GetInstance().GetModelConfig(modelId, config);
     if (success && config.startMode == START_ON_DEMAND) {
         Release(modelId);
     }

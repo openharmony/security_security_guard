@@ -50,7 +50,8 @@ void OnRemoteRequestFuzzTest(const uint8_t* data, size_t size)
     std::string conditions(reinterpret_cast<const char *>(data), size);
     datas.WriteString(deviceId);
     datas.WriteString(conditions);
-    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status) -> int32_t {
+    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
+        const std::string &errMsg) -> int32_t {
         SGLOGI("DataCollectManagerCallbackService called");
         return 0;
     };

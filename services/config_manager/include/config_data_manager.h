@@ -25,7 +25,7 @@
 #include "config_define.h"
 
 namespace OHOS::Security::SecurityGuard {
-class ConfigDataManager : public DelayedSingleton<ConfigDataManager> {
+class ConfigDataManager : public Singleton<ConfigDataManager> {
 public:
     void InsertModelMap(uint32_t modelId, const ModelCfg &config);
     void InsertEventMap(int64_t eventId, const EventCfg &config);

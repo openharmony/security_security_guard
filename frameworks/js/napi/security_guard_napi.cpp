@@ -325,6 +325,17 @@ static void DeleteRefIfFinish(napi_env env, napi_ref errCb, int32_t code)
     NapiRequestDataManager::GetInstance().DeleteContext(env);
 }
 
+static void DeleteRefIfFinish(napi_env env, napi_ref errCb, const std::string& errMsg)
+{
+    napi_value resArgv = nullptr;
+    napi_value returnVal = nullptr;
+    napi_value errCallback = nullptr;
+    napi_get_reference_value(env, errCb, &errCallback);
+    napi_create_string_utf8(env, errMsg.c_str(), errMsg.length(), &resArgv);
+    napi_call_function(env, nullptr, errCallback, 1, &resArgv, &returnVal);
+    NapiRequestDataManager::GetInstance().DeleteContext(env);
+}
+
 static void DeleteRefIfFinish(napi_env env, napi_ref endCb, uint32_t status)
 {
     if (status != 0) {
@@ -344,7 +355,11 @@ static void DeleteRefIfFinish(napi_env env, napi_ref endCb, uint32_t status)
 
 static void DeleteRefIfFinish(RequestSecurityEventInfoContext *context)
 {
-    DeleteRefIfFinish(context->env, context->endCallback, context->status);
+    if (context->errMsg.length() > 0) {
+        DeleteRefIfFinish(context->env, context->errorCallback, context->errMsg);
+    } else {
+        DeleteRefIfFinish(context->env, context->endCallback, context->status);
+    }
 }
 
 static napi_value GetConditionsEventIds(napi_env env, napi_value object,
@@ -579,7 +594,7 @@ static void OnWork(uv_work_t *work, int status)
 }
 
 static int32_t HandleRequestRiskDataCallback(std::shared_ptr<RequestSecurityEventInfoContext> context,
-    std::string devId, std::string riskData, uint32_t status)
+    std::string devId, std::string riskData, uint32_t status, const std::string& errMsg)
 {
     RequestSecurityEventInfoContext *tmpContext = new (std::nothrow) RequestSecurityEventInfoContext();
     if (tmpContext == nullptr) {
@@ -596,6 +611,7 @@ static int32_t HandleRequestRiskDataCallback(std::shared_ptr<RequestSecurityEven
     tmpContext->devId = devId;
     tmpContext->status = status;
     tmpContext->info = riskData;
+    tmpContext->errMsg = errMsg;
     uv_loop_t *loop = nullptr;
     napi_status ret = napi_get_uv_event_loop(context->env, &loop);
     if (ret != napi_ok) {
@@ -656,8 +672,9 @@ static napi_value NapiRequestSecurityEventInfo(napi_env env, napi_callback_info 
         NapiRequestDataManager::GetInstance().DeleteContext(env);
         return nullptr;
     }
-    auto func = [context] (std::string &devId, std::string &riskData, uint32_t status) -> int32_t {
-        return HandleRequestRiskDataCallback(context, devId, riskData, status);
+    auto func = [context] (std::string &devId, std::string &riskData, uint32_t status,
+        const std::string& errMsg) -> int32_t {
+        return HandleRequestRiskDataCallback(context, devId, riskData, status, errMsg);
     };
 
     int32_t code = SecurityGuardSdkAdaptor::RequestSecurityEventInfo(deviceId, context->conditions, func);

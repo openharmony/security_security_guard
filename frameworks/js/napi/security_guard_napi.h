@@ -42,6 +42,7 @@ struct RequestSecurityEventInfoContext {
     std::string beginTime;
     std::string endTime;
     std::string conditions;
+    std::string errMsg;
     napi_ref dataCallback = nullptr;
     napi_ref endCallback = nullptr;
     napi_ref errorCallback = nullptr;

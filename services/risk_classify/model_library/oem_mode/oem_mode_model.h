@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,23 +13,20 @@
  * limitations under the License.
  */
 
-#include "data_collect_manager_callback_service.h"
+#ifndef SECURITY_GUARD_OEM_MODE_MODEL_H
+#define SECURITY_GUARD_OEM_MODE_MODEL_H
 
-#include "security_guard_define.h"
+#include "i_model.h"
 
 namespace OHOS::Security::SecurityGuard {
-DataCollectManagerCallbackService::DataCollectManagerCallbackService(RequestRiskDataCallback &callback)
-    : callback_(callback)
-{
-}
+class OemModeModel : public IModel {
+public:
+    ~OemModeModel() override;
+    int32_t Init(std::shared_ptr<IModelManager> api) override;
+    std::string GetResult(uint32_t modelId) override;
+    int32_t SubscribeResult(std::shared_ptr<IModelResultListener> listener) override;
+    void Release() override;
+};
+} // OHOS::Security::SecurityGuard
 
-int32_t DataCollectManagerCallbackService::ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status,
-    const std::string& errMsg)
-{
-    if (callback_ != nullptr) {
-        callback_(devId, riskData, status, errMsg);
-        return SUCCESS;
-    }
-    return NULL_OBJECT;
-}
-}
+#endif // SECURITY_GUARD_OEM_MODE_MODEL_H

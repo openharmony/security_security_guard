@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,23 +13,19 @@
  * limitations under the License.
  */
 
-#include "data_collect_manager_callback_service.h"
+#ifndef SECURITY_GUARD_I_CONFIG_OPERATE_H
+#define SECURITY_GUARD_I_CONFIG_OPERATE_H
 
-#include "security_guard_define.h"
+#include "config_define.h"
 
 namespace OHOS::Security::SecurityGuard {
-DataCollectManagerCallbackService::DataCollectManagerCallbackService(RequestRiskDataCallback &callback)
-    : callback_(callback)
-{
-}
 
-int32_t DataCollectManagerCallbackService::ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status,
-    const std::string& errMsg)
-{
-    if (callback_ != nullptr) {
-        callback_(devId, riskData, status, errMsg);
-        return SUCCESS;
-    }
-    return NULL_OBJECT;
-}
-}
+class IConfigOperate {
+public:
+    virtual ~IConfigOperate() = default;
+    virtual bool GetModelConfig(uint32_t modelId, ModelCfg &config) = 0;
+    virtual bool GetEventConfig(int64_t eventId, EventCfg &config) = 0;
+};
+} // namespace OHOS::Security::SecurityGuard
+
+#endif // SECURITY_GUARD_I_CONFIG_OPERATE_H

@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "i_config_operate.h"
 #include "i_db_listener.h"
 #include "i_db_operate.h"
 
@@ -28,6 +29,7 @@ class IModelManager {
 public:
     virtual ~IModelManager() = default;
     virtual std::shared_ptr<IDbOperate> GetDbOperate(std::string table) = 0;
+    virtual std::shared_ptr<IConfigOperate> GetConfigOperate() = 0;
     virtual int32_t SubscribeDb(std::vector<int64_t> eventIds, std::shared_ptr<IDbListener> listener) = 0;
     virtual int32_t UnSubscribeDb(std::vector<int64_t> eventIds, std::shared_ptr<IDbListener> listener) = 0;
 };

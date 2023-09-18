@@ -48,7 +48,8 @@ public:
         CMD_SET_REQUEST_DATA = static_cast<uint32_t>(InterfaceCode::CMD_SET_REQUEST_DATA),
     };
 
-    virtual int32_t ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status) = 0;
+    virtual int32_t ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status,
+        const std::string& errMsg = "") = 0;
 };
 } // namespace OHOS::Security::SecurityGuard
 

@@ -28,6 +28,7 @@ public:
     ModelManagerImpl() = default;
     ~ModelManagerImpl() override = default;
     std::shared_ptr<IDbOperate> GetDbOperate(std::string table) override;
+    std::shared_ptr<IConfigOperate> GetConfigOperate() override;
     int32_t SubscribeDb(std::vector<int64_t> eventIds, std::shared_ptr<IDbListener> listener) override;
     int32_t UnSubscribeDb(std::vector<int64_t> eventIds, std::shared_ptr<IDbListener> listener) override;
 };

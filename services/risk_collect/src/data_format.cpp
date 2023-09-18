@@ -63,7 +63,7 @@ void DataFormat::ParseConditions(std::string conditions, RequestCondition &reqCo
     }
 
     for (auto it = set.begin(); it != set.end(); it++) {
-        std::string table = ConfigDataManager::GetInstance()->GetTableFromEventId(*it);
+        std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(*it);
         if (table == RISK_TABLE) {
             reqCondition.riskEvent.emplace_back(*it);
         } else if (table == AUDIT_TABLE) {

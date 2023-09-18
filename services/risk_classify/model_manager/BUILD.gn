@@ -37,6 +37,7 @@ ohos_source_set("sg_model_manager_stamp") {
   ]
 
   sources = [
+    "${sg_root_dir}/services/risk_classify/model_manager/src/config_operate.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/db_operate.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager_impl.cpp",

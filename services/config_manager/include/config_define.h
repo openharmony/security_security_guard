@@ -20,6 +20,25 @@
 #include <vector>
 
 namespace OHOS::Security::SecurityGuard {
+using Field = struct {
+    std::string fieldName;
+    std::string fieldType;
+    std::string value;
+};
+
+using Rule = struct {
+    int64_t eventId;
+    std::vector<Field> fields;
+    std::string fieldsRelation;
+};
+
+using BuildInDetectionCfg = struct {
+    std::vector<Rule> rules;
+    std::string rulesRelation;
+    std::string trueResult;
+    std::string falseResult;
+};
+
 using ModelCfg = struct {
     uint32_t modelId;
     std::string path;
@@ -31,6 +50,8 @@ using ModelCfg = struct {
     std::string dbTable;
     uint32_t runningCntl;
     std::vector<std::string> caller;
+    std::string type;
+    BuildInDetectionCfg config;
 };
 
 using EventCfg = struct {

@@ -34,6 +34,7 @@
         "hdf_core",
         "hisysevent",
         "hilog",
+        "init",
         "ipc",
         "napi",
         "os_account",

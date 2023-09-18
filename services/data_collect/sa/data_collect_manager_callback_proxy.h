@@ -29,7 +29,8 @@ class DataCollectManagerCallbackProxy : public IRemoteProxy<IDataCollectManagerC
 public:
     explicit DataCollectManagerCallbackProxy(const sptr<IRemoteObject> &impl);
     ~DataCollectManagerCallbackProxy() override = default;
-    int32_t ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status) override;
+    int32_t ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status,
+        const std::string& errMsg = "") override;
 
 private:
     static inline BrokerDelegator<DataCollectManagerCallbackProxy> delegator_;

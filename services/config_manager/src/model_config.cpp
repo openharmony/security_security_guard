@@ -107,7 +107,7 @@ bool ModelConfig::Update()
 
     stream << jsonObj;
     stream.close();
-    ConfigDataManager::GetInstance()->ResetModelMap();
+    ConfigDataManager::GetInstance().ResetModelMap();
     CacheModelConfig(configs);
     CacheModelToEvent(configs);
     CacheEventToTable(configs);
@@ -124,7 +124,7 @@ void ModelConfig::CacheModelConfig(const std::vector<ModelCfg> &configs)
 {
     for (const ModelCfg &config : configs) {
         SGLOGD("modelId=%{public}u", config.modelId);
-        ConfigDataManager::GetInstance()->InsertModelMap(config.modelId, config);
+        ConfigDataManager::GetInstance().InsertModelMap(config.modelId, config);
     }
 }
 
@@ -136,7 +136,7 @@ void ModelConfig::CacheModelToEvent(const std::vector<ModelCfg> &configs)
         for (int64_t event : config.eventList) {
             set.emplace(event);
         }
-        ConfigDataManager::GetInstance()->InsertModelToEventMap(config.modelId, set);
+        ConfigDataManager::GetInstance().InsertModelToEventMap(config.modelId, set);
     }
 }
 
@@ -146,7 +146,7 @@ void ModelConfig::CacheEventToTable(const std::vector<ModelCfg> &configs)
         SGLOGD("modelId=%{public}u", config.modelId);
         std::vector<int64_t> eventIds = config.eventList;
         for (int64_t eventId : eventIds) {
-            ConfigDataManager::GetInstance()->InsertEventToTableMap(eventId, config.dbTable);
+            ConfigDataManager::GetInstance().InsertEventToTableMap(eventId, config.dbTable);
         }
     }
 }

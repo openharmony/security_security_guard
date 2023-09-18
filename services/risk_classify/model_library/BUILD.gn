@@ -14,7 +14,7 @@
 import("//base/security/security_guard/security_guard.gni")
 import("//build/ohos.gni")
 
-ohos_shared_library("sg_device_completeness") {
+ohos_shared_library("sg_system_risk_detection") {
   subsystem_name = "security"
   part_name = "security_guard"
 
@@ -23,7 +23,7 @@ ohos_shared_library("sg_device_completeness") {
   configs =
       [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
 
-  sources = [ "${sg_root_dir}/services/risk_classify/model_library/device_completeness/device_completeness_model.cpp" ]
+  sources = [ "${sg_root_dir}/services/risk_classify/model_library/system_risk_detection/system_risk_detection_model.cpp" ]
 
   external_deps = [
     "c_utils:utils",
@@ -31,7 +31,7 @@ ohos_shared_library("sg_device_completeness") {
   ]
 }
 
-ohos_shared_library("sg_physical_machine_detection") {
+ohos_shared_library("sg_oem_mode_detection") {
   subsystem_name = "security"
   part_name = "security_guard"
 
@@ -40,28 +40,12 @@ ohos_shared_library("sg_physical_machine_detection") {
   configs =
       [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
 
-  sources = [ "${sg_root_dir}/services/risk_classify/model_library/physical_machine_detection/physical_machine_detection_model.cpp" ]
+  sources = [ "${sg_root_dir}/services/risk_classify/model_library/oem_mode/oem_mode_model.cpp" ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
-  ]
-}
-
-ohos_shared_library("sg_root_scan") {
-  subsystem_name = "security"
-  part_name = "security_guard"
-
-  include_dirs = [ "//third_party/json/include" ]
-
-  configs =
-      [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
-
-  sources = [ "${sg_root_dir}/services/risk_classify/model_library/root_scan/root_scan_model.cpp" ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
+    "init:libbegetutil",
   ]
 }
 
@@ -87,9 +71,8 @@ ohos_shared_library("sg_threat_detection") {
 
 group("security_guard_model") {
   deps = [
-    ":sg_device_completeness",
-    ":sg_physical_machine_detection",
-    ":sg_root_scan",
+    ":sg_system_risk_detection",
+    ":sg_oem_mode_detection",
     ":sg_threat_detection",
   ]
 }

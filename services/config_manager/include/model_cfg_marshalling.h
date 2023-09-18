@@ -24,6 +24,9 @@
 #include "config_define.h"
 
 namespace OHOS::Security::SecurityGuard {
+void from_json(const nlohmann::json &jsonObj, Field &field);
+void from_json(const nlohmann::json &jsonObj, Rule &rule);
+void from_json(const nlohmann::json &jsonObj, BuildInDetectionCfg &config);
 void to_json(nlohmann::json &jsonObj, const ModelCfg &modelCfg);
 void from_json(const nlohmann::json &jsonObj, ModelCfg &modelCfg);
 void to_json(nlohmann::json &jsonObj, const EventCfg &eventCfg);

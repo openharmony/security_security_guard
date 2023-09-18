@@ -61,7 +61,7 @@ int32_t ThreatDetectionModel::Init(std::shared_ptr<IModelManager> api)
     return api_->SubscribeDb(EVENTIDS, listener_);
 }
 
-std::string ThreatDetectionModel::GetResult()
+std::string ThreatDetectionModel::GetResult(uint32_t modelId)
 {
     return {};
 }

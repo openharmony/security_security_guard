@@ -22,6 +22,58 @@
 namespace OHOS::Security::SecurityGuard {
 using nlohmann::json;
 
+void from_json(const nlohmann::json &jsonObj, Field &field)
+{
+    if (jsonObj.find("fieldName") == jsonObj.end() || jsonObj.find("fieldType") == jsonObj.end() ||
+        jsonObj.find("value") == jsonObj.end()) {
+        return;
+    }
+
+    if (!jsonObj.at("fieldName").is_string() || !jsonObj.at("fieldType").is_string() ||
+        !jsonObj.at("value").is_string()) {
+        return;
+    }
+
+    field.fieldName = jsonObj.at("fieldName").get<std::string>();
+    field.fieldType = jsonObj.at("fieldType").get<std::string>();
+    field.value = jsonObj.at("value").get<std::string>();
+}
+
+void from_json(const nlohmann::json &jsonObj, Rule &rule)
+{
+    if (jsonObj.find("eventId") == jsonObj.end() || jsonObj.find("fields") == jsonObj.end() ||
+        jsonObj.find("fieldsRelation") == jsonObj.end()) {
+        return;
+    }
+
+    if (!jsonObj.at("eventId").is_number() || !jsonObj.at("fields").is_array() ||
+        !jsonObj.at("fieldsRelation").is_string()) {
+        return;
+    }
+
+    rule.eventId = jsonObj.at("eventId").get<int64_t>();
+    rule.fields = jsonObj.at("fields").get<std::vector<Field>>();
+    rule.fieldsRelation = jsonObj.at("fieldsRelation").get<std::string>();
+}
+
+void from_json(const nlohmann::json &jsonObj, BuildInDetectionCfg &config)
+{
+    if (jsonObj.find("rules") == jsonObj.end() || jsonObj.find("rulesRelation") == jsonObj.end() ||
+        jsonObj.find("trueResult") == jsonObj.end() || jsonObj.find("falseResult") == jsonObj.end()) {
+        return;
+    }
+
+    if (!jsonObj.at("rules").is_array() || !jsonObj.at("rulesRelation").is_string() ||
+        !jsonObj.at("trueResult").is_string() || !jsonObj.at("falseResult").is_string()) {
+        return;
+    }
+
+    config.rules = jsonObj.at("rules").get<std::vector<Rule>>();
+    config.rulesRelation = jsonObj.at("rulesRelation").get<std::string>();
+    config.trueResult = jsonObj.at("trueResult").get<std::string>();
+    config.falseResult = jsonObj.at("falseResult").get<std::string>();
+}
+
 void to_json(json &jsonObj, const ModelCfg &modelCfg)
 {
     std::vector<std::string> preLoads;
@@ -86,6 +138,8 @@ void from_json(const json &jsonObj, ModelCfg &modelCfg)
     JsonCfg::Unmarshal(modelCfg.dbTable, jsonObj, MODEL_CFG_DB_TABLE_KEY);
     JsonCfg::Unmarshal(modelCfg.runningCntl, jsonObj, MODEL_CFG_RUNNING_CNTL_KEY);
     JsonCfg::Unmarshal(modelCfg.caller, jsonObj, MODEL_CFG_CALLER_KEY);
+    JsonCfg::Unmarshal(modelCfg.type, jsonObj, MODEL_CFG_TYPE_KEY);
+    JsonCfg::Unmarshal(modelCfg.config, jsonObj, MODEL_CFG_BUILD_IN_CFG_KEY);
 }
 
 void to_json(json &jsonObj, const EventCfg &eventCfg)

@@ -15,6 +15,7 @@
 
 #include "model_manager_impl.h"
 
+#include "config_operate.h"
 #include "db_operate.h"
 #include "database_manager.h"
 
@@ -26,6 +27,11 @@ std::shared_ptr<IDbOperate> ModelManagerImpl::GetDbOperate(std::string table)
         operate = std::make_shared<DbOperate>(table);
     }
     return operate;
+}
+
+std::shared_ptr<IConfigOperate> ModelManagerImpl::GetConfigOperate()
+{
+    return std::make_shared<ConfigOperate>();
 }
 
 int32_t ModelManagerImpl::SubscribeDb(std::vector<int64_t> eventIds, std::shared_ptr<IDbListener> listener)

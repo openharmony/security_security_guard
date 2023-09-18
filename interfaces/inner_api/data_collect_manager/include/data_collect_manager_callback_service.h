@@ -26,7 +26,8 @@ class DataCollectManagerCallbackService : public DataCollectManagerCallbackStub 
 public:
     explicit DataCollectManagerCallbackService(RequestRiskDataCallback &callback);
     ~DataCollectManagerCallbackService() override = default;
-    int32_t ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status) override;
+    int32_t ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status,
+        const std::string& errMsg = "") override;
 
 private:
     RequestRiskDataCallback callback_;
