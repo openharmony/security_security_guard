@@ -1,8 +1,8 @@
 [
     {
-        "name": "HMS_SG_RequestSecurityModelResultSync"
+        "name": "OH_SG_RequestSecurityModelResultSync"
     },
     {
-        "name": "HMS_SG_RequestSecurityModelResultAsync"
+        "name": "OH_SG_RequestSecurityModelResultAsync"
     }
 ]

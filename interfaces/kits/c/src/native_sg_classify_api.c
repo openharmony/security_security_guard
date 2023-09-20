@@ -20,27 +20,27 @@
 #define SUCCESS 0
 #define NO_PERMISSION 2
 
-static int32_t ConvertToHmsErr(int32_t code)
+static int32_t ConvertToOhErr(int32_t code)
 {
     if (code == SUCCESS) {
-        return HMS_SG_SUCCESS;
+        return OH_SG_SUCCESS;
     } else if (code == NO_PERMISSION) {
-        return HMS_SG_PERMISSION_FAIL;
+        return OH_SG_PERMISSION_FAIL;
     } else {
-        return HMS_SG_BAD_PARAM;
+        return OH_SG_BAD_PARAM;
     }
 }
 
-int32_t HMS_SG_RequestSecurityModelResultSync(const struct HMS_SG_DeviceIdentify *devId, enum HMS_SG_ModelId modelId,
-    struct HMS_SG_SecurityModelResult *result)
+int32_t OH_SG_RequestSecurityModelResultSync(const struct OH_SG_DeviceIdentify *devId, enum OH_SG_ModelId modelId,
+    struct OH_SG_SecurityModelResult *result)
 {
-    return ConvertToHmsErr(RequestSecurityModelResultSync((const DeviceIdentify *) devId, modelId,
+    return ConvertToOhErr(RequestSecurityModelResultSync((const DeviceIdentify *) devId, modelId,
         (SecurityModelResult *) result));
 }
 
-int32_t HMS_SG_RequestSecurityModelResultAsync(const struct HMS_SG_DeviceIdentify *devId, enum HMS_SG_ModelId modelId,
-    HMS_SG_SecurityGuardRiskCallback callback)
+int32_t OH_SG_RequestSecurityModelResultAsync(const struct OH_SG_DeviceIdentify *devId, enum OH_SG_ModelId modelId,
+    OH_SG_SecurityGuardRiskCallback callback)
 {
-    return ConvertToHmsErr(RequestSecurityModelResultAsync((const DeviceIdentify *) devId, modelId,
+    return ConvertToOhErr(RequestSecurityModelResultAsync((const DeviceIdentify *) devId, modelId,
         (SecurityGuardRiskCallback *) callback));
 }
