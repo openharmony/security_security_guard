@@ -12,3 +12,4 @@
 # limitations under the License.
 
 sg_root_dir = "//base/security/security_guard"
+fuzz_test_output_path = "security_guard/security_guard"

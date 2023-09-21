@@ -15,10 +15,8 @@ import("//base/security/security_guard/security_guard.gni")
 import("//build/config/features.gni")
 import("//build/test.gni")
 
-module_output_path = "security_guard/obtaindata"
-
 ohos_fuzztest("RequestSecurityEventInfoAsyncFuzzTest") {
-  module_out_path = module_output_path
+  module_out_path = fuzz_test_output_path
   fuzz_config_file = "${sg_root_dir}/test/fuzztest/obtaindata/requestsecurityeventinfoasync_fuzzer"
 
   include_dirs = [
