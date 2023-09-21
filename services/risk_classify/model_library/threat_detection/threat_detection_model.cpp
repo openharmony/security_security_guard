@@ -79,7 +79,7 @@ void ThreatDetectionModel::Release()
 
 void ThreatDetectionModel::DbListener::OnChange(uint32_t optType, const SecEvent &events)
 {
-    HiLog::Info(LABEL, "%{public}s, eventId is %{public}ld", __func__, events.eventId);
+    HiLog::Info(LABEL, "%{public}s, eventId is %{public}lld", __func__, static_cast<long long>(events.eventId));
     if (model_ == nullptr) {
         HiLog::Info(LABEL, "model is nullptr");
         return;
@@ -90,7 +90,7 @@ void ThreatDetectionModel::DbListener::OnChange(uint32_t optType, const SecEvent
             break;
         }
         default: {
-            HiLog::Info(LABEL, "error event, id=%{public}ld", events.eventId);
+            HiLog::Info(LABEL, "error event, id=%{public}lld", static_cast<long long>(events.eventId));
         }
     }
 }
