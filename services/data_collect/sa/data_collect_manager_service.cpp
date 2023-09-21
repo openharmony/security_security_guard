@@ -131,7 +131,8 @@ int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::strin
         SGLOGE("CheckRiskContent error");
         return BAD_PARAM;
     }
-    SGLOGD("eventId=%{public}ld, version=%{public}s, date=%{public}s", eventId, version.c_str(), time.c_str());
+    SGLOGD("eventId=%{public}lld, version=%{public}s, date=%{public}s", static_cast<long long>(eventId),
+        version.c_str(), time.c_str());
     SecEvent event {
         .eventId = eventId,
         .version = version,
