@@ -23,21 +23,71 @@
 #include "sg_collect_client.h"
 
 namespace OHOS::Security::SecurityGuard {
+SgCollectClient &SgCollectClient::GetInstance()
+{
+    static SgCollectClient instance;
+    return instance;
+}
+
+sptr<IDataCollectManager> SgCollectClient::GetProxy()
+{
+    if (proxy_ == nullptr) {
+        InitProxy();
+    }
+    return proxy_;
+}
+
+void SgCollectClient::InitProxy()
+{
+    std::lock_guard<std::mutex> lock(proxyMutex_);
+    if (proxy_ == nullptr) {
+        auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (registry == nullptr) {
+            SGLOGE("registry is nullptr");
+            return;
+        }
+        auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+        if (object == nullptr) {
+            SGLOGE("object is nullptr");
+            return;
+        }
+        proxy_ = iface_cast<IDataCollectManager>(object);
+        if (proxy_ == nullptr) {
+            SGLOGE("proxy is nullptr");
+            return;
+        }
+
+        deathRecipient_ = new (std::nothrow) SgCollectClientDeathRecipient();
+        if (deathRecipient_ != nullptr) {
+            proxy_->AsObject()->AddDeathRecipient(deathRecipient_);
+        }
+    }
+}
+
+void SgCollectClient::ReleaseProxy()
+{
+    std::lock_guard<std::mutex> lock(proxyMutex_);
+    if (proxy_ != nullptr && proxy_->AsObject() != nullptr) {
+        proxy_->AsObject()->RemoveDeathRecipient(deathRecipient_);
+    }
+    proxy_ = nullptr;
+}
+
+void SgCollectClientDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
+{
+    SgCollectClient::GetInstance().ReleaseProxy();
+}
+
 int32_t NativeDataCollectKit::ReportSecurityInfo(const std::shared_ptr<EventInfo> &info)
 {
     if (info == nullptr) {
         return BAD_PARAM;
     }
-    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (registry == nullptr) {
-        return NULL_OBJECT;
-    }
-    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerProxy>(object);
+    sptr<IDataCollectManager> proxy = SgCollectClient::GetInstance().GetProxy();
     if (proxy == nullptr) {
-        SGLOGE("proxy is nullptr");
         return NULL_OBJECT;
     }
+
     int64_t eventId = info->GetEventId();
     std::string version = info->GetVersion();
     std::string content = info->GetContent();

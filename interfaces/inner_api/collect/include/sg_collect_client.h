@@ -16,7 +16,12 @@
 #ifndef SECURITY_GUARD_SG_COLLECT_CLIENT_H
 #define SECURITY_GUARD_SG_COLLECT_CLIENT_H
 
+#include <mutex>
+
+#include "iremote_object.h"
+
 #include "event_info.h"
+#include "i_data_collect_manager.h"
 #include "security_guard_api.h"
 
 #ifdef __cplusplus
@@ -33,6 +38,29 @@ namespace OHOS::Security::SecurityGuard {
 class NativeDataCollectKit {
 public:
     static int32_t ReportSecurityInfo(const std::shared_ptr<EventInfo> &info);
+};
+
+class SgCollectClient {
+public:
+    static SgCollectClient &GetInstance();
+    sptr<IDataCollectManager> GetProxy();
+    void InitProxy();
+    void ReleaseProxy();
+
+private:
+    SgCollectClient() = default;
+    ~SgCollectClient() = default;
+    std::mutex proxyMutex_;
+    sptr<IDataCollectManager> proxy_ = nullptr;
+    sptr<IRemoteObject::DeathRecipient> deathRecipient_ = nullptr;
+};
+
+class SgCollectClientDeathRecipient : public IRemoteObject::DeathRecipient {
+public:
+    SgCollectClientDeathRecipient() = default;
+    ~SgCollectClientDeathRecipient() override = default;
+
+    void OnRemoteDied(const wptr<IRemoteObject> &object) override;
 };
 } // namespace OHOS::Security::SecurityGuard
 
