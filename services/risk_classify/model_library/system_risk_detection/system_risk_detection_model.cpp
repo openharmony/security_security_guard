@@ -94,7 +94,7 @@ bool SystemRiskDetectionModel::GetRuleResult(std::vector<bool> &ruleResult, cons
             fieldResult.emplace_back(std::to_string(value) == field.value);
         }
 
-        if (fieldResult.empty()) {
+        if (fieldResult.size() != fieldSize) {
             continue;
         }
 
