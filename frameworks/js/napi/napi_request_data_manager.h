@@ -26,7 +26,7 @@ class NapiRequestDataManager {
 public:
     static NapiRequestDataManager& GetInstance();
     std::shared_ptr<RequestSecurityEventInfoContext> GetContext(napi_env env);
-    std::shared_ptr<RequestSecurityEventInfoContext> GetContext(napi_env env, bool &isExis);
+    std::shared_ptr<RequestSecurityEventInfoContext> GetContext(napi_env env, bool &isExist);
     void DeleteContext(napi_env env);
 
 private:

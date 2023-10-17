@@ -139,7 +139,7 @@ static napi_value GenerateBusinessError(napi_env env, int32_t code)
     return result;
 }
 
-static napi_value GenerateBusinessError(napi_env env, int32_t code, std::string msg)
+static napi_value GenerateBusinessError(napi_env env, int32_t code, const std::string &msg)
 {
     napi_value result;
     SGLOGD("GenerateBusinessError code:%{public}d", code);
@@ -210,7 +210,7 @@ static napi_value ParseUint32(napi_env env, napi_value object, uint32_t &value)
     return NapiCreateInt32(env, ConvertToJsErrCode(SUCCESS));
 }
 
-static napi_value GetString(napi_env env, napi_value object, std::string key, char *value, size_t &maxLen)
+static napi_value GetString(napi_env env, napi_value object, const std::string &key, char *value, size_t &maxLen)
 {
     napi_valuetype type;
     NAPI_CALL(env, napi_typeof(env, object, &type));
@@ -395,7 +395,7 @@ static napi_value GetConditionsEventIds(napi_env env, napi_value object,
     return NapiCreateInt32(env, SUCCESS);
 }
 
-static napi_value GetConditionsTime(napi_env env, napi_value object, std::string key, std::string &value)
+static napi_value GetConditionsTime(napi_env env, napi_value object, const std::string &key, std::string &value)
 {
     char time[TIME_MAX_LEN] = {0};
     size_t len = TIME_MAX_LEN;
@@ -412,7 +412,7 @@ static napi_value GetConditionsTime(napi_env env, napi_value object, std::string
         return nullptr;
     }
 
-    result = GetString(env, result, key.c_str(), time, len);
+    result = GetString(env, result, key, time, len);
     if (result == nullptr) {
         SGLOGE("get %{publid}s failed", key.c_str());
         return nullptr;
@@ -594,7 +594,7 @@ static void OnWork(uv_work_t *work, int status)
 }
 
 static int32_t HandleRequestRiskDataCallback(std::shared_ptr<RequestSecurityEventInfoContext> context,
-    std::string devId, std::string riskData, uint32_t status, const std::string& errMsg)
+    const std::string &devId, const std::string &riskData, uint32_t status, const std::string& errMsg)
 {
     RequestSecurityEventInfoContext *tmpContext = new (std::nothrow) RequestSecurityEventInfoContext();
     if (tmpContext == nullptr) {
