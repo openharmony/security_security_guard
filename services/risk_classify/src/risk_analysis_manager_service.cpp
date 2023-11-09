@@ -41,7 +41,7 @@ namespace {
     constexpr int32_t TIMEOUT_REPLY = 500;
     const std::string PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
     const std::string SET_MODEL_PERMISSION = "ohos.permission.securityguard.SET_MODEL_STATE";
-    const std::vector<uint32_t> MODELIDS = { 3001000000, 3001000001, 3001000002, 3001000005 };
+    const std::vector<uint32_t> MODELIDS = { 3001000000, 3001000001, 3001000002, 3001000005, 3001000006, 3001000007 };
     constexpr uint32_t AUDIT_MODEL_ID = 3001000003;
 }
 
@@ -59,11 +59,11 @@ void RiskAnalysisManagerService::OnStart()
     }
     bool success = ConfigManager::InitConfig<EventConfig>();
     if (!success) {
-        return;
+        SGLOGE("init event config error");
     }
     success = ConfigManager::InitConfig<ModelConfig>();
     if (!success) {
-        return;
+        SGLOGE("init model config error");
     }
 
     TaskHandler::Task task = [] {
@@ -78,8 +78,8 @@ void RiskAnalysisManagerService::OnStop()
 {
 }
 
-int32_t RiskAnalysisManagerService::RequestSecurityModelResult(std::string &devId, uint32_t modelId,
-    const sptr<IRemoteObject> &callback)
+int32_t RiskAnalysisManagerService::RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
+    const std::string &param, const sptr<IRemoteObject> &callback)
 {
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, PERMISSION);
@@ -93,7 +93,7 @@ int32_t RiskAnalysisManagerService::RequestSecurityModelResult(std::string &devI
     event.time = SecurityGuardUtils::GetDate();
     auto promise = std::make_shared<std::promise<std::string>>();
     auto future = promise->get_future();
-    PushRiskAnalysisTask(modelId, promise);
+    PushRiskAnalysisTask(modelId, param, promise);
     std::chrono::milliseconds span(TIMEOUT_REPLY);
     ErrorCode ret;
     std::string result{};
@@ -116,17 +116,17 @@ int32_t RiskAnalysisManagerService::RequestSecurityModelResult(std::string &devI
     return ret;
 }
 
-void RiskAnalysisManagerService::PushRiskAnalysisTask(uint32_t modelId,
+void RiskAnalysisManagerService::PushRiskAnalysisTask(uint32_t modelId, std::string param,
     std::shared_ptr<std::promise<std::string>> promise)
 {
-    TaskHandler::Task task = [modelId, promise] {
+    TaskHandler::Task task = [modelId, param, promise] {
         SGLOGD("modelId=%{public}u", modelId);
         if (std::count(MODELIDS.begin(), MODELIDS.end(), modelId) == 0) {
             SGLOGE("model not support, no need to analyse, modelId=%{public}u", modelId);
             promise->set_value(UNKNOWN_STATUS);
             return;
         }
-        std::string result = ModelManager::GetInstance().GetResult(modelId);
+        std::string result = ModelManager::GetInstance().GetResult(modelId, param);
         SGLOGI("result is %{public}s", result.c_str());
         promise->set_value(result);
     };

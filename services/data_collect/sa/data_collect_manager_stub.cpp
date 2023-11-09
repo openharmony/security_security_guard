@@ -38,6 +38,12 @@ int32_t DataCollectManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &da
             case CMD_DATA_REQUEST: {
                 return HandleDataRequestCmd(data, reply);
             }
+            case CMD_DATA_SUBSCRIBE: {
+                return HandleDataSubscribeCmd(data, reply);
+            }
+            case CMD_DATA_UNSUBSCRIBE: {
+                return HandleDataUnsubscribeCmd(data, reply);
+            }
             default: {
                 break;
             }
@@ -81,5 +87,53 @@ int32_t DataCollectManagerStub::HandleDataRequestCmd(MessageParcel &data, Messag
         return BAD_PARAM;
     }
     return RequestRiskData(devId, eventList, object);
+}
+
+int32_t DataCollectManagerStub::HandleDataSubscribeCmd(MessageParcel &data, MessageParcel &reply)
+{
+    SGLOGI("%{public}s", __func__);
+    uint32_t expected = sizeof(uint64_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (expected >= actual) {
+        SGLOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    std::unique_ptr<SecurityCollector::SecurityCollectorSubscribeInfo> info(
+        data.ReadParcelable<SecurityCollector::SecurityCollectorSubscribeInfo>());
+    if (!info) {
+        SGLOGE("failed to read parcelable for subscribeInfo");
+        return BAD_PARAM;
+    }
+
+    auto callback = data.ReadRemoteObject();
+    if (callback == nullptr) {
+        SGLOGE("callback is nullptr");
+        return BAD_PARAM;
+    }
+    int32_t ret = Subscribe(*info, callback);
+    reply.WriteInt32(ret);
+    return ret;
+}
+
+int32_t DataCollectManagerStub::HandleDataUnsubscribeCmd(MessageParcel &data, MessageParcel &reply)
+{
+    SGLOGI("%{public}s", __func__);
+    uint32_t expected = sizeof(uint64_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (expected >= actual) {
+        SGLOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    auto callback = data.ReadRemoteObject();
+    if (callback == nullptr) {
+        SGLOGE("callback is nullptr");
+        return BAD_PARAM;
+    }
+
+    int32_t ret = Unsubscribe(callback);
+    reply.WriteInt32(ret);
+    return ret;
 }
 }

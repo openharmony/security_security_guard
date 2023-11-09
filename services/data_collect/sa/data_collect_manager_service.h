@@ -21,6 +21,7 @@
 #include "nocopyable.h"
 #include "system_ability.h"
 
+#include "i_db_listener.h"
 #include "config_define.h"
 #include "data_collect_manager_stub.h"
 #include "security_guard_define.h"
@@ -37,15 +38,27 @@ public:
     int Dump(int fd, const std::vector<std::u16string>& args) override;
     int32_t RequestDataSubmit(int64_t eventId, std::string &version, std::string &time, std::string &content) override;
     int32_t RequestRiskData(std::string &devId, std::string &eventList, const sptr<IRemoteObject> &callback) override;
+    int32_t Subscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
+        const sptr<IRemoteObject> &callback) override;
+    int32_t Unsubscribe(const sptr<IRemoteObject> &callback) override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
 
 private:
+    class SubscriberDeathRecipient : public IRemoteObject::DeathRecipient {
+    public:
+        SubscriberDeathRecipient(wptr<DataCollectManagerService> service) : service_(service) {}
+        ~SubscriberDeathRecipient() override = default;
+        void OnRemoteDied(const wptr<IRemoteObject> &remote) override ;
+    private:
+        wptr<DataCollectManagerService> service_{};
+    };
     void DumpEventInfo(int fd, int64_t eventId);
     static std::vector<SecEvent> GetSecEventsFromConditions(RequestCondition &condition);
     static void PushDataCollectTask(const sptr<IRemoteObject> &object, std::string conditions, std::string devId,
         std::shared_ptr<std::promise<int32_t>> promise);
+    std::mutex mutex_{};
+    sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
 };
 } // namespace OHOS::Security::SecurityGuard
-
 #endif // SECURITY_GUARD_DATA_COLLECT_MANAGER_SERVICE_H

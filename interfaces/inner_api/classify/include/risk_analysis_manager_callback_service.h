@@ -23,7 +23,7 @@ class RiskAnalysisManagerCallbackService : public RiskAnalysisManagerCallbackStu
 public:
     explicit RiskAnalysisManagerCallbackService(ResultCallback &callback);
     ~RiskAnalysisManagerCallbackService() override = default;
-    int32_t ResponseSecurityModelResult(std::string &devId, uint32_t modelId, std::string &result) override;
+    int32_t ResponseSecurityModelResult(const std::string &devId, uint32_t modelId, std::string &result) override;
 
 private:
     ResultCallback callback_;

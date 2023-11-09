@@ -24,6 +24,8 @@ public:
     BigData() = delete;
     static void ReportObatinDataEvent(const ObatinDataEvent &event);
     static void ReportClassifyEvent(const ClassifyEvent &event);
+    static void ReportSubscribeEvent(const SubscribeEvent &event);
+    static void ReportUnsubscribeEvent(const UnsubscribeEvent &event);
 };
 } // namespace OHOS::Security::SecurityGuard
 

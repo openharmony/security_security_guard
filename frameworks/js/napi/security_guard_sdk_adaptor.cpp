@@ -23,6 +23,8 @@
 #include "i_risk_analysis_manager.h"
 #include "risk_analysis_manager_callback_service.h"
 #include "risk_analysis_manager_proxy.h"
+#include "security_collector_manager_callback_service.h"
+#include "security_collector_manager_proxy.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 
@@ -56,8 +58,8 @@ int32_t SecurityGuardSdkAdaptor::RequestSecurityEventInfo(std::string &devId, st
     return SUCCESS;
 }
 
-int32_t SecurityGuardSdkAdaptor::RequestSecurityModelResult(std::string &devId, uint32_t modelId,
-    ResultCallback callback)
+int32_t SecurityGuardSdkAdaptor::RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
+    const std::string &param, ResultCallback callback)
 {
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
@@ -77,7 +79,7 @@ int32_t SecurityGuardSdkAdaptor::RequestSecurityModelResult(std::string &devId, 
         SGLOGE("stub is null");
         return NULL_OBJECT;
     }
-    int32_t ret = proxy->RequestSecurityModelResult(devId, modelId, stub);
+    int32_t ret = proxy->RequestSecurityModelResult(devId, modelId, param, stub);
     SGLOGI("RequestSecurityModelResult result, ret=%{public}d", ret);
     return ret;
 }
@@ -127,5 +129,38 @@ int32_t SecurityGuardSdkAdaptor::SetModelState(uint32_t modelId, bool enable)
     int32_t ret = proxy->SetModelState(modelId, enable);
     SGLOGI("SetModelState result, ret=%{public}d", ret);
     return ret;
+}
+
+int32_t SecurityGuardSdkAdaptor::NotifyCollector(const SecurityCollector::Event &event, int64_t duration)
+{
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return NULL_OBJECT;
+    }
+
+    auto object = registry->GetSystemAbility(SecurityCollector::SECURITY_COLLECTOR_MANAGER_SA_ID);
+    auto proxy = iface_cast<SecurityCollector::ISecurityCollectorManager>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+
+    SGLOGE("event  %{public}ld, %{public}s, %{public}s,%{public}s",
+        event.eventId, event.version.c_str(), event.content.c_str(), event.extra.c_str());
+
+    SecurityCollector::SecurityCollectorSubscribeInfo subscriberInfo{event, duration, true};
+    sptr<SecurityCollector::SecurityCollectorManagerCallbackService> callback =
+            new (std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
+    if (callback == nullptr) {
+        SGLOGE("callback is null");
+        return NULL_OBJECT;
+    }
+    int32_t ret = proxy->Subscribe(subscriberInfo, callback);
+    SGLOGI("NotifyCollector result, ret=%{public}d", ret);
+    if (ret != SUCCESS) {
+        return ret;
+    }
+    return SUCCESS;
 }
 } // OHOS::Security::SecurityGuard

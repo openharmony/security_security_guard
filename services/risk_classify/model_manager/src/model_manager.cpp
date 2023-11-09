@@ -32,9 +32,9 @@ std::shared_ptr<IModelManager> ModelManager::modelManagerApi_ = std::make_shared
 namespace {
     constexpr const char *AUDIT_SWITCH = "audit_switch";
     constexpr const char *PREFIX_MODEL_PATH = "/system/lib64/lib";
-    constexpr const int32_t AUDIT_SWITCH_OFF = 0;
-    constexpr const int32_t AUDIT_SWITCH_ON = 1;
-    constexpr const uint32_t AUDIT_MODEL = 3001000003;
+    constexpr int32_t AUDIT_SWITCH_OFF = 0;
+    constexpr int32_t AUDIT_SWITCH_ON = 1;
+    constexpr uint32_t AUDIT_MODEL = 3001000003;
 }
 
 void ModelManager::Init()
@@ -114,7 +114,7 @@ int32_t ModelManager::InitModel(uint32_t modelId)
     return SUCCESS;
 }
 
-std::string ModelManager::GetResult(uint32_t modelId)
+std::string ModelManager::GetResult(uint32_t modelId, const std::string &param)
 {
     std::string result = "unknown";
     int32_t ret = InitModel(modelId);
@@ -129,7 +129,7 @@ std::string ModelManager::GetResult(uint32_t modelId)
             SGLOGI("the model has not been initialized, begin init, modelId=%{public}u", modelId);
             return result;
         }
-        result = iter->second->GetModelApi()->GetResult(modelId);
+        result = iter->second->GetModelApi()->GetResult(modelId, param);
     }
     ModelCfg config;
     bool success = ConfigDataManager::GetInstance().GetModelConfig(modelId, config);

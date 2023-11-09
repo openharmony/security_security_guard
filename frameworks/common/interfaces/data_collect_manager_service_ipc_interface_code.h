@@ -23,10 +23,13 @@ namespace OHOS::Security::SecurityGuard {
 enum class DataCollectManagerInterfaceCode {
     CMD_DATA_COLLECT = 1,
     CMD_DATA_REQUEST = 2,
+    CMD_DATA_SUBSCRIBE = 3,
+    CMD_DATA_UNSUBSCRIBE = 4,
 };
 
 enum class DataCollectManagerCallbackInterfaceCode {
     CMD_SET_REQUEST_DATA = 1,
+    CMD_DATA_SUBSCRIBE_CALLBACK = 2,
 };
 } // namespace OHOS::Security::SecurityGuard
 

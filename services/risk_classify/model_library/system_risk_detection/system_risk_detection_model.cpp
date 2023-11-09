@@ -22,15 +22,15 @@ using OHOS::HiviewDFX::HiLog;
 namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0xD002F10, "SG_SYS_RISK_DETECTION" };
-    constexpr const int32_t FAILED = -1;
-    constexpr const int32_t SUCCESS = 0;
-    constexpr const size_t MAX_CFG_ITEM_SIZE = 10;
-    constexpr const uint32_t ROOT_SCAN_MODEL_ID = 3001000000;
-    constexpr const uint32_t DEVICE_COMPLETENESS_MODEL_ID = 3001000001;
-    constexpr const uint32_t PHYSICAL_MACHINE_DETECTION_MODEL_ID = 3001000002;
-    constexpr const int64_t ROOT_SCAN_RESULT_ID = 1011009201;
-    constexpr const int64_t DEVICE_COMPLETENESS_RESULT_ID = 1011009203;
-    constexpr const int64_t PHYSICAL_MACHINE_DETECTION_RESULT_ID = 1011009202;
+    constexpr int32_t FAILED = -1;
+    constexpr int32_t SUCCESS = 0;
+    constexpr size_t MAX_CFG_ITEM_SIZE = 10;
+    constexpr uint32_t ROOT_SCAN_MODEL_ID = 3001000000;
+    constexpr uint32_t DEVICE_COMPLETENESS_MODEL_ID = 3001000001;
+    constexpr uint32_t PHYSICAL_MACHINE_DETECTION_MODEL_ID = 3001000002;
+    constexpr int64_t ROOT_SCAN_RESULT_ID = 1011009201;
+    constexpr int64_t DEVICE_COMPLETENESS_RESULT_ID = 1011009203;
+    constexpr int64_t PHYSICAL_MACHINE_DETECTION_RESULT_ID = 1011009202;
     constexpr const char* UNKNOWN_STATUS = "unknown";
 }
 
@@ -116,7 +116,7 @@ bool SystemRiskDetectionModel::GetRuleResult(std::vector<bool> &ruleResult, cons
     return true;
 }
 
-std::string SystemRiskDetectionModel::GetResult(uint32_t modelId)
+std::string SystemRiskDetectionModel::GetResult(uint32_t modelId, const std::string &param)
 {
     HiLog::Info(LABEL, "func=%{public}s", __func__);
     std::string result(UNKNOWN_STATUS);

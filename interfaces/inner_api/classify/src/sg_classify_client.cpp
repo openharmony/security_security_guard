@@ -35,8 +35,8 @@ using namespace OHOS::Security::SecurityGuard;
 
 static std::mutex g_mutex;
 
-static int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId,
-    ResultCallback callback)
+static int32_t RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
+    const std::string &param, ResultCallback callback)
 {
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
@@ -56,63 +56,34 @@ static int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId,
         SGLOGE("stub is null");
         return NULL_OBJECT;
     }
-    int32_t ret = proxy->RequestSecurityModelResult(devId, modelId, stub);
+    int32_t ret = proxy->RequestSecurityModelResult(devId, modelId, param, stub);
     SGLOGI("RequestSecurityModelResult result, ret=%{public}d", ret);
     return ret;
 }
 
-static int32_t FillingRequestResult(const SecurityModel &model, SecurityModelResult *result)
+namespace OHOS::Security::SecurityGuard {
+int32_t RequestSecurityModelResultSync(const std::string &devId, uint32_t modelId,
+    const std::string &param, SecurityModelResult &result)
 {
-    if (model.devId.length() >= DEVICE_ID_MAX_LEN || model.result.length() >= RESULT_MAX_LEN) {
-        return BAD_PARAM;
-    }
-
-    result->modelId = model.modelId;
-    errno_t rc = memcpy_s(result->devId.identity, DEVICE_ID_MAX_LEN, model.devId.c_str(), model.devId.length());
-    if (rc != EOK) {
-        return NULL_OBJECT;
-    }
-    result->devId.length = model.devId.length();
-
-    rc = memcpy_s(result->result, RESULT_MAX_LEN, model.result.c_str(), model.result.length());
-    if (rc != EOK) {
-        return NULL_OBJECT;
-    }
-    result->resultLen = model.result.length();
-
-    SGLOGD("modelId=%{public}u, result=%{public}s", model.modelId, model.result.c_str());
-    return SUCCESS;
-}
-
-static int32_t RequestSecurityModelResultSyncImpl(const DeviceIdentify *devId,
-    uint32_t modelId, SecurityModelResult *result)
-{
-    if (devId == nullptr || result == nullptr || devId->length >= DEVICE_ID_MAX_LEN) {
+    if (devId.length() >= DEVICE_ID_MAX_LEN) {
         return BAD_PARAM;
     }
     std::unique_lock<std::mutex> lock(g_mutex);
-    auto promise = std::make_shared<std::promise<SecurityModel>>();
+    auto promise = std::make_shared<std::promise<SecurityModelResult>>();
     auto future = promise->get_future();
-    auto func = [promise] (const std::string &devId, uint32_t modelId,
+    auto func = [promise, param] (const std::string &devId, uint32_t modelId,
         const std::string &result) mutable -> int32_t {
-        SecurityModel model = {
+        SecurityModelResult modelResult = {
             .devId = devId,
             .modelId = modelId,
+            .param = param,
             .result = result
         };
-        promise->set_value(model);
+        promise->set_value(modelResult);
         return SUCCESS;
     };
 
-    uint8_t tmp[DEVICE_ID_MAX_LEN] = {};
-    (void) memset_s(tmp, DEVICE_ID_MAX_LEN, 0, DEVICE_ID_MAX_LEN);
-    errno_t rc = memcpy_s(tmp, DEVICE_ID_MAX_LEN, devId->identity, devId->length);
-    if (rc != EOK) {
-        SGLOGE("identity memcpy error, code=%{public}d", rc);
-        return NULL_OBJECT;
-    }
-    std::string identify(reinterpret_cast<const char *>(tmp));
-    int32_t code = RequestSecurityModelResult(identify, modelId, func);
+    int32_t code = RequestSecurityModelResult(devId, modelId, param, func);
     if (code != SUCCESS) {
         SGLOGE("RequestSecurityModelResult error, code=%{public}d", code);
         return code;
@@ -122,63 +93,85 @@ static int32_t RequestSecurityModelResultSyncImpl(const DeviceIdentify *devId,
         SGLOGE("wait timeout");
         return TIME_OUT;
     }
-    SecurityModel model = future.get();
-    return FillingRequestResult(model, result);
+    result = future.get();
+    return SUCCESS;
 }
 
-static int32_t RequestSecurityModelResultAsyncImpl(const DeviceIdentify *devId, uint32_t modelId,
-    SecurityGuardRiskCallback callback)
+int32_t RequestSecurityModelResultAsync(const std::string &devId, uint32_t modelId,
+    const std::string &param, SecurityGuardRiskCallback callback)
 {
-    if (devId == nullptr || devId->length >= DEVICE_ID_MAX_LEN) {
+    if (devId.length() >= DEVICE_ID_MAX_LEN) {
         return BAD_PARAM;
     }
     std::unique_lock<std::mutex> lock(g_mutex);
-    uint8_t tmp[DEVICE_ID_MAX_LEN] = {};
-    (void) memset_s(tmp, DEVICE_ID_MAX_LEN, 0, DEVICE_ID_MAX_LEN);
-    errno_t rc = memcpy_s(tmp, DEVICE_ID_MAX_LEN, devId->identity, devId->length);
-    if (rc != EOK) {
-        SGLOGE("identity memcpy error, code=%{public}d", rc);
-        return NULL_OBJECT;
-    }
-    std::string identify(reinterpret_cast<const char *>(tmp));
-    auto func = [callback] (const std::string &devId, uint32_t modelId, const std::string &result)-> int32_t {
-        if (devId.length() >= DEVICE_ID_MAX_LEN || result.length() >= RESULT_MAX_LEN) {
-            return BAD_PARAM;
-        }
-
-        SecurityModelResult modelResult;
-        (void) memset_s(&modelResult, sizeof(SecurityModelResult), 0, sizeof(SecurityModelResult));
-        modelResult.modelId = modelId;
-        errno_t rc = memcpy_s(modelResult.devId.identity, DEVICE_ID_MAX_LEN, devId.c_str(), devId.length());
-        if (rc != EOK) {
-            return NULL_OBJECT;
-        }
-        modelResult.devId.length = devId.length();
-        rc = memcpy_s(modelResult.result, RESULT_MAX_LEN, result.c_str(), result.length());
-        if (rc != EOK) {
-            return NULL_OBJECT;
-        }
-        modelResult.resultLen = result.length();
-        callback(&modelResult);
+    auto func = [callback, param] (const std::string &devId,
+        uint32_t modelId, const std::string &result) -> int32_t {
+        callback(SecurityModelResult{devId, modelId, param, result});
         return SUCCESS;
     };
 
-    return RequestSecurityModelResult(identify, modelId, func);
+    return RequestSecurityModelResult(devId, modelId, param, func);
+}
 }
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int32_t RequestSecurityModelResultSync(const DeviceIdentify *devId, uint32_t modelId, SecurityModelResult *result)
+static int32_t FillingRequestResult(const OHOS::Security::SecurityGuard::SecurityModelResult &cppResult,
+    ::SecurityModelResult *result)
 {
-    return RequestSecurityModelResultSyncImpl(devId, modelId, result);
+    if (cppResult.devId.length() >= DEVICE_ID_MAX_LEN || cppResult.result.length() >= RESULT_MAX_LEN) {
+        return BAD_PARAM;
+    }
+
+    result->modelId = cppResult.modelId;
+    errno_t rc = memcpy_s(result->devId.identity, DEVICE_ID_MAX_LEN, cppResult.devId.c_str(), cppResult.devId.length());
+    if (rc != EOK) {
+        return NULL_OBJECT;
+    }
+    result->devId.length = cppResult.devId.length();
+
+    rc = memcpy_s(result->result, RESULT_MAX_LEN, cppResult.result.c_str(), cppResult.result.length());
+    if (rc != EOK) {
+        return NULL_OBJECT;
+    }
+    result->resultLen = cppResult.result.length();
+
+    SGLOGD("modelId=%{public}u, result=%{public}s", cppResult.modelId, cppResult.result.c_str());
+    return SUCCESS;
+}
+
+static std::string CovertDevId(const DeviceIdentify *devId)
+{
+    std::vector<char> id(DEVICE_ID_MAX_LEN, '\0');
+    std::copy(&devId->identity[0], &devId->identity[DEVICE_ID_MAX_LEN - 1], id.begin());
+    return std::string{id.data()};
+}
+
+int32_t RequestSecurityModelResultSync(const DeviceIdentify *devId, uint32_t modelId, ::SecurityModelResult *result)
+{
+    if (devId == nullptr || result == nullptr || devId->length >= DEVICE_ID_MAX_LEN) {
+        return BAD_PARAM;
+    }
+    OHOS::Security::SecurityGuard::SecurityModelResult tmp;
+    int32_t ret = OHOS::Security::SecurityGuard::RequestSecurityModelResultSync(CovertDevId(devId), modelId, "", tmp);
+    FillingRequestResult(tmp, result);
+    return ret;
 }
 
 int32_t RequestSecurityModelResultAsync(const DeviceIdentify *devId, uint32_t modelId,
-    SecurityGuardRiskCallback callback)
+    ::SecurityGuardRiskCallback callback)
 {
-    return RequestSecurityModelResultAsyncImpl(devId, modelId, callback);
+    if (devId == nullptr || devId->length >= DEVICE_ID_MAX_LEN) {
+        return BAD_PARAM;
+    }
+    auto cppCallBack = [callback](const OHOS::Security::SecurityGuard::SecurityModelResult &tmp) {
+        ::SecurityModelResult result{};
+        FillingRequestResult(tmp, &result);
+        callback(&result);
+    };
+    return OHOS::Security::SecurityGuard::RequestSecurityModelResultAsync(CovertDevId(devId), modelId, "", cppCallBack);
 }
 
 #ifdef __cplusplus

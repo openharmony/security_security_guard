@@ -32,7 +32,7 @@ class ModelManager : public Singleton<ModelManager> {
 public:
     void Init();
     int32_t InitModel(uint32_t modelId);
-    std::string GetResult(uint32_t modelId);
+    std::string GetResult(uint32_t modelId, const std::string &param);
     int32_t SubscribeResult(uint32_t modelId, std::shared_ptr<IModelResultListener> listener);
     void Release(uint32_t modelId);
 

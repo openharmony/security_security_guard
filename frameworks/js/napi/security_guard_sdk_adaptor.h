@@ -17,6 +17,7 @@
 #define REQUEST_SECURITY_EVENT_INFO_NAPI_H
 
 #include "event_info.h"
+#include "event_define.h"
 #include "security_guard_define.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -24,9 +25,11 @@ class SecurityGuardSdkAdaptor {
 public:
     static int32_t RequestSecurityEventInfo(std::string &devId, std::string &eventList,
         RequestRiskDataCallback callback);
-    static int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId, ResultCallback callback);
+    static int32_t RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
+        const std::string &param, ResultCallback callback);
     static int32_t ReportSecurityInfo(const std::shared_ptr<EventInfo> &info);
     static int32_t SetModelState(uint32_t modelId, bool enable);
+    static int32_t NotifyCollector(const SecurityCollector::Event &event, int64_t duration);
 
 private:
     SecurityGuardSdkAdaptor() = delete;

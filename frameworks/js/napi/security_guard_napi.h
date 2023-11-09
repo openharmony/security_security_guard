@@ -20,9 +20,12 @@
 #include "napi/native_node_api.h"
 
 #include "security_guard_define.h"
+#include "event_define.h"
 
 constexpr int CONDITIONS_MAX_LEN = 100;
+constexpr int VERSION_MAX_LEN = 50;
 constexpr int CONTENT_MAX_LEN = 900;
+constexpr int EXTRA_MAX_LEN = 900;
 constexpr int DEVICE_ID_MAX_LEN = 64;
 constexpr int NAPI_ON_RESULT_ARGS_CNT = 3;
 constexpr char NAPI_ON_RESULT_ATTR[] = "onResult";
@@ -63,6 +66,12 @@ struct ReportSecurityEventInfoContext {
     int64_t eventId;
     std::string version;
     std::string content;
+};
+
+
+struct NotifyCollectorContext {
+    OHOS::Security::SecurityCollector::Event event;
+    int64_t duration;
 };
 
 enum EventIdType : int64_t {

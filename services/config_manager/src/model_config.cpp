@@ -22,6 +22,7 @@
 #include "model_analysis_define.h"
 #include "model_cfg_marshalling.h"
 #include "security_guard_log.h"
+#include "security_guard_utils.h"
 
 namespace OHOS::Security::SecurityGuard {
 bool ModelConfig::Load(int mode)
@@ -99,14 +100,7 @@ bool ModelConfig::Update()
         return false;
     }
 
-    std::ofstream stream(CONFIG_UPTATE_FILES[MODEL_CFG_INDEX], std::ios::out | std::ios::trunc);
-    if (!stream.is_open() || !stream) {
-        SGLOGE("stream error, %{public}s", strerror(errno));
-        return false;
-    }
-
-    stream << jsonObj;
-    stream.close();
+    SecurityGuardUtils::CopyFile(CONFIG_CACHE_FILES[MODEL_CFG_INDEX], CONFIG_UPTATE_FILES[MODEL_CFG_INDEX]);
     ConfigDataManager::GetInstance().ResetModelMap();
     CacheModelConfig(configs);
     CacheModelToEvent(configs);

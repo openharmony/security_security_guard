@@ -14,6 +14,29 @@
 import("//base/security/security_guard/security_guard.gni")
 import("//build/ohos.gni")
 
+ohos_shared_library("sg_app_risk_detection") {
+  subsystem_name = "security"
+  part_name = "security_guard"
+
+  include_dirs = [
+    "//third_party/json/include",
+    "//third_party/openssl/include",
+  ]
+
+  configs =
+      [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
+
+  sources = [ "${sg_root_dir}/services/risk_classify/model_library/app_risk_detection/app_risk_detection_model.cpp" ]
+  
+  deps = [ "//third_party/openssl:libcrypto_shared" ]
+  
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "appverify:libhapverify",
+  ]
+}
+
 ohos_shared_library("sg_system_risk_detection") {
   subsystem_name = "security"
   part_name = "security_guard"
@@ -71,6 +94,7 @@ ohos_shared_library("sg_threat_detection") {
 
 group("security_guard_model") {
   deps = [
+    ":sg_app_risk_detection",
     ":sg_system_risk_detection",
     ":sg_oem_mode_detection",
     ":sg_threat_detection",

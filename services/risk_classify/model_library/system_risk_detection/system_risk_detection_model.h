@@ -25,7 +25,7 @@ class SystemRiskDetectionModel : public IModel {
 public:
     ~SystemRiskDetectionModel() override;
     int32_t Init(std::shared_ptr<IModelManager> api) override;
-    std::string GetResult(uint32_t modelId) override;
+    std::string GetResult(uint32_t modelId, const std::string &param) override;
     int32_t SubscribeResult(std::shared_ptr<IModelResultListener> listener) override;
     void Release() override;
 

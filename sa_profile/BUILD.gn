@@ -28,3 +28,17 @@ ohos_prebuilt_etc("security_guard.init") {
   subsystem_name = "security"
   part_name = "security_guard"
 }
+
+ohos_sa_profile("security_collector_sa_profile_standard") {
+  sources = [
+    "3525.json",
+  ]
+  part_name = "security_guard"
+}
+
+ohos_prebuilt_etc("security_collector.init") {
+  source = "security_collector.cfg"
+  relative_install_dir = "init"
+  subsystem_name = "security"
+  part_name = "security_guard"
+}

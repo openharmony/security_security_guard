@@ -26,6 +26,7 @@
 #include "config_manager.h"
 #include "model_config.h"
 #include "security_guard_log.h"
+#include "security_guard_utils.h"
 
 namespace OHOS::Security::SecurityGuard {
 std::shared_ptr<ConfigSubscriber> ConfigSubscriber::subscriber_{nullptr};
@@ -89,6 +90,10 @@ void ConfigSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData
                 (void)ConfigManager::UpdataConfig<EventConfig>();
             } else if (file == CONFIG_CACHE_FILES[MODEL_CFG_INDEX]) {
                 (void)ConfigManager::UpdataConfig<ModelConfig>();
+            } else if (file == CONFIG_CACHE_FILES[SIG_RULE_CFG_INDEX]) {
+                SecurityGuardUtils::CopyFile(file, CONFIG_UPTATE_FILES[SIG_RULE_CFG_INDEX]);
+            } else if (file == CONFIG_CACHE_FILES[URL_RULE_CFG_INDEX]) {
+                SecurityGuardUtils::CopyFile(file, CONFIG_UPTATE_FILES[URL_RULE_CFG_INDEX]);
             }
             bool success = RemoveFile(file);
             if (!success) {

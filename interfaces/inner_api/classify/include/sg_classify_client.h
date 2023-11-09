@@ -19,6 +19,27 @@
 #include "security_guard_api.h"
 
 #ifdef __cplusplus
+#include <string>
+namespace OHOS::Security::SecurityGuard {
+using SecurityModelResult = struct {
+    std::string devId;
+    uint32_t modelId;
+    std::string param;
+    std::string result;
+};
+
+using SecurityGuardRiskCallback = std::function<void(const SecurityModelResult &result)>;
+
+int32_t RequestSecurityModelResultSync(const std::string &devId, uint32_t modelId,
+    const std::string &param, SecurityModelResult &result);
+
+int32_t RequestSecurityModelResultAsync(const std::string &devId, uint32_t modelId,
+    const std::string &param, SecurityGuardRiskCallback callback);
+}
+
+#endif
+
+#ifdef __cplusplus
 extern "C" {
 #endif
 

@@ -20,6 +20,10 @@
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
+namespace {
+    constexpr int32_t CFG_FILE_MAX_SIZE = 1 * 1024 * 1024; // byte
+}
+
 bool BaseConfig::Check()
 {
     if (!stream_.is_open() ||!stream_) {
@@ -29,8 +33,8 @@ bool BaseConfig::Check()
 
     stream_.seekg(0, std::ios::end);
     int len = static_cast<int>(stream_.tellg());
-    if (len == 0) {
-        SGLOGE("stream is empty");
+    if (len == 0 || len > CFG_FILE_MAX_SIZE) {
+        SGLOGE("stream is empty or too large, len = %{public}d", len);
         stream_.close();
         return false;
     }

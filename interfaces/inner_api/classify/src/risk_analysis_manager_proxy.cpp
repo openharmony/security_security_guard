@@ -24,8 +24,8 @@ RiskAnalysisManagerProxy::RiskAnalysisManagerProxy(const sptr<IRemoteObject> &im
 {
 }
 
-int32_t RiskAnalysisManagerProxy::RequestSecurityModelResult(std::string &devId, uint32_t modelId,
-    const sptr<IRemoteObject> &callback)
+int32_t RiskAnalysisManagerProxy::RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
+    const std::string &param, const sptr<IRemoteObject> &callback)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -36,6 +36,7 @@ int32_t RiskAnalysisManagerProxy::RequestSecurityModelResult(std::string &devId,
     }
     data.WriteString(devId);
     data.WriteUint32(modelId);
+    data.WriteString(param);
     data.WriteRemoteObject(callback);
 
     MessageOption option = { MessageOption::TF_SYNC };

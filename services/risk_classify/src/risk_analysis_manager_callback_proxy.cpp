@@ -21,7 +21,7 @@ RiskAnalysisManagerCallbackProxy::RiskAnalysisManagerCallbackProxy(const sptr<IR
 {
 }
 
-int32_t RiskAnalysisManagerCallbackProxy::ResponseSecurityModelResult(std::string &devId, uint32_t modelId,
+int32_t RiskAnalysisManagerCallbackProxy::ResponseSecurityModelResult(const std::string &devId, uint32_t modelId,
     std::string &result)
 {
     MessageParcel data;

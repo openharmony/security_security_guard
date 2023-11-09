@@ -37,6 +37,7 @@ namespace OHOS::Security::SecurityGuard {
     const std::string MODEL_CFG_CALLER_KEY = "caller";
     const std::string MODEL_CFG_TYPE_KEY = "type";
     const std::string MODEL_CFG_BUILD_IN_CFG_KEY = "buildInDetectionCfg";
+    const std::string MODEL_CFG_APP_DETECTION_CFG_KEY = "appDetectionCfg";
 
     // threat config key
     const std::string THREAT_CFG_THREAT_ID_KEY = "threatId";

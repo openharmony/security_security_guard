@@ -20,8 +20,8 @@
 #include <vector>
 
 namespace OHOS::Security::SecurityGuard {
-constexpr const int INVALID_INDEX = -1;
-constexpr const int DB_VERSION = 1;
+constexpr int INVALID_INDEX = -1;
+constexpr int DB_VERSION = 1;
 constexpr const char *ID = "id";
 constexpr const char *USER_ID = "user_id";
 constexpr const char *DEVICE_ID = "device_id";

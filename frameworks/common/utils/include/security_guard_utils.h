@@ -26,6 +26,7 @@ public:
     static bool StrToLL(const std::string &str, long long &value);
     static bool StrToULL(const std::string &str, unsigned long long &value);
     static std::string GetDate();
+    static void CopyFile(const std::string &srcPath, const std::string &dstPath);
 
 private:
     SecurityGuardUtils() = default;

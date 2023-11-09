@@ -36,11 +36,13 @@ using ErrorCode = enum {
     DB_LOAD_ERR,
     DB_OPT_ERR,
     DB_INFO_ERR,
+    DUPLICATE,
 };
 
 using SecurityModel = struct {
     std::string devId;
     uint32_t modelId;
+    std::string param;
     std::string result;
 };
 
@@ -56,6 +58,22 @@ using ClassifyEvent = struct {
     std::string time;
     std::string eventInfo;
     std::string status;
+    std::string extend;
+};
+
+using SubscribeEvent = struct {
+    int32_t pid;
+    std::string time;
+    std::string eventInfo;
+    int64_t eventId;
+    int32_t ret;
+    std::string extend;
+};
+
+using UnsubscribeEvent = struct {
+    int32_t pid;
+    std::string time;
+    int32_t ret;
     std::string extend;
 };
 

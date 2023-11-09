@@ -36,8 +36,8 @@ public:
         CMD_SET_MODEL_STATE = static_cast<uint32_t>(InterfaceCode::CMD_SET_MODEL_STATE),
     };
 
-    virtual int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId,
-        const sptr<IRemoteObject> &callback) = 0;
+    virtual int32_t RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
+        const std::string &param, const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t SetModelState(uint32_t modelId, bool enable) = 0;
 };
 
@@ -49,7 +49,7 @@ public:
         CMD_SET_SECURITY_MODEL_RESULT = static_cast<uint32_t>(InterfaceCode::CMD_SET_SECURITY_MODEL_RESULT),
     };
 
-    virtual int32_t ResponseSecurityModelResult(std::string &devId, uint32_t modelId, std::string &result) = 0;
+    virtual int32_t ResponseSecurityModelResult(const std::string &devId, uint32_t modelId, std::string &result) = 0;
 };
 } // namespace OHOS::Security::SecurityGuard
 

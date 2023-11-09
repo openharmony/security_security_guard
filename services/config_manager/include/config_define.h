@@ -39,6 +39,13 @@ using BuildInDetectionCfg = struct {
     std::string falseResult;
 };
 
+using AppDetectionCfg = struct {
+    std::string detectionCategory;
+    std::string configFileName;
+    std::string trueResult;
+    std::string falseResult;
+};
+
 using ModelCfg = struct {
     uint32_t modelId;
     std::string path;
@@ -52,6 +59,7 @@ using ModelCfg = struct {
     std::vector<std::string> caller;
     std::string type;
     BuildInDetectionCfg config;
+    AppDetectionCfg appDetectionConfig;
 };
 
 using EventCfg = struct {
@@ -112,17 +120,23 @@ using LoadMode = enum {
 
 using PathIndex = enum {
     EVENT_CFG_INDEX,
-    MODEL_CFG_INDEX
+    MODEL_CFG_INDEX,
+    SIG_RULE_CFG_INDEX,
+    URL_RULE_CFG_INDEX
 };
 
 const std::vector<std::string> CONFIG_CACHE_FILES = {
     "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/security_guard_event.cfg",
-    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/security_guard_model.cfg"
+    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/security_guard_model.cfg",
+    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/signature_rule.cfg",
+    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/url_rule.cfg"
 };
 
 const std::vector<std::string> CONFIG_UPTATE_FILES = {
     "/data/service/el1/public/security_guard/security_guard_event.cfg",
-    "/data/service/el1/public/security_guard/security_guard_model.cfg"
+    "/data/service/el1/public/security_guard/security_guard_model.cfg",
+    "/data/service/el1/public/security_guard/signature_rule.cfg",
+    "/data/service/el1/public/security_guard/url_rule.cfg"
 };
 
 const std::vector<std::string> CONFIG_PRESET_FILES = {

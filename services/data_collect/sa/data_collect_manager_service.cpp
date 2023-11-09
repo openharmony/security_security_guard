@@ -22,6 +22,7 @@
 #include "ipc_skeleton.h"
 #include "string_ex.h"
 
+#include "acquire_data_subscribe_manager.h"
 #include "bigdata.h"
 #include "config_data_manager.h"
 #include "data_collect_manager_callback_proxy.h"
@@ -341,5 +342,87 @@ void DataCollectManagerService::OnAddSystemAbility(int32_t systemAbilityId, cons
 void DataCollectManagerService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     SGLOGW("OnRemoveSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
+}
+
+int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
+    const sptr<IRemoteObject> &callback)
+{
+    SGLOGD("DataCollectManagerService, start subscribe");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REPORT_PERMISSION);
+    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
+        SGLOGE("caller no permission");
+        return NO_PERMISSION;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (deathRecipient_ == nullptr) {
+        deathRecipient_ = new (std::nothrow) SubscriberDeathRecipient(this);
+        if (deathRecipient_ == nullptr) {
+            SGLOGE("no memory");
+            return NULL_OBJECT;
+        }
+    }
+    callback->AddDeathRecipient(deathRecipient_);
+    int32_t ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, callback);
+
+    SubscribeEvent event;
+    event.pid = IPCSkeleton::GetCallingPid();
+    event.time = SecurityGuardUtils::GetDate();
+    event.eventId = subscribeInfo.GetEvent().eventId;
+    event.eventInfo = subscribeInfo.GetEvent().content;
+    event.ret = ret;
+    SGLOGI("DataCollectManagerService, InsertSubscribeRecord eventId=%{public}ld", event.eventId);
+    BigData::ReportSubscribeEvent(event);
+
+    return ret;
+}
+
+int32_t DataCollectManagerService::Unsubscribe(const sptr<IRemoteObject> &callback)
+{
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REPORT_PERMISSION);
+    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
+        SGLOGE("caller no permission");
+        return NO_PERMISSION;
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (deathRecipient_ != nullptr) {
+        callback->RemoveDeathRecipient(deathRecipient_);
+    }
+
+    int32_t ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(callback);
+    UnsubscribeEvent event;
+    event.pid = IPCSkeleton::GetCallingPid();
+    event.time = SecurityGuardUtils::GetDate();
+    event.ret = ret;
+    SGLOGI("DataCollectManagerService, RemoveSubscribeRecord ret=%{ret}d", ret);
+    BigData::ReportUnsubscribeEvent(event);
+    return ret;
+}
+
+void DataCollectManagerService::SubscriberDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
+{
+    SGLOGE("enter");
+    if (remote == nullptr) {
+        SGLOGE("remote object is nullptr");
+        return;
+    }
+
+    sptr<IRemoteObject> object = remote.promote();
+    if (object == nullptr) {
+        SGLOGE("object is nullptr");
+        return;
+    }
+    sptr<DataCollectManagerService> service = service_.promote();
+    if (service == nullptr) {
+        SGLOGE("service is nullptr");
+        return;
+    }
+    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(object);
+    if (object->IsProxyObject() && service->deathRecipient_ != nullptr) {
+        object->RemoveDeathRecipient(service->deathRecipient_);
+    }
+    SGLOGE("end");
 }
 }

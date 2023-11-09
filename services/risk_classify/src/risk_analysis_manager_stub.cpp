@@ -57,12 +57,13 @@ int32_t RiskAnalysisManagerStub::HandleGetSecurityModelResult(MessageParcel &dat
 
     std::string devId = data.ReadString();
     uint32_t modelId = data.ReadUint32();
+    std::string param = data.ReadString();
     auto object = data.ReadRemoteObject();
     if (object == nullptr) {
         SGLOGE("object is nullptr");
         return BAD_PARAM;
     }
-    int32_t ret = RequestSecurityModelResult(devId, modelId, object);
+    int32_t ret = RequestSecurityModelResult(devId, modelId, param, object);
     reply.WriteInt32(ret);
     return ret;
 }

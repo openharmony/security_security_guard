@@ -27,8 +27,8 @@
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
-    constexpr const uint32_t FLUSH_INTERVAL = 60 * 1000;
-    constexpr const uint32_t DELETE_INTERVAL = 10000; // 1 hour
+    constexpr uint32_t FLUSH_INTERVAL = 60 * 1000;
+    constexpr uint32_t DELETE_INTERVAL = 10000; // 1 hour
 }
 
 DatabaseHelper &AuditEventMemRdbHelper::GetInstance()

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include "security_guard_napi.h"
 #include <future>
 #include <unistd.h>
 #include <syscall.h>
@@ -21,7 +21,6 @@
 #include "napi_request_data_manager.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
-#include "security_guard_napi.h"
 #include "security_guard_sdk_adaptor.h"
 #include "uv.h"
 
@@ -29,13 +28,14 @@
 
 using namespace OHOS::Security::SecurityGuard;
 
+constexpr int NAPI_NOTIFY_COLLECTOR_ARGS_CNT = 2;
 constexpr int NAPI_REPORT_EVENT_INFO_ARGS_CNT = 1;
 constexpr int NAPI_REQUEST_SECURITY_EVENT_INFO_ARGS_CNT = 3;
 constexpr int NAPI_REQUEST_SECURITY_EVENT_INFO_CALLBACK_ARGS_CNT = 2;
 constexpr int NAPI_REQUEST_SECURITY_MODEL_RESULT_ARGS_MIN_CNT = 2;
 constexpr int NAPI_REQUEST_SECURITY_MODEL_RESULT_ARGS_MAX_CNT = 3;
 constexpr int NAPI_SET_MODEL_STATE_ARGS_MAX_CNT = 2;
-constexpr int VERSION_MAX_LEN = 50;
+
 constexpr int TIME_MAX_LEN = 20;
 constexpr int CALLBACK_TYPE_MAX_LEN = 10;
 
@@ -703,7 +703,7 @@ static void RequestSecurityModelResultExecute(napi_env env, void *data)
         promise->set_value(model);
         return SUCCESS;
     };
-    context->ret = SecurityGuardSdkAdaptor::RequestSecurityModelResult(context->deviceId, context->modelId, func);
+    context->ret = SecurityGuardSdkAdaptor::RequestSecurityModelResult(context->deviceId, context->modelId, "", func);
     if (context->ret != SUCCESS) {
         SGLOGE("RequestSecurityModelResultSync error, ret=%{public}d", context->ret);
         return;
@@ -906,6 +906,84 @@ static napi_value NapiSetModelState(napi_env env, napi_callback_info info)
     return NapiCreateInt32(env, ConvertToJsErrCode(code));
 }
 
+static std::string ParseOptionalString(napi_env env, napi_value object, const std::string &key, uint32_t maxLen)
+{
+    bool hasProperty = false;
+    NAPI_CALL(env, napi_has_named_property(env, object, key.c_str(), &hasProperty));
+    if (!hasProperty) {
+        SGLOGE("no %{publid}s param", key.c_str());
+        return "";
+    }
+    napi_value value = nullptr;
+    NAPI_CALL(env, napi_get_named_property(env, object, key.c_str(), &value));
+    if (value == nullptr) {
+        SGLOGE("get %{publid}s failed", key.c_str());
+        return "";
+    }
+    size_t len = maxLen;
+    std::vector<char> str(len + 1, '\0');
+    napi_value result = GetString(env, value, key, str.data(), len);
+    if (result == nullptr) {
+        SGLOGE("get %{publid}s failed", key.c_str());
+        return "";
+    }
+    return std::string{str.data()};
+}
+
+static bool ParseEventForNotifyCollector(napi_env env, napi_value object,
+    OHOS::Security::SecurityCollector::Event &event)
+{
+    int64_t eventId = 0;
+    if (ParseInt64(env, object, "eventId", eventId) == nullptr) {
+        return false;
+    }
+    event.eventId = eventId;
+    event.version = ParseOptionalString(env, object, "version", VERSION_MAX_LEN);
+    event.content = ParseOptionalString(env, object, "content", CONTENT_MAX_LEN);
+    event.extra = ParseOptionalString(env, object, "extra", EXTRA_MAX_LEN);
+    return true;
+}
+
+ 
+static napi_value NapiNotifyCollector(napi_env env, napi_callback_info info)
+{
+    size_t argc = NAPI_NOTIFY_COLLECTOR_ARGS_CNT;
+    napi_value argv[NAPI_NOTIFY_COLLECTOR_ARGS_CNT] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    if (argc != NAPI_NOTIFY_COLLECTOR_ARGS_CNT && argc != NAPI_NOTIFY_COLLECTOR_ARGS_CNT - 1) {
+        SGLOGE("notify arguments count is not expected");
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
+        return nullptr;
+    }
+
+    OHOS::Security::SecurityCollector::Event event{};
+    if (!ParseEventForNotifyCollector(env, argv[0], event)) {
+        SGLOGE("notify context parse error");
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "param event error"));
+        return nullptr;
+    }
+    NotifyCollectorContext context{event, -1};
+
+    if (argc == NAPI_NOTIFY_COLLECTOR_ARGS_CNT) {
+        napi_valuetype type;
+        NAPI_CALL(env, napi_typeof(env, argv[1], &type));
+        if (type != napi_number) {
+            SGLOGE("type of param is not number");
+            napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "param not number"));
+            return nullptr;
+        }
+        int64_t duration = -1;
+        napi_get_value_int64(env, argv[1], &duration);
+        context.duration = duration;
+    }
+
+    int32_t code = SecurityGuardSdkAdaptor::NotifyCollector(context.event, context.duration);
+    if (code != SUCCESS) {
+        SGLOGE("notify error, code=%{public}d", code);
+    }
+    return NapiCreateInt32(env, ConvertToJsErrCode(code));
+}
+
 EXTERN_C_START
 static napi_value SecurityGuardNapiRegister(napi_env env, napi_value exports)
 {
@@ -916,6 +994,7 @@ static napi_value SecurityGuardNapiRegister(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("requestSecurityEventInfo", NapiRequestSecurityEventInfo),
         DECLARE_NAPI_FUNCTION("requestSecurityModelResult", NapiRequestSecurityModelResult),
         DECLARE_NAPI_FUNCTION("setModelState", NapiSetModelState),
+        DECLARE_NAPI_FUNCTION("notifyCollector", NapiNotifyCollector),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
     return exports;

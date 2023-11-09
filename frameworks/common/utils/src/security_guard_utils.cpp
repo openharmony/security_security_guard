@@ -16,6 +16,7 @@
 #include "security_guard_utils.h"
 
 #include <cerrno>
+#include <fstream>
 
 #include "security_guard_log.h"
 
@@ -23,6 +24,7 @@ namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr int32_t DEC_RADIX = 10;
     constexpr int32_t TIME_BUF_LEN = 32;
+    constexpr int32_t FILE_MAX_SIZE = 2 * 1024 * 1024; // byte
 }
 
 bool SecurityGuardUtils::StrToU32(const std::string &str, uint32_t &value)
@@ -48,7 +50,7 @@ bool SecurityGuardUtils::StrToLL(const std::string &str, long long &value)
     errno = 0;
     value = strtoll(add, &end, DEC_RADIX);
     if ((errno == ERANGE && (value == LLONG_MAX || value == LLONG_MIN)) || (errno != 0 && value == 0)) {
-        SGLOGE("strtoll converse error");
+        SGLOGE("strtoll converse error,str=%{public}s", str.c_str());
         return false;
     } else if (end == add) {
         SGLOGE("strtoll no digit find");
@@ -68,7 +70,7 @@ bool SecurityGuardUtils::StrToULL(const std::string &str, unsigned long long &va
     errno = 0;
     value = strtoull(add, &end, DEC_RADIX);
     if ((errno == ERANGE && value == ULLONG_MAX) || (errno != 0 && value == 0)) {
-        SGLOGE("strtoull converse error");
+        SGLOGE("strtoull converse error,str=%{public}s", str.c_str());
         return false;
     } else if (end == add) {
         SGLOGE("strtoull no digit find");
@@ -92,5 +94,26 @@ std::string SecurityGuardUtils::GetDate()
     }
     std::string data(buf);
     return data;
+}
+
+void SecurityGuardUtils::CopyFile(const std::string &srcPath, const std::string &dstPath)
+{
+    std::ifstream src(srcPath, std::ios::binary);
+    std::ofstream dst(dstPath, std::ios::binary);
+    if (!src.is_open() || !src || !dst.is_open() || !dst) {
+        SGLOGE("copy file stream error");
+        src.close();
+        dst.close();
+        return;
+    }
+    if (src.seekg(0, std::ios_base::end).tellg() > FILE_MAX_SIZE) {
+        SGLOGE("cfg file is too large");
+        src.close();
+        dst.close();
+        return;
+    }
+    dst << src.rdbuf();
+    src.close();
+    dst.close();
 }
 }

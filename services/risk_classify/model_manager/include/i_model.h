@@ -27,7 +27,7 @@ class IModel {
 public:
     virtual ~IModel() = default;
     virtual int32_t Init(std::shared_ptr<IModelManager> api) = 0;
-    virtual std::string GetResult(uint32_t modelId) = 0;
+    virtual std::string GetResult(uint32_t modelId, const std::string &param) = 0;
     virtual int32_t SubscribeResult(std::shared_ptr<IModelResultListener> listener) = 0;
     virtual void Release() = 0;
 };

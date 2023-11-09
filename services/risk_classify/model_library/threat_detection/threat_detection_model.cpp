@@ -22,10 +22,10 @@ using OHOS::HiviewDFX::HiLog;
 namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0xD002F10, "SG_THREAT_DETECTION" };
-    constexpr const int64_t ACCOUNT_ID = 1011015001;
-    constexpr const int64_t ACCOUNT_ANONYMIZE_ID = 1011009200;
-    constexpr const int32_t FAILED = -1;
-    constexpr const int32_t SUCCESS = 0;
+    constexpr int64_t ACCOUNT_ID = 1011015001;
+    constexpr int64_t ACCOUNT_ANONYMIZE_ID = 1011009200;
+    constexpr int32_t FAILED = -1;
+    constexpr int32_t SUCCESS = 0;
     constexpr const char* KEY_TYPE = "type";
     constexpr const char* KEY_SUB_TYPE = "subType";
     constexpr const char* KEY_CALLER = "caller";
@@ -61,7 +61,7 @@ int32_t ThreatDetectionModel::Init(std::shared_ptr<IModelManager> api)
     return api_->SubscribeDb(EVENTIDS, listener_);
 }
 
-std::string ThreatDetectionModel::GetResult(uint32_t modelId)
+std::string ThreatDetectionModel::GetResult(uint32_t modelId, const std::string &param)
 {
     return {};
 }

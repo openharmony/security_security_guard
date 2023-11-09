@@ -31,9 +31,10 @@ namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr const char *PKG_NAME = "ohos.security.securityguard";
     constexpr const char *AUDIT_SWITCH = "audit_switch";
-    constexpr const int32_t AUDIT_SWITCH_OFF = 0;
-    constexpr const int32_t AUDIT_SWITCH_ON = 1;
-    constexpr const int64_t ACCOUNT_ID = 1011015001;
+    constexpr int32_t AUDIT_SWITCH_OFF = 0;
+    constexpr int32_t AUDIT_SWITCH_ON = 1;
+    constexpr int64_t ACCOUNT_ID = 1011015001;
+    constexpr int64_t CERT_ID = 1011015014;
 }
 
 class InitCallback : public DistributedHardware::DmInitCallback {
@@ -140,7 +141,7 @@ int DatabaseManager::InsertEvent(uint32_t source, SecEvent& event)
     if (config.source == source) {
         std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(event.eventId);
         SGLOGD("table=%{public}s, eventId=%{public}ld", table.c_str(), config.eventId);
-        if (event.eventId == ACCOUNT_ID) {
+        if (event.eventId == ACCOUNT_ID || event.eventId == CERT_ID) {
             DbChanged(IDbListener::INSERT, event);
         }
         std::lock_guard<std::mutex> lock(dbMutex_);

@@ -22,11 +22,12 @@
 #include "model_analysis_define.h"
 #include "model_cfg_marshalling.h"
 #include "security_guard_log.h"
+#include "security_guard_utils.h"
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr const char *AUDIT_MODEL_ID = "3001000003";
-    constexpr const int32_t DB_MAX_VALUE = 100000;
+    constexpr int32_t DB_MAX_VALUE = 100000;
 }
 
 bool EventConfig::Load(int mode)
@@ -102,13 +103,7 @@ bool EventConfig::Update()
         return false;
     }
 
-    std::ofstream stream(CONFIG_UPTATE_FILES[EVENT_CFG_INDEX], std::ios::out | std::ios::trunc);
-    if (!stream.is_open() || !stream) {
-        SGLOGE("stream error, %{public}s", strerror(errno));
-        return false;
-    }
-    stream << jsonObj;
-    stream.close();
+    SecurityGuardUtils::CopyFile(CONFIG_CACHE_FILES[EVENT_CFG_INDEX], CONFIG_UPTATE_FILES[EVENT_CFG_INDEX]);
     ConfigDataManager::GetInstance().ResetEventMap();
     EventConfig::CacheEventConfig(configs);
     SGLOGI("cache EventConfig success");

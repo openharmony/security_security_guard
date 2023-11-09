@@ -42,20 +42,30 @@
         "relational_store",
         "safwk",
         "samgr",
-        "time_service"
+        "time_service",
+        "appverify",
+        "nativetoken"
+      ],
+      "third_party": [
+        "openssl",
+        "glib"
       ]
     },
     "build": {
       "sub_component": [
         "//base/security/security_guard/sa_profile:sg_sa_profile_standard",
         "//base/security/security_guard/sa_profile:security_guard.init",
+        "//base/security/security_guard/oem_property:security_audit_cfg",
         "//base/security/security_guard/oem_property:security_guard_cfg",
         "//base/security/security_guard/oem_property:security_guard_model_cfg",
         "//base/security/security_guard/oem_property:security_guard_event_cfg",
         "//base/security/security_guard:sg_classify_service_build_module",
         "//base/security/security_guard:sg_collect_service_build_module",
         "//base/security/security_guard:security_guard_napi",
-        "//base/security/security_guard:security_guard_capi"
+        "//base/security/security_guard:security_guard_capi",
+        "//base/security/security_guard/sa_profile:security_collector_sa_profile_standard",
+        "//base/security/security_guard/sa_profile:security_collector.init",
+        "//base/security/security_guard:security_collector_service_build_module"
       ],
       "inner_kits": [
         {
@@ -78,10 +88,24 @@
           }
         },
         {
+          "name": "//base/security/security_guard/interfaces/inner_api/collector:libsg_collector_sdk",
+          "header": {
+            "header_files": [
+              "collector_manager.h",
+              "i_collector_fwk.h",
+              "i_collector_subscriber.h",
+              "i_collector.h",
+              "event_define.h"
+            ],
+            "header_base": "//base/security/security_guard/interfaces/inner_api/collector/include"
+          }
+        },
+        {
           "name": "//base/security/security_guard/interfaces/inner_api/obtaindata:libsg_obtaindata_sdk",
           "header": {
             "header_files": [
-              "sg_obtaindata_client.h"
+              "sg_obtaindata_client.h",
+              "acquire_data_manager.h"
             ],
             "header_base": "//base/security/security_guard/interfaces/inner_api/obtaindata/include"
           }

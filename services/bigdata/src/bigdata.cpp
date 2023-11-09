@@ -24,6 +24,9 @@ namespace {
     const std::string EVENT_SIZE = "EVENT_SIZE";
     const std::string EVENT_INFO = "EVENT_INFO";
     const std::string RISK_STATUS = "RISK_STATUS";
+    const std::string EVENT_ID = "EVENT_ID";
+    const std::string SUB_RET = "SUB_RET";
+    const std::string UNSUB_RET = "UNSUB_RET";
 }
 
 void BigData::ReportObatinDataEvent(const ObatinDataEvent &event)
@@ -38,5 +41,19 @@ void BigData::ReportClassifyEvent(const ClassifyEvent &event)
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "RISK_ANALYSIS",
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid,
         CALL_TIME, event.time, EVENT_INFO, event.eventInfo, RISK_STATUS, event.status);
+}
+
+void BigData::ReportSubscribeEvent(const SubscribeEvent &event)
+{
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "EVENT_SUBSCRIBE",
+        OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid,
+        CALL_TIME, event.time, EVENT_INFO, event.eventInfo, EVENT_ID, event.eventId, SUB_RET, event.ret);
+}
+
+void BigData::ReportUnsubscribeEvent(const UnsubscribeEvent &event)
+{
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "EVENT_UNSUBSCRIBE",
+        OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid,
+        CALL_TIME, event.time, UNSUB_RET, event.ret);
 }
 }

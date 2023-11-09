@@ -30,14 +30,14 @@ public:
     ~RiskAnalysisManagerService() override = default;
     void OnStart() override;
     void OnStop() override;
-    int32_t RequestSecurityModelResult(std::string &devId, uint32_t modelId,
-        const sptr<IRemoteObject> &callback) override;
+    int32_t RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
+        const std::string &param, const sptr<IRemoteObject> &callback) override;
     int32_t SetModelState(uint32_t modelId, bool enable) override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
 
 private:
-    void PushRiskAnalysisTask(uint32_t modelId, std::shared_ptr<std::promise<std::string>> promise);
+    void PushRiskAnalysisTask(uint32_t modelId, std::string param, std::shared_ptr<std::promise<std::string>> promise);
 };
 } // namespace OHOS::Security::SecurityGuard
 

@@ -13,6 +13,7 @@
 
 import("//base/security/security_guard/security_guard.gni")
 import("//build/ohos.gni")
+import("//build/test.gni")
 
 group("sg_classify_service_build_module") {
   if (is_standard_system) {
@@ -70,5 +71,13 @@ group("security_guard_napi") {
     if (support_jsapi) {
       deps = [ "${sg_root_dir}/frameworks/js/napi:securityguard_napi" ]
     }
+  }
+}
+
+group("security_collector_service_build_module") {
+  if (is_standard_system) {
+    deps = [
+      "${sg_root_dir}/services/security_collector:security_collector_service",
+    ]
   }
 }

@@ -29,7 +29,7 @@ class RiskAnalysisManagerCallbackProxy : public IRemoteProxy<IRiskAnalysisManage
 public:
     explicit RiskAnalysisManagerCallbackProxy(const sptr<IRemoteObject> &impl);
     ~RiskAnalysisManagerCallbackProxy() override = default;
-    int32_t ResponseSecurityModelResult(std::string &devId, uint32_t modelId, std::string &result) override;
+    int32_t ResponseSecurityModelResult(const std::string &devId, uint32_t modelId, std::string &result) override;
 
 private:
     static inline BrokerDelegator<RiskAnalysisManagerCallbackProxy> delegator_;

@@ -23,9 +23,9 @@ using OHOS::HiviewDFX::HiLog;
 namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0xD002F10, "SG_OEM_MODE" };
-    constexpr const uint32_t OEM_MODE_MODEL_ID = 3001000005;
-    constexpr const int32_t SUCCESS = 0;
-    constexpr const int32_t PARAM_MAN_LEN = 10;
+    constexpr uint32_t OEM_MODE_MODEL_ID = 3001000005;
+    constexpr int32_t SUCCESS = 0;
+    constexpr int32_t PARAM_MAN_LEN = 10;
     constexpr const char* RISK_STATUS = "risk";
     constexpr const char* SAFE_STATUS = "safe";
     constexpr const char* UNKNOWN_STATUS = "unknown";
@@ -44,7 +44,7 @@ int32_t OemModeModel::Init(std::shared_ptr<IModelManager> api)
     return SUCCESS;
 }
 
-std::string OemModeModel::GetResult(uint32_t modelId)
+std::string OemModeModel::GetResult(uint32_t modelId, const std::string &param)
 {
     HiLog::Info(LABEL, "GetResult");
     if (modelId != OEM_MODE_MODEL_ID) {

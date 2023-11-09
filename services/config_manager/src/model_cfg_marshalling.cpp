@@ -22,6 +22,15 @@
 namespace OHOS::Security::SecurityGuard {
 using nlohmann::json;
 
+void from_json(const nlohmann::json &jsonObj, AppDetectionCfg &config)
+{
+    if (jsonObj.find("detectionCategory") == jsonObj.end()) {
+        return;
+    }
+
+    config.detectionCategory = jsonObj.at("detectionCategory").get<std::string>();
+}
+
 void from_json(const nlohmann::json &jsonObj, Field &field)
 {
     if (jsonObj.find("fieldName") == jsonObj.end() || jsonObj.find("fieldType") == jsonObj.end() ||
@@ -140,6 +149,7 @@ void from_json(const json &jsonObj, ModelCfg &modelCfg)
     JsonCfg::Unmarshal(modelCfg.caller, jsonObj, MODEL_CFG_CALLER_KEY);
     JsonCfg::Unmarshal(modelCfg.type, jsonObj, MODEL_CFG_TYPE_KEY);
     JsonCfg::Unmarshal(modelCfg.config, jsonObj, MODEL_CFG_BUILD_IN_CFG_KEY);
+    JsonCfg::Unmarshal(modelCfg.appDetectionConfig, jsonObj, MODEL_CFG_APP_DETECTION_CFG_KEY);
 }
 
 void to_json(json &jsonObj, const EventCfg &eventCfg)
