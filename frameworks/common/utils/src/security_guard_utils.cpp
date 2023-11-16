@@ -99,19 +99,25 @@ std::string SecurityGuardUtils::GetDate()
 void SecurityGuardUtils::CopyFile(const std::string &srcPath, const std::string &dstPath)
 {
     std::ifstream src(srcPath, std::ios::binary);
-    std::ofstream dst(dstPath, std::ios::binary);
-    if (!src.is_open() || !src || !dst.is_open() || !dst) {
+    if (!src.is_open() || !src) {
         SGLOGE("copy file stream error");
         src.close();
-        dst.close();
         return;
     }
     if (src.seekg(0, std::ios_base::end).tellg() > FILE_MAX_SIZE) {
         SGLOGE("cfg file is too large");
         src.close();
+        return;
+    }
+    src.seekg(0, std::ios::beg);
+    std::ofstream dst(dstPath, std::ios::binary);
+    if (!dst.is_open() || !dst) {
+        SGLOGE("copy file stream error");
+        src.close();
         dst.close();
         return;
     }
+
     dst << src.rdbuf();
     src.close();
     dst.close();
