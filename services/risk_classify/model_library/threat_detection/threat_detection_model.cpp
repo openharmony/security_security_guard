@@ -15,6 +15,7 @@
 
 #include "threat_detection_model.h"
 
+#include "hilog/log.h"
 #include "time_service_client.h"
 
 using OHOS::HiviewDFX::HiLog;
