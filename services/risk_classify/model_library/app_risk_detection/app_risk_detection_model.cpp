@@ -35,7 +35,7 @@
 using OHOS::HiviewDFX::HiLog;
 namespace OHOS::Security::SecurityGuard {
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0xD002F10, "SG_APP_RISK_DETECTION" };
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0xD002F07, "SG_APP_RISK_DETECTION" };
     constexpr int32_t FAILED = -1;
     constexpr int32_t SUCCESS = 0;
 

@@ -22,7 +22,7 @@ using OHOS::HiviewDFX::HiLog;
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0xD002F10, "SG_THREAT_DETECTION" };
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0xD002F07, "SG_THREAT_DETECTION" };
     constexpr int64_t ACCOUNT_ID = 1011015001;
     constexpr int64_t ACCOUNT_ANONYMIZE_ID = 1011009200;
     constexpr int32_t FAILED = -1;

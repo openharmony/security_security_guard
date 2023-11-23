@@ -21,7 +21,7 @@
 namespace OHOS::Security::SecurityCollector {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
     LOG_CORE,
-    0xD002F11,
+    0xD002F07,
     "S_COLLCTOR"
 };
 

@@ -21,7 +21,7 @@
 namespace OHOS::Security::SecurityGuard {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
     LOG_CORE,
-    0xD002F10,
+    0xD002F07,
     "SG_Service"
 };
 

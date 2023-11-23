@@ -22,7 +22,7 @@ using OHOS::HiviewDFX::HiLog;
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0xD002F10, "SG_OEM_MODE" };
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0xD002F07, "SG_OEM_MODE" };
     constexpr uint32_t OEM_MODE_MODEL_ID = 3001000005;
     constexpr int32_t SUCCESS = 0;
     constexpr int32_t PARAM_MAN_LEN = 10;
