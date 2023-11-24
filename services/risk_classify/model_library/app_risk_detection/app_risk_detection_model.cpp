@@ -217,7 +217,7 @@ public:
         return result.ToString();
     }
 private:
-    std::string ConvertToHex(const std::vector<unsigned char> &buf)
+    static std::string ConvertToHex(const std::vector<unsigned char> &buf)
     {
         std::string hexStr;
         for (auto c : buf) {
@@ -253,7 +253,7 @@ private:
         return  ConvertToHex(hash);
     }
 
-    uint64_t RandomSampleOffset(uint64_t fileSize)
+    static uint64_t RandomSampleOffset(uint64_t fileSize)
     {
         std::random_device rd;
         std::mt19937_64 gen(rd());

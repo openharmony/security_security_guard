@@ -91,14 +91,15 @@ bool DataCollection::StopCollectors(const std::vector<int64_t>& eventIds)
         if (collector == nullptr) {
             LOGE("CallGetCollector error");
             ret = false;
+        } else {
+            int result = collector->Stop();
+            if (result != 0) {
+                LOGE("Failed to stop collector, eventId is %{public}ld", eventId);
+                ret = false;
+            }
+            LOGI("Stop collector");
+            eventIdToLoaderMap_.erase(loader);
         }
-        int result = collector->Stop();
-        if (result != 0) {
-            LOGE("Failed to stop collector, eventId is %{public}ld", eventId);
-            ret = false;
-        }
-        LOGI("Stop collector");
-        eventIdToLoaderMap_.erase(loader);
     }
     LOGI("StopCollectors finish");
     return ret;
@@ -159,12 +160,13 @@ ErrorCode DataCollection::GetCollectorPath(int64_t eventId, std::string& path)
         return JSON_ERR;
     }
 
-    for (ModuleCfgSt module : moduleCfgs) {
-        if (module.eventId == eventId) {
-            path = module.modulePath + module.moduleName;
-            return SUCCESS;
-        }
+    auto it = std::find_if(moduleCfgs.begin(), moduleCfgs.end(),
+        [eventId] (ModuleCfgSt &module) { return module.eventId == eventId;});
+    if (it != moduleCfgs.end()) {
+        path = it->modulePath + it->moduleName;
+        return SUCCESS;
     }
+
     LOGE("The eventId does not exist");
     return FAILED;
 }

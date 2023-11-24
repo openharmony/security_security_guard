@@ -27,10 +27,7 @@ AcquireDataSubscribeManager& AcquireDataSubscribeManager::GetInstance()
     return instance;
 }
 
-AcquireDataSubscribeManager::AcquireDataSubscribeManager()
-{
-    listener_ = std::make_shared<DbListener>();
-}
+AcquireDataSubscribeManager::AcquireDataSubscribeManager() : listener_(std::make_shared<DbListener>()) {}
 
 int AcquireDataSubscribeManager::InsertSubscribeRecord(
     const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &callback)

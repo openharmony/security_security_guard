@@ -47,7 +47,7 @@ public:
 private:
     class SubscriberDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
-        SubscriberDeathRecipient(wptr<DataCollectManagerService> service) : service_(service) {}
+        explicit SubscriberDeathRecipient(wptr<DataCollectManagerService> service) : service_(service) {}
         ~SubscriberDeathRecipient() override = default;
         void OnRemoteDied(const wptr<IRemoteObject> &remote) override ;
     private:
