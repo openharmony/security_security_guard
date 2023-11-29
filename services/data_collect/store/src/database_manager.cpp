@@ -33,8 +33,6 @@ namespace {
     constexpr const char *AUDIT_SWITCH = "audit_switch";
     constexpr int32_t AUDIT_SWITCH_OFF = 0;
     constexpr int32_t AUDIT_SWITCH_ON = 1;
-    constexpr int64_t ACCOUNT_ID = 1011015001;
-    constexpr int64_t CERT_ID = 1011015014;
 }
 
 class InitCallback : public DistributedHardware::DmInitCallback {
@@ -141,24 +139,11 @@ int DatabaseManager::InsertEvent(uint32_t source, SecEvent& event)
     if (config.source == source) {
         std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(event.eventId);
         SGLOGD("table=%{public}s, eventId=%{public}ld", table.c_str(), config.eventId);
-        if (event.eventId == ACCOUNT_ID || event.eventId == CERT_ID) {
-            DbChanged(IDbListener::INSERT, event);
-        }
         std::lock_guard<std::mutex> lock(dbMutex_);
         if (table == AUDIT_TABLE) {
             SGLOGD("audit event insert");
-            if (PreferenceWrapper::GetInt(AUDIT_SWITCH, AUDIT_SWITCH_OFF) == AUDIT_SWITCH_OFF) {
-                SGLOGE("the audit function is not supported");
-                return NOT_SUPPORT;
-            }
-            // Check whether the upper limit is reached.
-            int64_t count = AuditEventMemRdbHelper::GetInstance().CountEventByEventId(event.eventId);
-            if (count >= config.storageRomNums) {
-                (void) AuditEventMemRdbHelper::GetInstance().DeleteOldEventByEventId(event.eventId,
-                    count + 1 - config.storageRomNums);
-            }
-            FillUserIdAndDeviceId(event);
-            return AuditEventMemRdbHelper::GetInstance().InsertEvent(event);
+            DbChanged(IDbListener::INSERT, event);
+            return SUCCESS;
         }
         SGLOGD("risk event insert, eventId=%{public}ld", event.eventId);
         // Check whether the upper limit is reached.
