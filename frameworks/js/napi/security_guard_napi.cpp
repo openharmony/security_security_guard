@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <syscall.h>
 #include <unordered_map>
+#include <algorithm>
 
 #include "napi_request_data_manager.h"
 #include "security_guard_define.h"
@@ -36,7 +37,7 @@ constexpr int NAPI_REQUEST_SECURITY_MODEL_RESULT_ARGS_MIN_CNT = 2;
 constexpr int NAPI_REQUEST_SECURITY_MODEL_RESULT_ARGS_MAX_CNT = 3;
 constexpr int NAPI_SET_MODEL_STATE_ARGS_MAX_CNT = 2;
 
-constexpr int TIME_MAX_LEN = 20;
+constexpr int TIME_MAX_LEN = 15;
 constexpr int CALLBACK_TYPE_MAX_LEN = 10;
 
 static const std::unordered_map<int32_t, std::pair<int32_t, std::string>> g_errorStringMap = {
@@ -395,6 +396,11 @@ static napi_value GetConditionsEventIds(napi_env env, napi_value object,
     return NapiCreateInt32(env, SUCCESS);
 }
 
+static bool IsNum(const std::string &s)
+{
+    return std::all_of(s.begin(), s.end(), isdigit);
+}
+
 static napi_value GetConditionsTime(napi_env env, napi_value object, const std::string &key, std::string &value)
 {
     char time[TIME_MAX_LEN] = {0};
@@ -418,38 +424,45 @@ static napi_value GetConditionsTime(napi_env env, napi_value object, const std::
         return nullptr;
     }
     value = time;
+    if (!IsNum(value) || value.length() != (TIME_MAX_LEN - 1)) {
+        SGLOGE("time invalid %{publid}s", key.c_str());
+        return nullptr;
+    }
     return NapiCreateInt32(env, SUCCESS);
 }
 
-static napi_value ParseConditions(napi_env env, napi_value object,
+static std::tuple<napi_value, std::string> ParseConditions(napi_env env, napi_value object,
     std::shared_ptr<RequestSecurityEventInfoContext> context)
 {
     napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, object, &type);
     if (status != napi_ok || type != napi_object) {
         SGLOGE("type of param eventInfo is not object");
-        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "param conditions error"));
-        return nullptr;
+        return std::make_tuple(nullptr, "type of param eventInfo is not object");
     }
 
     napi_value result = GetConditionsEventIds(env, object, context);
     if (result == nullptr) {
         SGLOGE("get conditions eventIds error");
-        return nullptr;
+        return std::make_tuple(nullptr, "get conditions eventIds error");
     }
 
     std::string beginTime;
     result = GetConditionsTime(env, object, "beginTime", beginTime);
     if (result == nullptr) {
         SGLOGE("get conditions beginTime error");
-        return nullptr;
+        return std::make_tuple(nullptr, "get conditions beginTime error");
     }
 
     std::string endTime;
     result = GetConditionsTime(env, object, "endTime", endTime);
     if (result == nullptr) {
         SGLOGE("get conditions endTime error");
-        return nullptr;
+        return std::make_tuple(nullptr, "get conditions endTime error");
+    }
+    if (!beginTime.empty() && !endTime.empty() && beginTime > endTime) {
+        SGLOGE("Time matching error");
+        return std::make_tuple(nullptr, "Time matching error");
     }
 
     context->conditions = "{\"eventId\":[";
@@ -465,7 +478,7 @@ static napi_value ParseConditions(napi_env env, napi_value object,
         context->conditions += ", \"endTime\": \""+ endTime + "\"";
     }
     context->conditions += "}";
-    return NapiCreateInt32(env, SUCCESS);
+    return std::make_tuple(NapiCreateInt32(env, SUCCESS), std::string{});
 }
 
 static napi_value On(napi_env env, napi_callback_info info)
@@ -643,8 +656,8 @@ static napi_value NapiRequestSecurityEventInfo(napi_env env, napi_callback_info 
     uint32_t index = 0;
     char deviceIdArr[DEVICE_ID_MAX_LEN];
     size_t len = DEVICE_ID_MAX_LEN;
-    napi_value result = GetString(env, argv[index], "deviceId", deviceIdArr, len);
-    if (result == nullptr) {
+    napi_value ret = GetString(env, argv[index], "deviceId", deviceIdArr, len);
+    if (ret == nullptr) {
         SGLOGE("parse deviceId error");
         return nullptr;
     }
@@ -659,10 +672,11 @@ static napi_value NapiRequestSecurityEventInfo(napi_env env, napi_callback_info 
     context->env = env;
     context->threadId = syscall(SYS_gettid);
     index++;
-    result = ParseConditions(env, argv[index], context);
+    auto [result, errorMsg] = ParseConditions(env, argv[index], context);
     if (result == nullptr) {
         SGLOGE("parse conditions error");
         NapiRequestDataManager::GetInstance().DeleteContext(env);
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, errorMsg));
         return nullptr;
     }
     index++;
@@ -974,12 +988,18 @@ static napi_value NapiNotifyCollector(napi_env env, napi_callback_info info)
         }
         int64_t duration = -1;
         napi_get_value_int64(env, argv[1], &duration);
+        if (duration <= 0) {
+            SGLOGE("duration of param is invalid");
+            napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "param invalid"));
+            return nullptr;
+        }
         context.duration = duration;
     }
 
     int32_t code = SecurityGuardSdkAdaptor::NotifyCollector(context.event, context.duration);
     if (code != SUCCESS) {
         SGLOGE("notify error, code=%{public}d", code);
+        napi_throw(env, GenerateBusinessError(env, code));
     }
     return NapiCreateInt32(env, ConvertToJsErrCode(code));
 }

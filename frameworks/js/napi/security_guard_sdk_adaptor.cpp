@@ -27,8 +27,11 @@
 #include "security_collector_manager_proxy.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
+#include "collector_service_loader.h"
 
 namespace OHOS::Security::SecurityGuard {
+namespace  { constexpr int64_t NOTIFY_COLLECTOR_EVENT_ID = 111111; }
+
 int32_t SecurityGuardSdkAdaptor::RequestSecurityEventInfo(std::string &devId, std::string &eventList,
     RequestRiskDataCallback callback)
 {
@@ -133,21 +136,16 @@ int32_t SecurityGuardSdkAdaptor::SetModelState(uint32_t modelId, bool enable)
 
 int32_t SecurityGuardSdkAdaptor::NotifyCollector(const SecurityCollector::Event &event, int64_t duration)
 {
-    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (registry == nullptr) {
-        SGLOGE("GetSystemAbilityManager error");
-        return NULL_OBJECT;
+    SGLOGI("On NotifyCollector...");
+    if (event.eventId != NOTIFY_COLLECTOR_EVENT_ID) {
+        return FAILED;
     }
-
-    auto object = registry->GetSystemAbility(SecurityCollector::SECURITY_COLLECTOR_MANAGER_SA_ID);
+    auto object = SecurityCollector::CollectorServiceLoader::GetInstance().LoadCollectorService();
     auto proxy = iface_cast<SecurityCollector::ISecurityCollectorManager>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
     }
-
-    SGLOGE("event  %{public}ld, %{public}s, %{public}s,%{public}s",
-        event.eventId, event.version.c_str(), event.content.c_str(), event.extra.c_str());
 
     SecurityCollector::SecurityCollectorSubscribeInfo subscriberInfo{event, duration, true};
     sptr<SecurityCollector::SecurityCollectorManagerCallbackService> callback =
@@ -158,9 +156,6 @@ int32_t SecurityGuardSdkAdaptor::NotifyCollector(const SecurityCollector::Event 
     }
     int32_t ret = proxy->Subscribe(subscriberInfo, callback);
     SGLOGI("NotifyCollector result, ret=%{public}d", ret);
-    if (ret != SUCCESS) {
-        return ret;
-    }
-    return SUCCESS;
+    return ret;
 }
 } // OHOS::Security::SecurityGuard

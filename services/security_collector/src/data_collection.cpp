@@ -161,7 +161,7 @@ ErrorCode DataCollection::GetCollectorPath(int64_t eventId, std::string& path)
     }
 
     auto it = std::find_if(moduleCfgs.begin(), moduleCfgs.end(),
-        [eventId] (ModuleCfgSt &module) { return module.eventId == eventId;});
+        [eventId] (const ModuleCfgSt &module) { return module.eventId == eventId;});
     if (it != moduleCfgs.end()) {
         path = it->modulePath + it->moduleName;
         return SUCCESS;

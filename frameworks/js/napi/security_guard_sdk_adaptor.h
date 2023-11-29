@@ -19,6 +19,7 @@
 #include "event_info.h"
 #include "event_define.h"
 #include "security_guard_define.h"
+#include "system_ability_load_callback_stub.h"
 
 namespace OHOS::Security::SecurityGuard {
 class SecurityGuardSdkAdaptor {

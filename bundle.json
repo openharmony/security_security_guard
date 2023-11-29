@@ -43,8 +43,7 @@
         "safwk",
         "samgr",
         "time_service",
-        "appverify",
-        "nativetoken"
+        "appverify"
       ],
       "third_party": [
         "openssl",
