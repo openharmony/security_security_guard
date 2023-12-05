@@ -128,7 +128,7 @@ void from_json(const json &jsonObj, ModelCfg &modelCfg)
     JsonCfg::Unmarshal(preLoads, jsonObj, MODEL_CFG_PRELOAD_KEY);
     for (const std::string& eventId : preLoads) {
         int64_t tmp = 0;
-        if (!SecurityGuardUtils::StrToI64(eventId, tmp)) {
+        if (eventId == "" || !SecurityGuardUtils::StrToI64(eventId, tmp)) {
             continue;
         }
         modelCfg.preload.emplace_back(tmp);
@@ -138,7 +138,7 @@ void from_json(const json &jsonObj, ModelCfg &modelCfg)
     JsonCfg::Unmarshal(eventList, jsonObj, MODEL_CFG_EVENT_LIST_KEY);
     for (const std::string& eventId : eventList) {
         int64_t tmp = 0;
-        if (!SecurityGuardUtils::StrToI64(eventId, tmp)) {
+        if (eventId == "" || !SecurityGuardUtils::StrToI64(eventId, tmp)) {
             continue;
         }
         modelCfg.eventList.emplace_back(tmp);

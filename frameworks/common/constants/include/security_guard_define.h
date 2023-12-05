@@ -61,16 +61,15 @@ using ClassifyEvent = struct {
     std::string extend;
 };
 
-using SubscribeEvent = struct {
+using SgSubscribeEvent = struct {
     int32_t pid;
     std::string time;
-    std::string eventInfo;
     int64_t eventId;
     int32_t ret;
     std::string extend;
 };
 
-using UnsubscribeEvent = struct {
+using SgUnsubscribeEvent = struct {
     int32_t pid;
     std::string time;
     int32_t ret;

@@ -43,6 +43,17 @@ ohos_source_set("sg_model_manager_stamp") {
     "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager_impl.cpp",
   ]
 
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
+  }
+  stack_protector_ret = true
+
   deps = [
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/data_collect:sg_collect_service",

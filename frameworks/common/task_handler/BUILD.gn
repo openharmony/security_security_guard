@@ -23,5 +23,16 @@ ohos_source_set("sg_task_stamp") {
   sources =
       [ "${sg_root_dir}/frameworks/common/task_handler/src/task_handler.cpp" ]
 
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
+  }
+  stack_protector_ret = true
+
   external_deps = [ "c_utils:utils" ]
 }

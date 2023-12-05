@@ -138,7 +138,7 @@ int32_t SecurityGuardSdkAdaptor::NotifyCollector(const SecurityCollector::Event 
 {
     SGLOGI("On NotifyCollector...");
     if (event.eventId != NOTIFY_COLLECTOR_EVENT_ID) {
-        return FAILED;
+        return BAD_PARAM;
     }
     auto object = SecurityCollector::CollectorServiceLoader::GetInstance().LoadCollectorService();
     auto proxy = iface_cast<SecurityCollector::ISecurityCollectorManager>(object);

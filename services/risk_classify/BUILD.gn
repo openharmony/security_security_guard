@@ -51,6 +51,17 @@ ohos_shared_library("sg_classify_service") {
     "${sg_root_dir}/services/risk_classify/src/risk_analysis_model.cpp",
   ]
 
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
+  }
+  stack_protector_ret = true
+
   deps = [
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",

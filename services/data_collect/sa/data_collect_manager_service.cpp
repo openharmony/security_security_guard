@@ -365,14 +365,13 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     callback->AddDeathRecipient(deathRecipient_);
     int32_t ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, callback);
 
-    SubscribeEvent event;
+    SgSubscribeEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
     event.eventId = subscribeInfo.GetEvent().eventId;
-    event.eventInfo = subscribeInfo.GetEvent().content;
     event.ret = ret;
     SGLOGI("DataCollectManagerService, InsertSubscribeRecord eventId=%{public}ld", event.eventId);
-    BigData::ReportSubscribeEvent(event);
+    BigData::ReportSgSubscribeEvent(event);
 
     return ret;
 }
@@ -392,12 +391,12 @@ int32_t DataCollectManagerService::Unsubscribe(const sptr<IRemoteObject> &callba
     }
 
     int32_t ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(callback);
-    UnsubscribeEvent event;
+    SgUnsubscribeEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
     event.ret = ret;
     SGLOGI("DataCollectManagerService, RemoveSubscribeRecord ret=%{ret}d", ret);
-    BigData::ReportUnsubscribeEvent(event);
+    BigData::ReportSgUnsubscribeEvent(event);
     return ret;
 }
 

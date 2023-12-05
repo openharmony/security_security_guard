@@ -43,16 +43,16 @@ void BigData::ReportClassifyEvent(const ClassifyEvent &event)
         CALL_TIME, event.time, EVENT_INFO, event.eventInfo, RISK_STATUS, event.status);
 }
 
-void BigData::ReportSubscribeEvent(const SubscribeEvent &event)
+void BigData::ReportSgSubscribeEvent(const SgSubscribeEvent &event)
 {
-    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "EVENT_SUBSCRIBE",
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "SG_EVENT_SUBSCRIBE",
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid,
-        CALL_TIME, event.time, EVENT_INFO, event.eventInfo, EVENT_ID, event.eventId, SUB_RET, event.ret);
+        CALL_TIME, event.time, EVENT_ID, event.eventId, SUB_RET, event.ret);
 }
 
-void BigData::ReportUnsubscribeEvent(const UnsubscribeEvent &event)
+void BigData::ReportSgUnsubscribeEvent(const SgUnsubscribeEvent &event)
 {
-    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "EVENT_UNSUBSCRIBE",
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "SG_EVENT_UNSUBSCRIBE",
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid,
         CALL_TIME, event.time, UNSUB_RET, event.ret);
 }

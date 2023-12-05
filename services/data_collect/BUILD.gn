@@ -44,6 +44,17 @@ ohos_source_set("sg_uevent_listener_stamp") {
     "${sg_root_dir}/services/risk_collect/src/uevent_notify.cpp",
   ]
 
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
+  }
+  stack_protector_ret = true
+
   deps = [ "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp" ]
 
   external_deps = [
@@ -98,6 +109,17 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/services/data_collect/store/src/rdb_event_store_callback.cpp",
     "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
   ]
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
+  }
+  stack_protector_ret = true
 
   deps = [
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",

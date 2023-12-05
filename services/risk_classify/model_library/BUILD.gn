@@ -27,7 +27,18 @@ ohos_shared_library("sg_app_risk_detection") {
       [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
 
   sources = [ "${sg_root_dir}/services/risk_classify/model_library/app_risk_detection/app_risk_detection_model.cpp" ]
-  
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
+  }
+  stack_protector_ret = true
+
   deps = [ "//third_party/openssl:libcrypto_shared" ]
   
   external_deps = [
@@ -48,6 +59,17 @@ ohos_shared_library("sg_system_risk_detection") {
 
   sources = [ "${sg_root_dir}/services/risk_classify/model_library/system_risk_detection/system_risk_detection_model.cpp" ]
 
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
+  }
+  stack_protector_ret = true
+
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
@@ -64,6 +86,17 @@ ohos_shared_library("sg_oem_mode_detection") {
       [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
 
   sources = [ "${sg_root_dir}/services/risk_classify/model_library/oem_mode/oem_mode_model.cpp" ]
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
+  }
+  stack_protector_ret = true
 
   external_deps = [
     "c_utils:utils",
@@ -82,6 +115,17 @@ ohos_shared_library("sg_threat_detection") {
       [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
 
   sources = [ "${sg_root_dir}/services/risk_classify/model_library/threat_detection/threat_detection_model.cpp" ]
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
+  }
+  stack_protector_ret = true
 
   external_deps = [
     "ability_base:want",

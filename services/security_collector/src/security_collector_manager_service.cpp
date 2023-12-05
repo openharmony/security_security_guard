@@ -15,6 +15,7 @@
 
 #include "security_collector_manager_service.h"
 
+#include "hisysevent.h"
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
 #include "system_ability_definition.h"
@@ -29,6 +30,13 @@ namespace OHOS::Security::SecurityCollector {
 namespace {
 constexpr char PERMISSION[] = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
 constexpr char NOTIFY_APP_NAME[] = "security_guard";
+
+const std::string CALLER_PID = "CALLER_PID";
+const std::string EVENT_VERSION = "EVENT_VERSION";
+const std::string SC_EVENT_ID = "EVENT_ID";
+const std::string SUB_RET = "SUB_RET";
+const std::string UNSUB_RET = "UNSUB_RET";
+
 std::string GetAppName()
 {
     AccessToken::AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
@@ -105,9 +113,8 @@ void SecurityCollectorManagerService::OnRemoveSystemAbility(int32_t systemAbilit
 int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscribeInfo &subscribeInfo,
     const sptr<IRemoteObject> &callback)
 {
-    LOGI("In subscribe, eventId:%{public}ld", subscribeInfo.GetEvent().eventId);
     Event event = subscribeInfo.GetEvent();
-    LOGE("xxxx subscribinfo:  duration:%{public}ld, isNotify:%{public}d, \n"
+    LOGI("in subscribe, subscribinfo: duration:%{public}ld, isNotify:%{public}d, \n"
         "eventid:%{public}ld, version:%{public}s, content:%{public}s, extra:%{public}s,",
         subscribeInfo.GetDuration(), (int)subscribeInfo.IsNotify(),
         event.eventId, event.version.c_str(), event.content.c_str(), event.extra.c_str());
@@ -136,17 +143,24 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
         }
         auto proxy = iface_cast<SecurityCollectorManagerCallbackProxy>(remote);
         if (proxy != nullptr) {
-            LOGI(" xxxx report to proxy");
             proxy->OnNotify(event);
-        } else {
-            LOGE("report proxy is null");
         }
     };
     auto subscriber = std::make_shared<SecurityCollectorSubscriber>(appName, subscribeInfo, callback, eventHandler);
+
+    ScSubscribeEvent subEvent;
+    subEvent.pid = IPCSkeleton::GetCallingPid();
+    subEvent.version = event.version;
+    subEvent.eventId = event.eventId;
+
     if (!SecurityCollectorSubscriberManager::GetInstance().SubscribeCollector(subscriber)) {
         UnsetDeathRecipient(callback);
+        subEvent.ret = BAD_PARAM;
+        ReportScSubscribeEvent(subEvent);
         return BAD_PARAM;
     }
+    subEvent.ret = SUCCESS;
+    ReportScSubscribeEvent(subEvent);
     LOGI("Out subscribe");
     return SUCCESS;
 }
@@ -159,6 +173,13 @@ int32_t SecurityCollectorManagerService::Unsubscribe(const sptr<IRemoteObject> &
         return NO_PERMISSION;
     }
     CleanSubscriber(callback);
+
+    ScUnsubscribeEvent subEvent;
+    subEvent.pid = IPCSkeleton::GetCallingPid();
+    subEvent.ret = SUCCESS;
+    LOGI("SecurityCollectorManagerService, CleanSubscriber");
+    ReportScUnsubscribeEvent(subEvent);
+
     LOGI("Out unubscribe");
     return SUCCESS;
 }
@@ -194,7 +215,7 @@ void SecurityCollectorManagerService::UnsetDeathRecipient(const sptr<IRemoteObje
 
 void SecurityCollectorManagerService::SubscriberDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
 {
-    LOGE("xxxx In");
+    LOGD("SecurityCollectorManagerService In");
     if (remote == nullptr) {
         LOGE("remote object is nullptr");
         return;
@@ -210,6 +231,19 @@ void SecurityCollectorManagerService::SubscriberDeathRecipient::OnRemoteDied(con
         return;
     }
     service->CleanSubscriber(object);
-    LOGE("xxxx out");
+    LOGD("SecurityCollectorManagerService out");
+}
+
+void SecurityCollectorManagerService::ReportScSubscribeEvent(const ScSubscribeEvent &event)
+{
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "SC_EVENT_SUBSCRIBE",
+        OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid,
+        EVENT_VERSION, event.version, SC_EVENT_ID, event.eventId, SUB_RET, event.ret);
+}
+
+void SecurityCollectorManagerService::ReportScUnsubscribeEvent(const ScUnsubscribeEvent &event)
+{
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "SC_EVENT_UNSUBSCRIBE",
+        OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid, UNSUB_RET, event.ret);
 }
 }

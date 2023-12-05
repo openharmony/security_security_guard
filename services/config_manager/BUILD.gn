@@ -40,6 +40,17 @@ ohos_shared_library("sg_config_manager") {
     "${sg_root_dir}/services/config_manager/src/model_config.cpp",
   ]
 
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
+  }
+  stack_protector_ret = true
+
   external_deps = [
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",

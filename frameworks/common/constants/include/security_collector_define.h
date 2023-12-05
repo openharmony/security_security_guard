@@ -51,6 +51,20 @@ using ModuleCfgSt = struct {
     uint32_t version;
 };
 
+using ScSubscribeEvent = struct {
+    int32_t pid;
+    std::string version;
+    int64_t eventId;
+    int32_t ret;
+    std::string extend;
+};
+
+using ScUnsubscribeEvent = struct {
+    int32_t pid;;
+    int32_t ret;
+    std::string extend;
+};
+
 const std::string MODULES = "modules";
 
 // model config key

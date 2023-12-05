@@ -23,7 +23,7 @@
 #include "security_collector_subscriber_manager.h"
 #include "security_collector_manager_callback_proxy.h"
 #include "security_collector_manager_stub.h"
-
+#include "security_collector_define.h"
 namespace OHOS::Security::SecurityCollector {
 class SecurityCollectorManagerService : public SystemAbility, public SecurityCollectorManagerStub, public NoCopyable {
 DECLARE_SYSTEM_ABILITY(SecurityCollectorManagerService);
@@ -48,7 +48,8 @@ public:
     int32_t Subscribe(const SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) override;
     int32_t Unsubscribe(const sptr<IRemoteObject> &callback) override;
-
+    static void ReportScSubscribeEvent(const ScSubscribeEvent &event);
+    static void ReportScUnsubscribeEvent(const ScUnsubscribeEvent &event);
 private:
     bool SetDeathRecipient(const sptr<IRemoteObject> &remote);
     void UnsetDeathRecipient(const sptr<IRemoteObject> &remote);
