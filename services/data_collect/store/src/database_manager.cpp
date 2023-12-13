@@ -139,7 +139,6 @@ int DatabaseManager::InsertEvent(uint32_t source, SecEvent& event)
     if (config.source == source) {
         std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(event.eventId);
         SGLOGD("table=%{public}s, eventId=%{public}ld", table.c_str(), config.eventId);
-        std::lock_guard<std::mutex> lock(dbMutex_);
         if (table == AUDIT_TABLE) {
             SGLOGD("audit event insert");
             DbChanged(IDbListener::INSERT, event);
