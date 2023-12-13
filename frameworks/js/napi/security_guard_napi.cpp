@@ -947,6 +947,12 @@ static std::string ParseOptionalString(napi_env env, napi_value object, const st
 static bool ParseEventForNotifyCollector(napi_env env, napi_value object,
     OHOS::Security::SecurityCollector::Event &event)
 {
+    napi_valuetype type = napi_undefined;
+    NAPI_CALL_BASE(env, napi_typeof(env, object, &type), false);
+    if (type != napi_object) {
+        SGLOGE("type of param event is not object");
+        return false;
+    }
     int64_t eventId = 0;
     if (ParseInt64(env, object, "eventId", eventId) == nullptr) {
         return false;
