@@ -25,6 +25,7 @@ ohos_shared_library("sg_config_manager") {
     "${sg_root_dir}/frameworks/common/json/include",
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/frameworks/common/utils/include",
+    "${sg_root_dir}/services/bigdata/include",
   ]
 
   sources = [
@@ -50,6 +51,8 @@ ohos_shared_library("sg_config_manager") {
     blocklist = "${sg_root_dir}/cfi_blocklist.txt"
   }
   stack_protector_ret = true
+
+  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp", ]
 
   external_deps = [
     "c_utils:utils",

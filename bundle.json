@@ -37,6 +37,7 @@
         "init",
         "ipc",
         "napi",
+        "netmanager_base",
         "os_account",
         "preferences",
         "relational_store",
@@ -60,12 +61,14 @@
         "//base/security/security_guard/oem_property:security_guard_event_cfg",
         "//base/security/security_guard:sg_classify_service_build_module",
         "//base/security/security_guard:sg_collect_service_build_module",
+        "//base/security/security_guard:collector_dns_event_module",
         "//base/security/security_guard:security_guard_napi",
         "//base/security/security_guard:security_guard_capi",
         "//base/security/security_guard/sa_profile:security_collector_sa_profile_standard",
         "//base/security/security_guard/sa_profile:security_collector.init",
         "//base/security/security_guard:security_collector_service_build_module",
-        "//base/security/security_guard:security_collector_seccomp_filter_module"
+        "//base/security/security_guard:security_collector_seccomp_filter_module",
+        "//base/security/security_guard:kernel_collector_build_module"
       ],
       "inner_kits": [
         {

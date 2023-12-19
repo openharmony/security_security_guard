@@ -43,14 +43,15 @@ private:
     int32_t GetAppSubscribeCount(const std::string &appName);
     int32_t GetAppSubscribeCount(const std::string &appName, int64_t eventId);
     void CleanSubscriber(const sptr<IRemoteObject> &remote) { unsubscribeHandler_(remote); }
+    void NotifySubscriber(const Event &event);
 
     class CollectorListenner : public ICollectorFwk {
     public:
-        using OnNotifyHandler = std::function<void(const Event &event)>;
-        CollectorListenner(OnNotifyHandler onNotifyHandler) : onNotifyHandler_(onNotifyHandler) {}
+        CollectorListenner(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber) : subscriber_(subscriber) {}
+        std::string GetExtraInfo() override;
         void OnNotify(const Event &event) override;
     private:
-        OnNotifyHandler onNotifyHandler_;
+        std::shared_ptr<SecurityCollectorSubscriber> subscriber_;
     };
     
     class CleanupTimer {
@@ -84,10 +85,10 @@ private:
     };
 
     UnsubscribeHandler unsubscribeHandler_{};
-    std::shared_ptr<ICollectorFwk> collectorListenner_{};
     std::mutex collectorMutex_{};
     std::map<int64_t, std::set<std::shared_ptr<SecurityCollectorSubscriber>>> eventToSubscribers_{};
     std::map<sptr<IRemoteObject>, std::shared_ptr<CleanupTimer>> timers_{};
+    std::map<int64_t, std::shared_ptr<ICollectorFwk>> eventToListenner_;
 };
 }
 #endif // SECURITY_GUARD_SECURITY_COLLECTOR_SUBSCRIBLER_MANAGER_H

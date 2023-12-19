@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,20 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "kernel_collector.h"
+#include "i_collector.h"
 
-#include "security_collector_manager_callback_service.h"
- 
-#include "security_collector_define.h"
-#include "security_collector_log.h"
-
-namespace OHOS::Security::SecurityCollector {
-
-int32_t SecurityCollectorManagerCallbackService::OnNotify(const Event &event)
+extern "C" OHOS::Security::SecurityCollector::ICollector *GetCollector()
 {
-    LOGD("eventId = %{public}ld callback", event.eventId);
-    if (subscriber_ != nullptr) {
-        subscriber_->OnNotify(event);
-    }
-    return SUCCESS;
-}
+    return &OHOS::Security::SecurityGuard::KernelCollector::GetInstance();
 }

@@ -24,27 +24,34 @@ namespace {
 }
 SecurityCollectorSubscriberManager::SecurityCollectorSubscriberManager()
 {
-    auto onNotifyHandler = [this] (const Event &event) {
-        std::lock_guard<std::mutex> lock(collectorMutex_);
-        LOGE("publish event: eventid:%{public}ld, version:%{public}s, content:%{public}s, extra:%{public}s",
-            event.eventId, event.version.c_str(), event.content.c_str(), event.extra.c_str());
-        const auto it = eventToSubscribers_.find(event.eventId);
-        if (it == eventToSubscribers_.end()) {
-            return;
-        }
-        for (const auto &subscriber : it->second) {
-            if (subscriber != nullptr) {
-                subscriber->OnChange(event);
-            }
-        }
-    };
-    collectorListenner_ = std::make_shared<SecurityCollectorSubscriberManager::CollectorListenner>(onNotifyHandler);
+}
+
+std::string SecurityCollectorSubscriberManager::CollectorListenner::GetExtraInfo()
+{
+    if (subscriber_) {
+        return subscriber_->GetSecurityCollectorSubscribeInfo().GetEvent().extra;
+    }
+    return {};
 }
 
 void SecurityCollectorSubscriberManager::CollectorListenner::OnNotify(const Event &event)
 {
-    if (onNotifyHandler_) {
-        onNotifyHandler_(event);
+    SecurityCollectorSubscriberManager::GetInstance().NotifySubscriber(event);
+}
+
+void SecurityCollectorSubscriberManager::NotifySubscriber(const Event &event)
+{
+    std::lock_guard<std::mutex> lock(collectorMutex_);
+    LOGE("publish event: eventid:%{public}ld, version:%{public}s, content:%{public}s, extra:%{public}s",
+        event.eventId, event.version.c_str(), event.content.c_str(), event.extra.c_str());
+    const auto it = eventToSubscribers_.find(event.eventId);
+    if (it == eventToSubscribers_.end()) {
+        return;
+    }
+    for (const auto &subscriber : it->second) {
+        if (subscriber != nullptr) {
+            subscriber->OnChange(event);
+        }
     }
 }
 
@@ -123,15 +130,19 @@ bool SecurityCollectorSubscriberManager::SubscribeCollector(
         LOGE("Already subscribed eventId:%{public}ld", eventId);
         return false;
     }
-
-    LOGI("Scheduling start collecctor, eventId:%{public}ld", eventId);
-    if (!DataCollection::GetInstance().StartCollectors(std::vector<int64_t>{eventId}, collectorListenner_)) {
-        LOGE("failed to start collectors");
-        return false;
+    if (eventToListenner_.count(eventId) == 0) {
+        auto collectorListenner = std::make_shared<SecurityCollectorSubscriberManager::CollectorListenner>(subscriber);
+        LOGI("Scheduling start collector, eventId:%{public}ld", eventId);
+        if (!DataCollection::GetInstance().StartCollectors(std::vector<int64_t>{eventId}, collectorListenner)) {
+            LOGE("failed to start collectors");
+            return false;
+        }
+        eventToListenner_.emplace(eventId, collectorListenner);
+    } else {
+        LOGI("Scheduling do not start collecctor, eventId:%{public}ld", eventId);
     }
     eventToSubscribers_[eventId].emplace(subscriber);
     LOGI("eventId:%{public}ld, callbackCount:%{public}ld", eventId, eventToSubscribers_[eventId].size());
-
     int64_t duration = subscriber->GetSecurityCollectorSubscribeInfo().GetDuration();
     if (duration > 0) {
         auto remote = subscriber->GetRemote();
@@ -165,6 +176,7 @@ bool SecurityCollectorSubscriberManager::UnsubscribeCollector(const sptr<IRemote
                     LOGE("failed to stop collectors");
                 }
                 eventToSubscribers_.erase(eventId);
+                eventToListenner_.erase(eventId);
             }
         }
     }

@@ -76,6 +76,12 @@ using SgUnsubscribeEvent = struct {
     std::string extend;
 };
 
+using ConfigUpdateEvent = struct {
+    std::string path;
+    std::string time;
+    int32_t ret;
+};
+
 using RequestCondition = struct {
     std::vector<int64_t> riskEvent;
     std::vector<int64_t> auditEvent;

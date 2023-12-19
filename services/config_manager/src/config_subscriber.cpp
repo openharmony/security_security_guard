@@ -21,6 +21,7 @@
 #include "directory_ex.h"
 #include "string_ex.h"
 
+#include "bigdata.h"
 #include "event_config.h"
 #include "config_define.h"
 #include "config_manager.h"
@@ -84,17 +85,25 @@ void ConfigSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData
         const std::string configPath = CONFIG_ROOT_PATH + names[0] + PATH_SEP + names[1];
         std::vector<std::string> files;
         GetDirFiles(configPath, files);
+        ConfigUpdateEvent event{};
         for (const std::string &file : files) {
+            bool isSuccess = false;
             SGLOGD("file path=%{public}s", file.c_str());
             if (file == CONFIG_CACHE_FILES[EVENT_CFG_INDEX]) {
-                (void)ConfigManager::UpdataConfig<EventConfig>();
+                isSuccess = ConfigManager::UpdataConfig<EventConfig>();
             } else if (file == CONFIG_CACHE_FILES[MODEL_CFG_INDEX]) {
-                (void)ConfigManager::UpdataConfig<ModelConfig>();
+                isSuccess = ConfigManager::UpdataConfig<ModelConfig>();
             } else if (file == CONFIG_CACHE_FILES[SIG_RULE_CFG_INDEX]) {
-                SecurityGuardUtils::CopyFile(file, CONFIG_UPTATE_FILES[SIG_RULE_CFG_INDEX]);
+                isSuccess = SecurityGuardUtils::CopyFile(file, CONFIG_UPTATE_FILES[SIG_RULE_CFG_INDEX]);
             } else if (file == CONFIG_CACHE_FILES[URL_RULE_CFG_INDEX]) {
-                SecurityGuardUtils::CopyFile(file, CONFIG_UPTATE_FILES[URL_RULE_CFG_INDEX]);
+                isSuccess = SecurityGuardUtils::CopyFile(file, CONFIG_UPTATE_FILES[URL_RULE_CFG_INDEX]);
             }
+            event.path = file;
+            event.time = SecurityGuardUtils::GetDate();
+            event.ret = isSuccess ? SUCCESS : FAILED;
+            SGLOGD("file path=%{public}s, TIME=%{public}s, ret=%{public}d", event.path.c_str(), event.time.c_str(),
+                event.ret);
+            BigData::ReportConfigUpdateEvent(event);
             bool success = RemoveFile(file);
             if (!success) {
                 SGLOGW("remove file error, %{public}s", strerror(errno));

@@ -41,9 +41,10 @@ namespace {
 
     constexpr const char *RISK_RESULT_STR[] = {"unknown", "risk", "safe"};
     constexpr uint32_t UNKNOWN_RESULT = 0;
-    constexpr uint32_t SAFE_RESULT = 1;
-    constexpr uint32_t RISK_REAULT = 2;
+    constexpr uint32_t RISK_REAULT = 1;
+    constexpr uint32_t SAFE_RESULT = 2;
     constexpr uint32_t CHECK_SIGNATURE = 1;
+    constexpr uint32_t CHECK_URL = 2;
 
     constexpr int64_t APP_SCAN_RESULT_ID = 1011016001;
     constexpr uint32_t CFG_FILE_MAX_SIZE = 1 * 1024 * 1024; // byte
@@ -52,6 +53,13 @@ namespace {
 struct DetectionCfg {
     std::string version;
     std::unordered_set<std::string> rules;
+};
+
+struct UrlContentSt {
+    std::string pkgName;
+    std::unordered_set<std::string> urls;
+    std::unordered_set<std::string> ip4Addr;
+    std::unordered_set<std::string> ip6Addr;
 };
 
 struct DetectionResult {
@@ -177,7 +185,84 @@ public:
     ~UrlChecker() override = default;
     std::string Run() override
     {
-        return DetectionResult{}.ToString();
+        HiLog::Info(LABEL, "UrlChecker start");
+        auto config = LoadCfg("/data/service/el1/public/security_guard/url_rule.cfg", "url");
+        if (!config) {
+            HiLog::Error(LABEL, "LoadCfg error");
+            return DetectionResult{}.ToString();
+        }
+        std::unordered_set<std::string> visitedUrls;
+        bool ret = QueryVisitedUrls(visitedUrls);
+        if (!ret) {
+            HiLog::Error(LABEL, "QueryVisitedUrls error");
+            return DetectionResult{}.ToString();
+        }
+        DetectionResult result{};
+        result.type = CHECK_URL;
+        result.packageName = param_;
+        if (visitedUrls.empty()) {
+            result.result = UNKNOWN_RESULT;
+        } else {
+            auto iter = std::find_first_of(config->rules.begin(), config->rules.end(),
+                visitedUrls.begin(), visitedUrls.end());
+            result.result = ((iter == config->rules.end()) ? SAFE_RESULT : RISK_REAULT);
+        }
+        HiLog::Info(LABEL, "check url finish, result = [%{public}s]", result.ToString().c_str());
+        if (result.result != UNKNOWN_RESULT) {
+            ReportResultEvent(result);
+        }
+        return result.ToString();
+    }
+private:
+    bool QueryVisitedUrls(std::unordered_set<std::string>& visitedUrls)
+    {
+        HiLog::Info(LABEL, "QueryVisitedUrls start");
+        int64_t eventId = 1037000001;
+        std::vector<SecEvent> secEvents;
+        int32_t ret = dbOpt_->QueryEventByEventId(eventId, secEvents);
+        if (ret != SUCCESS) {
+            HiLog::Error(LABEL, "query event error, ret=%{public}d", ret);
+            return false;
+        }
+        for (const auto& event : secEvents) {
+            nlohmann::json jsonObj = nlohmann::json::parse(event.content, nullptr, false);
+            if (jsonObj.is_discarded()) {
+                HiLog::Error(LABEL, "json error");
+                continue;
+            }
+            UrlContentSt content = UnmarshalDb(jsonObj);
+            if (content.pkgName.empty() || content.urls.empty()) {
+                HiLog::Error(LABEL, "content is empty");
+                continue;
+            }
+            if (content.pkgName == param_) {
+                visitedUrls.insert(content.urls.begin(), content.urls.end());
+            }
+        }
+        return true;
+    }
+
+    UrlContentSt UnmarshalDb(const nlohmann::json &jsonObj) const
+    {
+        HiLog::Info(LABEL, "UnmarshalDb start");
+        UrlContentSt content{};
+        if (IS_VALID_JSON(jsonObj, "pkg", string)) {
+            content.pkgName = jsonObj.at("pkg").get<std::string>();
+            HiLog::Error(LABEL, "UnmarshalDb pkg = [%{public}s]", content.pkgName.c_str());
+        }
+        if (IS_VALID_JSON(jsonObj, "host", array)) {
+            content.urls = jsonObj.at("host").get<std::unordered_set<std::string>>();
+            HiLog::Error(LABEL, "UnmarshalDb urls=%{public}lu", content.urls.size());
+        }
+        if (IS_VALID_JSON(jsonObj, "ip4Addr", array)) {
+            content.ip4Addr = jsonObj.at("ip4Addr").get<std::unordered_set<std::string>>();
+            HiLog::Error(LABEL, "UnmarshalDb ip4Addr=%{public}lu", content.ip4Addr.size());
+        }
+        if (IS_VALID_JSON(jsonObj, "ip6Addr", array)) {
+            content.ip6Addr = jsonObj.at("ip6Addr").get<std::unordered_set<std::string>>();
+            HiLog::Error(LABEL, "UnmarshalDb ip6Addr=%{public}lu", content.ip6Addr.size());
+        }
+        return content;
     }
 };
 
@@ -208,7 +293,7 @@ public:
         DetectionResult result{};
         result.type = CHECK_SIGNATURE;
         result.packageName = packageName;
-        result.result = ((config->rules.count(signature) != 0) ? SAFE_RESULT :  RISK_REAULT);
+        result.result = ((config->rules.count(signature) == 0) ? SAFE_RESULT :  RISK_REAULT);
         FileSampling(result.hash, result.size, result.offset, result.sample);
         HiLog::Info(LABEL, "check signature finish, result = [%{public}s]", result.ToString().c_str());
         if (result.result != UNKNOWN_RESULT) {

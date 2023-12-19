@@ -27,6 +27,8 @@ namespace {
     const std::string EVENT_ID = "EVENT_ID";
     const std::string SUB_RET = "SUB_RET";
     const std::string UNSUB_RET = "UNSUB_RET";
+    const std::string CONFIG_PATH = "CONFIG_PATH";
+    const std::string RET = "RET";
 }
 
 void BigData::ReportObatinDataEvent(const ObatinDataEvent &event)
@@ -55,5 +57,12 @@ void BigData::ReportSgUnsubscribeEvent(const SgUnsubscribeEvent &event)
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "SG_EVENT_UNSUBSCRIBE",
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid,
         CALL_TIME, event.time, UNSUB_RET, event.ret);
+}
+
+void BigData::ReportConfigUpdateEvent(const ConfigUpdateEvent &event)
+{
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "SG_UPDATE_CONFIG",
+        OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CONFIG_PATH, event.path,
+        CALL_TIME, event.time, RET, event.ret);
 }
 }

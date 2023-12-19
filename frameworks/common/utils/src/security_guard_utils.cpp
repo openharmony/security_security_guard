@@ -96,18 +96,18 @@ std::string SecurityGuardUtils::GetDate()
     return data;
 }
 
-void SecurityGuardUtils::CopyFile(const std::string &srcPath, const std::string &dstPath)
+bool SecurityGuardUtils::CopyFile(const std::string &srcPath, const std::string &dstPath)
 {
     std::ifstream src(srcPath, std::ios::binary);
     if (!src.is_open() || !src) {
         SGLOGE("copy file stream error");
         src.close();
-        return;
+        return false;
     }
     if (src.seekg(0, std::ios_base::end).tellg() > FILE_MAX_SIZE) {
         SGLOGE("cfg file is too large");
         src.close();
-        return;
+        return false;
     }
     src.seekg(0, std::ios::beg);
     std::ofstream dst(dstPath, std::ios::binary);
@@ -115,11 +115,12 @@ void SecurityGuardUtils::CopyFile(const std::string &srcPath, const std::string 
         SGLOGE("copy file stream error");
         src.close();
         dst.close();
-        return;
+        return false;
     }
 
     dst << src.rdbuf();
     src.close();
     dst.close();
+    return true;
 }
 }

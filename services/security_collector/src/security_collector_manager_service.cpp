@@ -114,10 +114,9 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
     const sptr<IRemoteObject> &callback)
 {
     Event event = subscribeInfo.GetEvent();
-    LOGI("in subscribe, subscribinfo: duration:%{public}ld, isNotify:%{public}d, \n"
-        "eventid:%{public}ld, version:%{public}s, content:%{public}s, extra:%{public}s,",
-        subscribeInfo.GetDuration(), (int)subscribeInfo.IsNotify(),
-        event.eventId, event.version.c_str(), event.content.c_str(), event.extra.c_str());
+    LOGI("in subscribe, subscribinfo: duration:%{public}ld, isNotify:%{public}d, eventid:%{public}ld, \n"
+        "version:%{public}s, extra:%{public}s", subscribeInfo.GetDuration(), (int)subscribeInfo.IsNotify(),
+        event.eventId, event.version.c_str(), event.extra.c_str());
 
     if (!HasPermission()) {
         LOGE("caller no permission");
@@ -131,9 +130,8 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
         return NULL_OBJECT;
     }
     auto eventHandler = [] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {
-        LOGE("xxxx OnChange eventid:%{public}ld ", event.eventId);
         if (appName == NOTIFY_APP_NAME) {
-            LOGI(" xxxx report to SG ");
+            LOGI("eventid:%{public}ld callback default", event.eventId);
             auto reportEvent = [event] () {
                 auto info = std::make_shared<SecurityGuard::EventInfo>(event.eventId, event.version, event.content);
                 (void)SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(info);
@@ -143,11 +141,13 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
         }
         auto proxy = iface_cast<SecurityCollectorManagerCallbackProxy>(remote);
         if (proxy != nullptr) {
+            LOGI("report to proxy");
             proxy->OnNotify(event);
+        } else {
+            LOGE("report proxy is null");
         }
     };
     auto subscriber = std::make_shared<SecurityCollectorSubscriber>(appName, subscribeInfo, callback, eventHandler);
-
     ScSubscribeEvent subEvent;
     subEvent.pid = IPCSkeleton::GetCallingPid();
     subEvent.version = event.version;

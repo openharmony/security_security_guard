@@ -26,6 +26,7 @@ public:
     static void ReportClassifyEvent(const ClassifyEvent &event);
     static void ReportSgSubscribeEvent(const SgSubscribeEvent &event);
     static void ReportSgUnsubscribeEvent(const SgUnsubscribeEvent &event);
+    static void ReportConfigUpdateEvent(const ConfigUpdateEvent &event);
 };
 } // namespace OHOS::Security::SecurityGuard
 

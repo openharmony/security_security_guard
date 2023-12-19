@@ -50,3 +50,9 @@ SC_EVENT_UNSUBSCRIBE:
   __BASE: {type: STATISTIC, level: CRITICAL, desc: security collect event unsubscribe data}
   CALLER_PID: {type: INT32, desc: caller pid}
   UNSUB_RET: {type: INT32, desc: unsubsecribe result}
+
+SG_UPDATE_CONFIG:
+  __BASE: {type: STATISTIC, level: CRITICAL, desc: security config update event}
+  CONFIG_PATH: {type: STRING, desc: config path}
+  CALL_TIME: {type: STRING, desc: call time}
+  RET: {type: INT32, desc: update result}

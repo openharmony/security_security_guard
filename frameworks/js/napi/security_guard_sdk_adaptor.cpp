@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <set>
+
 #include "security_guard_sdk_adaptor.h"
 
 #include "iservice_registry.h"
@@ -30,7 +32,7 @@
 #include "collector_service_loader.h"
 
 namespace OHOS::Security::SecurityGuard {
-namespace  { constexpr int64_t NOTIFY_COLLECTOR_EVENT_ID = 111111; }
+namespace  { const std::set<int64_t> GRANTED_EVENT{1037000001, 1064001001}; }
 
 int32_t SecurityGuardSdkAdaptor::RequestSecurityEventInfo(std::string &devId, std::string &eventList,
     RequestRiskDataCallback callback)
@@ -137,7 +139,8 @@ int32_t SecurityGuardSdkAdaptor::SetModelState(uint32_t modelId, bool enable)
 int32_t SecurityGuardSdkAdaptor::NotifyCollector(const SecurityCollector::Event &event, int64_t duration)
 {
     SGLOGI("On NotifyCollector...");
-    if (event.eventId != NOTIFY_COLLECTOR_EVENT_ID) {
+    if (GRANTED_EVENT.find(event.eventId) == GRANTED_EVENT.end()) {
+        SGLOGE("NotifyCollector error event id %{public}ld, can not Notify", event.eventId);
         return BAD_PARAM;
     }
     auto object = SecurityCollector::CollectorServiceLoader::GetInstance().LoadCollectorService();
