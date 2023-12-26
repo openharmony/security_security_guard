@@ -38,7 +38,7 @@ int32_t AcquireDataCallbackProxy::OnNotify(const SecurityCollector::Event &event
         return NULL_OBJECT;
     }
 
-    MessageOption option = { MessageOption::TF_ASYNC };
+    MessageOption option = { MessageOption::TF_SYNC };
     return Remote()->SendRequest(CMD_DATA_SUBSCRIBE_CALLBACK, data, reply, option);
 }
 }

@@ -19,21 +19,31 @@ namespace OHOS::Security::SecurityGuard {
 namespace {
     const int THREAD_NUMS = 5;
     const int MAX_TASK_NUMS = 1000;
+    const int MINORS_THREAD_NUMS = 1;
+    const int MINORS_MAX_TASK_NUMS = 500;
 }
 
 TaskHandler::TaskHandler()
 {
     pool_.Start(THREAD_NUMS);
     pool_.SetMaxTaskNum(MAX_TASK_NUMS);
+    minorsPool_.Start(MINORS_THREAD_NUMS);
+    minorsPool_.SetMaxTaskNum(MINORS_MAX_TASK_NUMS);
 }
 
 TaskHandler::~TaskHandler()
 {
     pool_.Stop();
+    minorsPool_.Stop();
 }
 
 void TaskHandler::AddTask(Task &task)
 {
     pool_.AddTask(task);
+}
+
+void TaskHandler::AddMinorsTask(Task &task)
+{
+    minorsPool_.AddTask(task);
 }
 }

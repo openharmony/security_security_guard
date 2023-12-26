@@ -29,9 +29,11 @@ public:
     TaskHandler();
     ~TaskHandler() override;
     void AddTask(Task &task);
+    void AddMinorsTask(Task &task);
 
 private:
     OHOS::ThreadPool pool_;
+    OHOS::ThreadPool minorsPool_;
 };
 } // namespace OHOS::Security::SecurityGuard
 

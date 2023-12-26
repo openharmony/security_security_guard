@@ -25,6 +25,8 @@
 #include "sg_collect_client.h"
 #include "security_collector_subscriber_manager.h"
 #include "security_collector_manager_callback_proxy.h"
+#include "task_handler.h"
+#include "event_define.h"
 
 namespace OHOS::Security::SecurityCollector {
 namespace {
@@ -129,7 +131,7 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
     if (appName != NOTIFY_APP_NAME && !SetDeathRecipient(callback)) {
         return NULL_OBJECT;
     }
-    auto eventHandler = [] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {
+    auto eventHandler = [this] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {
         if (appName == NOTIFY_APP_NAME) {
             LOGI("eventid:%{public}ld callback default", event.eventId);
             auto reportEvent = [event] () {
@@ -139,13 +141,7 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
             reportEvent();
             return;
         }
-        auto proxy = iface_cast<SecurityCollectorManagerCallbackProxy>(remote);
-        if (proxy != nullptr) {
-            LOGI("report to proxy");
-            proxy->OnNotify(event);
-        } else {
-            LOGE("report proxy is null");
-        }
+        ExecuteOnNotifyByTask(remote, event);
     };
     auto subscriber = std::make_shared<SecurityCollectorSubscriber>(appName, subscribeInfo, callback, eventHandler);
     ScSubscribeEvent subEvent;
@@ -245,5 +241,25 @@ void SecurityCollectorManagerService::ReportScUnsubscribeEvent(const ScUnsubscri
 {
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "SC_EVENT_UNSUBSCRIBE",
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid, UNSUB_RET, event.ret);
+}
+
+void SecurityCollectorManagerService::ExecuteOnNotifyByTask(const sptr<IRemoteObject> &remote, const Event &event)
+{
+    auto proxy = iface_cast<SecurityCollectorManagerCallbackProxy>(remote);
+    if (proxy != nullptr) {
+        LOGI("report to proxy");
+        SecurityGuard::TaskHandler::Task task = [proxy, event] () {
+            proxy->OnNotify(event);
+        };
+        if (event.eventId == SecurityCollector::FILE_EVENTID ||
+            event.eventId == SecurityCollector::PROCESS_EVENTID ||
+            event.eventId == SecurityCollector::NETWORK_EVENTID) {
+            SecurityGuard::TaskHandler::GetInstance()->AddMinorsTask(task);
+        } else {
+            SecurityGuard::TaskHandler::GetInstance()->AddTask(task);
+        }
+    } else {
+        LOGE("report proxy is null");
+    }
 }
 }

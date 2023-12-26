@@ -19,6 +19,9 @@
 #include "database_manager.h"
 #include "security_guard_define.h"
 #include "security_collector_subscribe_info.h"
+#include "security_guard_log.h"
+#include "task_handler.h"
+#include "event_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 AcquireDataSubscribeManager& AcquireDataSubscribeManager::GetInstance()
@@ -82,7 +85,16 @@ bool AcquireDataSubscribeManager::Publish(const SecEvent &events)
             .version = events.version,
             .content = events.content
         };
-        proxy->OnNotify(event);
+        SecurityGuard::TaskHandler::Task task = [proxy, event] () {
+            proxy->OnNotify(event);
+        };
+        if (event.eventId == SecurityCollector::FILE_EVENTID ||
+            event.eventId == SecurityCollector::PROCESS_EVENTID ||
+            event.eventId == SecurityCollector::NETWORK_EVENTID) {
+            SecurityGuard::TaskHandler::GetInstance()->AddMinorsTask(task);
+        } else {
+            SecurityGuard::TaskHandler::GetInstance()->AddTask(task);
+        }
     }
     return true;
 }
