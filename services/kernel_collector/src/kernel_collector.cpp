@@ -83,7 +83,12 @@ int ToKernelCollectorUdkSmcHashArg(nlohmann::json input, struct KernelCollectorU
         KLOGE("smc input file number too big = %{public}d", kcua->inputNum);
         return FAILED;
     }
-    fileTotalLen = kcua->inputNum * sizeof(struct inputFilePath);
+    unsigned int fileTotalSize = kcua->inputNum * sizeof(struct inputFilePath);
+    if (fileTotalSize > static_cast<unsigned int>(UDK_SMC_OUT_MAX_LEN)) {
+        KLOGE("file total len too large limit error");
+        return FAILED;
+    }
+    fileTotalLen = static_cast<int>(fileTotalSize);
     files = static_cast<struct inputFilePath *>(malloc(fileTotalLen));
     if (files == nullptr) {
         KLOGI("smc malloc fail files number = %{public}d", kcua->inputNum);
@@ -115,7 +120,6 @@ int ToKernelCollectorUdkSmcHashArg(nlohmann::json input, struct KernelCollectorU
         KLOGD("smc in path = %{public}s", files[i].path);
         i++;
     }
-
     return SUCCESS;
 }
 
@@ -203,7 +207,11 @@ int ProcPidOutInfo(nlohmann::json &output, char *outData, int outDataMaxLen)
         char *maps = (outData + readLen - mapsLen);
         std::string mapsStr(maps, mapsLen);
         mapsStr.erase(std::remove(mapsStr.begin(), mapsStr.end(), ' '), mapsStr.end());
-        mapsLen = mapsStr.size();
+        if (mapsStr.size() > static_cast<unsigned long>(UDK_SMC_OUT_MAX_LEN)) {
+            KLOGE("map size too large error");
+            return FAILED;
+        }
+        mapsLen = static_cast<int>(mapsStr.size());
         storeMapLen = std::min(mapsLen, UDK_SMC_MAX_MAP_STORE_LEN);
         std::string storeStr = mapsStr.substr(0, storeMapLen);
         KLOGD("smc read pid=%{public}d, masLen = %{public}d, storeMapLen = %{public}zu",
