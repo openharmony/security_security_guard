@@ -108,12 +108,13 @@ int ToKernelCollectorUdkSmcHashArg(nlohmann::json input, struct KernelCollectorU
             KLOGE("input 0 len file path");
             return FAILED;
         }
-        files[i].path = (char *)malloc(files[i].pathLen);
+        files[i].path = static_cast<char *>(malloc(files[i].pathLen));
         if (files[i].path == nullptr) {
             KLOGE("smc kernel collect hash malloc fail i = %{public}d", i);
             return FAILED;
         }
-        errno_t rc = memcpy_s(files[i].path, files[i].pathLen, (char *)file.c_str(), files[i].pathLen);
+        errno_t rc = memcpy_s(files[i].path, files[i].pathLen,
+            static_cast<const char *>(file.c_str()), files[i].pathLen);
         if (rc != EOK) {
             return FAILED;
         }
@@ -268,13 +269,9 @@ int ProcHashOutInfo(nlohmann::json &output, char *outData, int outDataMaxLen)
             return FAILED;
         }
         hashLen = *(reinterpret_cast<int *>(outData + readLen - sizeof(int)));
-        if (readLen > outLen) {
-            KLOGE("smc read hash readLen =%{public}d error", readLen);
-            return FAILED;
-        }
         readLen += hashLen;
         if (readLen > outLen) {
-            KLOGE("smc read file path len readLen =%{public}d error", readLen);
+            KLOGE("smc read hash readLen =%{public}d error", readLen);
             return FAILED;
         }
         char *hash = outData + readLen - hashLen;
@@ -324,7 +321,7 @@ bool InputCheck(nlohmann::json inJson)
     return true;
 }
 
-int CollectData(std::shared_ptr<SecurityCollector::ICollectorFwk> api, std::string input)
+int CollectData(std::shared_ptr<SecurityCollector::ICollectorFwk> api, const std::string input)
 {
     int ret = SUCCESS;
     nlohmann::json inJson = nlohmann::json::parse(input.c_str(), nullptr, false);
@@ -339,13 +336,13 @@ int CollectData(std::shared_ptr<SecurityCollector::ICollectorFwk> api, std::stri
         FreekcusArg(type, &kc);
         return ret;
     }
-    char *out = (char *)malloc(UDK_SMC_OUT_MAX_LEN);
+    char *out = static_cast<char *>(malloc(UDK_SMC_OUT_MAX_LEN));
     if (out == nullptr) {
         FreekcusArg(type, &kc);
         KLOGE("smc malloc out data failed");
         return FAILED;
     }
-    kc.outData = (void *)out;
+    kc.outData = static_cast<void *>(out);
     errno = 0;
     int fd = open("/dev/smc", O_RDONLY);
     if (fd < 0) {
@@ -360,7 +357,7 @@ int CollectData(std::shared_ptr<SecurityCollector::ICollectorFwk> api, std::stri
         return ret;
     }
     nlohmann::json output;
-    ret = ToJson(output, (char *)kc.outData, UDK_SMC_OUT_MAX_LEN, inJson["infoType"].get<int>());
+    ret = ToJson(output, static_cast<char *>(kc.outData), UDK_SMC_OUT_MAX_LEN, inJson["infoType"].get<int>());
     if (ret != UDK_SMC_SUCCESS) {
         FreekcusArg(type, &kc);
         KLOGE("smc proc res = %{public}d", ret);
