@@ -98,7 +98,7 @@ void ConfigSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData
             } else if (file == CONFIG_CACHE_FILES[URL_RULE_CFG_INDEX]) {
                 isSuccess = SecurityGuardUtils::CopyFile(file, CONFIG_UPTATE_FILES[URL_RULE_CFG_INDEX]);
             }
-            event.path = file;
+            event.path = file.substr(configPath.length() + 1);
             event.time = SecurityGuardUtils::GetDate();
             event.ret = isSuccess ? SUCCESS : FAILED;
             SGLOGD("file path=%{public}s, TIME=%{public}s, ret=%{public}d", event.path.c_str(), event.time.c_str(),
