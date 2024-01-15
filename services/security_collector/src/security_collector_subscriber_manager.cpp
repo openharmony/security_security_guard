@@ -42,8 +42,8 @@ void SecurityCollectorSubscriberManager::CollectorListenner::OnNotify(const Even
 void SecurityCollectorSubscriberManager::NotifySubscriber(const Event &event)
 {
     std::lock_guard<std::mutex> lock(collectorMutex_);
-    LOGE("publish event: eventid:%{public}ld, version:%{public}s, content:%{public}s, extra:%{public}s",
-        event.eventId, event.version.c_str(), event.content.c_str(), event.extra.c_str());
+    LOGE("publish event: eventid:%{public}ld, version:%{public}s, extra:%{public}s",
+        event.eventId, event.version.c_str(), event.extra.c_str());
     const auto it = eventToSubscribers_.find(event.eventId);
     if (it == eventToSubscribers_.end()) {
         return;
