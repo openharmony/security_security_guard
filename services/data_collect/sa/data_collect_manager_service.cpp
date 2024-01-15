@@ -48,21 +48,6 @@ namespace {
     constexpr int32_t TIMEOUT_REPLY = 10000;
     const std::string REPORT_PERMISSION = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
     const std::string REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
-    const std::string REQUEST_PERMISSION_CORE = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO_CORE";
-    const std::string REQUEST_PERMISSION_BASIC = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO_BASIC";
-    const std::string REQUEST_PERMISSION_NORMAL = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO_NORMAL";
-    const std::string ERR_RET_PARTIAL_PERMISSION_DATA = "You do not have permission on some data";
-
-    constexpr uint32_t PERMISSION_LEVEL_NONE = 0;
-    constexpr uint32_t PERMISSION_LEVEL_CORE = 1;
-    constexpr uint32_t PERMISSION_LEVEL_BASIC = 2;
-    constexpr uint32_t PERMISSION_LEVEL_NORMAL = 3;
-    const std::vector<std::pair<const uint32_t, const std::string>> PERMISSIONS{
-        {PERMISSION_LEVEL_CORE, REQUEST_PERMISSION},
-        {PERMISSION_LEVEL_CORE, REQUEST_PERMISSION_CORE},
-        {PERMISSION_LEVEL_BASIC, REQUEST_PERMISSION_BASIC},
-        {PERMISSION_LEVEL_NORMAL, REQUEST_PERMISSION_NORMAL}
-    };
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DataCollectManagerService, DATA_COLLECT_MANAGER_SA_ID, true);
@@ -164,54 +149,12 @@ int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::strin
     return SUCCESS;
 }
 
-static uint32_t GetPermissionLevel()
-{
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    for (auto permission : PERMISSIONS) {
-        int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permission.second);
-        if (code == AccessToken::PermissionState::PERMISSION_GRANTED) {
-            return permission.first;
-        }
-    }
-    return PERMISSION_LEVEL_NONE;
-}
-
-static std::vector<int64_t> FilterEventIdsByPermission(const std::vector<int64_t>& eventIds)
-{
-    std::vector<int64_t> ids;
-    uint32_t permissionLevel = GetPermissionLevel();
-    if (permissionLevel == PERMISSION_LEVEL_NONE) {
-        return ids;
-    }
-    for (size_t i = 0 ; i < eventIds.size(); i++) {
-        EventCfg config;
-        if (!ConfigDataManager::GetInstance().GetEventConfig(eventIds[i], config)) {
-            SGLOGE("eventId not found, id=%{public}ld", eventIds[i]);
-            continue;
-        }
-        if (permissionLevel <= config.dataSensitivityLevel) {
-            ids.push_back(eventIds[i]);
-        }
-    }
-    return ids;
-}
-
-static RequestCondition FilterConditionsByPermission(const RequestCondition& reqCondition)
-{
-    return RequestCondition{
-        .riskEvent = FilterEventIdsByPermission(reqCondition.riskEvent),
-        .auditEvent = FilterEventIdsByPermission(reqCondition.auditEvent),
-        .beginTime = reqCondition.beginTime,
-        .endTime = reqCondition.endTime};
-}
-
-
 int32_t DataCollectManagerService::RequestRiskData(std::string &devId, std::string &eventList,
     const sptr<IRemoteObject> &callback)
 {
-    uint32_t permissionLevel = GetPermissionLevel();
-    SGLOGI("caller permission level=%{public}u", permissionLevel);
-    if (permissionLevel == PERMISSION_LEVEL_NONE) {
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
+    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
         SGLOGE("caller no permission");
         return NO_PERMISSION;
     }
@@ -253,26 +196,18 @@ std::vector<SecEvent> DataCollectManagerService::GetSecEventsFromConditions(Requ
 void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &object,
     std::string conditions, std::string devId, std::shared_ptr<std::promise<int32_t>> promise)
 {
-    RequestCondition origReqCondition {};
-    DataFormat::ParseConditions(conditions, origReqCondition);
-    RequestCondition reqCondition = FilterConditionsByPermission(origReqCondition);
-
-    TaskHandler::Task task = [object, devId, promise, origReqCondition, reqCondition] () mutable {
+    TaskHandler::Task task = [object, conditions, devId, promise] () mutable {
         auto proxy = iface_cast<DataCollectManagerCallbackProxy>(object);
         if (proxy == nullptr) {
             promise->set_value(0);
             return;
         }
-        if (origReqCondition.riskEvent.empty() && origReqCondition.auditEvent.empty()) {
-            std::string empty;
-            proxy->ResponseRiskData(devId, empty, FINISH);
-            promise->set_value(0);
-            return;
-        }
+        RequestCondition reqCondition {};
+        DataFormat::ParseConditions(conditions, reqCondition);
         if (reqCondition.riskEvent.empty() && reqCondition.auditEvent.empty()) {
             SGLOGE("reqCondition no permission");
             std::string empty;
-            proxy->ResponseRiskData(devId, empty, FINISH, ERR_RET_PARTIAL_PERMISSION_DATA);
+            proxy->ResponseRiskData(devId, empty, FINISH);
             promise->set_value(0);
             return;
         }
@@ -296,13 +231,8 @@ void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &o
         // last dispatch
         dispatchVec.assign(events.begin() + curIndex, events.end());
         std::string dispatch = nlohmann::json(dispatchVec).dump();
-        std::string errMsg;
-        if (reqCondition.riskEvent.size() < origReqCondition.riskEvent.size() ||
-            reqCondition.auditEvent.size() < origReqCondition.auditEvent.size()) {
-            errMsg = ERR_RET_PARTIAL_PERMISSION_DATA;
-        }
-        (void) proxy->ResponseRiskData(devId, dispatch, FINISH, errMsg);
-        SGLOGI("ResponseRiskData FINIESH, errMsg=[%{public}s]", errMsg.c_str());
+        (void) proxy->ResponseRiskData(devId, dispatch, FINISH);
+        SGLOGI("ResponseRiskData FINISH");
     };
     TaskHandler::GetInstance()->AddTask(task);
 }

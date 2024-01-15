@@ -408,24 +408,24 @@ static napi_value GetConditionsTime(napi_env env, napi_value object, const std::
     bool hasProperty = false;
     NAPI_CALL(env, napi_has_named_property(env, object, key.c_str(), &hasProperty));
     if (!hasProperty) {
-        SGLOGE("no %{publid}s param", key.c_str());
+        SGLOGE("no %{public}s param", key.c_str());
         return NapiCreateInt32(env, SUCCESS);
     }
     napi_value result;
     NAPI_CALL(env, napi_get_named_property(env, object, key.c_str(), &result));
     if (result == nullptr) {
-        SGLOGE("get %{publid}s failed", key.c_str());
+        SGLOGE("get %{public}s failed", key.c_str());
         return nullptr;
     }
 
     result = GetString(env, result, key, time, len);
     if (result == nullptr) {
-        SGLOGE("get %{publid}s failed", key.c_str());
+        SGLOGE("get %{public}s failed", key.c_str());
         return nullptr;
     }
     value = time;
     if (!IsNum(value) || value.length() != (TIME_MAX_LEN - 1)) {
-        SGLOGE("time invalid %{publid}s", key.c_str());
+        SGLOGE("time invalid %{public}s", key.c_str());
         return nullptr;
     }
     return NapiCreateInt32(env, SUCCESS);
@@ -925,20 +925,20 @@ static std::string ParseOptionalString(napi_env env, napi_value object, const st
     bool hasProperty = false;
     NAPI_CALL(env, napi_has_named_property(env, object, key.c_str(), &hasProperty));
     if (!hasProperty) {
-        SGLOGE("no %{publid}s param", key.c_str());
+        SGLOGE("no %{public}s param", key.c_str());
         return "";
     }
     napi_value value = nullptr;
     NAPI_CALL(env, napi_get_named_property(env, object, key.c_str(), &value));
     if (value == nullptr) {
-        SGLOGE("get %{publid}s failed", key.c_str());
+        SGLOGE("get %{public}s failed", key.c_str());
         return "";
     }
     size_t len = maxLen;
     std::vector<char> str(len + 1, '\0');
     napi_value result = GetString(env, value, key, str.data(), len);
     if (result == nullptr) {
-        SGLOGE("get %{publid}s failed", key.c_str());
+        SGLOGE("get %{public}s failed", key.c_str());
         return "";
     }
     return std::string{str.data()};
