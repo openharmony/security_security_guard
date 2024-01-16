@@ -642,7 +642,13 @@ static int32_t HandleRequestRiskDataCallback(std::shared_ptr<RequestSecurityEven
         return NULL_OBJECT;
     }
     work->data = reinterpret_cast<void *>(tmpContext);
-    uv_queue_work(loop, work, [] (uv_work_t *work) {}, OnWork);
+    int retVal = uv_queue_work(loop, work, [] (uv_work_t *work) {}, OnWork);
+    if (retVal != 0) {
+        SGLOGE("failed to get uv_queue_work.");
+        delete (reinterpret_cast<RequestSecurityEventInfoContext *>(work->data));
+        delete work;
+        return NULL_OBJECT;
+    }
     return SUCCESS;
 }
 
