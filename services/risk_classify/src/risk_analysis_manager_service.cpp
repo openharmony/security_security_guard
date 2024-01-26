@@ -17,6 +17,8 @@
 
 #include <thread>
 
+#include "ability_connect_callback_stub.h"
+#include "ability_manager_client.h"
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
 
@@ -43,6 +45,8 @@ namespace {
     const std::string SET_MODEL_PERMISSION = "ohos.permission.securityguard.SET_MODEL_STATE";
     const std::vector<uint32_t> MODELIDS = { 3001000000, 3001000001, 3001000002, 3001000005, 3001000006, 3001000007 };
     constexpr uint32_t AUDIT_MODEL_ID = 3001000003;
+    constexpr char HSDR_BUNDLE_NAME[] = "com.huawei.hmos.hsdr";
+    constexpr int32_t HSDR_USER_ID = 100;
 }
 
 RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnCreate)
@@ -50,6 +54,15 @@ RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnC
 {
     SGLOGW("%{public}s", __func__);
 }
+
+class AbilityConnection : public AAFwk::AbilityConnectionStub {
+public:
+    AbilityConnection() = default;
+    ~AbilityConnection() = default;
+    void OnAbilityConnectDone(const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject,
+        int resultCode) override {}
+    void OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode) override {}
+};
 
 void RiskAnalysisManagerService::OnStart()
 {
@@ -72,6 +85,8 @@ void RiskAnalysisManagerService::OnStart()
     TaskHandler::GetInstance()->AddTask(task);
 
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
+    AddSystemAbilityListener(ABILITY_MGR_SERVICE_ID);
+    AddSystemAbilityListener(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
 }
 
 void RiskAnalysisManagerService::OnStop()
@@ -163,6 +178,15 @@ void RiskAnalysisManagerService::OnAddSystemAbility(int32_t systemAbilityId, con
     SGLOGI("OnAddSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
     if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
         ConfigManager::GetInstance()->StartUpdate();
+    } else if (systemAbilityId == ABILITY_MGR_SERVICE_ID || systemAbilityId == BUNDLE_MGR_SERVICE_SYS_ABILITY_ID) {
+        AAFwk::Want want;
+        std::string bundleName = HSDR_BUNDLE_NAME;
+        std::string abilityName = "HSDRService";
+        want.SetAction("security_guard");
+        want.SetElementName(bundleName, abilityName);
+        sptr<AbilityConnection> abilityConnection = new AbilityConnection();
+        auto ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, abilityConnection, HSDR_USER_ID);
+        SGLOGI("connect result ret: %{public}d", ret);
     }
 }
 
