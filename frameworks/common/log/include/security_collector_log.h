@@ -17,6 +17,7 @@
 #define SECURITY_COLLECTOR_LOG_H
 
 #include "hilog/log.h"
+#include <cinttypes>
 
 namespace OHOS::Security::SecurityCollector {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {

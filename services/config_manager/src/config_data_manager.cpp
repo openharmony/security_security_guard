@@ -83,7 +83,7 @@ std::vector<int64_t> ConfigDataManager::GetAllEventIds()
     std::lock_guard<std::mutex> lock(eventMutex_);
     std::vector<int64_t> vector;
     for (const auto &entry : eventMap_) {
-        SGLOGD("eventId=%{public}ld", entry.first);
+        SGLOGD("eventId=%{public}" PRId64 "", entry.first);
         vector.emplace_back(entry.first);
     }
     return vector;

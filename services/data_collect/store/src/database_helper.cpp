@@ -44,7 +44,7 @@ int DatabaseHelper::InsertEvent(const SecEvent& event)
     int64_t rowId;
     int ret = Insert(rowId, dbTable_, values);
     if (ret != NativeRdb::E_OK) {
-        SGLOGI("failed to add event, eventId=%{public}ld, ret=%{public}d", event.eventId, ret);
+        SGLOGI("failed to add event, eventId=%{public}" PRId64 ", ret=%{public}d", event.eventId, ret);
         return DB_OPT_ERR;
     }
     return SUCCESS;
@@ -95,7 +95,7 @@ int DatabaseHelper::QueryRecentEventByEventId(const std::vector<int64_t> &eventI
         return BAD_PARAM;
     }
     for (int i = 0; i < size; i++) {
-        SGLOGI("eventId=%{public}ld", eventIds[i]);
+        SGLOGI("eventId=%{public}" PRId64 "", eventIds[i]);
         NativeRdb::RdbPredicates predicates(dbTable_);
         predicates.EqualTo(EVENT_ID, std::to_string(eventIds[i]));
         predicates.OrderByDesc(ID);
@@ -197,7 +197,7 @@ int64_t DatabaseHelper::CountEventByEventId(int64_t eventId)
     predicates.EqualTo(EVENT_ID, std::to_string(eventId));
     int ret = Count(count, predicates);
     if (ret != NativeRdb::E_OK) {
-        SGLOGE("failed to count event, eventId=%{public}ld, ret=%{public}d", eventId, ret);
+        SGLOGE("failed to count event, eventId=%{public}" PRId64 ", ret=%{public}d", eventId, ret);
     }
     return count;
 }
@@ -211,7 +211,7 @@ int DatabaseHelper::DeleteOldEventByEventId(int64_t eventId, int64_t count)
     std::vector<std::string> columns { ID };
     std::shared_ptr<NativeRdb::ResultSet> resultSet = Query(queryPredicates, columns);
     if (resultSet == nullptr) {
-        SGLOGI("failed to get event, eventId=%{public}ld", eventId);
+        SGLOGI("failed to get event, eventId=%{public}" PRId64 "", eventId);
         return DB_OPT_ERR;
     }
     int64_t primaryKey = -1;
@@ -227,7 +227,7 @@ int DatabaseHelper::DeleteOldEventByEventId(int64_t eventId, int64_t count)
     deletePredicates.EqualTo(EVENT_ID, std::to_string(eventId));
     int ret = Delete(rowId, deletePredicates);
     if (ret != NativeRdb::E_OK) {
-        SGLOGE("failed to delete event, eventId=%{public}ld, ret=%{public}d", eventId, ret);
+        SGLOGE("failed to delete event, eventId=%{public}" PRId64 ", ret=%{public}d", eventId, ret);
         return DB_OPT_ERR;
     }
     return SUCCESS;
@@ -240,7 +240,7 @@ int DatabaseHelper::DeleteAllEventByEventId(int64_t eventId)
     predicates.EqualTo(EVENT_ID, std::to_string(eventId));
     int ret = Delete(rowId, predicates);
     if (ret != NativeRdb::E_OK) {
-        SGLOGI("failed to delete event, eventId=%{public}ld, ret=%{public}d", eventId, ret);
+        SGLOGI("failed to delete event, eventId=%{public}" PRId64 ", ret=%{public}d", eventId, ret);
         return DB_OPT_ERR;
     }
     return SUCCESS;

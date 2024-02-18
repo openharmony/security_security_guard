@@ -31,11 +31,10 @@ using namespace OHOS::Security::SecurityGuard;
 
 constexpr int NAPI_NOTIFY_COLLECTOR_ARGS_CNT = 2;
 constexpr int NAPI_REPORT_EVENT_INFO_ARGS_CNT = 1;
-constexpr int NAPI_REQUEST_SECURITY_EVENT_INFO_ARGS_CNT = 3;
+constexpr int NAPI_REQUEST_SECURITY_EVENT_INFO_ARGS_CNT = 2;
 constexpr int NAPI_REQUEST_SECURITY_EVENT_INFO_CALLBACK_ARGS_CNT = 2;
-constexpr int NAPI_REQUEST_SECURITY_MODEL_RESULT_ARGS_MIN_CNT = 2;
-constexpr int NAPI_REQUEST_SECURITY_MODEL_RESULT_ARGS_MAX_CNT = 3;
-constexpr int NAPI_SET_MODEL_STATE_ARGS_MAX_CNT = 2;
+constexpr int NAPI_REQUEST_SECURITY_MODEL_RESULT_ARGS_MIN_CNT = 1;
+constexpr int NAPI_REQUEST_SECURITY_MODEL_RESULT_ARGS_MAX_CNT = 2;
 
 constexpr int TIME_MAX_LEN = 15;
 constexpr int CALLBACK_TYPE_MAX_LEN = 10;
@@ -158,19 +157,6 @@ static napi_value GenerateBusinessError(napi_env env, int32_t code, const std::s
     return result;
 }
 
-static napi_value ParseBool(napi_env env, napi_value object, bool &value)
-{
-    napi_valuetype type;
-    NAPI_CALL(env, napi_typeof(env, object, &type));
-    if (type != napi_boolean) {
-        SGLOGE("type of param is not bool");
-        return nullptr;
-    }
-
-    NAPI_CALL(env, napi_get_value_bool(env, object, &value));
-    return NapiCreateInt32(env, ConvertToJsErrCode(SUCCESS));
-}
-
 static napi_value ParseInt64(napi_env env, napi_value object, const std::string &key, int64_t &value)
 {
     napi_value result;
@@ -196,19 +182,6 @@ static napi_value ParseInt64(napi_env env, napi_value object, const std::string 
 
     NAPI_CALL(env, napi_get_value_int64(env, result, &value));
     return NapiCreateInt64(env, ConvertToJsErrCode(SUCCESS));
-}
-
-static napi_value ParseUint32(napi_env env, napi_value object, uint32_t &value)
-{
-    napi_valuetype type;
-    NAPI_CALL(env, napi_typeof(env, object, &type));
-    if (type != napi_number) {
-        SGLOGE("type of param is not number");
-        return nullptr;
-    }
-
-    NAPI_CALL(env, napi_get_value_uint32(env, object, &value));
-    return NapiCreateInt32(env, ConvertToJsErrCode(SUCCESS));
 }
 
 static napi_value GetString(napi_env env, napi_value object, const std::string &key, char *value, size_t &maxLen)
@@ -299,6 +272,7 @@ static napi_value NapiReportSecurityInfo(napi_env env, napi_callback_info info)
     int32_t code = SecurityGuardSdkAdaptor::ReportSecurityInfo(eventInfo);
     if (code != SUCCESS) {
         SGLOGE("report eventInfo error, code=%{public}d", code);
+        napi_throw(env, GenerateBusinessError(env, code));
     }
     return NapiCreateInt32(env, ConvertToJsErrCode(code));
 }
@@ -660,15 +634,6 @@ static napi_value NapiRequestSecurityEventInfo(napi_env env, napi_callback_info 
     NAPI_ASSERT(env, argc == NAPI_REQUEST_SECURITY_EVENT_INFO_ARGS_CNT, "arguments count is not expected");
 
     uint32_t index = 0;
-    char deviceIdArr[DEVICE_ID_MAX_LEN];
-    size_t len = DEVICE_ID_MAX_LEN;
-    napi_value ret = GetString(env, argv[index], "deviceId", deviceIdArr, len);
-    if (ret == nullptr) {
-        SGLOGE("parse deviceId error");
-        return nullptr;
-    }
-    std::string deviceId(deviceIdArr);
-
     bool isExist = false;
     auto context = NapiRequestDataManager::GetInstance().GetContext(env, isExist);
     if (isExist) {
@@ -677,7 +642,6 @@ static napi_value NapiRequestSecurityEventInfo(napi_env env, napi_callback_info 
     }
     context->env = env;
     context->threadId = syscall(SYS_gettid);
-    index++;
     auto [result, errorMsg] = ParseConditions(env, argv[index], context);
     if (result == nullptr) {
         SGLOGE("parse conditions error");
@@ -696,7 +660,7 @@ static napi_value NapiRequestSecurityEventInfo(napi_env env, napi_callback_info 
         const std::string& errMsg) -> int32_t {
         return HandleRequestRiskDataCallback(context, devId, riskData, status, errMsg);
     };
-
+    std::string deviceId;
     int32_t code = SecurityGuardSdkAdaptor::RequestSecurityEventInfo(deviceId, context->conditions, func);
     if (code != SUCCESS) {
         SGLOGE("request eventInfo error, code=%{public}d.", code);
@@ -790,14 +754,22 @@ static void RequestSecurityModelResultComplete(napi_env env, napi_status status,
 
 static napi_value ParseModelId(napi_env env, napi_value object, uint32_t &modelId)
 {
-    if (ParseUint32(env, object, modelId) == nullptr) {
+    char modelName[MODEL_NAME_MAX_LEN] = {0};
+    size_t len = MODEL_NAME_MAX_LEN;
+    if (ParseString(env, object, "modelName", modelName, len) == nullptr) {
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
         return nullptr;
     }
-    if (modelId != ModelIdType::ROOT_SCAN_MODEL_ID && modelId != ModelIdType::DEVICE_COMPLETENESS_MODEL_ID &&
-        modelId != ModelIdType::PHYSICAL_MACHINE_DETECTION_MODEL_ID) {
+    std::string modelNameStr = std::string(modelName);
+    if (modelNameStr == "SecurityGuard_JailbreakCheck") {
+        modelId = ModelIdType::ROOT_SCAN_MODEL_ID;
+    } else if (modelNameStr == "SecurityGuard_IntegrityCheck") {
+         modelId = ModelIdType::DEVICE_COMPLETENESS_MODEL_ID;
+    } else if (modelNameStr == "SecurityGuard_SimulatorCheck") {
+        modelId = ModelIdType::PHYSICAL_MACHINE_DETECTION_MODEL_ID;
+    } else {
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM,
-            "Parameter error, please make sure using the correct model id"));
+            "Parameter error, please make sure using the correct model name"));
         return nullptr;
     }
     return NapiCreateInt32(env, SUCCESS);
@@ -816,13 +788,6 @@ static napi_value NapiRequestSecurityModelResult(napi_env env, napi_callback_inf
 
     size_t index = 0;
     char deviceId[DEVICE_ID_MAX_LEN];
-    size_t len = DEVICE_ID_MAX_LEN;
-    if (GetString(env, argv[index], "deviceId", deviceId, len) == nullptr) {
-        napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
-        return nullptr;
-    }
-
-    index++;
     uint32_t modelId = 0;
     if (ParseModelId(env, argv[index], modelId) == nullptr) {
         return nullptr;
@@ -837,93 +802,19 @@ static napi_value NapiRequestSecurityModelResult(napi_env env, napi_callback_inf
     context->modelId = modelId;
     index++;
     if (index < argc) {
-        napi_valuetype napiType;
-        napi_typeof(env, argv[index], &napiType);
-        if (napiType != napi_function) {
-            napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "the third param is not function"));
+        char extra[EXTRA_MAX_LEN] = {0};
+        size_t len = EXTRA_MAX_LEN;
+        if (ParseString(env, argv[index], "extra", extra, len) == nullptr) {
             return nullptr;
         }
-        napi_create_reference(env, argv[index], 1, &context->ref);
     }
-
     napi_value promise = nullptr;
-    if (context->ref == nullptr) {
-        NAPI_CALL(env, napi_create_promise(env, &context->deferred, &promise));
-    } else {
-        NAPI_CALL(env, napi_get_undefined(env, &promise));
-    }
+    NAPI_CALL(env, napi_create_promise(env, &context->deferred, &promise));
     napi_value resourceName = NapiCreateString(env, "NapiRequestSecurityModelResult");
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, RequestSecurityModelResultExecute,
         RequestSecurityModelResultComplete, static_cast<void *>(context), &context->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, context->asyncWork));
     return promise;
-}
-
-static napi_value EventIdTypeConstructor(napi_env env)
-{
-    napi_value eventIdType = nullptr;
-    napi_value printerEventId = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &eventIdType));
-    NAPI_CALL(env, napi_create_int64(env, EventIdType::PRINTER_EVENT_ID, &printerEventId));
-    NAPI_CALL(env, napi_set_named_property(env, eventIdType, "PRINTER_EVENT_ID", printerEventId));
-    return eventIdType;
-}
-
-static napi_value ModelIdTypeConstructor(napi_env env)
-{
-    napi_value modelIdType = nullptr;
-    napi_value rsModelId = nullptr;
-    napi_value dcModelId = nullptr;
-    napi_value pmdModelId = nullptr;
-    napi_value saModeltId = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &modelIdType));
-    NAPI_CALL(env, napi_create_uint32(env, ModelIdType::ROOT_SCAN_MODEL_ID, &rsModelId));
-    NAPI_CALL(env, napi_create_uint32(env, ModelIdType::DEVICE_COMPLETENESS_MODEL_ID, &dcModelId));
-    NAPI_CALL(env, napi_create_uint32(env, ModelIdType::PHYSICAL_MACHINE_DETECTION_MODEL_ID, &pmdModelId));
-    NAPI_CALL(env, napi_create_uint32(env, ModelIdType::SECURITY_AUDIT_MODEL_ID, &saModeltId));
-    NAPI_CALL(env, napi_set_named_property(env, modelIdType, "ROOT_SCAN_MODEL_ID", rsModelId));
-    NAPI_CALL(env, napi_set_named_property(env, modelIdType, "DEVICE_COMPLETENESS_MODEL_ID", dcModelId));
-    NAPI_CALL(env, napi_set_named_property(env, modelIdType, "PHYSICAL_MACHINE_DETECTION_MODEL_ID", pmdModelId));
-    NAPI_CALL(env, napi_set_named_property(env, modelIdType, "SECURITY_AUDIT_MODEL_ID", saModeltId));
-    return modelIdType;
-}
-
-static napi_value NapiSetModelState(napi_env env, napi_callback_info info)
-{
-    size_t argc = NAPI_SET_MODEL_STATE_ARGS_MAX_CNT;
-    napi_value argv[NAPI_SET_MODEL_STATE_ARGS_MAX_CNT] = {nullptr};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
-    if (argc != NAPI_SET_MODEL_STATE_ARGS_MAX_CNT) {
-        SGLOGE("set model state arguments count is not expected");
-        napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
-        return nullptr;
-    }
-
-    size_t index = 0;
-    uint32_t modelId = 0;
-    if (ParseUint32(env, argv[index], modelId) == nullptr) {
-        napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
-        return nullptr;
-    }
-
-    if (modelId != ModelIdType::SECURITY_AUDIT_MODEL_ID) {
-        napi_throw(env, GenerateBusinessError(env, BAD_PARAM,
-            "Parameter error, only supported SECURITY_AUDIT_MODEL_ID"));
-        return nullptr;
-    }
-
-    index++;
-    bool enable = false;
-    if (ParseBool(env, argv[index], enable) == nullptr) {
-        napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
-        return nullptr;
-    }
-
-    int32_t code = SecurityGuardSdkAdaptor::SetModelState(modelId, enable);
-    if (code != SUCCESS) {
-        SGLOGE("set model state error, code=%{public}d", code);
-    }
-    return NapiCreateInt32(env, ConvertToJsErrCode(code));
 }
 
 static std::string ParseOptionalString(napi_env env, napi_value object, const std::string &key, uint32_t maxLen)
@@ -1020,12 +911,9 @@ EXTERN_C_START
 static napi_value SecurityGuardNapiRegister(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
-        DECLARE_NAPI_PROPERTY("EventIdType", EventIdTypeConstructor(env)),
-        DECLARE_NAPI_PROPERTY("ModelIdType", ModelIdTypeConstructor(env)),
         DECLARE_NAPI_FUNCTION("reportSecurityInfo", NapiReportSecurityInfo),
         DECLARE_NAPI_FUNCTION("requestSecurityEventInfo", NapiRequestSecurityEventInfo),
         DECLARE_NAPI_FUNCTION("requestSecurityModelResult", NapiRequestSecurityModelResult),
-        DECLARE_NAPI_FUNCTION("setModelState", NapiSetModelState),
         DECLARE_NAPI_FUNCTION("notifyCollector", NapiNotifyCollector),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

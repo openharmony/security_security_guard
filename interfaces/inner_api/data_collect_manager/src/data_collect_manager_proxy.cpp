@@ -27,7 +27,7 @@ DataCollectManagerProxy::DataCollectManagerProxy(const sptr<IRemoteObject> &impl
 int32_t DataCollectManagerProxy::RequestDataSubmit(int64_t eventId, std::string &version,
     std::string &time, std::string &content)
 {
-    SGLOGD("eventId=%{public}ld, version=%{public}s", eventId, version.c_str());
+    SGLOGD("eventId=%{public}" PRId64 ", version=%{public}s", eventId, version.c_str());
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {

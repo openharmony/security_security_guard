@@ -20,7 +20,6 @@ group("sg_classify_service_build_module") {
     deps = [
       "${sg_root_dir}/interfaces/inner_api/classify:libsg_classify_sdk",
       "${sg_root_dir}/services/risk_classify:sg_classify_service",
-      "${sg_root_dir}/services/risk_classify/model_library:security_guard_model",
     ]
   }
 }
@@ -60,12 +59,6 @@ group("security_guard_fuzz_test") {
   }
 }
 
-group("security_guard_capi") {
-  if (is_standard_system) {
-    deps = [ "${sg_root_dir}/interfaces/kits/c:securityguard_ndk" ]
-  }
-}
-
 group("security_guard_napi") {
   if (os_level == "standard") {
     if (support_jsapi) {
@@ -82,24 +75,8 @@ group("security_collector_service_build_module") {
   }
 }
 
-group("collector_dns_event_module") {
-  if (is_standard_system) {
-    deps = [
-      "${sg_root_dir}/services/collectors/dns_event:dns_event",
-    ]
-  }
-}
-
 group("security_collector_seccomp_filter_module") {
   if (is_standard_system && build_seccomp) {
     deps = [ "${sg_root_dir}/seccomp_policy:security_collector_seccomp_filter" ]
-  }
-}
-
-group("kernel_collector_build_module") {
-  if (is_standard_system) {
-    deps = [
-      "${sg_root_dir}/services/kernel_collector:kernel_collector_sg",
-    ]
   }
 }

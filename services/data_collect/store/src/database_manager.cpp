@@ -198,19 +198,19 @@ int DatabaseManager::InsertEvent(uint32_t source, SecEvent& event)
     EventCfg config;
     bool success = ConfigDataManager::GetInstance().GetEventConfig(event.eventId, config);
     if (!success) {
-        SGLOGE("not found event, id=%{public}ld", event.eventId);
+        SGLOGE("not found event, id=%{public}" PRId64 "", event.eventId);
         return NOT_FOUND;
     }
 
     if (config.source == source) {
         std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(event.eventId);
-        SGLOGD("table=%{public}s, eventId=%{public}ld", table.c_str(), config.eventId);
+        SGLOGD("table=%{public}s, eventId=%{public}" PRId64 "", table.c_str(), config.eventId);
         if (table == AUDIT_TABLE) {
             SGLOGD("audit event insert");
             DbChanged(IDbListener::INSERT, event);
             return SUCCESS;
         }
-        SGLOGD("risk event insert, eventId=%{public}ld", event.eventId);
+        SGLOGD("risk event insert, eventId=%{public}" PRId64 "", event.eventId);
         // Check whether the upper limit is reached.
         int64_t count = RiskEventRdbHelper::GetInstance().CountEventByEventId(event.eventId);
         if (count >= config.storageRomNums) {
@@ -377,7 +377,7 @@ int32_t DatabaseManager::SubscribeDb(std::vector<int64_t> eventIds, std::shared_
     }
     std::lock_guard<std::mutex> lock(mutex_);
     for (int64_t eventId : eventIds) {
-        SGLOGI("SubscribeDb EVENTID %{public}ld", eventId);
+        SGLOGI("SubscribeDb EVENTID %{public}" PRId64 "", eventId);
         listenerMap_[eventId].insert(listener);
     }
     return SUCCESS;
@@ -404,7 +404,7 @@ void DatabaseManager::DbChanged(int32_t optType, const SecEvent &event)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::set<std::shared_ptr<IDbListener>> listeners = listenerMap_[event.eventId];
-    SGLOGI("eventId=%{public}ld, listener size=%{public}u", event.eventId, static_cast<int32_t>(listeners.size()));
+    SGLOGI("eventId=%{public}" PRId64 ", listener size=%{public}u", event.eventId, static_cast<int32_t>(listeners.size()));
     for (auto &listener : listeners) {
         if (listener != nullptr) {
             listener->OnChange(optType, event);

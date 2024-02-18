@@ -140,7 +140,7 @@ int32_t SecurityGuardSdkAdaptor::NotifyCollector(const SecurityCollector::Event 
 {
     SGLOGI("On NotifyCollector...");
     if (GRANTED_EVENT.find(event.eventId) == GRANTED_EVENT.end()) {
-        SGLOGE("NotifyCollector error event id %{public}ld, can not Notify", event.eventId);
+        SGLOGE("NotifyCollector error event id %{public}" PRId64 ", can not Notify", event.eventId);
         return BAD_PARAM;
     }
     auto object = SecurityCollector::CollectorServiceLoader::GetInstance().LoadCollectorService();

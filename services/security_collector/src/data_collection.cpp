@@ -40,21 +40,21 @@ bool DataCollection::StartCollectors(const std::vector<int64_t>& eventIds, std::
     }
     std::vector<int64_t> loadedEventIds_;
     for (int64_t eventId : eventIds) {
-        LOGI("StartCollectors eventId is %{public}ld", eventId);
+        LOGI("StartCollectors eventId is %{public}" PRId64 "", eventId);
         if (IsCollectorStarted(eventId)) {
-            LOGI("Collector already started, eventId is %{public}ld", eventId);
+            LOGI("Collector already started, eventId is %{public}" PRId64 "", eventId);
             continue;
         }
         std::string collectorPath;
         ErrorCode ret = GetCollectorPath(eventId, collectorPath);
         if (ret != SUCCESS) {
-            LOGE("GetCollectorPath failed, eventId is %{public}ld", eventId);
+            LOGE("GetCollectorPath failed, eventId is %{public}" PRId64 "", eventId);
             StopCollectors(loadedEventIds_);
             return false;
         }
         ret = LoadCollector(eventId, collectorPath, api);
         if (ret != SUCCESS) {
-            LOGE("Load collector failed, eventId is %{public}ld", eventId);
+            LOGE("Load collector failed, eventId is %{public}" PRId64 "", eventId);
             StopCollectors(loadedEventIds_);
             return false;
         }
@@ -81,10 +81,10 @@ bool DataCollection::StopCollectors(const std::vector<int64_t>& eventIds)
     bool ret = true;
     std::lock_guard<std::mutex> lock(mutex_);
     for (int64_t eventId : eventIds) {
-        LOGI("StopCollectors eventId is %{public}ld", eventId);
+        LOGI("StopCollectors eventId is %{public}" PRId64 "", eventId);
         auto loader = eventIdToLoaderMap_.find(eventId);
         if (loader == eventIdToLoaderMap_.end()) {
-            LOGI("Collector not found, eventId is %{public}ld", eventId);
+            LOGI("Collector not found, eventId is %{public}" PRId64 "", eventId);
             continue;
         }
         ICollector* collector = loader->second->CallGetCollector();
@@ -94,7 +94,7 @@ bool DataCollection::StopCollectors(const std::vector<int64_t>& eventIds)
         } else {
             int result = collector->Stop();
             if (result != 0) {
-                LOGE("Failed to stop collector, eventId is %{public}ld", eventId);
+                LOGE("Failed to stop collector, eventId is %{public}" PRId64 "", eventId);
                 ret = false;
             }
             LOGI("Stop collector");

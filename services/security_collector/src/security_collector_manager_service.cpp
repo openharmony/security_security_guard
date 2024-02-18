@@ -116,7 +116,7 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
     const sptr<IRemoteObject> &callback)
 {
     Event event = subscribeInfo.GetEvent();
-    LOGI("in subscribe, subscribinfo: duration:%{public}ld, isNotify:%{public}d, eventid:%{public}ld, \n"
+    LOGI("in subscribe, subscribinfo: duration:%{public}" PRId64 ", isNotify:%{public}d, eventid:%{public}" PRId64 ", \n"
         "version:%{public}s, extra:%{public}s", subscribeInfo.GetDuration(), (int)subscribeInfo.IsNotify(),
         event.eventId, event.version.c_str(), event.extra.c_str());
 
@@ -133,7 +133,7 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
     }
     auto eventHandler = [this] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {
         if (appName == NOTIFY_APP_NAME) {
-            LOGI("eventid:%{public}ld callback default", event.eventId);
+            LOGI("eventid:%{public}" PRId64 " callback default", event.eventId);
             auto reportEvent = [event] () {
                 auto info = std::make_shared<SecurityGuard::EventInfo>(event.eventId, event.version, event.content);
                 (void)SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(info);

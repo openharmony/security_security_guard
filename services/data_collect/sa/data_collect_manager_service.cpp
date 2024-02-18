@@ -132,7 +132,7 @@ int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::strin
         SGLOGE("CheckRiskContent error");
         return BAD_PARAM;
     }
-    SGLOGD("eventId=%{public}ld, version=%{public}s, date=%{public}s", eventId, version.c_str(), time.c_str());
+    SGLOGD("eventId=%{public}" PRId64 ", version=%{public}s, date=%{public}s", eventId, version.c_str(), time.c_str());
     SecEvent event {
         .eventId = eventId,
         .version = version,
@@ -300,7 +300,7 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     event.time = SecurityGuardUtils::GetDate();
     event.eventId = subscribeInfo.GetEvent().eventId;
     event.ret = ret;
-    SGLOGI("DataCollectManagerService, InsertSubscribeRecord eventId=%{public}ld", event.eventId);
+    SGLOGI("DataCollectManagerService, InsertSubscribeRecord eventId=%{public}" PRId64 "", event.eventId);
     BigData::ReportSgSubscribeEvent(event);
 
     return ret;

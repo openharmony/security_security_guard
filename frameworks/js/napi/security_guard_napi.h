@@ -27,6 +27,7 @@ constexpr int VERSION_MAX_LEN = 50;
 constexpr int CONTENT_MAX_LEN = 900;
 constexpr int EXTRA_MAX_LEN = 900;
 constexpr int DEVICE_ID_MAX_LEN = 64;
+constexpr int MODEL_NAME_MAX_LEN = 64;
 constexpr int NAPI_ON_RESULT_ARGS_CNT = 3;
 constexpr char NAPI_ON_RESULT_ATTR[] = "onResult";
 constexpr char NAPI_SECURITY_MODEL_RESULT_DEVICE_ID_ATTR[] = "deviceId";

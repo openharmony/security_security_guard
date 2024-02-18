@@ -22,7 +22,7 @@ namespace OHOS::Security::SecurityCollector {
 
 int32_t SecurityCollectorManagerCallbackService::OnNotify(const Event &event)
 {
-    LOGD("eventId = %{public}ld callback", event.eventId);
+    LOGD("eventId = %{public}" PRId64 " callback", event.eventId);
     if (subscriber_ != nullptr) {
         subscriber_->OnNotify(event);
     }

@@ -1,0 +1,24 @@
+{
+    "patches": [
+        {
+            "project":"productdefine_common",
+            "path":"productdefine/common",
+            "pr_url":"https://gitee.com/openharmony/productdefine_common/pulls/721"
+        },
+        {
+            "project":"security_selinux_adapter",
+            "path":"base/security/selinux_adapter",
+            "pr_url":"https://gitee.com/openharmony/security_selinux_adapter/pulls/2901"
+        },
+        {
+            "project":"interface_sdk-js",
+            "path":"interface/sdk-js",
+            "pr_url":"https://gitee.com/openharmony/interface_sdk-js/pulls/7083"
+        },
+        {
+            "project":"build",
+            "path":"build",
+            "pr_url":"https://gitee.com/openharmony/build/pulls/2387"
+        }
+    ]
+}

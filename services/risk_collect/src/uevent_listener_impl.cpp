@@ -165,7 +165,7 @@ void UeventListenerImpl::ParseEvent(char *buffer, size_t length)
             }
 
             TaskHandler::Task task = [event] () mutable {
-                SGLOGD("kernel report eventId=%{public}ld", event.eventId);
+                SGLOGD("kernel report eventId=%{public}" PRId64 "", event.eventId);
                 (void) DatabaseManager::GetInstance().InsertEvent(KERNEL_SOURCE, event);
             };
             TaskHandler::GetInstance()->AddTask(task);
