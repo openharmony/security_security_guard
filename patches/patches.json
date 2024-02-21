@@ -4,6 +4,16 @@
             "project":"productdefine_common",
             "path":"productdefine/common",
             "pr_url":"https://gitee.com/openharmony/productdefine_common/pulls/835"
+        },
+        {
+            "project":"vendor_hihope",
+            "path":"vendor/hihope",
+            "pr_url":"https://gitee.com/openharmony/vendor_hihope/pulls/1091"
+        },
+        {
+            "project":"device_board_hihope",
+            "path":"device/board/hihope",
+            "pr_url":"https://gitee.com/openharmony/device_board_hihope/pulls/320"
         }
     ]
 }
