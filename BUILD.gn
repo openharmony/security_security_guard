@@ -74,9 +74,3 @@ group("security_collector_service_build_module") {
     ]
   }
 }
-
-group("security_collector_seccomp_filter_module") {
-  if (is_standard_system && build_seccomp) {
-    deps = [ "${sg_root_dir}/seccomp_policy:security_collector_seccomp_filter" ]
-  }
-}
