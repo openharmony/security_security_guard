@@ -14,6 +14,11 @@
             "project":"device_board_hihope",
             "path":"device/board/hihope",
             "pr_url":"https://gitee.com/openharmony/device_board_hihope/pulls/320"
+        },
+        {
+            "project":"security_selinux_adapter",
+            "path":"base/security/selinux_adapter",
+            "pr_url":"https://gitee.com/openharmony/security_selinux_adapter/pulls/3763"
         }
     ]
 }
