@@ -756,7 +756,7 @@ static napi_value ParseModelId(napi_env env, napi_value object, uint32_t &modelI
 {
     char modelName[MODEL_NAME_MAX_LEN] = {0};
     size_t len = MODEL_NAME_MAX_LEN;
-    if (ParseString(env, object, "modelName", modelName, len) == nullptr) {
+    if (GetString(env, object, "modelName", modelName, len) == nullptr) {
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
         return nullptr;
     }
