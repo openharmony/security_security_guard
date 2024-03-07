@@ -44,7 +44,8 @@
         "safwk",
         "samgr",
         "time_service",
-        "appverify"
+        "appverify",
+        "json"
       ],
       "third_party": [
         "openssl",
