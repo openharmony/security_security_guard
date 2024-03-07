@@ -26,7 +26,6 @@ ohos_shared_library("sg_classify_service") {
   part_name = "security_guard"
 
   include_dirs = [
-    "//third_party/json/include",
     "${sg_root_dir}/services/bigdata/include",
     "${sg_root_dir}/interfaces/inner_api/classify/include",
     "${sg_root_dir}/services/config_manager/include",
@@ -78,9 +77,10 @@ ohos_shared_library("sg_classify_service") {
     "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "os_account:os_account_innerkits",
   ]
 }
