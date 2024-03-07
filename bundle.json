@@ -1,5 +1,5 @@
 {
-  "name": "@openharmony/security_guard",
+  "name": "@ohos/security_guard",
   "description": "security_guard",
   "version": "3.1.0",
   "license": "Apache License 2.0",
