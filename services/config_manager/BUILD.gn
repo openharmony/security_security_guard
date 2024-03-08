@@ -19,7 +19,6 @@ ohos_shared_library("sg_config_manager") {
   part_name = "security_guard"
 
   include_dirs = [
-    "//third_party/json/include",
     "${sg_root_dir}/services/config_manager/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/json/include",
@@ -52,11 +51,12 @@ ohos_shared_library("sg_config_manager") {
   }
   stack_protector_ret = true
 
-  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp", ]
+  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
 
   external_deps = [
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
+    "json:nlohmann_json_static",
   ]
 }
