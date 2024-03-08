@@ -22,7 +22,6 @@ ohos_source_set("sg_model_manager_stamp") {
       [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
 
   include_dirs = [
-    "//third_party/json/include",
     "include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/interfaces",
@@ -62,6 +61,7 @@ ohos_source_set("sg_model_manager_stamp") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "json:nlohmann_json_static",
     "relational_store:native_rdb",
   ]
 }
