@@ -26,11 +26,6 @@
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 #include "store_define.h"
-#include "common_event_manager.h"
-#include "common_event_subscribe_info.h"
-#include "common_event_subscriber.h"
-#include "security_guard_utils.h"
-#include "bigdata.h"
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
@@ -38,8 +33,6 @@ namespace {
     constexpr const char *AUDIT_SWITCH = "audit_switch";
     constexpr int32_t AUDIT_SWITCH_OFF = 0;
     constexpr int32_t AUDIT_SWITCH_ON = 1;
-    const std::string PARAM_SEP = ",";
-    const std::string HSDR_EVENT_UPLOAD = "usual.event.HSDR_EVENT_UPLOAD";
 }
 
 class InitCallback : public DistributedHardware::DmInitCallback {
@@ -48,70 +41,11 @@ public:
     void OnRemoteDied() override {};
 };
 
-class EventSubscriber : public EventFwk::CommonEventSubscriber {
-public:
-    explicit EventSubscriber(const EventFwk::CommonEventSubscribeInfo &subscriberInfo)
-        : EventFwk::CommonEventSubscriber(subscriberInfo) {};
-    ~EventSubscriber() override = default;
-    void OnReceiveEvent(const EventFwk::CommonEventData &eventData) override
-    {
-        const std::string data = eventData.GetData();
-        SGLOGI("OnReceiveEvent, data=%{public}s", data.c_str());
-        std::vector<std::string> params;
-        SplitStr(data, PARAM_SEP, params);
-        std::vector<SecEvent> events;
-        auto paramsSize = static_cast<int>(params.size());
-        if (paramsSize == 0) {
-            DatabaseManager::GetInstance().QueryAllEvent(RISK_TABLE, events);
-            ReportEvent(events, true);
-            return;
-        }
-        for (int i = 0 ; i < paramsSize ; i++) {
-            int64_t eventId = 0;
-            const std::string param = params[i];
-            if (param == "" || !SecurityGuardUtils::StrToI64(param, eventId)) {
-                continue;
-            }
-            DatabaseManager::GetInstance().QueryEventByEventId(eventId, events);
-            if (i == (paramsSize - 1)) {
-                ReportEvent(events, true);
-            } else {
-                ReportEvent(events, false);
-            }
-        }
-    }
-private:
-    void ReportEvent(std::vector<SecEvent> &events, bool isLastEvent)
-    {
-        auto eventsSize = static_cast<int>(events.size());
-        for (int j = 0 ; j < eventsSize ; j++) {
-            auto event = events[j];
-            ClassifyEvent reportEvent {};
-            reportEvent.eventInfo = event.content;
-            reportEvent.status = std::to_string(event.eventId);
-            if (isLastEvent && j == (eventsSize - 1)) {
-                reportEvent.pid = 0;
-            } else {
-                reportEvent.pid = -1;
-            }
-            BigData::ReportClassifyEvent(reportEvent);
-        }
-    }
-};
-
 void DatabaseManager::Init()
 {
     // init database
     int32_t ret = RiskEventRdbHelper::GetInstance().Init();
     SGLOGI("risk event rdb init result is %{public}d", ret);
-    
-    EventFwk::MatchingSkills matchingSkills;
-    matchingSkills.AddEvent(HSDR_EVENT_UPLOAD);
-    EventFwk::CommonEventSubscribeInfo subscriberInfo(matchingSkills);
-    std::shared_ptr<EventSubscriber> subscriber = std::make_shared<EventSubscriber>(subscriberInfo);
-    SGLOGI("EventSubscriber begin Subscribe");
-    auto result = EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber);
-    SGLOGI("EventSubscriber result : %{public}d", result);
     
     // init audit according to audit switch state
     if (PreferenceWrapper::GetInt(AUDIT_SWITCH, AUDIT_SWITCH_OFF) == AUDIT_SWITCH_ON) {
