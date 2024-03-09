@@ -17,11 +17,8 @@
 
 #include <thread>
 
-#include "ability_connect_callback_stub.h"
-#include "extension_manager_client.h"
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
-#include "os_account_manager.h"
 
 #include "bigdata.h"
 #include "database_manager.h"
@@ -36,7 +33,6 @@
 #include "task_handler.h"
 #include "model_manager.h"
 #include "config_manager.h"
-#include "store_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 REGISTER_SYSTEM_ABILITY_BY_ID(RiskAnalysisManagerService, RISK_ANALYSIS_MANAGER_SA_ID, true);
@@ -47,9 +43,6 @@ namespace {
     const std::string SET_MODEL_PERMISSION = "ohos.permission.securityguard.SET_MODEL_STATE";
     const std::vector<uint32_t> MODELIDS = { 3001000000, 3001000001, 3001000002, 3001000005, 3001000006, 3001000007 };
     constexpr uint32_t AUDIT_MODEL_ID = 3001000003;
-    constexpr char HSDR_BUNDLE_NAME[] = "com.huawei.hmos.hsdr";
-    constexpr int32_t HSDR_USER_ID = 100;
-    constexpr int32_t SLEEP_INTERVAL = 2000;
 }
 
 RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnCreate)
@@ -57,32 +50,6 @@ RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnC
 {
     SGLOGW("%{public}s", __func__);
 }
-
-class AbilityConnection : public AAFwk::AbilityConnectionStub {
-public:
-    AbilityConnection() = default;
-    ~AbilityConnection() = default;
-    void OnAbilityConnectDone(const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject,
-        int resultCode) override {}
-    void OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode) override {}
-};
-
-class AccountSubscriber : public AccountSA::OsAccountSubscriber {
-public:
-    ~AccountSubscriber() override = default;
-    int GetUserId() { return userId_; }
-    void OnAccountsChanged(const int &id) override
-    {
-        userId_ = id;
-        SGLOGI("security_guard userId = %{public}d", userId_);
-        if (userId_ == HSDR_USER_ID) {
-            RiskAnalysisManagerService::StartUpHsdr();
-        }
-    }
-
-private:
-    int userId_{-1};
-};
 
 void RiskAnalysisManagerService::OnStart()
 {
@@ -105,14 +72,6 @@ void RiskAnalysisManagerService::OnStart()
     TaskHandler::GetInstance()->AddTask(task);
 
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
-    AddSystemAbilityListener(ABILITY_MGR_SERVICE_ID);
-    AddSystemAbilityListener(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-
-    std::shared_ptr<AccountSubscriber> accountSubscriber_ = std::make_shared<AccountSubscriber>();
-    int32_t accountSubscriberCode = AccountSA::OsAccountManager::SubscribeOsAccount(accountSubscriber_);
-    if (accountSubscriberCode != ERR_OK) {
-        SGLOGE("subscribe os account failed, code=%{public}d", accountSubscriberCode);
-    }
 }
 
 void RiskAnalysisManagerService::OnStop()
@@ -204,26 +163,7 @@ void RiskAnalysisManagerService::OnAddSystemAbility(int32_t systemAbilityId, con
     SGLOGI("OnAddSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
     if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
         ConfigManager::GetInstance()->StartUpdate();
-    } else if (systemAbilityId == ABILITY_MGR_SERVICE_ID || systemAbilityId == BUNDLE_MGR_SERVICE_SYS_ABILITY_ID) {
-        StartUpHsdr();
     }
-}
-
-void RiskAnalysisManagerService::StartUpHsdr()
-{
-    AAFwk::Want want;
-    std::string bundleName = HSDR_BUNDLE_NAME;
-    std::string abilityName = "HSDRService";
-    want.SetAction("security_guard");
-    want.SetElementName(bundleName, abilityName);
-    sptr<AbilityConnection> abilityConnection = new AbilityConnection();
-    auto ret = AAFwk::ExtensionManagerClient::GetInstance()
-        .ConnectServiceExtensionAbility(want, abilityConnection, HSDR_USER_ID);
-    SGLOGI("connect result ret: %{public}d", ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
-    auto ret1 = AAFwk::ExtensionManagerClient::GetInstance()
-        .DisconnectAbility(abilityConnection);
-    SGLOGI("disconnect result ret: %{public}d", ret1);
 }
 
 void RiskAnalysisManagerService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
