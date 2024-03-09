@@ -78,7 +78,6 @@ ohos_shared_library("sg_classify_service") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
-    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
