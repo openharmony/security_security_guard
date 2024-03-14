@@ -25,6 +25,7 @@ config("security_guard_config") {
 }
 
 ohos_shared_library("libsg_collect_sdk") {
+  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "security"
   part_name = "security_guard"
   output_name = "libsg_collect_sdk"
