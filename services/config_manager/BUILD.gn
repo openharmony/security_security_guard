@@ -18,6 +18,10 @@ ohos_shared_library("sg_config_manager") {
   subsystem_name = "security"
   part_name = "security_guard"
 
+  version_script = "sg_config_manager.map"
+
+  configs = [ "${sg_root_dir}/resource/config/build:coverage_flags" ]
+
   include_dirs = [
     "${sg_root_dir}/services/config_manager/include",
     "${sg_root_dir}/frameworks/common/constants/include",
@@ -25,6 +29,7 @@ ohos_shared_library("sg_config_manager") {
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/frameworks/common/utils/include",
     "${sg_root_dir}/services/bigdata/include",
+    "${sg_root_dir}/services/data_collect/store/include",
   ]
 
   sources = [
@@ -38,6 +43,10 @@ ohos_shared_library("sg_config_manager") {
     "${sg_root_dir}/services/config_manager/src/event_config.cpp",
     "${sg_root_dir}/services/config_manager/src/model_cfg_marshalling.cpp",
     "${sg_root_dir}/services/config_manager/src/model_config.cpp",
+    "${sg_root_dir}/services/config_manager/src/global_app_config.cpp",
+    "${sg_root_dir}/services/config_manager/src/local_app_config.cpp",
+    "${sg_root_dir}/services/config_manager/src/app_info_rdb_helper.cpp",
+    "${sg_root_dir}/services/config_manager/src/config_database_helper.cpp",
   ]
 
   sanitize = {
@@ -47,16 +56,19 @@ ohos_shared_library("sg_config_manager") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
   }
   stack_protector_ret = true
 
-  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
+  deps = [
+    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
+    "${sg_root_dir}/services/data_collect:sg_collect_service_database",
+  ]
 
   external_deps = [
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "json:nlohmann_json_static",
+    "relational_store:native_rdb",
   ]
 }

@@ -67,12 +67,14 @@ using EventCfg = struct {
     std::string eventName;
     uint32_t version;
     uint32_t eventType;
+    uint32_t collectOnStart;
     uint32_t dataSensitivityLevel;
     uint32_t storageRamNums;
     uint32_t storageRomNums;
     int32_t storageTime;
     std::vector<std::string> owner;
     uint32_t source;
+    std::string dbTable;
 };
 
 using DataMgrCfgSt = struct {
@@ -100,6 +102,21 @@ using SecEvent = struct {
     std::string deviceId;
 };
 
+using AppAttribute = enum {
+    NORMAL,
+    PAYMENT,
+    MALICIOUS,
+    MONITORING,
+    ATTRMAX
+};
+
+using AppInfo = struct {
+    std::string appName;
+    std::string appHash;
+    std::vector<std::string> attrs;
+    int isGlobalApp;
+    int isUpdate;
+};
 using StartMode = enum {
     NOT_SUPPORT,
     START_ON_STARTUP,
@@ -122,21 +139,30 @@ using PathIndex = enum {
     EVENT_CFG_INDEX,
     MODEL_CFG_INDEX,
     SIG_RULE_CFG_INDEX,
-    URL_RULE_CFG_INDEX
+    URL_RULE_CFG_INDEX,
+    LOCAL_APP_CFG_INDEX,
+    GLOBAL_APP_CFG_INDEX,
+    RELATED_EVENT_ANALYSIS_CFG_INDEX
 };
 
 const std::vector<std::string> CONFIG_CACHE_FILES = {
     "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/security_guard_event.cfg",
     "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/security_guard_model.cfg",
     "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/signature_rule.cfg",
-    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/url_rule.cfg"
+    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/url_rule.cfg",
+    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/local_app_attribute.json",
+    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/global_app_attribute.json",
+    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/related_event_analysis.json"
 };
 
 const std::vector<std::string> CONFIG_UPTATE_FILES = {
     "/data/service/el1/public/security_guard/security_guard_event.cfg",
     "/data/service/el1/public/security_guard/security_guard_model.cfg",
     "/data/service/el1/public/security_guard/signature_rule.cfg",
-    "/data/service/el1/public/security_guard/url_rule.cfg"
+    "/data/service/el1/public/security_guard/url_rule.cfg",
+    "/data/service/el1/public/security_guard/local_app_attr.json",
+    "/data/service/el1/public/security_guard/global_app_attr.json",
+    "/data/service/el1/public/security_guard/related_event_analysis.json"
 };
 
 const std::vector<std::string> CONFIG_PRESET_FILES = {

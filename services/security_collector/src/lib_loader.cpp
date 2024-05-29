@@ -18,6 +18,7 @@
 #include <dlfcn.h>
 #include <string>
 
+#include "directory_ex.h"
 #include "security_collector_log.h"
 
 namespace OHOS::Security::SecurityCollector {
@@ -34,7 +35,13 @@ LibLoader::~LibLoader()
 ErrorCode LibLoader::LoadLib()
 {
     LOGI("LoadLib start");
-    m_handle = dlopen(m_libPath.c_str(), RTLD_LAZY);
+    std::string realPath;
+    if (!PathToRealPath(m_libPath, realPath) || realPath.find("/system/lib64") != 0) {
+        LOGE("LoadLib m_libPath error, realPath: %{public}s", realPath.c_str());
+        m_isLoaded = false;
+        return RET_DLOPEN_LIB_FAIL;
+    }
+    m_handle = dlopen(realPath.c_str(), RTLD_LAZY);
     if (m_handle == nullptr) {
         LOGE("LoadLib m_handle error");
         m_isLoaded = false;

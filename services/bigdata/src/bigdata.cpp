@@ -19,16 +19,16 @@
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
-    const std::string CALLER_PID = "CALLER_PID";
-    const std::string CALL_TIME = "CALL_TIME";
-    const std::string EVENT_SIZE = "EVENT_SIZE";
-    const std::string EVENT_INFO = "EVENT_INFO";
-    const std::string RISK_STATUS = "RISK_STATUS";
-    const std::string EVENT_ID = "EVENT_ID";
-    const std::string SUB_RET = "SUB_RET";
-    const std::string UNSUB_RET = "UNSUB_RET";
-    const std::string CONFIG_PATH = "CONFIG_PATH";
-    const std::string RET = "RET";
+    constexpr const char* CALLER_PID = "CALLER_PID";
+    constexpr const char* CALL_TIME = "CALL_TIME";
+    constexpr const char* EVENT_SIZE = "EVENT_SIZE";
+    constexpr const char* EVENT_INFO = "EVENT_INFO";
+    constexpr const char* RISK_STATUS = "RISK_STATUS";
+    constexpr const char* EVENT_ID = "EVENT_ID";
+    constexpr const char* SUB_RET = "SUB_RET";
+    constexpr const char* UNSUB_RET = "UNSUB_RET";
+    constexpr const char* CONFIG_PATH = "CONFIG_PATH";
+    constexpr const char* RET = "RET";
 }
 
 void BigData::ReportObatinDataEvent(const ObatinDataEvent &event)

@@ -25,9 +25,12 @@ config("security_guard_config") {
 }
 
 ohos_shared_library("libsg_classify_sdk") {
+  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "security"
   part_name = "security_guard"
   output_name = "libsg_classify_sdk"
+
+  configs = [ "${sg_root_dir}/resource/config/build:coverage_flags" ]
 
   public_configs = [ ":security_guard_config" ]
 
@@ -54,7 +57,6 @@ ohos_shared_library("libsg_classify_sdk") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
   }
   stack_protector_ret = true
 

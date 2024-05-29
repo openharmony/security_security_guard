@@ -74,7 +74,6 @@ bool ModelConfig::Parse()
     }
     CacheModelConfig(configs);
     CacheModelToEvent(configs);
-    CacheEventToTable(configs);
     SGLOGI("cache ModelConfig success");
     return true;
 }
@@ -104,7 +103,6 @@ bool ModelConfig::Update()
     ConfigDataManager::GetInstance().ResetModelMap();
     CacheModelConfig(configs);
     CacheModelToEvent(configs);
-    CacheEventToTable(configs);
     SGLOGI("cache ModelConfig success");
     return true;
 }
@@ -131,17 +129,6 @@ void ModelConfig::CacheModelToEvent(const std::vector<ModelCfg> &configs)
             set.emplace(event);
         }
         ConfigDataManager::GetInstance().InsertModelToEventMap(config.modelId, set);
-    }
-}
-
-void ModelConfig::CacheEventToTable(const std::vector<ModelCfg> &configs)
-{
-    for (const ModelCfg &config : configs) {
-        SGLOGD("modelId=%{public}u", config.modelId);
-        std::vector<int64_t> eventIds = config.eventList;
-        for (int64_t eventId : eventIds) {
-            ConfigDataManager::GetInstance().InsertEventToTableMap(eventId, config.dbTable);
-        }
     }
 }
 } // OHOS::Security::SecurityGuard

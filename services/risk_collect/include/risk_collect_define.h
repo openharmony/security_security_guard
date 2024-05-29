@@ -25,9 +25,9 @@ using DISTRIBUTE_STATUS = enum {
 };
 
 constexpr int32_t MAX_DISTRIBUTE_LENS = 100;
-const std::string KV_STORE_APP_ID = "security_guard_service";
-const std::string BASE_EVENT_ID_STORE_ID = "base_event_id";
-const std::string EVENT_DATA_STORE_ID = "event_data";
+constexpr const char* KV_STORE_APP_ID = "security_guard_service";
+constexpr const char* BASE_EVENT_ID_STORE_ID = "base_event_id";
+constexpr const char* EVENT_DATA_STORE_ID = "event_data";
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_RISK_COLLECT_DEFINE_H

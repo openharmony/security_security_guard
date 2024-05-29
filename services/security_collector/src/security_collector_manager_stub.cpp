@@ -19,6 +19,7 @@
 #include "security_collector_log.h"
 
 namespace OHOS::Security::SecurityCollector {
+
 int32_t SecurityCollectorManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
     MessageParcel &reply, MessageOption &option)
 {
@@ -34,6 +35,15 @@ int32_t SecurityCollectorManagerStub::OnRemoteRequest(uint32_t code, MessageParc
             }
             case CMD_COLLECTOR_UNSUBCRIBE: {
                 return HandleUnsubscribeCmd(data, reply);
+            }
+            case CMD_COLLECTOR_START: {
+                return HandleStartCmd(data, reply);
+            }
+            case CMD_COLLECTOR_STOP: {
+                return HandleStopCmd(data, reply);
+            }
+            case CMD_SECURITY_EVENT_QUERY: {
+                return HandleSecurityEventQueryCmd(data, reply);
             }
             default: {
                 break;
@@ -88,5 +98,108 @@ int32_t SecurityCollectorManagerStub::HandleUnsubscribeCmd(MessageParcel &data, 
     int32_t ret = Unsubscribe(callback);
     reply.WriteInt32(ret);
     return ret;
+}
+
+int32_t SecurityCollectorManagerStub::HandleStartCmd(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("in HandleStartCmd");
+    uint32_t expected = sizeof(uint64_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (expected >= actual) {
+        LOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    std::unique_ptr<SecurityCollectorSubscribeInfo> info(data.ReadParcelable<SecurityCollectorSubscribeInfo>());
+    if (!info) {
+        LOGE("failed to read parcelable for subscribeInfo");
+        return BAD_PARAM;
+    }
+
+    auto callback = data.ReadRemoteObject();
+    if (callback == nullptr) {
+        LOGE("callback is nullptr");
+        return BAD_PARAM;
+    }
+    int32_t ret = CollectorStart(*info, callback);
+    reply.WriteInt32(ret);
+    return ret;
+}
+
+int32_t SecurityCollectorManagerStub::HandleStopCmd(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("%{public}s", __func__);
+    uint32_t expected = sizeof(uint64_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (expected >= actual) {
+        LOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    std::unique_ptr<SecurityCollectorSubscribeInfo> info(data.ReadParcelable<SecurityCollectorSubscribeInfo>());
+    if (!info) {
+        LOGE("failed to read parcelable for subscribeInfo");
+        return BAD_PARAM;
+    }
+
+    auto callback = data.ReadRemoteObject();
+    if (callback == nullptr) {
+        LOGE("callback is nullptr");
+        return BAD_PARAM;
+    }
+    int32_t ret = CollectorStop(*info, callback);
+    reply.WriteInt32(ret);
+    return ret;
+}
+
+int32_t SecurityCollectorManagerStub::HandleSecurityEventQueryCmd(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("%{public}s", __func__);
+    uint32_t expected = sizeof(uint32_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (expected >= actual) {
+        LOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    uint32_t size = 0;
+    if (!data.ReadUint32(size)) {
+        LOGE("failed to get the event size");
+        return BAD_PARAM;
+    }
+
+    if (size > MAX_QUERY_EVENT_SIZE) {
+        LOGE("the ruler size error");
+        return BAD_PARAM;
+    }
+    std::vector<SecurityCollector::SecurityEventRuler> rulers;
+    for (uint32_t index = 0; index < size; index++) {
+        std::shared_ptr<SecurityCollector::SecurityEventRuler> ruler(
+            data.ReadParcelable<SecurityCollector::SecurityEventRuler>());
+        if (ruler == nullptr) {
+            LOGE("failed read security event");
+            return BAD_PARAM;
+        }
+        rulers.emplace_back(*ruler);
+    }
+
+    std::vector<SecurityCollector::SecurityEvent> events;
+    int32_t ret = QuerySecurityEvent(rulers, events);
+    if (ret != SUCCESS) {
+        LOGE("QuerySecurityEvent failed, ret=%{public}d", ret);
+        return ret;
+    }
+    if (!reply.WriteUint32(events.size())) {
+        LOGE("failed to WriteInt32 for parcelable vector size");
+        return WRITE_ERR;
+    }
+
+    for (const auto &event : events) {
+        if (!reply.WriteParcelable(&event)) {
+            LOGE("failed to WriteParcelable for parcelable");
+            return WRITE_ERR;
+        }
+    }
+    return SUCCESS;
 }
 }

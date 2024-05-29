@@ -64,6 +64,35 @@ bool DataCollection::StartCollectors(const std::vector<int64_t>& eventIds, std::
     return true;
 }
 
+bool DataCollection::SecurityGuardSubscribeCollector(const std::vector<int64_t>& eventIds)
+{
+    LOGI("Start to subscribe collectors start");
+    std::vector<int64_t> loadedEventIds_;
+    for (int64_t eventId : eventIds) {
+        LOGI("StartCollectors eventId is %{public}" PRId64 "", eventId);
+        if (IsCollectorStarted(eventId)) {
+            LOGI("Collector already started, eventId is %{public}" PRId64 "", eventId);
+            continue;
+        }
+        std::string collectorPath;
+        ErrorCode ret = GetCollectorPath(eventId, collectorPath);
+        if (ret != SUCCESS) {
+            LOGE("GetCollectorPath failed, eventId is %{public}" PRId64 "", eventId);
+            StopCollectors(loadedEventIds_);
+            return false;
+        }
+        ret = LoadCollector(eventId, collectorPath, nullptr);
+        if (ret != SUCCESS) {
+            LOGE("GetCollectorPath failed, eventId is %{public}" PRId64 "", eventId);
+            StopCollectors(loadedEventIds_);
+            return false;
+        }
+        loadedEventIds_.push_back(eventId);
+    }
+    LOGI("StartCollectors finish");
+    return true;
+}
+
 bool DataCollection::IsCollectorStarted(int64_t eventId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -93,6 +122,10 @@ bool DataCollection::StopCollectors(const std::vector<int64_t>& eventIds)
             ret = false;
         } else {
             int result = collector->Stop();
+            int isStartWithSub = collector->IsStartWithSub();
+            if (isStartWithSub == 1) {
+                result = collector->Unsubscribe(eventId);
+            }
             if (result != 0) {
                 LOGE("Failed to stop collector, eventId is %{public}" PRId64 "", eventId);
                 ret = false;
@@ -111,7 +144,7 @@ ErrorCode DataCollection::LoadCollector(int64_t eventId, std::string path, std::
     std::unique_ptr<LibLoader> loader = std::make_unique<LibLoader>(path);
     ErrorCode ret = loader->LoadLib();
     if (ret != SUCCESS) {
-        LOGE("LoadLib error, ret=%{public}d", ret);
+        LOGE("LoadLib error, ret=%{public}d, path : %{public}s", ret, path.c_str());
         return FAILED;
     }
     ICollector* collector = loader->CallGetCollector();
@@ -120,6 +153,10 @@ ErrorCode DataCollection::LoadCollector(int64_t eventId, std::string path, std::
         return FAILED;
     }
     int result = collector->Start(api);
+    int isStartWithSub = collector->IsStartWithSub();
+    if (isStartWithSub == 1) {
+        result = collector->Subscribe(eventId);
+    }
     if (result != 0) {
         LOGE("Failed to start collector");
         return FAILED;
@@ -161,9 +198,66 @@ ErrorCode DataCollection::GetCollectorPath(int64_t eventId, std::string& path)
     }
 
     auto it = std::find_if(moduleCfgs.begin(), moduleCfgs.end(),
-        [eventId] (const ModuleCfgSt &module) { return module.eventId == eventId;});
+        [eventId] (const ModuleCfgSt &module) {
+            auto ifIt = std::find(module.eventId.begin(), module.eventId.end(), eventId);
+            if (ifIt != module.eventId.end()) {
+                LOGI("seccess to find the %{public}" PRId64 "", eventId);
+                return true;
+            } else {
+                return false;
+            }
+        });
     if (it != moduleCfgs.end()) {
         path = it->modulePath + it->moduleName;
+        return SUCCESS;
+    }
+
+    LOGE("The eventId does not exist");
+    return FAILED;
+}
+
+ErrorCode DataCollection::GetCollectorType(int64_t eventId, int32_t& collectorType)
+{
+    LOGI("Start GetCollectorType");
+    std::ifstream stream(SA_CONFIG_PATH, std::ios::in);
+    if (!stream) {
+        LOGE("stream error, %{public}s", strerror(errno));
+        return STREAM_ERROR;
+    }
+
+    ErrorCode ret = CheckFileStream(stream);
+    if (ret != SUCCESS) {
+        LOGE("check file stream error, ret=%{public}d", ret);
+        stream.close();
+        return ret;
+    }
+    nlohmann::json json;
+    stream >> json;
+    stream.close();
+
+    if (json.is_discarded()) {
+        LOGE("parse json error");
+        return JSON_ERR;
+    }
+
+    std::vector<ModuleCfgSt> moduleCfgs;
+    if (!SecurityGuard::JsonCfg::Unmarshal<ModuleCfgSt>(moduleCfgs, json, MODULES)) {
+        LOGE("Unmarshal moduleCfgs error");
+        return JSON_ERR;
+    }
+
+    auto it = std::find_if(moduleCfgs.begin(), moduleCfgs.end(),
+        [eventId] (const ModuleCfgSt &module) {
+            auto ifIt = std::find(module.eventId.begin(), module.eventId.end(), eventId);
+            if (ifIt != module.eventId.end()) {
+                return true;
+            } else {
+                return false;
+            }
+        });
+    if (it != moduleCfgs.end()) {
+        collectorType = it->collectorType;
+        LOGI("get event %{public}" PRId64 " collector type is %{public}d.", eventId, collectorType);
         return SUCCESS;
     }
 
@@ -186,5 +280,55 @@ ErrorCode DataCollection::CheckFileStream(std::ifstream &stream)
     }
     stream.seekg(0, std::ios::beg);
     return SUCCESS;
+}
+
+ErrorCode DataCollection::LoadCollector(std::string path, const SecurityEventRuler &ruler,
+    std::vector<SecurityEvent> &events)
+{
+    LOGI("Start LoadCollector");
+    std::unique_ptr<LibLoader> loader = std::make_unique<LibLoader>(path);
+    ErrorCode ret = loader->LoadLib();
+    if (ret != SUCCESS) {
+        LOGE("LoadLib error, ret=%{public}d", ret);
+        return FAILED;
+    }
+    ICollector* collector = loader->CallGetCollector();
+    if (collector == nullptr) {
+        LOGE("CallGetCollector error");
+        return FAILED;
+    }
+    int result = collector->Query(ruler, events);
+    if (result != 0) {
+        LOGE("Failed to start collector");
+        return FAILED;
+    }
+    LOGI("End LoadCollector");
+    return SUCCESS;
+}
+
+int32_t DataCollection::QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
+    std::vector<SecurityEvent> &events)
+{
+    LOGI("QuerySecurityEvent start");
+    if (rulers.empty()) {
+        LOGE("Invalid input parameter");
+        return false;
+    }
+    for (const auto &ruler : rulers) {
+        LOGI("QuerySecurityEvent eventId is %{public}" PRId64 "", ruler.GetEventId());
+        std::string collectorPath;
+        ErrorCode ret = GetCollectorPath(ruler.GetEventId(), collectorPath);
+        if (ret != SUCCESS) {
+            LOGE("GetCollectorPath failed, eventId is %{public}" PRId64 "", ruler.GetEventId());
+            return false;
+        }
+        ret = LoadCollector(collectorPath, ruler, events);
+        if (ret != SUCCESS) {
+            LOGE("Load collector failed, eventId is %{public}" PRId64 "", ruler.GetEventId());
+            return false;
+        }
+    }
+    LOGI("StartCollectors finish");
+    return true;
 }
 }

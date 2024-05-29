@@ -18,8 +18,10 @@ ohos_source_set("sg_uevent_listener_stamp") {
   subsystem_name = "security"
   part_name = "security_guard"
 
-  configs =
-      [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
+  configs = [
+    "${sg_root_dir}/services/risk_classify:security_guard_model_configs",
+    "${sg_root_dir}/resource/config/build:coverage_flags"
+  ]
 
   include_dirs = [
     "${sg_root_dir}/services/risk_collect/include",
@@ -37,10 +39,6 @@ ohos_source_set("sg_uevent_listener_stamp") {
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/risk_collect/src/data_format.cpp",
-    "${sg_root_dir}/services/risk_collect/src/kernel_interface_adapter.cpp",
-    "${sg_root_dir}/services/risk_collect/src/uevent_listener.cpp",
-    "${sg_root_dir}/services/risk_collect/src/uevent_listener_impl.cpp",
-    "${sg_root_dir}/services/risk_collect/src/uevent_notify.cpp",
   ]
 
   sanitize = {
@@ -50,7 +48,6 @@ ohos_source_set("sg_uevent_listener_stamp") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
   }
   stack_protector_ret = true
 
@@ -58,28 +55,33 @@ ohos_source_set("sg_uevent_listener_stamp") {
 
   external_deps = [
     "c_utils:utils",
-    "common_event_service:cesfwk_innerkits",
     "hdf_core:libhdf_ipc_adapter",
     "hilog:libhilog",
     "json:nlohmann_json_static",
     "relational_store:native_rdb",
+    "init:libbegetutil",
   ]
 }
 
 ohos_shared_library("sg_collect_service") {
   subsystem_name = "security"
   part_name = "security_guard"
+  version_script = "sg_collect_service.map"
 
-  configs =
-      [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
+  configs = [
+    "${sg_root_dir}/services/risk_classify:security_guard_model_configs",
+    "${sg_root_dir}/resource/config/build:coverage_flags"
+  ]
 
   include_dirs = [
     "${sg_root_dir}/interfaces/inner_api/collect/include",
     "${sg_root_dir}/interfaces/inner_api/collector/include",
+    "${sg_root_dir}/interfaces/inner_api/obtaindata/include",
     "${sg_root_dir}/frameworks/common/interfaces",
     "${sg_root_dir}/services/bigdata/include",
     "${sg_root_dir}/services/config_manager/include",
     "${sg_root_dir}/services/data_collect/collect/hiview",
+    "${sg_root_dir}/services/data_collect/sa/include",
     "${sg_root_dir}/services/data_collect/store/include",
     "${sg_root_dir}/services/risk_collect/include",
     "${sg_root_dir}/frameworks/common/constants/include",
@@ -88,25 +90,25 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/frameworks/common/database/include",
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/frameworks/common/utils/include",
+    "${sg_root_dir}/services/security_collector/include"
   ]
 
   sources = [
-    "${sg_root_dir}/interfaces/inner_api/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/services/data_collect/collect/hiview/hiview_collector.cpp",
     "${sg_root_dir}/services/data_collect/collect/hiview/hiview_listener.cpp",
+    "${sg_root_dir}/interfaces/inner_api/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_subscribe_manager.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_service.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_stub.cpp",
-    "${sg_root_dir}/services/data_collect/store/src/audit_event_mem_rdb_helper.cpp",
-    "${sg_root_dir}/services/data_collect/store/src/audit_event_rdb_helper.cpp",
-    "${sg_root_dir}/services/data_collect/store/src/database.cpp",
+    "${sg_root_dir}/services/data_collect/sa/security_event_query_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
-    "${sg_root_dir}/services/data_collect/store/src/preferences_wrapper.cpp",
-    "${sg_root_dir}/services/data_collect/store/src/rdb_event_store_callback.cpp",
     "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
+    "${sg_root_dir}/services/security_collector/src/data_collection.cpp",
+    "${sg_root_dir}/services/security_collector/src/lib_loader.cpp",
+    "${sg_root_dir}/services/security_collector/src/collector_cfg_marshalling.cpp"
   ]
 
   sanitize = {
@@ -116,31 +118,69 @@ ohos_shared_library("sg_collect_service") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
   }
   stack_protector_ret = true
 
   deps = [
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
+    "${sg_root_dir}/interfaces/inner_api/collector:libsg_collector_sdk",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/data_collect:sg_uevent_listener_stamp",
+    "${sg_root_dir}/services/data_collect:sg_collect_service_database",
   ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "device_manager:devicemanagersdk",
-    "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
-    "os_account:os_account_innerkits",
-    "preferences:native_preferences",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+  ]
+}
+
+ohos_shared_library("sg_collect_service_database") {
+  subsystem_name = "security"
+  part_name = "security_guard"
+
+  configs = [
+    "${sg_root_dir}/services/risk_classify:security_guard_model_configs",
+    "${sg_root_dir}/resource/config/build:coverage_flags"
+  ]
+
+  include_dirs = [
+    "${sg_root_dir}/frameworks/common/database/include",
+    "${sg_root_dir}/frameworks/common/log/include",
+    "${sg_root_dir}/services/data_collect/store/include",
+  ]
+
+  sources = [
+    "${sg_root_dir}/services/data_collect/store/src/database.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/rdb_event_store_callback.cpp",
+  ]
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  stack_protector_ret = true
+
+  deps = [
+
+  ]
+
+  external_deps = [
+    "relational_store:native_rdb",
+    "hilog:libhilog",
   ]
 }

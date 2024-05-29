@@ -26,4 +26,9 @@ bool ConfigOperate::GetEventConfig(int64_t eventId, EventCfg &config)
 {
     return ConfigDataManager::GetInstance().GetEventConfig(eventId, config);
 }
+
+std::vector<AppInfo> ConfigOperate::GetAppInfosByName(const std::string name)
+{
+    return ConfigDataManager::GetInstance().GetAppInfosByName(name);
+}
 } // namespace OHOS::Security::SecurityGuard

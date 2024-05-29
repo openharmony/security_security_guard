@@ -1,5 +1,5 @@
 {
-  "name": "@ohos/security_guard",
+  "name": "@openharmony/security_guard",
   "description": "security_guard",
   "version": "3.1.0",
   "license": "Apache License 2.0",
@@ -13,11 +13,13 @@
     "name": "security_guard",
     "subsystem": "security",
     "syscap": [
-      "SystemCapability.Security.SecurityGuard"
+      "SystemCapability.Security.SecurityGuard",
+      "SystemCapability.Security.SafetyDetect"
     ],
     "hisysevent_config": [
       "//base/security/security_guard/hisysevent.yaml"
     ],
+    "feature": [ "security_guard_feature_coverage = false" ],
     "adapted_system_type": [
       "standard"
     ],
@@ -32,6 +34,7 @@
         "common_event_service",
         "device_manager",
         "hdf_core",
+        "hiappevent",
         "hisysevent",
         "hilog",
         "init",
@@ -45,11 +48,11 @@
         "samgr",
         "time_service",
         "appverify",
-        "json"
+        "json",
+        "bundle_framework"
       ],
       "third_party": [
-        "openssl",
-        "glib"
+        "openssl"
       ]
     },
     "build": {
@@ -65,7 +68,8 @@
         "//base/security/security_guard:security_guard_napi",
         "//base/security/security_guard/sa_profile:security_collector_sa_profile_standard",
         "//base/security/security_guard/sa_profile:security_collector.init",
-        "//base/security/security_guard:security_collector_service_build_module"
+        "//base/security/security_guard:security_collector_service_build_module",
+        "//base/security/security_guard:real_time_detect_service_build_module"
       ],
       "inner_kits": [
         {
@@ -113,7 +117,8 @@
       ],
       "test": [
         "//base/security/security_guard:security_guard_build_module_test",
-        "//base/security/security_guard:security_guard_fuzz_test"
+        "//base/security/security_guard:security_guard_fuzz_test",
+        "//base/security/security_guard:security_guard_unit_test"
       ]
     }
   }

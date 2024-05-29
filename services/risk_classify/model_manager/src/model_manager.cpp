@@ -20,7 +20,6 @@
 #include "directory_ex.h"
 
 #include "config_data_manager.h"
-#include "preferences_wrapper.h"
 #include "security_guard_log.h"
 #include "model_manager_impl.h"
 #include "database_manager.h"
@@ -30,10 +29,7 @@ namespace OHOS::Security::SecurityGuard {
 std::shared_ptr<IModelManager> ModelManager::modelManagerApi_ = std::make_shared<ModelManagerImpl>();
 
 namespace {
-    constexpr const char *AUDIT_SWITCH = "audit_switch";
     constexpr const char *PREFIX_MODEL_PATH = "/system/lib64/lib";
-    constexpr int32_t AUDIT_SWITCH_OFF = 0;
-    constexpr int32_t AUDIT_SWITCH_ON = 1;
     constexpr uint32_t AUDIT_MODEL = 3001000003;
 }
 
@@ -53,10 +49,6 @@ void ModelManager::Init()
         if (cfg.modelId != AUDIT_MODEL) {
             (void) InitModel(modelId);
             continue;
-        }
-        if (PreferenceWrapper::GetInt(AUDIT_SWITCH, AUDIT_SWITCH_OFF) == AUDIT_SWITCH_ON) {
-            SGLOGI("begin init audit model");
-            (void) InitModel(modelId);
         }
     }
 }

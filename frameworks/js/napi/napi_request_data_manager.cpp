@@ -65,4 +65,37 @@ void NapiRequestDataManager::DeleteContext(napi_env env)
         envContextMap_.erase(iter);
     }
 }
+
+uint32_t NapiRequestDataManager::AddDataCallback(napi_env env)
+{
+    std::lock_guard<std::mutex> lock(envQuerierMutex_);
+    auto iter = envQuerierMap_.find(env);
+    if (iter != envQuerierMap_.end()) {
+        envQuerierMap_[env]++;
+        return iter->second;
+    }
+    uint32_t dataCallbackSize = 1;
+    envQuerierMap_[env] = dataCallbackSize;
+    return dataCallbackSize;
+}
+ 
+uint32_t NapiRequestDataManager::DelDataCallback(napi_env env)
+{
+    std::lock_guard<std::mutex> lock(envQuerierMutex_);
+    auto iter = envQuerierMap_.find(env);
+    if (iter != envQuerierMap_.end()) {
+        envQuerierMap_.erase(iter);
+    }
+    return 0;
+}
+ 
+bool NapiRequestDataManager::GetDataCallback(napi_env env)
+{
+    std::lock_guard<std::mutex> lock(envQuerierMutex_);
+    auto iter = envQuerierMap_.find(env);
+    if (iter != envQuerierMap_.end()) {
+        return true;
+    }
+    return false;
+}
 } // OHOS::Security::SecurityGuard

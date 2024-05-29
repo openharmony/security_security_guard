@@ -24,6 +24,8 @@
 #include "event_define.h"
 #include "security_collector_subscribe_info.h"
 #include "security_collector_manager_service_ipc_interface_code.h"
+#include "security_event.h"
+#include "security_event_ruler.h"
 
 namespace OHOS::Security::SecurityCollector {
 constexpr int32_t SECURITY_COLLECTOR_MANAGER_SA_ID = 3525;
@@ -34,12 +36,21 @@ public:
     using InterfaceCode = SecurityCollectManagerInterfaceCode;
     enum {
         CMD_COLLECTOR_SUBCRIBE = static_cast<uint32_t>(InterfaceCode::CMD_COLLECTOR_SUBCRIBE),
-        CMD_COLLECTOR_UNSUBCRIBE = static_cast<uint32_t>(InterfaceCode::CMD_COLLECTOR_UNSUBCRIBE)
+        CMD_COLLECTOR_UNSUBCRIBE = static_cast<uint32_t>(InterfaceCode::CMD_COLLECTOR_UNSUBCRIBE),
+        CMD_COLLECTOR_START = static_cast<uint32_t>(InterfaceCode::CMD_COLLECTOR_START),
+        CMD_COLLECTOR_STOP =  static_cast<uint32_t>(InterfaceCode::CMD_COLLECTOR_STOP),
+        CMD_SECURITY_EVENT_QUERY = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_EVENT_QUERY),
     };
 
     virtual int32_t Subscribe(const SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t Unsubscribe(const sptr<IRemoteObject> &callback) = 0;
+    virtual int32_t CollectorStart(const SecurityCollectorSubscribeInfo &subscribeInfo,
+        const sptr<IRemoteObject> &callback) = 0;
+    virtual int32_t CollectorStop(const SecurityCollectorSubscribeInfo &subscribeInfo,
+        const sptr<IRemoteObject> &callback) = 0;
+    virtual int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
+        std::vector<SecurityEvent> &events) = 0;
 };
 
 class ISecurityCollectorManagerCallback : public IRemoteBroker {

@@ -25,11 +25,18 @@ enum class DataCollectManagerInterfaceCode {
     CMD_DATA_REQUEST = 2,
     CMD_DATA_SUBSCRIBE = 3,
     CMD_DATA_UNSUBSCRIBE = 4,
+    CMD_SECURITY_EVENT_QUERY = 5,
 };
 
 enum class DataCollectManagerCallbackInterfaceCode {
     CMD_SET_REQUEST_DATA = 1,
     CMD_DATA_SUBSCRIBE_CALLBACK = 2,
+};
+
+enum class SecurityEventQueryCallbackInterfaceCode {
+    CMD_ON_QUERY = 1,
+    CMD_ON_COMPLETE = 2,
+    CMD_ON_ERROR = 3,
 };
 } // namespace OHOS::Security::SecurityGuard
 

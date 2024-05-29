@@ -23,10 +23,11 @@ class SecurityGuardUtils {
 public:
     static bool StrToU32(const std::string &str, uint32_t &value);
     static bool StrToI64(const std::string &str, int64_t &value);
-    static bool StrToLL(const std::string &str, long long &value);
+    static bool StrToLL(const std::string &str, long long &value, int32_t base);
     static bool StrToULL(const std::string &str, unsigned long long &value);
     static std::string GetDate();
     static bool CopyFile(const std::string &srcPath, const std::string &dstPath);
+    static bool StrToI64Hex(const std::string &str, int64_t &value);
 
 private:
     SecurityGuardUtils() = default;

@@ -28,10 +28,15 @@ public:
     std::shared_ptr<RequestSecurityEventInfoContext> GetContext(napi_env env);
     std::shared_ptr<RequestSecurityEventInfoContext> GetContext(napi_env env, bool &isExist);
     void DeleteContext(napi_env env);
+    uint32_t AddDataCallback(napi_env env);
+    uint32_t DelDataCallback(napi_env env);
+    bool GetDataCallback(napi_env env);
 
 private:
     std::unordered_map<napi_env, std::shared_ptr<RequestSecurityEventInfoContext>> envContextMap_;
+    std::unordered_map<napi_env, uint32_t> envQuerierMap_;
     std::mutex mutex_;
+    std::mutex envQuerierMutex_;
     NapiRequestDataManager() = default;
     ~NapiRequestDataManager() = default;
 };

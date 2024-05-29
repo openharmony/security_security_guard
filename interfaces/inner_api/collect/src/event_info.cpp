@@ -16,6 +16,13 @@
 #include "event_info.h"
 
 namespace OHOS::Security::SecurityGuard {
+EventInfo::EventInfo(int64_t eventId, std::string version, std::string content)
+{
+    eventId_ = eventId;
+    version_ = version;
+    content_ = content;
+}
+
 int64_t EventInfo::GetEventId() const
 {
     return eventId_;

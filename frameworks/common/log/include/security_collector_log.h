@@ -15,16 +15,15 @@
 
 #ifndef SECURITY_COLLECTOR_LOG_H
 #define SECURITY_COLLECTOR_LOG_H
+#undef LOG_TAG
+#define LOG_TAG "S_COLLCTOR"
+#undef LOG_DOMAIN
+#define LOG_DOMAIN 0xD002F07
 
 #include "hilog/log.h"
 #include <cinttypes>
 
 namespace OHOS::Security::SecurityCollector {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
-    LOG_CORE,
-    0xD002F07,
-    "S_COLLCTOR"
-};
 
 #ifdef LOGD
 #undef LOGD
@@ -47,15 +46,15 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
 #endif
 
 #define LOGD(fmt, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Debug(LABEL, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
+    (void)HILOG_DEBUG(LOG_CORE, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
 #define LOGE(fmt, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Error(LABEL, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
+    (void)HILOG_ERROR(LOG_CORE, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
 #define LOGF(fmt, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Fatal(LABEL, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
+    (void)HILOG_FATAL(LOG_CORE, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
 #define LOGI(fmt, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Info(LABEL, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
+    (void)HILOG_INFO(LOG_CORE, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
 #define LOGW(fmt, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Warn(LABEL, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
+    (void)HILOG_WARN(LOG_CORE, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_COLLECTOR_LOG_H

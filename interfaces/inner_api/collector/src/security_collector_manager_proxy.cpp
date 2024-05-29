@@ -76,4 +76,108 @@ int32_t SecurityCollectorManagerProxy::Unsubscribe(const sptr<IRemoteObject> &ca
     return ret;
 }
 
+int32_t SecurityCollectorManagerProxy::CollectorStart(const SecurityCollectorSubscribeInfo &subscribeInfo,
+    const sptr<IRemoteObject> &callback)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    LOGD("==========================in CollectorControl");
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("WriteInterfaceToken error");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteParcelable(&subscribeInfo)) {
+        LOGE("failed to write parcelable for subscribeInfo");
+        return WRITE_ERR;
+    }
+    data.WriteRemoteObject(callback);
+    MessageOption option = { MessageOption::TF_SYNC };
+    int ret = Remote()->SendRequest(CMD_COLLECTOR_START, data, reply, option);
+    if (ret != ERR_NONE) {
+        LOGE("ret=%{public}d", ret);
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    LOGD("reply=%{public}d", ret);
+    return ret;
+}
+
+int32_t SecurityCollectorManagerProxy::CollectorStop(const SecurityCollectorSubscribeInfo &subscribeInfo,
+    const sptr<IRemoteObject> &callback)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    LOGD("===========================in CollectorControl.");
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("WriteInterfaceToken error");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteParcelable(&subscribeInfo)) {
+        LOGE("failed to write parcelable for subscribeInfo");
+        return WRITE_ERR;
+    }
+    data.WriteRemoteObject(callback);
+    MessageOption option = { MessageOption::TF_SYNC };
+    int ret = Remote()->SendRequest(CMD_COLLECTOR_STOP, data, reply, option);
+    if (ret != ERR_NONE) {
+        LOGE("ret=%{public}d", ret);
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    LOGD("reply=%{public}d", ret);
+    return ret;
+}
+
+int32_t SecurityCollectorManagerProxy::QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
+    std::vector<SecurityEvent> &events)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("WriteInterfaceToken error");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteUint32(rulers.size())) {
+        LOGE("failed to WriteInt32 for parcelable vector size");
+        return WRITE_ERR;
+    }
+
+    for (const auto &ruler : rulers) {
+        if (!data.WriteParcelable(&ruler)) {
+            LOGE("failed to WriteParcelable for parcelable");
+            return WRITE_ERR;
+        }
+    }
+
+    MessageOption option = { MessageOption::TF_SYNC };
+    int ret = Remote()->SendRequest(CMD_SECURITY_EVENT_QUERY, data, reply, option);
+    if (ret != ERR_NONE) {
+        LOGE("ret=%{public}d", ret);
+        return ret;
+    }
+
+    uint32_t size = 0;
+    if (!reply.ReadUint32(size)) {
+        LOGE("failed to get the event size");
+        return BAD_PARAM;
+    }
+
+    if (size > MAX_QUERY_EVENT_SIZE) {
+        LOGE("the event size error");
+        return BAD_PARAM;
+    }
+    for (uint32_t index = 0; index < size; index++) {
+        std::shared_ptr<SecurityEvent> event(reply.ReadParcelable<SecurityEvent>());
+        if (event == nullptr) {
+            LOGE("failed read security event");
+            return BAD_PARAM;
+        }
+        events.emplace_back(*event);
+    }
+    return SUCCESS;
+}
 }

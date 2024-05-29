@@ -21,6 +21,8 @@
 #include "singleton.h"
 #include "security_collector_manager_callback_service.h"
 #include "i_collector_subscriber.h"
+#include "security_event_ruler.h"
+#include "security_event.h"
 
 namespace OHOS::Security::SecurityCollector {
 class CollectorManager : public Singleton<CollectorManager> {
@@ -33,6 +35,9 @@ public:
     };
     int32_t Subscribe(const std::shared_ptr<ICollectorSubscriber> &subscriber);
     int32_t Unsubscribe(const std::shared_ptr<ICollectorSubscriber> &subscriber);
+    int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
+        std::vector<SecurityEvent> &events);
+
 private:
     void HandleDecipient();
     std::mutex mutex_{};

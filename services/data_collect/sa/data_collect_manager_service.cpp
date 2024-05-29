@@ -24,23 +24,22 @@
 
 #include "acquire_data_subscribe_manager.h"
 #include "bigdata.h"
+#include "collector_manager.h"
 #include "config_data_manager.h"
 #include "data_collect_manager_callback_proxy.h"
 #include "data_format.h"
 #include "database_manager.h"
+#include "data_collection.h"
 #include "hiview_collector.h"
-#include "kernel_interface_adapter.h"
 #include "risk_collect_define.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 #include "system_ability_definition.h"
 #include "task_handler.h"
-#include "uevent_listener.h"
-#include "uevent_listener_impl.h"
-#include "uevent_notify.h"
-
+#include "config_manager.h"
 #include "risk_event_rdb_helper.h"
+#include "model_cfg_marshalling.h"
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
@@ -65,18 +64,32 @@ void DataCollectManagerService::OnStart()
         SGLOGE("Publish error");
         return;
     }
-
     DatabaseManager::GetInstance().Init(); // Make sure the database is ready
 
     AddSystemAbilityListener(RISK_ANALYSIS_MANAGER_SA_ID);
-    AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
-    AddSystemAbilityListener(DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID);
     AddSystemAbilityListener(DFX_SYS_HIVIEW_ABILITY_ID);
+    bool success = ConfigManager::InitConfig<EventConfig>();
+        if (!success) {
+        SGLOGE("init event config error");
+    }
+    std::vector<int64_t> eventIds = ConfigDataManager::GetInstance().GetAllEventIds();
+    std::vector<int64_t> onStartEventList;
+    for (int64_t eventId : eventIds) {
+        EventCfg eventCfg;
+        bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(eventId, eventCfg);
+        if (!isSuccess) {
+            SGLOGI("GetEventConfig error");
+        } else if (eventCfg.collectOnStart == 1) {
+            onStartEventList.push_back(eventId);
+        }
+    }
+    SecurityCollector::DataCollection::GetInstance().SecurityGuardSubscribeCollector(onStartEventList);
 }
 
 void DataCollectManagerService::OnStop()
 {
 }
+
 
 int DataCollectManagerService::Dump(int fd, const std::vector<std::u16string>& args)
 {
@@ -183,11 +196,8 @@ std::vector<SecEvent> DataCollectManagerService::GetSecEventsFromConditions(Requ
     std::vector<SecEvent> events;
     if (condition.beginTime.empty() && condition.endTime.empty()) {
         (void) DatabaseManager::GetInstance().QueryEventByEventId(RISK_TABLE, condition.riskEvent, events);
-        (void) DatabaseManager::GetInstance().QueryEventByEventId(AUDIT_TABLE, condition.auditEvent, events);
     } else {
         (void) DatabaseManager::GetInstance().QueryEventByEventIdAndDate(RISK_TABLE, condition.riskEvent, events,
-            condition.beginTime, condition.endTime);
-        (void) DatabaseManager::GetInstance().QueryEventByEventIdAndDate(AUDIT_TABLE, condition.auditEvent, events,
             condition.beginTime, condition.endTime);
     }
     return events;
@@ -240,33 +250,6 @@ void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &o
 void DataCollectManagerService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     SGLOGI("OnAddSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
-    if (systemAbilityId == RISK_ANALYSIS_MANAGER_SA_ID) {
-        TaskHandler::Task listenerTask = [] {
-            KernelInterfaceAdapter adapter;
-            UeventNotify notify(adapter);
-            std::vector<int64_t> whiteList = ConfigDataManager::GetInstance().GetAllEventIds();
-            notify.AddWhiteList(whiteList);
-            notify.NotifyScan();
-
-            UeventListenerImpl impl(adapter);
-            UeventListener listener(impl);
-            listener.Start();
-        };
-        TaskHandler::GetInstance()->AddTask(listenerTask);
-        return;
-    }
-    if (systemAbilityId == SOFTBUS_SERVER_SA_ID || systemAbilityId == DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID) {
-        (void)DatabaseManager::GetInstance().InitDeviceId();
-        return;
-    }
-    if (systemAbilityId == DFX_SYS_HIVIEW_ABILITY_ID) {
-        TaskHandler::Task hiviewListenerTask = [] {
-            auto collector = std::make_shared<HiviewCollector>();
-            collector->Collect("PASTEBOARD", "USE_BEHAVIOUR");
-        };
-        TaskHandler::GetInstance()->AddTask(hiviewListenerTask);
-        return;
-    }
 }
 
 void DataCollectManagerService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
@@ -294,7 +277,6 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     }
     callback->AddDeathRecipient(deathRecipient_);
     int32_t ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, callback);
-
     SgSubscribeEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
@@ -302,7 +284,6 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     event.ret = ret;
     SGLOGI("DataCollectManagerService, InsertSubscribeRecord eventId=%{public}" PRId64 "", event.eventId);
     BigData::ReportSgSubscribeEvent(event);
-
     return ret;
 }
 
@@ -328,6 +309,75 @@ int32_t DataCollectManagerService::Unsubscribe(const sptr<IRemoteObject> &callba
     SGLOGI("DataCollectManagerService, RemoveSubscribeRecord ret=%{ret}d", ret);
     BigData::ReportSgUnsubscribeEvent(event);
     return ret;
+}
+
+bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallback> proxy,
+    SecurityCollector::SecurityEventRuler ruler)
+{
+    EventCfg config;
+    bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(ruler.GetEventId(), config);
+    if (!isSuccess) {
+        SGLOGE("GetEventConfig error");
+        proxy->OnError("eventId error");
+        return false;
+    }
+    std::vector<SecurityCollector::SecurityEvent> replyEvents;
+    std::vector<int64_t> eventIds{ruler.GetEventId()};
+    SGLOGD("eventType is %{public}u", config.eventType);
+    if (config.eventType == 0) { // query in database
+        std::vector<SecEvent> events;
+        if (ruler.GetBeginTime().empty() && ruler.GetEndTime().empty()) {
+            (void) DatabaseManager::GetInstance().QueryEventByEventId(ruler.GetEventId(), events);
+        } else {
+            (void) DatabaseManager::GetInstance().QueryEventByEventIdAndDate(RISK_TABLE, eventIds, events,
+                ruler.GetBeginTime(), ruler.GetEndTime());
+        }
+        std::transform(events.begin(), events.end(),
+            std::back_inserter(replyEvents), [] (SecEvent event) {
+            return SecurityCollector::SecurityEvent(event.eventId, event.version, event.content);
+        });
+        proxy->OnQuery(replyEvents);
+    } else if (config.eventType == 1) { // query in collector
+        int32_t code = SecurityCollector::CollectorManager::GetInstance().QuerySecurityEvent(
+            {ruler}, replyEvents);
+        if (code != SUCCESS) {
+            proxy->OnError("QuerySecurityEvent failed");
+            return false;
+        }
+        proxy->OnQuery(replyEvents);
+    } else {
+        SGLOGE("not support type, %{public}u", config.eventType);
+    }
+    return true;
+}
+
+int32_t DataCollectManagerService::QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
+    const sptr<IRemoteObject> &callback)
+{
+    SGLOGE("enter QuerySecurityEvent");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
+    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
+        SGLOGE("caller no permission");
+        return NO_PERMISSION;
+    }
+    auto proxy = iface_cast<ISecurityEventQueryCallback>(callback);
+    if (proxy == nullptr) {
+        SGLOGI("proxy is null");
+        return NULL_OBJECT;
+    }
+
+    TaskHandler::Task task = [proxy, rulers] {
+        if (std::any_of(rulers.begin(), rulers.end(), [proxy] (auto const &ruler) {
+                return !QueryEventByRuler(proxy, ruler);
+            })) {
+            return;
+        }
+        proxy->OnComplete();
+    };
+
+    TaskHandler::GetInstance()->AddTask(task);
+    return SUCCESS;
 }
 
 void DataCollectManagerService::SubscriberDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)

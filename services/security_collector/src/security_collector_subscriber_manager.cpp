@@ -142,7 +142,8 @@ bool SecurityCollectorSubscriberManager::SubscribeCollector(
         LOGI("Scheduling do not start collecctor, eventId:%{public}" PRId64 "", eventId);
     }
     eventToSubscribers_[eventId].emplace(subscriber);
-    LOGI("eventId:%{public}" PRId64 ", callbackCount:%{public}zu", eventId, eventToSubscribers_[eventId].size());
+    LOGI("eventId:%{public}" PRId64 ", callbackCount:%{public}u",
+        eventId, static_cast<uint32_t>(eventToSubscribers_[eventId].size()));
     int64_t duration = subscriber->GetSecurityCollectorSubscribeInfo().GetDuration();
     if (duration > 0) {
         auto remote = subscriber->GetRemote();
@@ -171,7 +172,7 @@ bool SecurityCollectorSubscriberManager::UnsubscribeCollector(const sptr<IRemote
         for (auto subscriber: subscribers) {
             eventToSubscribers_[eventId].erase(subscriber);
             if (eventToSubscribers_[eventId].size() == 0) {
-                LOGI("Scheduling stop collecctor, eventId:%{public}" PRId64 "", eventId);
+                LOGI("Scheduling stop collector, eventId:%{public}" PRId64 "", eventId);
                 if (!DataCollection::GetInstance().StopCollectors(std::vector<int64_t>{eventId})) {
                     LOGE("failed to stop collectors");
                 }
@@ -186,5 +187,4 @@ bool SecurityCollectorSubscriberManager::UnsubscribeCollector(const sptr<IRemote
     LOGI("erase timer after remoteObject");
     return true;
 }
-
 }
