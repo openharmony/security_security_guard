@@ -13,8 +13,7 @@
     "name": "security_guard",
     "subsystem": "security",
     "syscap": [
-      "SystemCapability.Security.SecurityGuard",
-      "SystemCapability.Security.SafetyDetect"
+      "SystemCapability.Security.SecurityGuard"
     ],
     "hisysevent_config": [
       "//base/security/security_guard/hisysevent.yaml"
