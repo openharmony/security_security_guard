@@ -67,8 +67,7 @@
         "//base/security/security_guard:security_guard_napi",
         "//base/security/security_guard/sa_profile:security_collector_sa_profile_standard",
         "//base/security/security_guard/sa_profile:security_collector.init",
-        "//base/security/security_guard:security_collector_service_build_module",
-        "//base/security/security_guard:real_time_detect_service_build_module"
+        "//base/security/security_guard:security_collector_service_build_module"
       ],
       "inner_kits": [
         {

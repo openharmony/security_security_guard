@@ -76,13 +76,6 @@ group("security_collector_service_build_module") {
   }
 }
 
-group("real_time_detect_service_build_module") {
-  if (is_standard_system) {
-    deps =
-        [ "${sg_root_dir}/services/real_time_detect:real_time_detect_service" ]
-  }
-}
-
 group("security_guard_unit_test") {
   testonly = true
   if (is_standard_system) {
