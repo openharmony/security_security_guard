@@ -29,11 +29,6 @@ int DbOperate::QueryAllEvent(std::vector<SecEvent> &events)
     return DatabaseManager::GetInstance().QueryAllEvent(table_, events);
 }
 
-int DbOperate::QueryAllEventFromMem(std::vector<SecEvent> &events)
-{
-    return DatabaseManager::GetInstance().QueryAllEventFromMem(events);
-}
-
 int DbOperate::QueryRecentEventByEventId(int64_t eventId, SecEvent &event)
 {
     return DatabaseManager::GetInstance().QueryRecentEventByEventId(eventId, event);

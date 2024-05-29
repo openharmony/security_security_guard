@@ -21,9 +21,9 @@
 #include <string>
 
 namespace OHOS::Security::SecurityGuard {
-const std::string RISK_STATUS = "risk";
-const std::string SAFE_STATUS = "safe";
-const std::string UNKNOWN_STATUS = "unknown";
+constexpr const char* RISK_STATUS = "risk";
+constexpr const char* SAFE_STATUS = "safe";
+constexpr const char* UNKNOWN_STATUS = "unknown";
 
 using CONTENT_STATUS = enum {
     RISK,

@@ -136,4 +136,40 @@ int32_t DataCollectManagerProxy::Unsubscribe(const sptr<IRemoteObject> &callback
     SGLOGD("reply=%{public}d", ret);
     return ret;
 }
+
+int32_t DataCollectManagerProxy::QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
+    const sptr<IRemoteObject> &callback)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        SGLOGE("WriteInterfaceToken error");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteUint32(rulers.size())) {
+        SGLOGE("failed to WriteInt32 for parcelable vector size");
+        return WRITE_ERR;
+    }
+
+    for (const auto &ruler : rulers) {
+        if (!data.WriteParcelable(&ruler)) {
+            SGLOGE("failed to WriteParcelable for parcelable");
+            return WRITE_ERR;
+        }
+    }
+
+    data.WriteRemoteObject(callback);
+
+    MessageOption option = { MessageOption::TF_SYNC };
+    int ret = Remote()->SendRequest(CMD_SECURITY_EVENT_QUERY, data, reply, option);
+    if (ret != ERR_NONE) {
+        SGLOGE("ret=%{public}d", ret);
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    SGLOGD("reply=%{public}d", ret);
+    return ret;
+}
 }

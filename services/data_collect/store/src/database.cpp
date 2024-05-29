@@ -17,7 +17,7 @@
 
 #include <thread>
 
-#include "abs_shared_result_set.h"
+#include "result_set.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 

@@ -1,0 +1,86 @@
+{
+    "version":"1.0",
+    "realaseTime":"2023-12-22",
+    "privileges":["detection","contacts"],
+    "configs":[
+            {
+            "context":{
+                "survivalTime":14400,
+                "eventIds":[555,666,222,888,999]
+            },
+            "init": {
+                "survivalTime":10,
+                "nexts": [
+                    {
+                        "input": 555,
+                        "filter": "",
+                        "action":{},
+                        "nextState":"s1"
+                    }
+                ]
+            },
+            "s1": {
+                "survivalTime":10,
+                "maxAccessCount":10,
+                "nexts":[
+                    {
+                        "input": 666,
+                        "filter": "", 
+                        "action":{},
+                        "nextState": "s1"
+                    }
+                ]
+            },
+            "s2": {
+                "survivalTime":-1,
+                "maxAccessCount":10,
+                "nexts":[
+                    {
+                        "input": 222,
+                        "filter": "in(monitorList, packageName)", 
+                        "action":{
+                            "put":[{"key":"packageName","value":"packageName"}]
+                        },
+                        "nextState":"s3"
+                    }
+                ]
+            },
+            "s3": {
+                "survivalTime":-1,
+                "maxAccessCount":10,
+                "nexts":[
+                    {
+                        "input": 888,
+                        "filter": "packageName == getPackageName() && in(privilegeList, privilege)", 
+                        "action":{},
+                        "nextState":"s4"
+                    }
+                ]
+            },
+            "s4": {
+                "survivalTime":-1,
+                "maxAccessCount":10,
+                "nexts":[
+                    {
+                        "input": 999,
+                        "filter": "", 
+                        "action":{},
+                        "nextState":"end"
+                    }
+                ]
+            },
+            "end": {
+                "survivalTime":-1,
+                "result":{"eventId":721420288, "content":"{\"scene\":\"config3\",\"accountId\":\"\", \"packageName\":\"getPackageName()\"}"},
+            "nexts":[
+                    {
+                        "input": -1,
+                        "filter": "", 
+                        "action":{},
+                        "nextState":"init"
+                    }
+               ]
+            }
+        }
+]
+}

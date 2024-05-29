@@ -34,19 +34,22 @@ extern "C" {
 #endif
 
 namespace OHOS::Security::SecurityGuardTest {
-std::string g_enforceValue = "0";
 
 void RiskClassifyKitTest::SetUpTestCase()
 {
-    bool isSuccess = LoadStringFromFile("/sys/fs/selinux/enforce", g_enforceValue);
-    if (isSuccess && g_enforceValue == "1") {
+    string isEnforcing;
+    LoadStringFromFile("/sys/fs/selinux/enforce", isEnforcing);
+    if (isEnforcing.compare("1") == 0) {
+        RiskClassifyKitTest::isEnforcing_ = true;
         SaveStringToFile("/sys/fs/selinux/enforce", "0");
     }
 }
 
 void RiskClassifyKitTest::TearDownTestCase()
 {
-    SaveStringToFile("/sys/fs/selinux/enforce", g_enforceValue);
+    if (RiskClassifyKitTest::isEnforcing_) {
+        SaveStringToFile("/sys/fs/selinux/enforce", "1");
+    }
 }
 
 void RiskClassifyKitTest::SetUp()
@@ -56,6 +59,8 @@ void RiskClassifyKitTest::SetUp()
 void RiskClassifyKitTest::TearDown()
 {
 }
+
+bool RiskClassifyKitTest::isEnforcing_ = false;
 
 void RiskClassifyKitTest::SecurityGuardRiskCallbackFunc(SecurityModelResult *result)
 {

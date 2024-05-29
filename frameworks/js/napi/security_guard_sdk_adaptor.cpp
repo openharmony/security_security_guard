@@ -30,9 +30,10 @@
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 #include "collector_service_loader.h"
+#include "security_event_query_callback_service.h"
 
 namespace OHOS::Security::SecurityGuard {
-namespace  { const std::set<int64_t> GRANTED_EVENT{1037000001, 1064001001}; }
+namespace  { const std::set<int64_t> GRANTED_EVENT{1037000001, 1064001001, 1064001002}; }
 
 int32_t SecurityGuardSdkAdaptor::RequestSecurityEventInfo(std::string &devId, std::string &eventList,
     RequestRiskDataCallback callback)
@@ -160,5 +161,81 @@ int32_t SecurityGuardSdkAdaptor::NotifyCollector(const SecurityCollector::Event 
     int32_t ret = proxy->Subscribe(subscriberInfo, callback);
     SGLOGI("NotifyCollector result, ret=%{public}d", ret);
     return ret;
+}
+
+int32_t SecurityGuardSdkAdaptor::StartCollector(const SecurityCollector::Event &event,
+    int64_t duration)
+{
+    auto object = SecurityCollector::CollectorServiceLoader::GetInstance().LoadCollectorService();
+    auto proxy = iface_cast<SecurityCollector::ISecurityCollectorManager>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+
+    SecurityCollector::SecurityCollectorSubscribeInfo subscriberInfo{event, duration, true};
+    sptr<SecurityCollector::SecurityCollectorManagerCallbackService> callback =
+        new (std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
+    if (callback == nullptr) {
+        SGLOGE("callback is null");
+        return NULL_OBJECT;
+    }
+
+    int32_t ret = proxy->CollectorStart(subscriberInfo, callback);
+    SGLOGI("StartCollector result, ret=%{public}d", ret);
+    return ret;
+}
+
+int32_t SecurityGuardSdkAdaptor::StopCollector(const SecurityCollector::Event &event)
+{
+    SGLOGD("in SecurityGuardSdkAdaptor StopCollector ************");
+    auto object = SecurityCollector::CollectorServiceLoader::GetInstance().LoadCollectorService();
+    auto proxy = iface_cast<SecurityCollector::ISecurityCollectorManager>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+
+    SecurityCollector::SecurityCollectorSubscribeInfo subscriberInfo{event, -1, true};
+    sptr<SecurityCollector::SecurityCollectorManagerCallbackService> callback =
+        new (std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
+    if (callback == nullptr) {
+        SGLOGE("callback is null");
+        return NULL_OBJECT;
+    }
+
+    int32_t ret = proxy->CollectorStop(subscriberInfo, callback);
+    SGLOGI("StopCollector result, ret=%{public}d", ret);
+    return ret;
+}
+
+int32_t SecurityGuardSdkAdaptor::QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
+    std::shared_ptr<SecurityEventQueryCallback> callback)
+{
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return NULL_OBJECT;
+    }
+
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    auto proxy = iface_cast<IDataCollectManager>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+
+    auto obj = new (std::nothrow) SecurityEventQueryCallbackService(callback);
+    if (obj == nullptr) {
+        SGLOGE("obj is null");
+        return NULL_OBJECT;
+    }
+
+    int32_t ret = proxy->QuerySecurityEvent(rulers, obj);
+    if (ret != SUCCESS) {
+        SGLOGE("QuerySecurityEvent error, ret=%{public}d", ret);
+        return ret;
+    }
+    return SUCCESS;
 }
 } // OHOS::Security::SecurityGuard

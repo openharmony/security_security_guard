@@ -22,12 +22,14 @@
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
-void HiviewCollector::Collect(std::string domain, std::string eventName)
+void HiviewCollector::Collect(std::vector<std::pair<std::string, std::string>> domainEventList)
 {
-    auto listener = std::make_shared<HiviewListener>();
-    HiviewDFX::ListenerRule rule(domain, eventName);
     std::vector<HiviewDFX::ListenerRule> rules;
-    rules.push_back(rule);
+    for (auto domainEvent : domainEventList) {
+        HiviewDFX::ListenerRule rule(domainEvent.first, domainEvent.second);
+        rules.push_back(rule);
+    }
+    auto listener = std::make_shared<HiviewListener>();
     int32_t ret = HiviewDFX::HiSysEventManager::AddListener(listener, rules);
     SGLOGI("Add hiview listener result is %{public}d", ret);
 }

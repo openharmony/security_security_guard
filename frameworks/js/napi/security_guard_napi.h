@@ -19,15 +19,15 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
+#include "security_event.h"
 #include "security_guard_define.h"
 #include "event_define.h"
 
 constexpr int CONDITIONS_MAX_LEN = 100;
 constexpr int VERSION_MAX_LEN = 50;
 constexpr int CONTENT_MAX_LEN = 900;
-constexpr int EXTRA_MAX_LEN = 900;
+constexpr int EXTRA_MAX_LEN = 2000;
 constexpr int DEVICE_ID_MAX_LEN = 64;
-constexpr int MODEL_NAME_MAX_LEN = 64;
 constexpr int NAPI_ON_RESULT_ARGS_CNT = 3;
 constexpr char NAPI_ON_RESULT_ATTR[] = "onResult";
 constexpr char NAPI_SECURITY_MODEL_RESULT_DEVICE_ID_ATTR[] = "deviceId";
@@ -75,6 +75,40 @@ struct NotifyCollectorContext {
     int64_t duration;
 };
 
+struct NapiSecurityEventRuler {
+    int64_t eventId;
+    std::string beginTime;
+    std::string endTime;
+    std::string param;
+};
+
+struct NapiSecurityEvent {
+    int64_t eventId;
+    std::string version;
+    std::string content;
+};
+
+using CALLBACK_FUNC = std::function<void(const napi_env, const napi_ref, pid_t threadId,
+    const std::vector<OHOS::Security::SecurityCollector::SecurityEvent> &napiEvents)>;
+using RELEASE_FUNC = std::function<void(pid_t threadId)>;
+
+struct QuerySecurityEventContext {
+    QuerySecurityEventContext() = default;
+    explicit QuerySecurityEventContext(QuerySecurityEventContext *context)
+        : env(context->env), ref(context->ref),
+          callback(context->callback),
+          release(context->release),
+          threadId(context->threadId),
+          events(context->events) {};
+
+    napi_env env = nullptr;
+    napi_ref ref = nullptr;
+    CALLBACK_FUNC callback;
+    RELEASE_FUNC release;
+    pid_t threadId;
+    std::vector<OHOS::Security::SecurityCollector::SecurityEvent> events;
+};
+
 enum EventIdType : int64_t {
     PRINTER_EVENT_ID = 1011015004
 };
@@ -89,6 +123,7 @@ enum ModelIdType : uint32_t {
 enum JsErrCode : int32_t {
     JS_ERR_SUCCESS = 0,
     JS_ERR_NO_PERMISSION = 201,
+    JS_ERR_NO_SYSTEMCALL = 202,
     JS_ERR_BAD_PARAM = 401,
     JS_ERR_SYS_ERR = 21200001,
 };

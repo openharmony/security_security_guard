@@ -20,6 +20,8 @@
 #include "event_define.h"
 #include "security_guard_define.h"
 #include "system_ability_load_callback_stub.h"
+#include "security_event_query_callback.h"
+#include "security_event_ruler.h"
 
 namespace OHOS::Security::SecurityGuard {
 class SecurityGuardSdkAdaptor {
@@ -31,6 +33,10 @@ public:
     static int32_t ReportSecurityInfo(const std::shared_ptr<EventInfo> &info);
     static int32_t SetModelState(uint32_t modelId, bool enable);
     static int32_t NotifyCollector(const SecurityCollector::Event &event, int64_t duration);
+    static int32_t StartCollector(const SecurityCollector::Event &event, int64_t duration);
+    static int32_t StopCollector(const SecurityCollector::Event &event);
+    static int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
+        std::shared_ptr<SecurityEventQueryCallback> callback);
 
 private:
     SecurityGuardSdkAdaptor() = delete;

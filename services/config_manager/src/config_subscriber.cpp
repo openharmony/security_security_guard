@@ -26,18 +26,22 @@
 #include "config_define.h"
 #include "config_manager.h"
 #include "model_config.h"
+#include "local_app_config.h"
+#include "global_app_config.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 
 namespace OHOS::Security::SecurityGuard {
 std::shared_ptr<ConfigSubscriber> ConfigSubscriber::subscriber_{nullptr};
 std::mutex ConfigSubscriber::mutex_{};
+TimeEventRelatedCallBack ConfigSubscriber::timeEventCallBack_ {nullptr};
+std::mutex ConfigSubscriber::callBackMutex_ {};
 
 namespace {
-    const std::string HSDR_EVENT = "usual.event.HSDR_EVENT";
-    const std::string PATH_SEP = "/";
-    const std::string PARAM_SEP = "|";
-    const std::string NAME_SEP = ".";
+    constexpr const char* HSDR_EVENT = "usual.event.HSDR_EVENT";
+    constexpr const char* PATH_SEP = "/";
+    constexpr const char* PARAM_SEP = "|";
+    constexpr const char* NAME_SEP = ".";
     constexpr size_t NAME_COUNT = 2;
 }
 
@@ -48,6 +52,7 @@ bool ConfigSubscriber::Subscribe(void)
         EventFwk::MatchingSkills matchingSkills;
         matchingSkills.AddEvent(HSDR_EVENT);
         EventFwk::CommonEventSubscribeInfo subscriberInfo(matchingSkills);
+        subscriberInfo.SetPermission("ohos.permission.securityguard.REPORT_SECURITY_INFO");
         subscriber_ = std::make_shared<ConfigSubscriber>(subscriberInfo);
         SGLOGI("begin Subscribe");
         return EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
@@ -55,6 +60,17 @@ bool ConfigSubscriber::Subscribe(void)
     return true;
 };
 
+bool ConfigSubscriber::RegisterTimeEventRelatedCallBack(const TimeEventRelatedCallBack &callBack)
+{
+    std::lock_guard<std::mutex> lock(callBackMutex_);
+    if (callBack == nullptr) {
+        SGLOGE("callBack is null");
+        return false;
+    }
+    SGLOGI("RegisterTimeEventRelatedCallBack...");
+    timeEventCallBack_ = callBack;
+    return true;
+}
 bool ConfigSubscriber::UnSubscribe(void)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -67,6 +83,21 @@ bool ConfigSubscriber::UnSubscribe(void)
     }
     return success;
 };
+
+bool ConfigSubscriber::UpdateRelatedEventAnalysisCfg(const std::string &file)
+{
+    bool isSuccess = false;
+    {
+        std::lock_guard<std::mutex> lock(callBackMutex_);
+        if (timeEventCallBack_ != nullptr) {
+            isSuccess = timeEventCallBack_();
+        }
+    }
+    if (isSuccess) {
+        return SecurityGuardUtils::CopyFile(file, CONFIG_UPTATE_FILES[RELATED_EVENT_ANALYSIS_CFG_INDEX]);
+    }
+    return isSuccess;
+}
 
 void ConfigSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
 {
@@ -97,6 +128,12 @@ void ConfigSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData
                 isSuccess = SecurityGuardUtils::CopyFile(file, CONFIG_UPTATE_FILES[SIG_RULE_CFG_INDEX]);
             } else if (file == CONFIG_CACHE_FILES[URL_RULE_CFG_INDEX]) {
                 isSuccess = SecurityGuardUtils::CopyFile(file, CONFIG_UPTATE_FILES[URL_RULE_CFG_INDEX]);
+            } else if (file == CONFIG_CACHE_FILES[RELATED_EVENT_ANALYSIS_CFG_INDEX]) {
+                isSuccess = UpdateRelatedEventAnalysisCfg(file);
+            } else if (file == CONFIG_CACHE_FILES[LOCAL_APP_CFG_INDEX]) {
+                isSuccess = ConfigManager::UpdataConfig<LocalAppConfig>();
+            } else if (file == CONFIG_CACHE_FILES[GLOBAL_APP_CFG_INDEX]) {
+                isSuccess = ConfigManager::UpdataConfig<GlobalAppConfig>();
             }
             event.path = file.substr(configPath.length() + 1);
             event.time = SecurityGuardUtils::GetDate();

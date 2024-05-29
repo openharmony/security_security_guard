@@ -33,6 +33,9 @@ public:
     void TearDown() override;
 
     static void SecurityGuardRiskCallbackFunc(SecurityModelResult *result);
+
+private:
+    static bool isEnforcing_;
 };
 }  // namespace OHOS::Security::SecurityGuardTest
 

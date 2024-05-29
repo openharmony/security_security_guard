@@ -16,13 +16,15 @@
 #ifndef SECURITY_GUARD_HIVIEW_COLLECTOR_H
 #define SECURITY_GUARD_HIVIEW_COLLECTOR_H
 
+#include <vector>
+
 #include "hisysevent_listener.h"
 
 namespace OHOS::Security::SecurityGuard {
 class HiviewCollector {
 public:
     HiviewCollector() {}
-    void Collect(std::string domain, std::string eventName);
+    void Collect(std::vector<std::pair<std::string, std::string>> domainEventList);
 };
 } // OHOS::Security::SecurityGuard
 

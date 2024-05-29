@@ -22,6 +22,8 @@
 #include "security_guard_log.h"
 #include "task_handler.h"
 #include "event_define.h"
+#include "i_data_collect_manager.h"
+
 
 namespace OHOS::Security::SecurityGuard {
 AcquireDataSubscribeManager& AcquireDataSubscribeManager::GetInstance()
@@ -76,7 +78,7 @@ bool AcquireDataSubscribeManager::Publish(const SecEvent &events)
     }
     auto listerers = iter->second;
     for (const auto &listener : listerers) {
-        auto proxy = iface_cast<AcquireDataCallbackProxy>(listener);
+        auto proxy = iface_cast<IAcquireDataCallback>(listener);
         if (proxy == nullptr) {
             return false;
         }

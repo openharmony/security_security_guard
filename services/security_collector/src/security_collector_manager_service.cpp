@@ -24,55 +24,23 @@
 #include "data_collection.h"
 #include "sg_collect_client.h"
 #include "security_collector_subscriber_manager.h"
+#include "security_collector_run_manager.h"
 #include "security_collector_manager_callback_proxy.h"
 #include "task_handler.h"
 #include "event_define.h"
+#include "tokenid_kit.h"
+#include "data_collection.h"
 
 namespace OHOS::Security::SecurityCollector {
 namespace {
-constexpr char PERMISSION[] = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
-constexpr char NOTIFY_APP_NAME[] = "security_guard";
-
-const std::string CALLER_PID = "CALLER_PID";
-const std::string EVENT_VERSION = "EVENT_VERSION";
-const std::string SC_EVENT_ID = "EVENT_ID";
-const std::string SUB_RET = "SUB_RET";
-const std::string UNSUB_RET = "UNSUB_RET";
-
-std::string GetAppName()
-{
-    AccessToken::AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(tokenId);
-    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_HAP) {
-        AccessToken::HapTokenInfo hapTokenInfo;
-        int ret = AccessToken::AccessTokenKit::GetHapTokenInfo(tokenId, hapTokenInfo);
-        if (ret != 0) {
-            LOGE("failed to get hap token info, result = %{public}d", ret);
-            return "";
-        }
-        return hapTokenInfo.bundleName;
-    } else if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-        AccessToken::NativeTokenInfo nativeTokenInfo;
-        int ret = AccessToken::AccessTokenKit::GetNativeTokenInfo(tokenId, nativeTokenInfo);
-        if (ret != 0) {
-            LOGE("failed to get native token info, result = %{public}d", ret);
-            return "";
-        }
-        return nativeTokenInfo.processName;
-    }
-    LOGE("failed to get app name");
-    return "";
-}
-
-bool HasPermission()
-{
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, PERMISSION);
-    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
-        return false;
-    }
-    return true;
-}
+    constexpr char PERMISSION[] = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
+    constexpr char REPORT_PERMISSION[] = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
+    constexpr char NOTIFY_APP_NAME[] = "security_guard";
+    constexpr const char* CALLER_PID = "CALLER_PID";
+    constexpr const char* EVENT_VERSION = "EVENT_VERSION";
+    constexpr const char* SC_EVENT_ID = "EVENT_ID";
+    constexpr const char* SUB_RET = "SUB_RET";
+    constexpr const char* UNSUB_RET = "UNSUB_RET";
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(SecurityCollectorManagerService, SECURITY_COLLECTOR_MANAGER_SA_ID, true);
@@ -119,10 +87,10 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
     LOGI("in subscribe, subscribinfo: duration:%{public}" PRId64 ", isNotify:%{public}d, eventid:%{public}" PRId64 ", \n"
         "version:%{public}s, extra:%{public}s", subscribeInfo.GetDuration(), (int)subscribeInfo.IsNotify(),
         event.eventId, event.version.c_str(), event.extra.c_str());
-
-    if (!HasPermission()) {
+    int32_t ret = HasPermission();
+    if (ret != SUCCESS) {
         LOGE("caller no permission");
-        return NO_PERMISSION;
+        return ret;
     }
     std::string appName = (subscribeInfo.IsNotify() ? NOTIFY_APP_NAME : GetAppName());
     if (appName.empty()) {
@@ -163,10 +131,11 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
 
 int32_t SecurityCollectorManagerService::Unsubscribe(const sptr<IRemoteObject> &callback)
 {
-    LOGI("In unubscribe");
-    if (!HasPermission()) {
+    LOGI("In unsubscribe");
+    int32_t ret = HasPermission();
+    if (ret != SUCCESS) {
         LOGE("caller no permission");
-        return NO_PERMISSION;
+        return ret;
     }
     CleanSubscriber(callback);
 
@@ -176,9 +145,88 @@ int32_t SecurityCollectorManagerService::Unsubscribe(const sptr<IRemoteObject> &
     LOGI("SecurityCollectorManagerService, CleanSubscriber");
     ReportScUnsubscribeEvent(subEvent);
 
-    LOGI("Out unubscribe");
+    LOGI("Out unsubscribe");
     return SUCCESS;
 }
+
+int32_t SecurityCollectorManagerService::CollectorStart(const SecurityCollectorSubscribeInfo &subscribeInfo,
+    const sptr<IRemoteObject> &callback)
+{
+    Event event = subscribeInfo.GetEvent();
+    int32_t ret = HasPermission();
+    if (ret != SUCCESS) {
+        LOGE("caller no permission");
+        return ret;
+    }
+    int32_t collectorType = COLLECTOR_NOT_CAN_START;
+    if (DataCollection::GetInstance().GetCollectorType(event.eventId, collectorType) != SUCCESS) {
+        LOGE("get collector type error event id: %{public}" PRId64 "", event.eventId);
+        return BAD_PARAM;
+    }
+    
+    if (collectorType != COLLECTOR_CAN_START) {
+        LOGE("collector type not support be start, event id: %{public}" PRId64 "", event.eventId);
+        return BAD_PARAM;
+    }
+    std::string appName = GetAppName();
+    LOGI("in subscribe, appname:%{public}s", appName.c_str());
+    if (appName.empty()) {
+        return BAD_PARAM;
+    }
+    auto eventHandler = [this] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {
+        return;
+    };
+    auto subscriber = std::make_shared<SecurityCollectorSubscriber>(appName, subscribeInfo, nullptr, eventHandler);
+    ScSubscribeEvent subEvent;
+    subEvent.pid = IPCSkeleton::GetCallingPid();
+    subEvent.version = event.version;
+    subEvent.eventId = event.eventId;
+
+    if (!SecurityCollectorRunManager::GetInstance().StartCollector(subscriber)) {
+        subEvent.ret = BAD_PARAM;
+        ReportScSubscribeEvent(subEvent);
+        return BAD_PARAM;
+    }
+    subEvent.ret = SUCCESS;
+    ReportScSubscribeEvent(subEvent);
+    LOGI("Out CollectorStart");
+    return SUCCESS;
+}
+
+int32_t SecurityCollectorManagerService::CollectorStop(const SecurityCollectorSubscribeInfo &subscribeInfo,
+    const sptr<IRemoteObject> &callback)
+{
+    Event event = subscribeInfo.GetEvent();
+    int32_t ret = HasPermission();
+    if (ret != SUCCESS) {
+        LOGE("caller no permission");
+        return ret;
+    }
+    std::string appName = GetAppName();
+    LOGI("in CollectorStop, appname:%{public}s", appName.c_str());
+    if (appName.empty()) {
+        return BAD_PARAM;
+    }
+    auto eventHandler = [this] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {
+        return;
+    };
+    auto subscriber = std::make_shared<SecurityCollectorSubscriber>(appName, subscribeInfo, nullptr, eventHandler);
+    ScSubscribeEvent subEvent;
+    subEvent.pid = IPCSkeleton::GetCallingPid();
+    subEvent.version = event.version;
+    subEvent.eventId = event.eventId;
+
+    if (!SecurityCollectorRunManager::GetInstance().StopCollector(subscriber)) {
+        subEvent.ret = BAD_PARAM;
+        ReportScSubscribeEvent(subEvent);
+        return BAD_PARAM;
+    }
+    subEvent.ret = SUCCESS;
+    ReportScSubscribeEvent(subEvent);
+    LOGI("Out CollectorStop");
+    return SUCCESS;
+}
+
 
 void SecurityCollectorManagerService::CleanSubscriber(const sptr<IRemoteObject> &remote)
 {
@@ -261,5 +309,59 @@ void SecurityCollectorManagerService::ExecuteOnNotifyByTask(const sptr<IRemoteOb
     } else {
         LOGE("report proxy is null");
     }
+}
+
+int32_t SecurityCollectorManagerService::QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
+    std::vector<SecurityEvent> &events)
+{
+    LOGI("begin QuerySecurityEvent");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REPORT_PERMISSION);
+    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
+        LOGE("caller no permission");
+        return NO_PERMISSION;
+    }
+    bool isSuccess = DataCollection::GetInstance().QuerySecurityEvent(rulers, events);
+    if (!isSuccess) {
+        LOGI("QuerySecurityEvent error");
+        return READ_ERR;
+    }
+    return SUCCESS;
+}
+
+std::string SecurityCollectorManagerService::GetAppName()
+{
+    AccessToken::AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(tokenId);
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_HAP) {
+        AccessToken::HapTokenInfo hapTokenInfo;
+        int ret = AccessToken::AccessTokenKit::GetHapTokenInfo(tokenId, hapTokenInfo);
+        if (ret != 0) {
+            LOGE("failed to get hap token info, result = %{public}d", ret);
+            return "";
+        }
+        return hapTokenInfo.bundleName;
+    } else if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        AccessToken::NativeTokenInfo nativeTokenInfo;
+        int ret = AccessToken::AccessTokenKit::GetNativeTokenInfo(tokenId, nativeTokenInfo);
+        if (ret != 0) {
+            LOGE("failed to get native token info, result = %{public}d", ret);
+            return "";
+        }
+        return nativeTokenInfo.processName;
+    }
+    LOGE("failed to get app name");
+    return "";
+}
+
+int32_t SecurityCollectorManagerService::HasPermission()
+{
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, PERMISSION);
+    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
+        return NO_PERMISSION;
+    }
+
+    return SUCCESS;
 }
 }

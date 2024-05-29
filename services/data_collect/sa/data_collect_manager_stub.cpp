@@ -44,6 +44,9 @@ int32_t DataCollectManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &da
             case CMD_DATA_UNSUBSCRIBE: {
                 return HandleDataUnsubscribeCmd(data, reply);
             }
+            case CMD_SECURITY_EVENT_QUERY: {
+                return HandleSecurityEventQueryCmd(data, reply);
+            }
             default: {
                 break;
             }
@@ -133,6 +136,48 @@ int32_t DataCollectManagerStub::HandleDataUnsubscribeCmd(MessageParcel &data, Me
     }
 
     int32_t ret = Unsubscribe(callback);
+    reply.WriteInt32(ret);
+    return ret;
+}
+
+int32_t DataCollectManagerStub::HandleSecurityEventQueryCmd(MessageParcel &data, MessageParcel &reply)
+{
+    SGLOGI("%{public}s", __func__);
+    uint32_t expected = sizeof(uint32_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (expected >= actual) {
+        SGLOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    uint32_t size = 0;
+    if (!data.ReadUint32(size)) {
+        SGLOGE("failed to get the event size");
+        return BAD_PARAM;
+    }
+
+    if (size > MAX_QUERY_EVENT_SIZE) {
+        SGLOGE("the event size error");
+        return BAD_PARAM;
+    }
+    std::vector<SecurityCollector::SecurityEventRuler> rulers;
+    for (uint32_t index = 0; index < size; index++) {
+        std::shared_ptr<SecurityCollector::SecurityEventRuler> event(
+            data.ReadParcelable<SecurityCollector::SecurityEventRuler>());
+        if (event == nullptr) {
+            SGLOGE("failed read security event");
+            return BAD_PARAM;
+        }
+        rulers.emplace_back(*event);
+    }
+
+    auto callback = data.ReadRemoteObject();
+    if (callback == nullptr) {
+        SGLOGE("callback is nullptr");
+        return BAD_PARAM;
+    }
+
+    int32_t ret = QuerySecurityEvent(rulers, callback);
     reply.WriteInt32(ret);
     return ret;
 }

@@ -32,19 +32,22 @@ extern "C" {
 #endif
 
 namespace OHOS::Security::SecurityGuardTest {
-std::string g_enforceValue = "0";
 
 void ObtainDataKitTest::SetUpTestCase()
 {
-    bool isSuccess = LoadStringFromFile("/sys/fs/selinux/enforce", g_enforceValue);
-    if (isSuccess && g_enforceValue == "1") {
+    string isEnforcing;
+    LoadStringFromFile("/sys/fs/selinux/enforce", isEnforcing);
+    if (isEnforcing.compare("1") == 0) {
+        ObtainDataKitTest::isEnforcing_ = true;
         SaveStringToFile("/sys/fs/selinux/enforce", "0");
     }
 }
 
 void ObtainDataKitTest::TearDownTestCase()
 {
-    SaveStringToFile("/sys/fs/selinux/enforce", g_enforceValue);
+    if (ObtainDataKitTest::isEnforcing_) {
+        SaveStringToFile("/sys/fs/selinux/enforce", "1");
+    }
 }
 
 void ObtainDataKitTest::SetUp()
@@ -54,6 +57,8 @@ void ObtainDataKitTest::SetUp()
 void ObtainDataKitTest::TearDown()
 {
 }
+
+bool ObtainDataKitTest::isEnforcing_ = false;
 
 void ObtainDataKitTest::RequestSecurityEventInfoCallBackFunc(const DeviceIdentify *devId, const char *eventBuffList,
     uint32_t status)

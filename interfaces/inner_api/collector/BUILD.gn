@@ -22,13 +22,17 @@ config("security_guard_config") {
     "${sg_root_dir}/interfaces/inner_api/common/include",
     "${sg_root_dir}/interfaces/inner_api/collector/include",
     "${sg_root_dir}/services/security_collector/include",
+    "${sg_root_dir}/interfaces/inner_api/obtaindata/include",
   ]
 }
 
 ohos_shared_library("libsg_collector_sdk") {
+  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "security"
   part_name = "security_guard"
   output_name = "libsg_collector_sdk"
+
+  configs = [ "${sg_root_dir}/resource/config/build:coverage_flags" ]
 
   public_configs = [ ":security_guard_config" ]
 
@@ -43,12 +47,17 @@ ohos_shared_library("libsg_collector_sdk") {
   ]
 
   sources = [
-    "src/collector_manager.cpp",
-    "src/collector_service_loader.cpp",
     "src/security_collector_manager_callback_service.cpp",
     "src/security_collector_manager_callback_stub.cpp",
     "src/security_collector_manager_proxy.cpp",
     "src/security_collector_subscribe_info.cpp",
+    "src/security_event.cpp",
+    "src/security_event_ruler.cpp",
+    "src/collector_manager.cpp",
+    "src/collector_service_loader.cpp",
+    "src/i_collector.cpp",
+    "src/i_collector_fwk.cpp",
+    "src/i_collector_subscriber.cpp"
   ]
 
   sanitize = {
@@ -58,7 +67,6 @@ ohos_shared_library("libsg_collector_sdk") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
   }
   stack_protector_ret = true
 

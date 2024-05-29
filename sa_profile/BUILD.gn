@@ -30,7 +30,9 @@ ohos_prebuilt_etc("security_guard.init") {
 }
 
 ohos_sa_profile("security_collector_sa_profile_standard") {
-  sources = [ "3525.json" ]
+  sources = [
+    "3525.json",
+  ]
   part_name = "security_guard"
 }
 
