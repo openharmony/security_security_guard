@@ -19,7 +19,7 @@ ohos_unittest("risk_collect_test") {
   part_name = "security_guard"
   subsystem_name = "security"
   module_out_path = "${part_name}/${part_name}"
- 
+
   include_dirs = [
     "include",
     "${sg_root_dir}/frameworks/common/task_handler/include",
@@ -45,17 +45,17 @@ ohos_unittest("risk_collect_test") {
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/risk_collect/src/data_format.cpp",
     "${sg_root_dir}/services/risk_collect/src/kernel_interface_adapter.cpp",
-    "${sg_root_dir}/services/risk_collect/src/uevent_listener_impl.cpp",
     "${sg_root_dir}/services/risk_collect/src/uevent_listener.cpp",
+    "${sg_root_dir}/services/risk_collect/src/uevent_listener_impl.cpp",
     "${sg_root_dir}/services/risk_collect/src/uevent_notify.cpp",
     "src/risk_collect_test.cpp",
   ]
- 
+
   deps = [
-    "//third_party/googletest:gmock",
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
+    "//third_party/googletest:gmock",
   ]
- 
+
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",

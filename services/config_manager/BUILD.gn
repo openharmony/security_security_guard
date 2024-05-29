@@ -35,18 +35,18 @@ ohos_shared_library("sg_config_manager") {
   sources = [
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
+    "${sg_root_dir}/services/config_manager/src/app_info_rdb_helper.cpp",
     "${sg_root_dir}/services/config_manager/src/base_config.cpp",
     "${sg_root_dir}/services/config_manager/src/config_data_manager.cpp",
+    "${sg_root_dir}/services/config_manager/src/config_database_helper.cpp",
     "${sg_root_dir}/services/config_manager/src/config_manager.cpp",
     "${sg_root_dir}/services/config_manager/src/config_operator.cpp",
     "${sg_root_dir}/services/config_manager/src/config_subscriber.cpp",
     "${sg_root_dir}/services/config_manager/src/event_config.cpp",
-    "${sg_root_dir}/services/config_manager/src/model_cfg_marshalling.cpp",
-    "${sg_root_dir}/services/config_manager/src/model_config.cpp",
     "${sg_root_dir}/services/config_manager/src/global_app_config.cpp",
     "${sg_root_dir}/services/config_manager/src/local_app_config.cpp",
-    "${sg_root_dir}/services/config_manager/src/app_info_rdb_helper.cpp",
-    "${sg_root_dir}/services/config_manager/src/config_database_helper.cpp",
+    "${sg_root_dir}/services/config_manager/src/model_cfg_marshalling.cpp",
+    "${sg_root_dir}/services/config_manager/src/model_config.cpp",
   ]
 
   sanitize = {

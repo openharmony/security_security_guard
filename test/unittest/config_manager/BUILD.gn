@@ -45,16 +45,16 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "${sg_root_dir}/services/config_manager/src/config_operator.cpp",
     "${sg_root_dir}/services/config_manager/src/config_subscriber.cpp",
     "${sg_root_dir}/services/config_manager/src/event_config.cpp",
-    "${sg_root_dir}/services/config_manager/src/model_cfg_marshalling.cpp",
-    "${sg_root_dir}/services/config_manager/src/model_config.cpp",
     "${sg_root_dir}/services/config_manager/src/global_app_config.cpp",
     "${sg_root_dir}/services/config_manager/src/local_app_config.cpp",
+    "${sg_root_dir}/services/config_manager/src/model_cfg_marshalling.cpp",
+    "${sg_root_dir}/services/config_manager/src/model_config.cpp",
     "src/security_guard_config_manager_test.cpp",
   ]
 
   deps = [
-    "//third_party/googletest:gmock", 
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
+    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
@@ -114,8 +114,8 @@ ohos_unittest("AppInfoDatabseTest") {
   ]
 
   deps = [
-    "//third_party/googletest:gmock", 
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
+    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
@@ -146,5 +146,8 @@ ohos_unittest("AppInfoDatabseTest") {
 
 group("unittest") {
   testonly = true
-  deps = [ ":SecurityGuardConfigManagerTest", ":AppInfoDatabseTest" ]
+  deps = [
+    ":AppInfoDatabseTest",
+    ":SecurityGuardConfigManagerTest",
+  ]
 }

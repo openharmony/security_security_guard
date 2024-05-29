@@ -27,8 +27,8 @@ ohos_unittest("libsg_obtaindata_sdk_test") {
   ]
 
   sources = [
-    "unittest/src/obtaindata_kit_test.cpp",
     "unittest/src/acquire_data_manager_test.cpp",
+    "unittest/src/obtaindata_kit_test.cpp",
   ]
 
   deps = [
