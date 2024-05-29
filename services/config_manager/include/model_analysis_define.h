@@ -78,9 +78,6 @@ namespace OHOS::Security::SecurityGuard {
     constexpr const char* EVENT_CONTENT_STATUS_KEY = "status";
     constexpr const char* EVENT_CONTENT_CRED_KEY = "cred";
     constexpr const char* EVENT_CONTENT_EXTRA_KEY = "extra";
-
-    // radix
-    constexpr int32_t DEX_RADIX = 10;
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_MODEL_ANALYSIS_DEFINE_H
