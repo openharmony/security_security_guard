@@ -21,7 +21,7 @@ ohos_source_set("sg_task_stamp") {
   include_dirs = [
     "${sg_root_dir}/frameworks/common/task_handler/include",
     "${sg_root_dir}/frameworks/common/log/include",
-    ]
+  ]
 
   sources =
       [ "${sg_root_dir}/frameworks/common/task_handler/src/task_handler.cpp" ]
@@ -38,7 +38,7 @@ ohos_source_set("sg_task_stamp") {
 
   external_deps = [
     "c_utils:utils",
-    "init:libbegetutil",
     "hilog:libhilog",
+    "init:libbegetutil",
   ]
 }

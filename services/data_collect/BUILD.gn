@@ -20,7 +20,7 @@ ohos_source_set("sg_uevent_listener_stamp") {
 
   configs = [
     "${sg_root_dir}/services/risk_classify:security_guard_model_configs",
-    "${sg_root_dir}/resource/config/build:coverage_flags"
+    "${sg_root_dir}/resource/config/build:coverage_flags",
   ]
 
   include_dirs = [
@@ -57,9 +57,9 @@ ohos_source_set("sg_uevent_listener_stamp") {
     "c_utils:utils",
     "hdf_core:libhdf_ipc_adapter",
     "hilog:libhilog",
+    "init:libbegetutil",
     "json:nlohmann_json_static",
     "relational_store:native_rdb",
-    "init:libbegetutil",
   ]
 }
 
@@ -70,7 +70,7 @@ ohos_shared_library("sg_collect_service") {
 
   configs = [
     "${sg_root_dir}/services/risk_classify:security_guard_model_configs",
-    "${sg_root_dir}/resource/config/build:coverage_flags"
+    "${sg_root_dir}/resource/config/build:coverage_flags",
   ]
 
   include_dirs = [
@@ -90,13 +90,13 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/frameworks/common/database/include",
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/frameworks/common/utils/include",
-    "${sg_root_dir}/services/security_collector/include"
+    "${sg_root_dir}/services/security_collector/include",
   ]
 
   sources = [
+    "${sg_root_dir}/interfaces/inner_api/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/services/data_collect/collect/hiview/hiview_collector.cpp",
     "${sg_root_dir}/services/data_collect/collect/hiview/hiview_listener.cpp",
-    "${sg_root_dir}/interfaces/inner_api/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_subscribe_manager.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_callback_proxy.cpp",
@@ -106,9 +106,9 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
     "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
+    "${sg_root_dir}/services/security_collector/src/collector_cfg_marshalling.cpp",
     "${sg_root_dir}/services/security_collector/src/data_collection.cpp",
     "${sg_root_dir}/services/security_collector/src/lib_loader.cpp",
-    "${sg_root_dir}/services/security_collector/src/collector_cfg_marshalling.cpp"
   ]
 
   sanitize = {
@@ -126,17 +126,17 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/interfaces/inner_api/collector:libsg_collector_sdk",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
-    "${sg_root_dir}/services/data_collect:sg_uevent_listener_stamp",
     "${sg_root_dir}/services/data_collect:sg_collect_service_database",
+    "${sg_root_dir}/services/data_collect:sg_uevent_listener_stamp",
   ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",
-    "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
     "relational_store:native_rdb",
@@ -151,7 +151,7 @@ ohos_shared_library("sg_collect_service_database") {
 
   configs = [
     "${sg_root_dir}/services/risk_classify:security_guard_model_configs",
-    "${sg_root_dir}/resource/config/build:coverage_flags"
+    "${sg_root_dir}/resource/config/build:coverage_flags",
   ]
 
   include_dirs = [
@@ -175,12 +175,10 @@ ohos_shared_library("sg_collect_service_database") {
   }
   stack_protector_ret = true
 
-  deps = [
-
-  ]
+  deps = []
 
   external_deps = [
-    "relational_store:native_rdb",
     "hilog:libhilog",
+    "relational_store:native_rdb",
   ]
 }

@@ -16,6 +16,6 @@ group("fuzztest") {
   deps = [
     "datacollectmanager_fuzzer:DataCollectManagerFuzzTest",
     "riskanalysismanager_fuzzer:RiskAnalysisManagerFuzzTest",
-    "securitycollectormanager_fuzzer:SecurityCollectorManagerFuzzTest"
+    "securitycollectormanager_fuzzer:SecurityCollectorManagerFuzzTest",
   ]
 }

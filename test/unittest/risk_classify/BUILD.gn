@@ -52,11 +52,11 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
   ]
 
   deps = [
-    "//third_party/googletest:gmock",
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
+    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
@@ -79,7 +79,5 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
 
 group("unittest") {
   testonly = true
-  deps = [
-    ":SecurityGuardRiskAnalysisTest",
-  ]
+  deps = [ ":SecurityGuardRiskAnalysisTest" ]
 }
