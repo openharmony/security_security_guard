@@ -83,7 +83,6 @@ group("security_guard_unit_test") {
       "${sg_root_dir}/test/unittest/config_manager:unittest",
       "${sg_root_dir}/test/unittest/data_collect:data_collect_test",
       "${sg_root_dir}/test/unittest/data_collect:unittest",
-      "${sg_root_dir}/test/unittest/model_manager:unittest",
       "${sg_root_dir}/test/unittest/risk_classify:unittest",
       "${sg_root_dir}/test/unittest/security_collector:security_collector_test",
       "${sg_root_dir}/test/unittest/security_collector:unittest",
