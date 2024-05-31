@@ -24,7 +24,22 @@
 
 namespace OHOS::Security::SecurityGuard {
 DataCollectManagerService g_service(DATA_COLLECT_MANAGER_SA_ID, true);
-constexpr int32_t REMAINDER_VALUE = 2;
+constexpr int32_t REMAINDER_VALUE = 5;
+constexpr int32_t CMD_DATA_COLLECT_VALUE = 0;
+constexpr int32_t CMD_DATA_REQUEST_VALUE = 1;
+constexpr int32_t CMD_DATA_SUBSCRIBE = 2;
+constexpr int32_t CMD_DATA_UNSUBSCRIBE_VALUE = 3;
+constexpr int32_t CMD_SECURITY_EVENT_QUERY_VALUE = 4;
+void OnRemoteCollectRequest(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option);
+void OnRemoteRequestRequest(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option);
+void OnRemoteSubscribeRequest(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option);
+void OnRemoteUnsubscribeRequest(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option);
+void OnRemoteSecurityEventQuery(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option);
 
 void OnRemoteRequestFuzzTest(const uint8_t* data, size_t size)
 {
@@ -32,33 +47,121 @@ void OnRemoteRequestFuzzTest(const uint8_t* data, size_t size)
     MessageParcel reply;
     MessageOption option;
     datas.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    if (size % REMAINDER_VALUE == 0) {
+    if (size % REMAINDER_VALUE == CMD_DATA_COLLECT_VALUE) {
         // handle data collect cmd
-        int64_t eventId = static_cast<int64_t>(size);
-        std::string version(reinterpret_cast<const char *>(data), size);
-        std::string time(reinterpret_cast<const char *>(data), size);
-        std::string content(reinterpret_cast<const char *>(data), size);
-        datas.WriteInt64(eventId);
-        datas.WriteString(version);
-        datas.WriteString(time);
-        datas.WriteString(content);
-        g_service.OnRemoteRequest(DataCollectManagerStub::CMD_DATA_COLLECT, datas, reply, option);
+        OnRemoteCollectRequest(data, size, &datas, &reply, &option);
+        return;
+    } else if (size % REMAINDER_VALUE == CMD_DATA_REQUEST_VALUE) {
+        // handle data request cmd
+        OnRemoteRequestRequest(data, size, &datas, &reply, &option);
+        return;
+    } else if (size % REMAINDER_VALUE == CMD_DATA_SUBSCRIBE) {
+        // handle data subscribe cmd
+        OnRemoteSubscribeRequest(data, size, &datas, &reply, &option);
+        return;
+    } else if (size % REMAINDER_VALUE == CMD_DATA_UNSUBSCRIBE_VALUE) {
+        // handle data unsubscribe cmd
+        OnRemoteUnsubscribeRequest(data, size, &datas, &reply, &option);
+        return;
+    } else if (size % REMAINDER_VALUE == CMD_SECURITY_EVENT_QUERY_VALUE) {
+        // handle security event query cmd
+        OnRemoteSecurityEventQuery(data, size, &datas, &reply, &option);
         return;
     }
-    // handle data request cmd
+}
+
+void OnRemoteCollectRequest(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option)
+{
+    int64_t eventId = static_cast<int64_t>(size);
+    std::string version(reinterpret_cast<const char *>(data), size);
+    std::string time(reinterpret_cast<const char *>(data), size);
+    std::string content(reinterpret_cast<const char *>(data), size);
+    datas->WriteInt64(eventId);
+    datas->WriteString(version);
+    datas->WriteString(time);
+    datas->WriteString(content);
+    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_DATA_COLLECT, *datas, *reply, *option);
+}
+
+void OnRemoteRequestRequest(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option)
+{
     std::string deviceId(reinterpret_cast<const char *>(data), size);
     std::string conditions(reinterpret_cast<const char *>(data), size);
-    datas.WriteString(deviceId);
-    datas.WriteString(conditions);
+    datas->WriteString(deviceId);
+    datas->WriteString(conditions);
     RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
         const std::string &errMsg) -> int32_t {
         SGLOGI("DataCollectManagerCallbackService called");
         return 0;
     };
     sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
-    datas.WriteRemoteObject(callback);
-    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_DATA_REQUEST, datas, reply, option);
+    datas->WriteRemoteObject(callback);
+    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_DATA_REQUEST, *datas, *reply, *option);
 }
+
+void OnRemoteSubscribeRequest(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option)
+{
+    int64_t eventId = static_cast<int64_t>(size);
+    std::string version(reinterpret_cast<const char *>(data), size);
+    std::string content(reinterpret_cast<const char *>(data), size);
+    std::string extra(reinterpret_cast<const char *>(data), size);
+    int64_t duration = static_cast<int64_t>(size);
+    SecurityCollector::Event event;
+    event.eventId = eventId;
+    event.version = version;
+    event.content = content;
+    event.extra = extra;
+    SecurityCollector::SecurityCollectorSubscribeInfo subscriberInfo{event, duration, true};
+    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
+        const std::string &errMsg) -> int32_t {
+        SGLOGI("DataCollectManagerCallbackService called");
+        return 0;
+    };
+    sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
+    datas->WriteRemoteObject(callback);
+    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_DATA_SUBSCRIBE, *datas, *reply, *option);
+}
+
+void OnRemoteUnsubscribeRequest(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option)
+{
+    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
+        const std::string &errMsg) -> int32_t {
+        SGLOGI("DataCollectManagerCallbackService called");
+        return 0;
+    };
+    sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
+    datas->WriteRemoteObject(callback);
+    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_DATA_UNSUBSCRIBE, *datas, *reply, *option);
+}
+
+void OnRemoteSecurityEventQuery(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option)
+{
+    uint32_t rulerSize = size >= MAX_QUERY_EVENT_SIZE ? MAX_QUERY_EVENT_SIZE : static_cast<uint32_t>(size);
+    datas->WriteUint32(rulerSize);
+    for (uint32_t i = 0; i < rulerSize; i++) {
+        int64_t eventId = static_cast<int64_t>(size);
+        std::string beginTime(reinterpret_cast<const char *>(data), size);
+        std::string endTime(reinterpret_cast<const char *>(data), size);
+        std::string param(reinterpret_cast<const char *>(data), size);
+        SecurityCollector::SecurityEventRuler ruler =
+            SecurityCollector::SecurityEventRuler(eventId, beginTime, endTime, param);
+        datas->WriteParcelable(&ruler);
+    }
+    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
+        const std::string &errMsg) -> int32_t {
+        SGLOGI("DataCollectManagerCallbackService called");
+        return 0;
+    };
+    sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
+    datas->WriteRemoteObject(callback);
+    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_SECURITY_EVENT_QUERY, *datas, *reply, *option);
+}
+
 }  // namespace OHOS::Security::SecurityGuard
 
 /* Fuzzer entry point */

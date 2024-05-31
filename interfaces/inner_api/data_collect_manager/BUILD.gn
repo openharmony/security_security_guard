@@ -18,6 +18,8 @@ ohos_source_set("sg_collect_stamp") {
   subsystem_name = "security"
   part_name = "security_guard"
 
+  configs = [ "${sg_root_dir}/resource/config/build:coverage_flags" ]
+
   include_dirs = [
     "include",
     "${sg_root_dir}/frameworks/common/interfaces",
@@ -40,7 +42,6 @@ ohos_source_set("sg_collect_stamp") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
   }
   stack_protector_ret = true
 

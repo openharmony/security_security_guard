@@ -15,28 +15,24 @@
 
 #ifndef SECURITY_GUARD_LOG_H
 #define SECURITY_GUARD_LOG_H
+#undef LOG_TAG
+#define LOG_TAG "SG_Service"
+#undef LOG_DOMAIN
+#define LOG_DOMAIN 0xD002F07
 
 #include "hilog/log.h"
-// #define __STDC_FORMAT_MACROS
 #include <cinttypes>
-
 namespace OHOS::Security::SecurityGuard {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
     LOG_CORE,
     0xD002F07,
     "SG_Service"
 };
-
-#define SGLOGD(fmt, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Debug(LABEL, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
-#define SGLOGE(fmt, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Error(LABEL, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
-#define SGLOGF(fmt, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Fatal(LABEL, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
-#define SGLOGI(fmt, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Info(LABEL, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
-#define SGLOGW(fmt, ...) \
-    (void)OHOS::HiviewDFX::HiLog::Warn(LABEL, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
+#define SGLOGD(fmt, ...) HILOG_DEBUG(LOG_CORE, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
+#define SGLOGE(fmt, ...) HILOG_ERROR(LOG_CORE, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
+#define SGLOGF(fmt, ...) HILOG_FATAL(LOG_CORE, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
+#define SGLOGI(fmt, ...) HILOG_INFO(LOG_CORE, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
+#define SGLOGW(fmt, ...) HILOG_WARN(LOG_CORE, "[%{public}s]" fmt, __func__, ##__VA_ARGS__)
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_LOG_H

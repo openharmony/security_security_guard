@@ -34,6 +34,9 @@ public:
 
     static void RequestSecurityEventInfoCallBackFunc(const DeviceIdentify *devId, const char *eventBuffList,
         uint32_t status);
+
+private:
+    static bool isEnforcing_;
 };
 } // namespace OHOS::Security::SecurityGuardTest
 

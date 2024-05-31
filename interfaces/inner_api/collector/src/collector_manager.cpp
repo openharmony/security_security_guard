@@ -111,4 +111,24 @@ void CollectorManager::HandleDecipient()
     std::lock_guard<std::mutex> lock(mutex_);
     eventListeners_.clear();
 }
+
+int32_t CollectorManager::QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
+    std::vector<SecurityEvent> &events)
+{
+    LOGE("begin collector QuerySecurityEvent");
+    auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
+    auto proxy = iface_cast<ISecurityCollectorManager>(object);
+    if (proxy == nullptr) {
+        LOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+
+    int32_t ret = proxy->QuerySecurityEvent(rulers, events);
+    if (ret != SUCCESS) {
+        LOGI("QuerySecurityEvent failed, ret=%{public}d", ret);
+        return ret;
+    }
+    LOGI("QuerySecurityEvent result, ret=%{public}d", ret);
+    return SUCCESS;
+}
 }

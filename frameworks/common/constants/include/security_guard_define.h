@@ -23,6 +23,7 @@ using ErrorCode = enum {
     SUCCESS,
     FAILED,
     NO_PERMISSION,
+    NO_SYSTEMCALL,
     FILE_ERR,
     BAD_PARAM,
     JSON_ERR,
@@ -91,6 +92,8 @@ using RequestCondition = struct {
 
 using RequestRiskDataCallback = std::function<int32_t(std::string &, std::string &, uint32_t, const std::string &)>;
 using ResultCallback = std::function<int32_t (const std::string &devId, uint32_t modelId, const std::string &result)>;
+
+const size_t MAX_QUERY_EVENT_SIZE = 1000;
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_DEFINE_H

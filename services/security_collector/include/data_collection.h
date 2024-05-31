@@ -25,6 +25,8 @@
 
 #include "lib_loader.h"
 #include "i_collector_fwk.h"
+#include "security_event.h"
+#include "security_event_ruler.h"
 
 namespace OHOS::Security::SecurityCollector {
 
@@ -33,10 +35,14 @@ public:
     static DataCollection &GetInstance();
     bool StartCollectors(const std::vector<int64_t>& eventIds, std::shared_ptr<ICollectorFwk> api);
     bool StopCollectors(const std::vector<int64_t>& eventIds);
-
+    ErrorCode GetCollectorType(int64_t eventId, int32_t& collectorType);
+    int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
+    std::vector<SecurityEvent> &events);
+    bool SecurityGuardSubscribeCollector(const std::vector<int64_t>& eventIds);
 private:
     DataCollection() = default;
     ErrorCode LoadCollector(int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api);
+    ErrorCode LoadCollector(std::string path, const SecurityEventRuler &ruler, std::vector<SecurityEvent> &events);
     ErrorCode GetCollectorPath(int64_t eventId, std::string& path);
     ErrorCode CheckFileStream(std::ifstream &stream);
     bool IsCollectorStarted(int64_t eventId);

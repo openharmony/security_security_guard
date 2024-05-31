@@ -15,7 +15,6 @@
 
 #ifndef SECURITY_COLLECTOR_DEFINE_H
 #define SECURITY_COLLECTOR_DEFINE_H
-
 #include <string>
 
 namespace OHOS::Security::SecurityCollector {
@@ -23,6 +22,7 @@ using ErrorCode = enum {
     SUCCESS,
     FAILED,
     NO_PERMISSION,
+    NO_SYSTEMCALL,
     STREAM_ERROR,
     FILE_ERR,
     BAD_PARAM,
@@ -45,10 +45,11 @@ using ErrorCode = enum {
 
 using ModuleCfgSt = struct {
     std::string moduleId;
-    int64_t eventId;
+    std::vector<int64_t> eventId;
     std::string moduleName;
     std::string modulePath;
     uint32_t version;
+    int32_t collectorType;
 };
 
 using ScSubscribeEvent = struct {
@@ -65,14 +66,22 @@ using ScUnsubscribeEvent = struct {
     std::string extend;
 };
 
-const std::string MODULES = "modules";
+using CollectorType = enum {
+    COLLECTOR_NOT_CAN_START,
+    COLLECTOR_CAN_START
+};
+
+constexpr const char* MODULES = "modules";
 
 // model config key
-const std::string MODULE_ID = "moduleId";
-const std::string EVENT_ID = "eventId";
-const std::string MODULE_NAME = "moduleName";
-const std::string MODULE_PATH = "modulePath";
-const std::string MODULE_VERSION = "version";
+constexpr const char* MODULE_ID = "moduleId";
+constexpr const char* EVENT_ID = "eventId";
+constexpr const char* MODULE_NAME = "moduleName";
+constexpr const char* MODULE_PATH = "modulePath";
+constexpr const char* MODULE_VERSION = "version";
+constexpr const char* MODULE_COLLECTOR_TYPE = "collectorType";
+
+const size_t MAX_QUERY_EVENT_SIZE = 1000;
 
 } // namespace OHOS::Security::SecurityGuard
 

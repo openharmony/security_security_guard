@@ -76,4 +76,17 @@ bool JsonCfg::Unmarshal(std::vector<std::string> &data, nlohmann::json jsonObj, 
     }
     return true;
 }
+
+bool JsonCfg::Unmarshal(std::vector<int64_t> &data, nlohmann::json jsonObj, std::string key)
+{
+    JSON_CHECK_HELPER_RETURN_IF_FAILED(jsonObj, key, array, false);
+    nlohmann::json arrays = jsonObj.at(key);
+    for (const auto &element : arrays) {
+        if (!element.is_number()) {
+            return false;
+        }
+        data.emplace_back(element.get<int64_t>());
+    }
+    return true;
+}
 } // namespace OHOS::Security::SecurityGuard

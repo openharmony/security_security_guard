@@ -26,8 +26,9 @@ ohos_fuzztest("DataCollectManagerFuzzTest") {
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/interfaces/inner_api/data_collect_manager/include",
     "${sg_root_dir}/services/config_manager/include",
-    "${sg_root_dir}/services/data_collect/sa",
+    "${sg_root_dir}/services/data_collect/sa/include",
     "${sg_root_dir}/services/risk_classify/model_manager/include",
+    "${sg_root_dir}/interfaces/inner_api/collector/include",
   ]
 
   cflags = [
@@ -47,6 +48,7 @@ ohos_fuzztest("DataCollectManagerFuzzTest") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "security_guard:libsg_collector_sdk",
     "security_guard:libsg_obtaindata_sdk",
   ]
 }

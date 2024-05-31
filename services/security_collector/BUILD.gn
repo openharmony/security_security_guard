@@ -26,10 +26,12 @@ ohos_shared_library("security_collector_service") {
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/task_handler/include",
     "${sg_root_dir}/frameworks/common/json/include",
+    "${sg_root_dir}/frameworks/common/utils/include",
   ]
 
   sources = [
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/interfaces/inner_api/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/services/security_collector/src/collector_cfg_marshalling.cpp",
     "${sg_root_dir}/services/security_collector/src/data_collection.cpp",
@@ -37,6 +39,7 @@ ohos_shared_library("security_collector_service") {
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_service.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_stub.cpp",
+    "${sg_root_dir}/services/security_collector/src/security_collector_run_manager.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_subscriber_manager.cpp",
   ]
 
@@ -47,20 +50,20 @@ ohos_shared_library("security_collector_service") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
   }
   stack_protector_ret = true
 
   deps = [
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
     "${sg_root_dir}/interfaces/inner_api/collect:libsg_collect_sdk",
+    "${sg_root_dir}/interfaces/inner_api/collector:libsg_collector_sdk",
   ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",

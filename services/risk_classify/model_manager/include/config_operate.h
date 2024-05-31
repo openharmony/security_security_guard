@@ -26,6 +26,7 @@ public:
     ~ConfigOperate() override = default;
     bool GetModelConfig(uint32_t modelId, ModelCfg &config) override;
     bool GetEventConfig(int64_t eventId, EventCfg &config) override;
+    std::vector<AppInfo> GetAppInfosByName(const std::string name) override;
 };
 } // namespace OHOS::Security::SecurityGuard
 

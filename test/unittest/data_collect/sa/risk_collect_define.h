@@ -1,0 +1,33 @@
+/*
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef SECURITY_GUARD_RISK_COLLECT_DEFINE_H
+#define SECURITY_GUARD_RISK_COLLECT_DEFINE_H
+
+#include <string>
+
+namespace OHOS::Security::SecurityGuard {
+using DISTRIBUTE_STATUS = enum {
+    FINISH,
+    CONTINUE,
+};
+
+constexpr int32_t MAX_DISTRIBUTE_LENS = 100;
+const std::string KV_STORE_APP_ID = "security_guard_service";
+const std::string BASE_EVENT_ID_STORE_ID = "base_event_id";
+const std::string EVENT_DATA_STORE_ID = "event_data";
+} // namespace OHOS::Security::SecurityGuard
+
+#endif // SECURITY_GUARD_RISK_COLLECT_DEFINE_H

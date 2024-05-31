@@ -16,8 +16,15 @@
 #include "config_data_manager.h"
 
 #include "security_guard_log.h"
+#include "app_info_rdb_helper.h"
 
 namespace OHOS::Security::SecurityGuard {
+ConfigDataManager &ConfigDataManager::GetInstance()
+{
+    static ConfigDataManager instance;
+    return instance;
+}
+
 void ConfigDataManager::InsertModelMap(uint32_t modelId, const ModelCfg &config)
 {
     std::lock_guard<std::mutex> lock(modelMutex_);
@@ -126,5 +133,12 @@ std::string ConfigDataManager::GetTableFromEventId(int64_t eventId)
 {
     std::lock_guard<std::mutex> lock(eventToTableMutex_);
     return eventToTableMap_[eventId];
+}
+
+std::vector<AppInfo> ConfigDataManager::GetAppInfosByName(const std::string &appName)
+{
+    std::vector<AppInfo> infos;
+    AppInfoRdbHelper::GetInstance().QueryAppInfosByName(appName, infos);
+    return infos;
 }
 } // OHOS::Security::SecurityGuard

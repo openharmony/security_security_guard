@@ -56,11 +56,6 @@ int DatabaseHelper::QueryAllEvent(std::vector<SecEvent> &events)
     return QueryEventBase(predicates, events);
 }
 
-int DatabaseHelper::QueryAllEventFromMem(std::vector<SecEvent> &events)
-{
-    return SUCCESS;
-}
-
 int DatabaseHelper::QueryRecentEventByEventId(int64_t eventId, SecEvent &event)
 {
     std::vector<std::string> columns { EVENT_ID, VERSION, DATE, CONTENT };

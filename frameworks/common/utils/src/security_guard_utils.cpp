@@ -23,6 +23,8 @@
 namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr int32_t DEC_RADIX = 10;
+    constexpr int32_t HEX_RADIX = 16;
+    constexpr int32_t STR_INDEX = 2;
     constexpr int32_t TIME_BUF_LEN = 32;
     constexpr int32_t FILE_MAX_SIZE = 2 * 1024 * 1024; // byte
 }
@@ -38,17 +40,30 @@ bool SecurityGuardUtils::StrToU32(const std::string &str, uint32_t &value)
 bool SecurityGuardUtils::StrToI64(const std::string &str, int64_t &value)
 {
     long long tmp = 0;
-    bool isOK = StrToLL(str, tmp);
+    bool isOK = StrToLL(str, tmp, DEC_RADIX);
     value = tmp;
     return isOK && (tmp >= INT64_MIN && tmp <= INT64_MAX);
 }
 
-bool SecurityGuardUtils::StrToLL(const std::string &str, long long &value)
+bool SecurityGuardUtils::StrToI64Hex(const std::string &str, int64_t &value)
+{
+    long long tmp = 0;
+    bool isOK;
+    if (str.substr(0, STR_INDEX) == "0x") {
+        isOK = StrToLL(str, tmp, HEX_RADIX);
+    } else {
+        isOK = StrToLL(str, tmp, DEC_RADIX);
+    }
+    value = tmp;
+    return isOK && (tmp >= INT64_MIN && tmp <= INT64_MAX);
+}
+
+bool SecurityGuardUtils::StrToLL(const std::string &str, long long &value, int32_t base)
 {
     auto add = str.c_str();
     char *end = nullptr;
     errno = 0;
-    value = strtoll(add, &end, DEC_RADIX);
+    value = strtoll(add, &end, base);
     if ((errno == ERANGE && (value == LLONG_MAX || value == LLONG_MIN)) || (errno != 0 && value == 0)) {
         SGLOGE("strtoll converse error,str=%{public}s", str.c_str());
         return false;

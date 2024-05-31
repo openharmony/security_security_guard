@@ -19,9 +19,10 @@
 #include "nativetoken_kit.h"
 #include "securec.h"
 #include "token_setproc.h"
-
+#define private public
 #include "security_guard_define.h"
 #include "sg_collect_client.h"
+#undef private
 
 using namespace testing::ext;
 using namespace OHOS::Security::SecurityGuardTest;
@@ -35,7 +36,6 @@ extern "C" {
 #endif
 
 namespace OHOS::Security::SecurityGuardTest {
-std::string g_enforceValue = "0";
 
 void DataCollectKitTest::SetUpTestCase()
 {
@@ -53,15 +53,19 @@ void DataCollectKitTest::SetUpTestCase()
     };
     tokenId = GetAccessTokenId(&infoParams);
     SetSelfTokenID(tokenId);
-    bool isSuccess = LoadStringFromFile("/sys/fs/selinux/enforce", g_enforceValue);
-    if (isSuccess && g_enforceValue == "1") {
+    string isEnforcing;
+    LoadStringFromFile("/sys/fs/selinux/enforce", isEnforcing);
+    if (isEnforcing.compare("1") == 0) {
+        DataCollectKitTest::isEnforcing_ = true;
         SaveStringToFile("/sys/fs/selinux/enforce", "0");
     }
 }
 
 void DataCollectKitTest::TearDownTestCase()
 {
-    SaveStringToFile("/sys/fs/selinux/enforce", g_enforceValue);
+    if (DataCollectKitTest::isEnforcing_) {
+        SaveStringToFile("/sys/fs/selinux/enforce", "1");
+    }
 }
 
 void DataCollectKitTest::SetUp()
@@ -71,6 +75,8 @@ void DataCollectKitTest::SetUp()
 void DataCollectKitTest::TearDown()
 {
 }
+
+bool DataCollectKitTest::isEnforcing_ = false;
 
 /**
  * @tc.name: ReportSecurityInfo001
@@ -192,5 +198,30 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo006, TestSize.Level1)
 {
     int ret = ReportSecurityInfo(nullptr);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+}
+
+/**
+ * @tc.name: ReleaseProxy001
+ * @tc.desc: SgCollectClient ReleaseProxy
+ * @tc.type: FUNC
+ * @tc.require: SR000H96L5
+ */
+HWTEST_F(DataCollectKitTest, ReleaseProxy001, TestSize.Level1)
+{
+    SecurityGuard::SgCollectClient::GetInstance().ReleaseProxy();
+    ASSERT_NE(nullptr, &SecurityGuard::SgCollectClient::GetInstance().proxy_);
+}
+
+/**
+ * @tc.name: ReportSecurityInfo007
+ * @tc.desc: SgCollectClient DeathRecipient OnRemoteDied
+ * @tc.type: FUNC
+ * @tc.require: SR000H96L5
+ */
+HWTEST_F(DataCollectKitTest, DeathRecipient001, TestSize.Level1)
+{
+    SecurityGuard::SgCollectClientDeathRecipient recipient =
+        SecurityGuard::SgCollectClientDeathRecipient();
+    recipient.OnRemoteDied(nullptr);
 }
 }
