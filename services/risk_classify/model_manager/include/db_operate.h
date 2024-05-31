@@ -26,7 +26,6 @@ public:
     ~DbOperate() override = default;
     int InsertEvent(SecEvent& event) override;
     int QueryAllEvent(std::vector<SecEvent> &events) override;
-    int QueryAllEventFromMem(std::vector<SecEvent> &events) override;
     int QueryRecentEventByEventId(int64_t eventId, SecEvent &event) override;
     int QueryRecentEventByEventId(const std::vector<int64_t> &eventId, std::vector<SecEvent> &event) override;
     int QueryEventByEventId(int64_t eventId, std::vector<SecEvent> &events) override;

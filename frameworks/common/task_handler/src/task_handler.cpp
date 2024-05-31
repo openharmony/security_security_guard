@@ -15,9 +15,13 @@
 
 #include "task_handler.h"
 
+#include "syspara/parameters.h"
+#include "security_guard_log.h"
+
 namespace OHOS::Security::SecurityGuard {
 namespace {
-    const int THREAD_NUMS = 5;
+    const int PC_THREAD_NUMS = 5;
+    const int THREAD_NUMS = 1;
     const int MAX_TASK_NUMS = 1000;
     const int MINORS_THREAD_NUMS = 1;
     const int MINORS_MAX_TASK_NUMS = 500;
@@ -25,10 +29,17 @@ namespace {
 
 TaskHandler::TaskHandler()
 {
-    pool_.Start(THREAD_NUMS);
+    SGLOGE("TaskHandler is called .");
+    std::string deviceType = OHOS::system::GetDeviceType();
+    if (deviceType == "2in1") {
+        pool_.Start(PC_THREAD_NUMS);
+    } else {
+        pool_.Start(THREAD_NUMS);
+    }
     pool_.SetMaxTaskNum(MAX_TASK_NUMS);
     minorsPool_.Start(MINORS_THREAD_NUMS);
     minorsPool_.SetMaxTaskNum(MINORS_MAX_TASK_NUMS);
+    SGLOGE("TaskHandler end");
 }
 
 TaskHandler::~TaskHandler()

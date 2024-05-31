@@ -16,6 +16,7 @@ import("//build/ohos.gni")
 
 ohos_source_set("sg_bigdata_stamp") {
   sources = [ "src/bigdata.cpp" ]
+  configs = [ "${sg_root_dir}/resource/config/build:coverage_flags" ]
 
   include_dirs = [
     "${sg_root_dir}/frameworks/common/constants/include",
@@ -31,7 +32,6 @@ ohos_source_set("sg_bigdata_stamp") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
   }
   stack_protector_ret = true
 

@@ -32,8 +32,13 @@ public:
 
     int32_t Subscribe(const SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) override;
-
     int32_t Unsubscribe(const sptr<IRemoteObject> &callback) override;
+    int32_t CollectorStart(const SecurityCollectorSubscribeInfo &subscribeInfo,
+        const sptr<IRemoteObject> &callback) override;
+    int32_t CollectorStop(const SecurityCollectorSubscribeInfo &subscribeInfo,
+        const sptr<IRemoteObject> &callback) override;
+    int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
+        std::vector<SecurityEvent> &events) override;
 
 private:
     static inline BrokerDelegator<SecurityCollectorManagerProxy> delegator_;

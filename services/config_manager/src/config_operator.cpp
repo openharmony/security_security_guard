@@ -14,7 +14,7 @@
  */
 
 #include "config_operator.h"
-
+#include "security_guard_log.h"
 #include "config_define.h"
 
 namespace OHOS::Security::SecurityGuard {

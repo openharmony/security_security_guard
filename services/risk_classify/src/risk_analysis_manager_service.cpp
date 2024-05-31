@@ -33,16 +33,15 @@
 #include "task_handler.h"
 #include "model_manager.h"
 #include "config_manager.h"
+#include "store_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 REGISTER_SYSTEM_ABILITY_BY_ID(RiskAnalysisManagerService, RISK_ANALYSIS_MANAGER_SA_ID, true);
 
 namespace {
     constexpr int32_t TIMEOUT_REPLY = 500;
-    const std::string PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
-    const std::string SET_MODEL_PERMISSION = "ohos.permission.securityguard.SET_MODEL_STATE";
+    constexpr const char* PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
     const std::vector<uint32_t> MODELIDS = { 3001000000, 3001000001, 3001000002, 3001000005, 3001000006, 3001000007 };
-    constexpr uint32_t AUDIT_MODEL_ID = 3001000003;
 }
 
 RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnCreate)
@@ -135,34 +134,14 @@ void RiskAnalysisManagerService::PushRiskAnalysisTask(uint32_t modelId, std::str
 
 int32_t RiskAnalysisManagerService::SetModelState(uint32_t modelId, bool enable)
 {
-    SGLOGI("begin set model state");
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, SET_MODEL_PERMISSION);
-    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
-        SGLOGE("caller no permission");
-        return NO_PERMISSION;
-    }
-    if (modelId != AUDIT_MODEL_ID) {
-        return BAD_PARAM;
-    }
-    DatabaseManager::GetInstance().SetAuditState(enable);
-    if (!enable) {
-        ModelManager::GetInstance().Release(modelId);
-        return SUCCESS;
-    }
-
-    int32_t ret = ModelManager::GetInstance().InitModel(modelId);
-    if (ret != SUCCESS) {
-        DatabaseManager::GetInstance().SetAuditState(false);
-    }
-    return ret;
+    return SUCCESS;
 }
 
 void RiskAnalysisManagerService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     SGLOGI("OnAddSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
     if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
-        ConfigManager::GetInstance()->StartUpdate();
+        ConfigManager::GetInstance().StartUpdate();
     }
 }
 

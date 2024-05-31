@@ -38,6 +38,7 @@ public:
     static bool Unmarshal(std::string &data, nlohmann::json jsonObj, std::string key);
     static bool Unmarshal(std::vector<int32_t> &data, nlohmann::json jsonObj, std::string key);
     static bool Unmarshal(std::vector<std::string> &data, nlohmann::json jsonObj, std::string key);
+    static bool Unmarshal(std::vector<int64_t> &data, nlohmann::json jsonObj, std::string key);
     template<typename T>
     static bool Unmarshal(T &data, nlohmann::json jsonObj, std::string key)
     {

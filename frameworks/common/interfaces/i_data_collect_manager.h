@@ -22,6 +22,8 @@
 
 #include "data_collect_manager_service_ipc_interface_code.h"
 #include "security_collector_subscribe_info.h"
+#include "security_event_ruler.h"
+#include "security_event.h"
 
 namespace OHOS::Security::SecurityGuard {
 constexpr int32_t DATA_COLLECT_MANAGER_SA_ID = 3524;
@@ -35,6 +37,7 @@ public:
         CMD_DATA_REQUEST = static_cast<uint32_t>(InterfaceCode::CMD_DATA_REQUEST),
         CMD_DATA_SUBSCRIBE = static_cast<uint32_t>(InterfaceCode::CMD_DATA_SUBSCRIBE),
         CMD_DATA_UNSUBSCRIBE = static_cast<uint32_t>(InterfaceCode::CMD_DATA_UNSUBSCRIBE),
+        CMD_SECURITY_EVENT_QUERY = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_EVENT_QUERY),
     };
 
     virtual int32_t RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
@@ -44,6 +47,8 @@ public:
     virtual int32_t Subscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t Unsubscribe(const sptr<IRemoteObject> &callback) = 0;
+    virtual int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
+        const sptr<IRemoteObject> &callback) = 0;
 };
 
 class IDataCollectManagerCallback : public IRemoteBroker {
@@ -67,6 +72,21 @@ public:
     };
 
     virtual int32_t OnNotify(const SecurityCollector::Event &event) = 0;
+};
+
+class ISecurityEventQueryCallback : public IRemoteBroker {
+public:
+    using InterfaceCode = SecurityEventQueryCallbackInterfaceCode;
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Security.SecurityEventQuery.Callback");
+    enum {
+        CMD_ON_QUERY = static_cast<uint32_t>(InterfaceCode::CMD_ON_QUERY),
+        CMD_ON_COMPLETE = static_cast<uint32_t>(InterfaceCode::CMD_ON_COMPLETE),
+        CMD_ON_ERROR = static_cast<uint32_t>(InterfaceCode::CMD_ON_ERROR),
+    };
+
+    virtual void OnQuery(const std::vector<SecurityCollector::SecurityEvent> &events) = 0;
+    virtual void OnComplete() = 0;
+    virtual void OnError(const std::string &message) = 0;
 };
 } // namespace OHOS::Security::SecurityGuard
 

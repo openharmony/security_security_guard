@@ -28,6 +28,7 @@ namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr const char *AUDIT_MODEL_ID = "3001000003";
     constexpr int32_t DB_MAX_VALUE = 100000;
+    constexpr int32_t STORAGE_ROM_NUMS_MAX_VALUE = 1000;
 }
 
 bool EventConfig::Load(int mode)
@@ -78,6 +79,7 @@ bool EventConfig::Parse()
         return false;
     }
     EventConfig::CacheEventConfig(configs);
+    EventConfig::CacheEventToTable(configs);
     SGLOGI("cache EventConfig success");
     return true;
 }
@@ -106,6 +108,7 @@ bool EventConfig::Update()
     SecurityGuardUtils::CopyFile(CONFIG_CACHE_FILES[EVENT_CFG_INDEX], CONFIG_UPTATE_FILES[EVENT_CFG_INDEX]);
     ConfigDataManager::GetInstance().ResetEventMap();
     EventConfig::CacheEventConfig(configs);
+    EventConfig::CacheEventToTable(configs);
     SGLOGI("cache EventConfig success");
     return true;
 }
@@ -115,7 +118,7 @@ bool EventConfig::ParseEventConfig(std::vector<EventCfg> &configs, nlohmann::jso
     bool success = JsonCfg::Unmarshal<EventCfg>(configs, jsonObj, EVENT_CFG_KEY);
     if (success) {
         for (EventCfg &config : configs) {
-            uint32_t maxValue = 5;
+            uint32_t maxValue = STORAGE_ROM_NUMS_MAX_VALUE;
             if (!config.owner.empty() && config.owner.at(0) == AUDIT_MODEL_ID) {
                 maxValue = DB_MAX_VALUE;
             }
@@ -131,6 +134,13 @@ void EventConfig::CacheEventConfig(const std::vector<EventCfg> &configs)
 {
     for (const EventCfg &config : configs) {
         ConfigDataManager::GetInstance().InsertEventMap(config.eventId, config);
+    }
+}
+
+void EventConfig::CacheEventToTable(const std::vector<EventCfg> &configs)
+{
+    for (const EventCfg &config : configs) {
+        ConfigDataManager::GetInstance().InsertEventToTableMap(config.eventId, config.dbTable);
     }
 }
 } // OHOS::Security::SecurityGuard

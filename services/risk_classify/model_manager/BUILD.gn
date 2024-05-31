@@ -18,8 +18,10 @@ ohos_source_set("sg_model_manager_stamp") {
   part_name = "security_guard"
   subsystem_name = "security"
 
-  configs =
-      [ "${sg_root_dir}/services/risk_classify:security_guard_model_configs" ]
+  configs = [
+    "${sg_root_dir}/services/risk_classify:security_guard_model_configs",
+    "${sg_root_dir}/resource/config/build:coverage_flags",
+  ]
 
   include_dirs = [
     "include",
@@ -49,7 +51,6 @@ ohos_source_set("sg_model_manager_stamp") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
   }
   stack_protector_ret = true
 

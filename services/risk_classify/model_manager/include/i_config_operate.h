@@ -25,6 +25,7 @@ public:
     virtual ~IConfigOperate() = default;
     virtual bool GetModelConfig(uint32_t modelId, ModelCfg &config) = 0;
     virtual bool GetEventConfig(int64_t eventId, EventCfg &config) = 0;
+    virtual std::vector<AppInfo> GetAppInfosByName(const std::string name) = 0;
 };
 } // namespace OHOS::Security::SecurityGuard
 

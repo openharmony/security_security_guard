@@ -28,7 +28,6 @@ public:
     virtual void Release();
     virtual int InsertEvent(const SecEvent& event);
     virtual int QueryAllEvent(std::vector<SecEvent> &events);
-    virtual int QueryAllEventFromMem(std::vector<SecEvent> &events);
     virtual int QueryRecentEventByEventId(int64_t eventId, SecEvent &event);
     virtual int QueryRecentEventByEventId(const std::vector<int64_t> &eventId, std::vector<SecEvent> &event);
     virtual int QueryEventByEventId(int64_t eventId, std::vector<SecEvent> &events);

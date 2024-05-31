@@ -28,6 +28,9 @@ public:
     void SetUp() override;
 
     void TearDown() override;
+
+private:
+    static bool isEnforcing_;
 };
 }  // namespace OHOS::Security::SecurityGuardTest
 

@@ -28,6 +28,10 @@ void from_json(const nlohmann::json &jsonObj, AppDetectionCfg &config)
         return;
     }
 
+    if (!jsonObj.at("detectionCategory").is_string()) {
+        return;
+    }
+
     config.detectionCategory = jsonObj.at("detectionCategory").get<std::string>();
 }
 
@@ -164,7 +168,8 @@ void to_json(json &jsonObj, const EventCfg &eventCfg)
         { EVENT_CFG_STORAGE_ROM_NUM_KEY, eventCfg.storageRomNums },
         { EVENT_CFG_STORAGE_TIME_KEY, eventCfg.storageTime },
         { EVENT_CFG_OWNER_KEY, eventCfg.owner },
-        { EVENT_CFG_SOURCE_KEY, eventCfg.source }
+        { EVENT_CFG_SOURCE_KEY, eventCfg.source },
+        { EVENT_CFG_DB_TABLE_KEY, eventCfg.dbTable }
     };
 }
 
@@ -173,19 +178,21 @@ void from_json(const json &jsonObj, EventCfg &eventCfg)
     std::string eventId;
     JsonCfg::Unmarshal(eventId, jsonObj, EVENT_CFG_EVENT_ID_KEY);
     int64_t value = 0;
-    if (!SecurityGuardUtils::StrToI64(eventId, value)) {
+    if (!SecurityGuardUtils::StrToI64Hex(eventId, value)) {
         return;
     }
     eventCfg.eventId = value;
     JsonCfg::Unmarshal(eventCfg.eventName, jsonObj, EVENT_CFG_EVENT_NAME_KEY);
     JsonCfg::Unmarshal(eventCfg.version, jsonObj, EVENT_CFG_VERSION_KEY);
     JsonCfg::Unmarshal(eventCfg.eventType, jsonObj, EVENT_CFG_EVENT_TYPE_KEY);
+    JsonCfg::Unmarshal(eventCfg.collectOnStart, jsonObj, EVENT_CFG_COLLECT_ON_START_KEY);
     JsonCfg::Unmarshal(eventCfg.dataSensitivityLevel, jsonObj, EVENT_CFG_DATA_SENSITIVITY_LEVEL_KEY);
     JsonCfg::Unmarshal(eventCfg.storageRamNums, jsonObj, EVENT_CFG_STORAGE_RAM_NUM_KEY);
     JsonCfg::Unmarshal(eventCfg.storageRomNums, jsonObj, EVENT_CFG_STORAGE_ROM_NUM_KEY);
     JsonCfg::Unmarshal(eventCfg.storageTime, jsonObj, EVENT_CFG_STORAGE_TIME_KEY);
     JsonCfg::Unmarshal(eventCfg.owner, jsonObj, EVENT_CFG_OWNER_KEY);
     JsonCfg::Unmarshal(eventCfg.source, jsonObj, EVENT_CFG_SOURCE_KEY);
+    JsonCfg::Unmarshal(eventCfg.dbTable, jsonObj, EVENT_CFG_DB_TABLE_KEY);
 }
 
 void to_json(json &jsonObj, const DataMgrCfgSt &dataMgrCfg)

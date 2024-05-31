@@ -20,13 +20,12 @@
 #include <set>
 #include <unordered_map>
 
-#include "singleton.h"
-
 #include "config_define.h"
 
 namespace OHOS::Security::SecurityGuard {
-class ConfigDataManager : public Singleton<ConfigDataManager> {
+class ConfigDataManager {
 public:
+    static ConfigDataManager &GetInstance();
     void InsertModelMap(uint32_t modelId, const ModelCfg &config);
     void InsertEventMap(int64_t eventId, const EventCfg &config);
     void InsertModelToEventMap(uint32_t modelId, std::set<int64_t> eventIds);
@@ -41,7 +40,7 @@ public:
     bool GetModelConfig(uint32_t modelId, ModelCfg &config);
     bool GetEventConfig(int64_t eventId, EventCfg &config);
     std::string GetTableFromEventId(int64_t eventId);
-
+    std::vector<AppInfo> GetAppInfosByName(const std::string &appName);
 private:
     std::unordered_map<uint32_t, std::set<int64_t>> modelToEventMap_;
     std::unordered_map<uint32_t, ModelCfg> modelMap_;
