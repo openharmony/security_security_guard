@@ -25,7 +25,7 @@
 namespace OHOS::Security::SecurityCollector {
 class ICollectorSubscriber {
 public:
-    ICollectorSubscriber(const Event &event, int64_t duration = -1, bool isNotify = false);
+    ICollectorSubscriber(const Event &event, int64_t duration = -1, bool isNotify = false) {};
     virtual ~ICollectorSubscriber() = default;
     virtual int32_t OnNotify(const Event &event) = 0;
 };

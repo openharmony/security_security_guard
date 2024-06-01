@@ -31,7 +31,7 @@ int32_t AcquireDataCallbackProxy::OnNotify(const SecurityCollector::Event &event
     data.WriteString(event.version);
     data.WriteString(event.content);
     data.WriteString(event.extra);
-
+    data.WriteString(event.timestamp);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         SGLOGE("remote is nullptr, code = %{public}u", static_cast<uint32_t>(CMD_DATA_SUBSCRIBE_CALLBACK));

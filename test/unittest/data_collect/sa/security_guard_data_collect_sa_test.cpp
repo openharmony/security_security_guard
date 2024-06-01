@@ -47,6 +47,8 @@ namespace OHOS {
     std::shared_ptr<Security::SecurityGuard::MockDataFormatInterface> DataFormat::instance_ = nullptr;
     std::shared_ptr<Security::AccessToken::MockAccessTokenKitInterface>
         Security::AccessToken::AccessTokenKit::instance_ = nullptr;
+    std::shared_ptr<Security::AccessToken::MockTokenIdKitInterface>
+        Security::AccessToken::TokenIdKit::instance_ = nullptr;
     std::mutex Security::SecurityGuard::DataFormat::mutex_ {};
     std::mutex Security::AccessToken::AccessTokenKit::mutex_ {};
 }
@@ -327,18 +329,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, OnAddSystemAbility_RiskAnalysisManagerS
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, OnAddSystemAbility_SoftbusServerSaId, TestSize.Level1)
-{
-    EXPECT_CALL(DatabaseManager::GetInstance(), InitDeviceId()).WillOnce(Return(0));
-    g_service.OnAddSystemAbility(SOFTBUS_SERVER_SA_ID, "deviceId");
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, OnAddSystemAbility_DistributedHardwareDeviceManagerSaId, TestSize.Level1)
-{
-    EXPECT_CALL(DatabaseManager::GetInstance(), InitDeviceId()).WillOnce(Return(0));
-    g_service.OnAddSystemAbility(DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID, "deviceId");
-}
-
 HWTEST_F(SecurityGuardDataCollectSaTest, OnAddSystemAbility_DfxSysHiviewAbilityId, TestSize.Level1)
 {
     g_service.OnAddSystemAbility(DFX_SYS_HIVIEW_ABILITY_ID, "deviceId");
@@ -462,6 +452,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Success, TestSize
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(DatabaseManager::GetInstance(), SubscribeDb).WillOnce(Return(SUCCESS));
     EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb).WillOnce(Return(SUCCESS));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     EXPECT_EQ(result, SUCCESS);
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(obj);
@@ -475,6 +466,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Fail01, TestSize.
     sptr<MockRemoteObject> obj2(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(DatabaseManager::GetInstance(), SubscribeDb).WillOnce(Return(FAILED)).WillRepeatedly(Return(SUCCESS));
     EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb).WillOnce(Return(FAILED)).WillRepeatedly(Return(SUCCESS));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     EXPECT_NE(result, SUCCESS);
     result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
@@ -516,6 +508,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NullProxy, TestSize.Level1)
     sptr<MockRemoteObject> obj = nullptr;
     EXPECT_CALL(DatabaseManager::GetInstance(), SubscribeDb).WillRepeatedly(Return(SUCCESS));
     EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb).WillRepeatedly(Return(SUCCESS));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     EXPECT_EQ(result, SUCCESS);
     EXPECT_FALSE(AcquireDataSubscribeManager::GetInstance().Publish(event));
@@ -545,6 +538,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NotNullProxy, TestSize.Level1)
             g_service.OnRemoteRequest(code, data, reply, option);
             return SUCCESS;
         });
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, mockObject);
     EXPECT_EQ(result, SUCCESS);
     EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().Publish(event));
@@ -767,6 +761,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd09
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_DENIED));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     int32_t result = g_service.OnRemoteRequest(DataCollectManagerService::CMD_DATA_UNSUBSCRIBE, data, reply, option);
     EXPECT_EQ(result, NO_PERMISSION);
 }

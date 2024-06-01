@@ -41,6 +41,7 @@ struct Event {
     std::string version;
     std::string content;
     std::string extra;
+    std::string timestamp;
 };
 } // namespace OHOS::Security::SecurityCollector
 #endif // SECURITY_COLLECTOR_EVENT_INFO_H

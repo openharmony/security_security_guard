@@ -78,13 +78,11 @@ bool DataCollection::SecurityGuardSubscribeCollector(const std::vector<int64_t>&
         ErrorCode ret = GetCollectorPath(eventId, collectorPath);
         if (ret != SUCCESS) {
             LOGE("GetCollectorPath failed, eventId is %{public}" PRId64 "", eventId);
-            StopCollectors(loadedEventIds_);
             return false;
         }
         ret = LoadCollector(eventId, collectorPath, nullptr);
         if (ret != SUCCESS) {
             LOGE("GetCollectorPath failed, eventId is %{public}" PRId64 "", eventId);
-            StopCollectors(loadedEventIds_);
             return false;
         }
         loadedEventIds_.push_back(eventId);
@@ -171,23 +169,21 @@ ErrorCode DataCollection::GetCollectorPath(int64_t eventId, std::string& path)
 {
     LOGI("Start GetCollectorPath");
     std::ifstream stream(SA_CONFIG_PATH, std::ios::in);
-    if (!stream) {
-        LOGE("stream error, %{public}s", strerror(errno));
+    if (!stream.is_open() || !stream) {
+        LOGE("Stream error, %{public}s", strerror(errno));
         return STREAM_ERROR;
     }
-
     ErrorCode ret = CheckFileStream(stream);
     if (ret != SUCCESS) {
         LOGE("check file stream error, ret=%{public}d", ret);
         stream.close();
         return ret;
     }
-    nlohmann::json json;
-    stream >> json;
+    nlohmann::json json = nlohmann::json::parse(stream, nullptr, false);
     stream.close();
 
     if (json.is_discarded()) {
-        LOGE("parse json error");
+        LOGE("json is discarded");
         return JSON_ERR;
     }
 
@@ -204,6 +200,7 @@ ErrorCode DataCollection::GetCollectorPath(int64_t eventId, std::string& path)
                 LOGI("seccess to find the %{public}" PRId64 "", eventId);
                 return true;
             } else {
+                LOGI("Failed to find the eventId");
                 return false;
             }
         });
@@ -220,8 +217,8 @@ ErrorCode DataCollection::GetCollectorType(int64_t eventId, int32_t& collectorTy
 {
     LOGI("Start GetCollectorType");
     std::ifstream stream(SA_CONFIG_PATH, std::ios::in);
-    if (!stream) {
-        LOGE("stream error, %{public}s", strerror(errno));
+    if (!stream.is_open() || !stream) {
+        LOGE("Stream error, %{public}s", strerror(errno));
         return STREAM_ERROR;
     }
 
@@ -231,12 +228,12 @@ ErrorCode DataCollection::GetCollectorType(int64_t eventId, int32_t& collectorTy
         stream.close();
         return ret;
     }
-    nlohmann::json json;
-    stream >> json;
+    
+    nlohmann::json json = nlohmann::json::parse(stream, nullptr, false);
     stream.close();
 
     if (json.is_discarded()) {
-        LOGE("parse json error");
+        LOGE("json is discarded");
         return JSON_ERR;
     }
 

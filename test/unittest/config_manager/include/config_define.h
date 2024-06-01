@@ -62,6 +62,13 @@ using ModelCfg = struct {
     AppDetectionCfg appDetectionConfig;
 };
 
+enum class EventTypeEnum {
+    NORMALE_COLL = 0,
+    QUERY_COLL = 1,
+    START_STOP_COLL = 2,
+    SUBSCRIBE_COLL = 3
+};
+
 using EventCfg = struct {
     int64_t eventId;
     std::string eventName;
@@ -75,6 +82,7 @@ using EventCfg = struct {
     std::vector<std::string> owner;
     uint32_t source;
     std::string dbTable;
+    std::string prog;
 };
 
 using DataMgrCfgSt = struct {

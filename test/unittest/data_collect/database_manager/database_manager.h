@@ -46,7 +46,6 @@ public:
     int DeleteAllEventByEventId(int64_t eventId);
     int32_t SubscribeDb(std::vector<int64_t> eventIds, std::shared_ptr<IDbListener> listener);
     int32_t UnSubscribeDb(std::vector<int64_t> eventIds, std::shared_ptr<IDbListener> listener);
-    int32_t InitDeviceId();
 
 private:
     std::mutex mutex_;
