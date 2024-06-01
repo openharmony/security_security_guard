@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include <sstream>
 #include "nlohmann/json.hpp"
 
 #include "lib_loader.h"

@@ -14,7 +14,6 @@
  */
 
 #include <set>
-
 #include "security_guard_sdk_adaptor.h"
 
 #include "iservice_registry.h"
@@ -31,10 +30,15 @@
 #include "security_guard_utils.h"
 #include "collector_service_loader.h"
 #include "security_event_query_callback_service.h"
+#include "acquire_data_manager_callback_service.h"
 
 namespace OHOS::Security::SecurityGuard {
-namespace  { const std::set<int64_t> GRANTED_EVENT{1037000001, 1064001001, 1064001002}; }
-
+namespace  {
+    const std::set<int64_t> GRANTED_EVENT{1037000001, 1064001001, 1064001002};
+    static std::mutex g_mutex;
+}
+std::map<std::shared_ptr<SecurityCollector::ICollectorSubscriber>,
+        sptr<AcquireDataManagerCallbackService>> SecurityGuardSdkAdaptor::subscribers_ {};
 int32_t SecurityGuardSdkAdaptor::RequestSecurityEventInfo(std::string &devId, std::string &eventList,
     RequestRiskDataCallback callback)
 {
@@ -238,4 +242,82 @@ int32_t SecurityGuardSdkAdaptor::QuerySecurityEvent(std::vector<SecurityCollecto
     }
     return SUCCESS;
 }
+
+int32_t SecurityGuardSdkAdaptor::Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
+{
+    if (subscriber == nullptr) {
+        SGLOGE("subscriber is nullptr");
+        return NULL_OBJECT;
+    }
+    if (subscribers_.find(subscriber) != subscribers_.end()) {
+        SGLOGE("the callback has been registered.");
+        return BAD_PARAM;
+    }
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return NULL_OBJECT;
+    }
+
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    auto proxy = iface_cast<IDataCollectManager>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+
+    auto obj = new (std::nothrow) AcquireDataManagerCallbackService(subscriber);
+    if (obj == nullptr) {
+        SGLOGE("obj is null");
+        return NULL_OBJECT;
+    }
+
+    int32_t ret = proxy->Subscribe(subscriber->GetSubscribeInfo(), obj);
+    if (ret != SUCCESS) {
+        SGLOGE("Subscribe error, ret=%{public}d", ret);
+        return ret;
+    }
+    {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        subscribers_[subscriber] = obj;
+    }
+    return SUCCESS;
+}
+
+int32_t SecurityGuardSdkAdaptor::Unsubscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
+{
+    if (subscriber == nullptr) {
+        SGLOGE("subscriber is nullptr");
+        return NULL_OBJECT;
+    }
+    auto iter = subscribers_.find(subscriber);
+    if (iter == subscribers_.end()) {
+        SGLOGE("the callback has not been registered.");
+        return BAD_PARAM;
+    }
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return NULL_OBJECT;
+    }
+
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    auto proxy = iface_cast<IDataCollectManager>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+
+    int32_t ret = proxy->Unsubscribe(subscribers_[subscriber]);
+    if (ret != SUCCESS) {
+        SGLOGE("Unsubscribe error, ret=%{public}d", ret);
+        return ret;
+    }
+    {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        subscribers_.erase(iter);
+    }
+    return SUCCESS;
+}
+
 } // OHOS::Security::SecurityGuard

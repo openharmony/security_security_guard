@@ -40,7 +40,7 @@ int32_t AcquireDataManagerCallbackStub::OnRemoteRequest(uint32_t code, MessagePa
         event.version = data.ReadString();
         event.content = data.ReadString();
         event.extra = data.ReadString();
-
+        event.timestamp = data.ReadString();
         OnNotify(event);
         return SUCCESS;
     }

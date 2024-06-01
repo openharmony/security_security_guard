@@ -61,7 +61,7 @@ namespace OHOS::Security::SecurityGuard {
     constexpr const char* EVENT_CFG_DB_TABLE_KEY = "db_table";
     constexpr const char* EVENT_CFG_USER_ID_KEY = "userId";
     constexpr const char* EVENT_CFG_DEVICE_ID_KEY = "deviceId";
-
+    constexpr const char* EVENT_CFG_PROG_KEY = "prog";
     // date manager key
     constexpr const char* DATA_MGR_DEVICE_ROM_KEY = "deviceRom";
     constexpr const char* DATA_MGR_DEVICE_RAM_KEY = "deviceRam";

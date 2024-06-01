@@ -164,6 +164,7 @@ ohos_unittest("SecurityGuardDatabaseManagerTest") {
   ]
 
   deps = [
+    "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "//third_party/googletest:gmock",
   ]
