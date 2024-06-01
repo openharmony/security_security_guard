@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "accesstoken_kit.h"
+#include "tokenid_kit.h"
 #include "ipc_skeleton.h"
 #include "string_ex.h"
 
@@ -262,10 +263,18 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
 {
     SGLOGD("DataCollectManagerService, start subscribe");
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REPORT_PERMISSION);
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
     if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
         SGLOGE("caller no permission");
         return NO_PERMISSION;
+    }
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+            SGLOGE("not system app no permission");
+            return NO_SYSTEMCALL;
+        }
     }
     std::lock_guard<std::mutex> lock(mutex_);
     if (deathRecipient_ == nullptr) {
@@ -290,12 +299,19 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
 int32_t DataCollectManagerService::Unsubscribe(const sptr<IRemoteObject> &callback)
 {
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REPORT_PERMISSION);
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
     if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
         SGLOGE("caller no permission");
         return NO_PERMISSION;
     }
-
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+            SGLOGE("not system app no permission");
+            return NO_SYSTEMCALL;
+        }
+    }
     std::lock_guard<std::mutex> lock(mutex_);
     if (deathRecipient_ != nullptr) {
         callback->RemoveDeathRecipient(deathRecipient_);
@@ -306,7 +322,7 @@ int32_t DataCollectManagerService::Unsubscribe(const sptr<IRemoteObject> &callba
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
     event.ret = ret;
-    SGLOGI("DataCollectManagerService, RemoveSubscribeRecord ret=%{ret}d", ret);
+    SGLOGI("DataCollectManagerService, RemoveSubscribeRecord ret=%{public}d", ret);
     BigData::ReportSgUnsubscribeEvent(event);
     return ret;
 }

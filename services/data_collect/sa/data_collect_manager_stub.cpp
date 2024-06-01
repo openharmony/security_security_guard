@@ -128,7 +128,6 @@ int32_t DataCollectManagerStub::HandleDataUnsubscribeCmd(MessageParcel &data, Me
         SGLOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
-
     auto callback = data.ReadRemoteObject();
     if (callback == nullptr) {
         SGLOGE("callback is nullptr");

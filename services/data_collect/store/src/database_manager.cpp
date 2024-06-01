@@ -25,6 +25,7 @@
 #include "common_event_subscriber.h"
 #include "security_guard_utils.h"
 #include "bigdata.h"
+#include "task_handler.h"
 
 namespace OHOS::Security::SecurityGuard {
 DatabaseManager &DatabaseManager::GetInstance()
@@ -64,6 +65,7 @@ int DatabaseManager::InsertEvent(uint32_t source, SecEvent& event)
             (void) RiskEventRdbHelper::GetInstance().DeleteOldEventByEventId(event.eventId,
                 count + 1 - config.storageRomNums);
         }
+        DbChanged(IDbListener::INSERT, event);
         return RiskEventRdbHelper::GetInstance().InsertEvent(event);
     }
 
@@ -218,11 +220,18 @@ void DatabaseManager::DbChanged(int32_t optType, const SecEvent &event)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::set<std::shared_ptr<IDbListener>> listeners = listenerMap_[event.eventId];
-    SGLOGI("eventId=%{public}" PRId64 ", listener size=%{public}u", event.eventId, static_cast<int32_t>(listeners.size()));
-    for (auto &listener : listeners) {
-        if (listener != nullptr) {
-            listener->OnChange(optType, event);
-        }
+    if (listeners.empty()) {
+        return;
     }
+    SGLOGI("eventId=%{public}" PRId64 ", listener size=%{public}u", event.eventId, static_cast<int32_t>(listeners.size()));
+    SecurityGuard::TaskHandler::Task task = [listeners, optType, event] () {
+        for (auto &listener : listeners) {
+            if (listener != nullptr) {
+                listener->OnChange(optType, event);
+            }
+        }
+    };
+    SecurityGuard::TaskHandler::GetInstance()->AddTask(task);
+    return;
 }
 } // namespace OHOS::Security::SecurityGuard
