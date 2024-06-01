@@ -16,6 +16,7 @@
 #ifndef SECURITY_GUARD_ACQUIRE_DATA_SUBSCIBEE_SUBSCRIBE_INFO_H
 #define SECURITY_GUARD_ACQUIRE_DATA_SUBSCIBEE_SUBSCRIBE_INFO_H
 
+#include <unordered_map>
 #include <map>
 #include <mutex>
 #include <set>
@@ -24,7 +25,7 @@
 
 #include "i_db_listener.h"
 #include "security_collector_subscribe_info.h"
-
+#include "collector_manager.h"
 namespace OHOS::Security::SecurityGuard {
 class AcquireDataSubscribeManager {
 public:
@@ -37,15 +38,28 @@ public:
 private:
     AcquireDataSubscribeManager();
     ~AcquireDataSubscribeManager() = default;
+    int SubscribeSc(int64_t eventId);
+    int UnSubscribeSc(int64_t eventId);
     class DbListener : public IDbListener {
     public:
         DbListener() = default;
         ~DbListener() override = default;
         void OnChange(uint32_t optType, const SecEvent &events) override;
     };
+    class SecurityCollectorSubscriber : public SecurityCollector::ICollectorSubscriber {
+    public:
+        explicit SecurityCollectorSubscriber(
+            const SecurityCollector::Event &event) : SecurityCollector::ICollectorSubscriber(event) {};
+        ~SecurityCollectorSubscriber() override = default;
+        int32_t OnNotify(const SecurityCollector::Event &event) override
+        {
+            return 0;
+        };
+    };
     std::shared_ptr<IDbListener> listener_{};
     std::mutex mutex_{};
     std::map<int64_t, std::set<sptr<IRemoteObject>>> eventIdToSubscriberMap_{};
+    std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
 };
 } // namespace OHOS::Security::SecurityGuard
 

@@ -187,4 +187,18 @@ HWTEST_F(CollectorInterfaceTest, Query002, testing::ext::TestSize.Level1)
     EXPECT_EQ(collector.Start(nullptr), 0);
     EXPECT_EQ(collector.Stop(), 0);
 }
+
+/**
+ * @tc.name: Query002
+ * @tc.desc: ICollector Query
+ * @tc.type: FUNC
+ * @tc.require: AR20240110334295
+ */
+HWTEST_F(CollectorInterfaceTest, Query003, testing::ext::TestSize.Level1)
+{
+    TestCollector collector;
+    EXPECT_EQ(collector.Subscribe(0), 0);
+    EXPECT_EQ(collector.Unsubscribe(0), 0);
+    EXPECT_EQ(collector.IsStartWithSub(), 0);
+}
 }

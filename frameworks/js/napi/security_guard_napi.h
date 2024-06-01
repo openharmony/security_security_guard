@@ -16,6 +16,7 @@
 #ifndef SECURITY_GUARD_NAPI_H
 #define SECURITY_GUARD_NAPI_H
 
+#include <thread>
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
@@ -28,6 +29,8 @@ constexpr int VERSION_MAX_LEN = 50;
 constexpr int CONTENT_MAX_LEN = 900;
 constexpr int EXTRA_MAX_LEN = 2000;
 constexpr int DEVICE_ID_MAX_LEN = 64;
+constexpr int MODEL_NAME_MAX_LEN = 64;
+constexpr int PARAM_MAX_LEN = 900;
 constexpr int NAPI_ON_RESULT_ARGS_CNT = 3;
 constexpr char NAPI_ON_RESULT_ATTR[] = "onResult";
 constexpr char NAPI_SECURITY_MODEL_RESULT_DEVICE_ID_ATTR[] = "deviceId";
@@ -86,6 +89,15 @@ struct NapiSecurityEvent {
     int64_t eventId;
     std::string version;
     std::string content;
+    std::string timestamp;
+};
+struct SubscribeEventInfo {
+    int64_t eventId;
+};
+
+struct ModelRule {
+    std::string modelName;
+    std::string param;
 };
 
 using CALLBACK_FUNC = std::function<void(const napi_env, const napi_ref, pid_t threadId,
@@ -128,4 +140,52 @@ enum JsErrCode : int32_t {
     JS_ERR_SYS_ERR = 21200001,
 };
 
+class SubscriberPtr;
+struct CommonAsyncContext {
+    CommonAsyncContext() {};
+    explicit CommonAsyncContext(napi_env napiEnv, std::thread::id thId,
+        bool throwAble = false) : env(napiEnv), threadId(thId), throwErr(throwAble) {};
+    virtual ~CommonAsyncContext()
+    {
+        if (env == nullptr) {
+            return;
+        }
+        if (callbackRef != nullptr) {
+            napi_delete_reference(env, callbackRef);
+            callbackRef = nullptr;
+        }
+        if (work != nullptr) {
+            napi_delete_async_work(env, work);
+            work = nullptr;
+        }
+    };
+    napi_env env = nullptr;
+    napi_async_work work = nullptr;
+    napi_deferred deferred = nullptr;
+    napi_ref callbackRef = nullptr;
+    napi_status status = napi_ok;
+    int32_t errCode = 0;
+    std::string errMsg;
+    std::thread::id threadId;
+    bool throwErr = false;
+};
+struct SubscribeCBInfo : public CommonAsyncContext {
+    explicit SubscribeCBInfo(napi_env napiEnv,
+        std::thread::id thId) : CommonAsyncContext(napiEnv, thId) {};
+    OHOS::Security::SecurityCollector::Event events;
+    std::shared_ptr<SubscriberPtr> subscriber = nullptr;
+};
+
+struct UnsubscribeCBInfo : public CommonAsyncContext {
+    explicit UnsubscribeCBInfo(napi_env napiEnv,
+        std::thread::id thId) : CommonAsyncContext(napiEnv, thId){};
+    std::vector<std::shared_ptr<SubscriberPtr>> subscribers;
+};
+
+
+struct SubscriberOAWorker : public CommonAsyncContext {
+    NapiSecurityEvent event;
+    napi_ref ref = nullptr;
+    SubscriberPtr *subscriber = nullptr;
+};
 #endif // SECURITY_GUARD_NAPI_H

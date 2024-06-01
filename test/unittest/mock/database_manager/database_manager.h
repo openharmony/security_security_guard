@@ -49,7 +49,6 @@ public:
     virtual int DeleteAllEventByEventId(int64_t eventId) = 0;
     virtual int32_t SubscribeDb(std::vector<int64_t> eventIds, std::shared_ptr<IDbListener> listener) = 0;
     virtual int32_t UnSubscribeDb(std::vector<int64_t> eventIds, std::shared_ptr<IDbListener> listener) = 0;
-    virtual int32_t InitDeviceId() = 0;
 };
 
 class DatabaseManager : public BaseDatabaseManager {
@@ -81,7 +80,6 @@ public:
     MOCK_METHOD1(DeleteAllEventByEventId, int(int64_t eventId));
     MOCK_METHOD2(SubscribeDb, int32_t(std::vector<int64_t> eventIds, std::shared_ptr<IDbListener> listener));
     MOCK_METHOD2(UnSubscribeDb, int32_t(std::vector<int64_t> eventIds, std::shared_ptr<IDbListener> listener));
-    MOCK_METHOD0(InitDeviceId, int32_t());
 };
 } // namespace OHOS::Security::SecurityGuard
 #endif // SECURITY_GUARD_DATABASE_MANAGER_H

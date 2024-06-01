@@ -24,6 +24,7 @@ using ErrorCode = enum {
     FAILED,
     NO_PERMISSION,
     NO_SYSTEMCALL,
+    STREAM_ERROR,
     FILE_ERR,
     BAD_PARAM,
     JSON_ERR,
