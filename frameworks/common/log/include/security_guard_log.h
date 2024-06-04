@@ -17,7 +17,6 @@
 #define SECURITY_GUARD_LOG_H
 
 #include "hilog/log.h"
-// #define __STDC_FORMAT_MACROS
 #include <cinttypes>
 
 namespace OHOS::Security::SecurityGuard {
