@@ -172,9 +172,7 @@ bool SecurityCollectorSubscriberManager::UnsubscribeCollector(const sptr<IRemote
             eventToSubscribers_[eventId].erase(subscriber);
             if (eventToSubscribers_[eventId].size() == 0) {
                 LOGI("Scheduling stop collecctor, eventId:%{public}" PRId64 "", eventId);
-                if (!DataCollection::GetInstance().StopCollectors(std::vector<int64_t>{eventId})) {
-                    LOGE("failed to stop collectors");
-                }
+                (void) DataCollection::GetInstance().StopCollectors(std::vector<int64_t>{eventId});
                 eventToSubscribers_.erase(eventId);
                 eventToListenner_.erase(eventId);
             }
