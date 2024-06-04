@@ -338,7 +338,8 @@ void DatabaseManager::DbChanged(int32_t optType, const SecEvent &event)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::set<std::shared_ptr<IDbListener>> listeners = listenerMap_[event.eventId];
-    SGLOGI("eventId=%{public}" PRId64 ", listener size=%{public}u", event.eventId, static_cast<int32_t>(listeners.size()));
+    SGLOGI("eventId=%{public}" PRId64 ", listener size=%{public}u",
+        event.eventId, static_cast<int32_t>(listeners.size()));
     for (auto &listener : listeners) {
         if (listener != nullptr) {
             listener->OnChange(optType, event);
