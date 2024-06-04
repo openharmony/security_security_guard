@@ -85,7 +85,7 @@ bool SecurityGuardUtils::StrToULL(const std::string &str, unsigned long long &va
 
 std::string SecurityGuardUtils::GetDate()
 {
-    time_t timestamp = time(nullptr);
+    time_t timestamp = (void) time(nullptr);
     struct tm timeInfo{};
     localtime_r(&timestamp, &timeInfo);
     char buf[TIME_BUF_LEN] = {};

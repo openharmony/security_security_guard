@@ -764,7 +764,7 @@ static napi_value ParseModelId(napi_env env, napi_value object, uint32_t &modelI
     if (modelNameStr == "SecurityGuard_JailbreakCheck") {
         modelId = ModelIdType::ROOT_SCAN_MODEL_ID;
     } else if (modelNameStr == "SecurityGuard_IntegrityCheck") {
-         modelId = ModelIdType::DEVICE_COMPLETENESS_MODEL_ID;
+        modelId = ModelIdType::DEVICE_COMPLETENESS_MODEL_ID;
     } else if (modelNameStr == "SecurityGuard_SimulatorCheck") {
         modelId = ModelIdType::PHYSICAL_MACHINE_DETECTION_MODEL_ID;
     } else {
