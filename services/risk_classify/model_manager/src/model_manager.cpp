@@ -29,7 +29,7 @@ namespace OHOS::Security::SecurityGuard {
 std::shared_ptr<IModelManager> ModelManager::modelManagerApi_ = std::make_shared<ModelManagerImpl>();
 
 namespace {
-    constexpr const char *PREFIX_MODEL_PATH = "/system/lib64/lib";
+    constexpr const char *PREFIX_MODEL_PATH = "/system/lib";
     constexpr uint32_t AUDIT_MODEL = 3001000003;
 }
 
