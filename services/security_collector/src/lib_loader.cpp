@@ -36,7 +36,7 @@ ErrorCode LibLoader::LoadLib()
 {
     LOGI("LoadLib start");
     std::string realPath;
-    if (!PathToRealPath(m_libPath, realPath) || realPath.find("/system/lib64") != 0) {
+    if (!PathToRealPath(m_libPath, realPath) || realPath.find("/system/lib") != 0) {
         LOGE("LoadLib m_libPath error, realPath: %{public}s", realPath.c_str());
         m_isLoaded = false;
         return RET_DLOPEN_LIB_FAIL;
