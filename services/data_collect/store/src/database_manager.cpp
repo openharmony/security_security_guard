@@ -223,7 +223,8 @@ void DatabaseManager::DbChanged(int32_t optType, const SecEvent &event)
     if (listeners.empty()) {
         return;
     }
-    SGLOGI("eventId=%{public}" PRId64 ", listener size=%{public}u", event.eventId, static_cast<int32_t>(listeners.size()));
+    SGLOGI("eventId=%{public}" PRId64 ", listener size=%{public}u",
+        event.eventId, static_cast<int32_t>(listeners.size()));
     SecurityGuard::TaskHandler::Task task = [listeners, optType, event] () {
         for (auto &listener : listeners) {
             if (listener != nullptr) {
