@@ -87,7 +87,7 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
     LOGI("in subscribe, subscribinfo: duration:%{public}" PRId64 ", isNotify:%{public}d, eventid:%{public}" PRId64 ", \n"
         "version:%{public}s, extra:%{public}s", subscribeInfo.GetDuration(), (int)subscribeInfo.IsNotify(),
         event.eventId, event.version.c_str(), event.extra.c_str());
-    int32_t ret = HasPermission();
+    int32_t ret = HasPermission(REPORT_PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;
@@ -132,7 +132,7 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
 int32_t SecurityCollectorManagerService::Unsubscribe(const sptr<IRemoteObject> &callback)
 {
     LOGI("In unsubscribe");
-    int32_t ret = HasPermission();
+    int32_t ret = HasPermission(REPORT_PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;
@@ -153,7 +153,7 @@ int32_t SecurityCollectorManagerService::CollectorStart(const SecurityCollectorS
     const sptr<IRemoteObject> &callback)
 {
     Event event = subscribeInfo.GetEvent();
-    int32_t ret = HasPermission();
+    int32_t ret = HasPermission(PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;
@@ -197,7 +197,7 @@ int32_t SecurityCollectorManagerService::CollectorStop(const SecurityCollectorSu
     const sptr<IRemoteObject> &callback)
 {
     Event event = subscribeInfo.GetEvent();
-    int32_t ret = HasPermission();
+    int32_t ret = HasPermission(PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;
@@ -354,10 +354,10 @@ std::string SecurityCollectorManagerService::GetAppName()
     return "";
 }
 
-int32_t SecurityCollectorManagerService::HasPermission()
+int32_t SecurityCollectorManagerService::HasPermission(const std::string &permission)
 {
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, PERMISSION);
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permission);
     if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
         return NO_PERMISSION;
     }

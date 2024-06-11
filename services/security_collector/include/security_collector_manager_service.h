@@ -58,7 +58,7 @@ public:
     static void ReportScUnsubscribeEvent(const ScUnsubscribeEvent &event);
 private:
     static std::string GetAppName();
-    static int32_t HasPermission();
+    static int32_t HasPermission(const std::string &permission);
     bool SetDeathRecipient(const sptr<IRemoteObject> &remote);
     void UnsetDeathRecipient(const sptr<IRemoteObject> &remote);
     void CleanSubscriber(const sptr<IRemoteObject> &remote);
