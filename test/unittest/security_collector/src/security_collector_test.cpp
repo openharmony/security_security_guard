@@ -47,6 +47,7 @@ namespace OHOS {
         Security::AccessToken::TokenIdKit::instance_ = nullptr;
     std::mutex Security::AccessToken::AccessTokenKit::mutex_ {};
     std::mutex Security::AccessToken::TokenIdKit::mutex_ {};
+    constexpr char PERMISSION[] = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
 }
 
 namespace OHOS::Security::SecurityCollectorTest {
@@ -134,21 +135,21 @@ HWTEST_F(SecurityCollectorTest, HasPermission01, TestSize.Level1)
 {
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_DENIED));
-    EXPECT_EQ(SecurityCollectorManagerService::HasPermission(), SecurityCollector::ErrorCode::NO_PERMISSION);
+    EXPECT_EQ(SecurityCollectorManagerService::HasPermission(PERMISSION), SecurityCollector::ErrorCode::NO_PERMISSION);
 }
 
 HWTEST_F(SecurityCollectorTest, HasPermission02, TestSize.Level1)
 {
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_EQ(SecurityCollectorManagerService::HasPermission(), SecurityCollector::ErrorCode::SUCCESS);
+    EXPECT_EQ(SecurityCollectorManagerService::HasPermission(PERMISSION), SecurityCollector::ErrorCode::SUCCESS);
 }
 
 HWTEST_F(SecurityCollectorTest, HasPermission03, TestSize.Level1)
 {
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_EQ(SecurityCollectorManagerService::HasPermission(), SecurityCollector::ErrorCode::SUCCESS);
+    EXPECT_EQ(SecurityCollectorManagerService::HasPermission(PERMISSION), SecurityCollector::ErrorCode::SUCCESS);
 }
 
 HWTEST_F(SecurityCollectorTest, Subscribe01, TestSize.Level1)
