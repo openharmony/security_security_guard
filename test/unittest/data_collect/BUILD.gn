@@ -117,7 +117,6 @@ ohos_unittest("SecurityGuardDataCollectTest") {
 
   deps = [
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
@@ -128,6 +127,7 @@ ohos_unittest("SecurityGuardDataCollectTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "googletest:gmock",
   ]
 }
 
@@ -166,7 +166,6 @@ ohos_unittest("SecurityGuardDatabaseManagerTest") {
   deps = [
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
@@ -177,6 +176,7 @@ ohos_unittest("SecurityGuardDatabaseManagerTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "googletest:gmock",
   ]
 }
 
@@ -230,7 +230,6 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
-    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
@@ -244,6 +243,7 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "googletest:gmock",
   ]
 }
 

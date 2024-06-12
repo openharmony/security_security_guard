@@ -48,6 +48,7 @@
         "time_service",
         "appverify",
         "json",
+        "googletest",
         "bundle_framework"
       ],
       "third_party": [
