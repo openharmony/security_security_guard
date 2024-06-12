@@ -38,9 +38,9 @@ ohos_unittest("security_collector_test") {
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock",
     "hilog:libhilog",
     "json:nlohmann_json_static",
-    "googletest:gmock",
   ]
 }
 
@@ -91,6 +91,7 @@ ohos_unittest("SecurityCollectorTest") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "device_manager:devicemanagersdk",
+    "googletest:gmock",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",
@@ -98,7 +99,6 @@ ohos_unittest("SecurityCollectorTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "googletest:gmock",
   ]
 }
 
@@ -145,6 +145,7 @@ ohos_unittest("SecurityCollectorRunManagerTest") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "device_manager:devicemanagersdk",
+    "googletest:gmock",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",
@@ -152,7 +153,6 @@ ohos_unittest("SecurityCollectorRunManagerTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "googletest:gmock",
   ]
 }
 

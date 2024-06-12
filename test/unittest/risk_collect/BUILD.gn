@@ -51,16 +51,14 @@ ohos_unittest("risk_collect_test") {
     "src/risk_collect_test.cpp",
   ]
 
-  deps = [
-    "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
-  ]
+  deps = [ "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp" ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock",
     "hilog:libhilog",
     "init:libbegetutil",
     "json:nlohmann_json_static",
-    "googletest:gmock",
   ]
 }
 
