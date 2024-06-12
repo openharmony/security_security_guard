@@ -34,13 +34,13 @@ ohos_unittest("security_collector_test") {
   deps = [
     "${sg_root_dir}/interfaces/inner_api/collector:libsg_collector_sdk",
     "${sg_root_dir}/services/security_collector:security_collector_service",
-    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
     "json:nlohmann_json_static",
+    "googletest:gmock",
   ]
 }
 
@@ -85,7 +85,6 @@ ohos_unittest("SecurityCollectorTest") {
   deps = [
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
@@ -99,6 +98,7 @@ ohos_unittest("SecurityCollectorTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "googletest:gmock",
   ]
 }
 
@@ -139,7 +139,6 @@ ohos_unittest("SecurityCollectorRunManagerTest") {
   deps = [
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
@@ -153,6 +152,7 @@ ohos_unittest("SecurityCollectorRunManagerTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "googletest:gmock",
   ]
 }
 

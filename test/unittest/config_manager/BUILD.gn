@@ -54,7 +54,6 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
 
   deps = [
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
@@ -71,6 +70,7 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "googletest:gmock",
   ]
 
   sanitize = {
@@ -115,7 +115,6 @@ ohos_unittest("AppInfoDatabseTest") {
 
   deps = [
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
@@ -131,6 +130,7 @@ ohos_unittest("AppInfoDatabseTest") {
     "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "googletest:gmock",
   ]
 
   sanitize = {
