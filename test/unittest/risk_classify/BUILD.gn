@@ -66,6 +66,7 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "device_usage_statistics:usagestatsinner",
+    "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
@@ -73,7 +74,6 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "googletest:gmock",
   ]
 }
 

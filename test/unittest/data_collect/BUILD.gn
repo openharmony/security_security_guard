@@ -115,19 +115,17 @@ ohos_unittest("SecurityGuardDataCollectTest") {
     "src/security_guard_data_collect_test.cpp",
   ]
 
-  deps = [
-    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-  ]
+  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
 
   external_deps = [
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "googletest:gmock",
   ]
 }
 
@@ -171,12 +169,12 @@ ohos_unittest("SecurityGuardDatabaseManagerTest") {
   external_deps = [
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "googletest:gmock",
   ]
 }
 
@@ -236,6 +234,7 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "device_manager:devicemanagersdk",
+    "googletest:gmock",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",
@@ -243,7 +242,6 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "googletest:gmock",
   ]
 }
 
