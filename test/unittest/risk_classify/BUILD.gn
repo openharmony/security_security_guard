@@ -56,7 +56,6 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
-    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
@@ -67,6 +66,7 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "device_usage_statistics:usagestatsinner",
+    "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",

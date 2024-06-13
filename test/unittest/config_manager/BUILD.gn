@@ -52,10 +52,7 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "src/security_guard_config_manager_test.cpp",
   ]
 
-  deps = [
-    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "//third_party/googletest:gmock",
-  ]
+  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
 
   external_deps = [
     "ability_base:base",
@@ -65,6 +62,7 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "access_token:libtoken_setproc",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
@@ -113,10 +111,7 @@ ohos_unittest("AppInfoDatabseTest") {
     "src/app_info_database_test.cpp",
   ]
 
-  deps = [
-    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "//third_party/googletest:gmock",
-  ]
+  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
 
   external_deps = [
     "ability_base:base",
@@ -126,6 +121,7 @@ ohos_unittest("AppInfoDatabseTest") {
     "access_token:libtoken_setproc",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
     "kv_store:distributeddata_inner",
