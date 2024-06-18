@@ -26,6 +26,8 @@ enum class DataCollectManagerInterfaceCode {
     CMD_DATA_SUBSCRIBE = 3,
     CMD_DATA_UNSUBSCRIBE = 4,
     CMD_SECURITY_EVENT_QUERY = 5,
+    CMD_SECURITY_COLLECTOR_START = 6,
+    CMD_SECURITY_COLLECTOR_STOP = 7,
 };
 
 enum class DataCollectManagerCallbackInterfaceCode {

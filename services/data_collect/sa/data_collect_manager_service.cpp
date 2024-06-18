@@ -420,4 +420,40 @@ void DataCollectManagerService::SubscriberDeathRecipient::OnRemoteDied(const wpt
     }
     SGLOGE("end");
 }
+
+int32_t DataCollectManagerService::CollectorStart(
+    const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &callback)
+{
+    SGLOGI("enter CollectorStart.");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
+    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
+        SGLOGE("caller no permission");
+        return NO_PERMISSION;
+    }
+    code = SecurityCollector::CollectorManager::GetInstance().CollectorStart(subscribeInfo);
+    if (code != SUCCESS) {
+        SGLOGI("CollectorStart failed, code=%{public}d", code);
+        return code;
+    }
+    return SUCCESS;
+}
+
+int32_t DataCollectManagerService::CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
+    const sptr<IRemoteObject> &callback)
+{
+    SGLOGI("enter CollectorStop.");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
+    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
+        SGLOGE("caller no permission");
+        return NO_PERMISSION;
+    }
+    code = SecurityCollector::CollectorManager::GetInstance().CollectorStop(subscribeInfo);
+    if (code != SUCCESS) {
+        SGLOGI("CollectorStop failed, code=%{public}d", code);
+        return code;
+    }
+    return SUCCESS;
+}
 }
