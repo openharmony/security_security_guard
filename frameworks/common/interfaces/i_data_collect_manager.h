@@ -38,6 +38,8 @@ public:
         CMD_DATA_SUBSCRIBE = static_cast<uint32_t>(InterfaceCode::CMD_DATA_SUBSCRIBE),
         CMD_DATA_UNSUBSCRIBE = static_cast<uint32_t>(InterfaceCode::CMD_DATA_UNSUBSCRIBE),
         CMD_SECURITY_EVENT_QUERY = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_EVENT_QUERY),
+        CMD_SECURITY_COLLECTOR_START = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_COLLECTOR_START),
+        CMD_SECURITY_COLLECTOR_STOP = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_COLLECTOR_STOP),
     };
 
     virtual int32_t RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
@@ -48,6 +50,10 @@ public:
         const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t Unsubscribe(const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
+        const sptr<IRemoteObject> &callback) = 0;
+    virtual int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
+        const sptr<IRemoteObject> &callback) = 0;
+    virtual int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) = 0;
 };
 

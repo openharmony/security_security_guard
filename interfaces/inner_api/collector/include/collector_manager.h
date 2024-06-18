@@ -37,6 +37,8 @@ public:
     int32_t Unsubscribe(const std::shared_ptr<ICollectorSubscriber> &subscriber);
     int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
         std::vector<SecurityEvent> &events);
+    int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber);
+    int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber);
 
 private:
     void HandleDecipient();
