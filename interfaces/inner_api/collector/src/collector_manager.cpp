@@ -131,4 +131,52 @@ int32_t CollectorManager::QuerySecurityEvent(const std::vector<SecurityEventRule
     LOGI("QuerySecurityEvent result, ret=%{public}d", ret);
     return SUCCESS;
 }
+
+int32_t CollectorManager::CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber)
+{
+    LOGI("begin CollectorStart");
+    auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
+    auto proxy = iface_cast<ISecurityCollectorManager>(object);
+    if (proxy == nullptr) {
+        LOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+    sptr<SecurityCollector::SecurityCollectorManagerCallbackService> callback =
+        new (std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
+    if (callback == nullptr) {
+        LOGE("callback is null");
+        return NULL_OBJECT;
+    }
+    int32_t ret = proxy->CollectorStart(subscriber, callback);
+    if (ret != SUCCESS) {
+        LOGI("CollectorStart failed, ret=%{public}d", ret);
+        return ret;
+    }
+    LOGI("CollectorStart result, ret=%{public}d", ret);
+    return SUCCESS;
+}
+
+int32_t CollectorManager::CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber)
+{
+    LOGI("begin CollectorStart");
+    auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
+    auto proxy = iface_cast<ISecurityCollectorManager>(object);
+    if (proxy == nullptr) {
+        LOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+    sptr<SecurityCollector::SecurityCollectorManagerCallbackService> callback =
+        new (std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
+    if (callback == nullptr) {
+        LOGE("callback is null");
+        return NULL_OBJECT;
+    }
+    int32_t ret = proxy->CollectorStop(subscriber, callback);
+    if (ret != SUCCESS) {
+        LOGI("CollectorStart failed, ret=%{public}d", ret);
+        return ret;
+    }
+    LOGI("CollectorStart result, ret=%{public}d", ret);
+    return SUCCESS;
+}
 }

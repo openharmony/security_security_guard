@@ -37,6 +37,8 @@ public:
     virtual int32_t Unsubscribe(const std::shared_ptr<ICollectorSubscriber> &subscriber) = 0;
     virtual int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
         std::vector<SecurityEvent> &events) = 0;
+    virtual int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber) = 0;
+    virtual int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber) = 0;
 };
 
 class CollectorManager : public BaseCollectorManager {
@@ -52,6 +54,8 @@ public:
     MOCK_METHOD1(Unsubscribe, int32_t(const std::shared_ptr<ICollectorSubscriber> &subscriber));
     MOCK_METHOD2(QuerySecurityEvent, int32_t(const std::vector<SecurityEventRuler> rulers,
         std::vector<SecurityEvent> &events));
+    MOCK_METHOD1(CollectorStart, int32_t(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber));
+    MOCK_METHOD1(CollectorStop, int32_t(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber));
 };
 } // OHOS::Security::SecurityCollector
 
