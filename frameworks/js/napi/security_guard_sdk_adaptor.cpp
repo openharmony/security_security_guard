@@ -170,8 +170,14 @@ int32_t SecurityGuardSdkAdaptor::NotifyCollector(const SecurityCollector::Event 
 int32_t SecurityGuardSdkAdaptor::StartCollector(const SecurityCollector::Event &event,
     int64_t duration)
 {
-    auto object = SecurityCollector::CollectorServiceLoader::GetInstance().LoadCollectorService();
-    auto proxy = iface_cast<SecurityCollector::ISecurityCollectorManager>(object);
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return NULL_OBJECT;
+    }
+
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    auto proxy = iface_cast<IDataCollectManager>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
@@ -193,8 +199,14 @@ int32_t SecurityGuardSdkAdaptor::StartCollector(const SecurityCollector::Event &
 int32_t SecurityGuardSdkAdaptor::StopCollector(const SecurityCollector::Event &event)
 {
     SGLOGD("in SecurityGuardSdkAdaptor StopCollector ************");
-    auto object = SecurityCollector::CollectorServiceLoader::GetInstance().LoadCollectorService();
-    auto proxy = iface_cast<SecurityCollector::ISecurityCollectorManager>(object);
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return NULL_OBJECT;
+    }
+
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    auto proxy = iface_cast<IDataCollectManager>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;

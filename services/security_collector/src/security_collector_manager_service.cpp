@@ -33,7 +33,6 @@
 
 namespace OHOS::Security::SecurityCollector {
 namespace {
-    constexpr char PERMISSION[] = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
     constexpr char REPORT_PERMISSION[] = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
     constexpr char NOTIFY_APP_NAME[] = "security_guard";
     constexpr const char* CALLER_PID = "CALLER_PID";
@@ -153,7 +152,7 @@ int32_t SecurityCollectorManagerService::CollectorStart(const SecurityCollectorS
     const sptr<IRemoteObject> &callback)
 {
     Event event = subscribeInfo.GetEvent();
-    int32_t ret = HasPermission(PERMISSION);
+    int32_t ret = HasPermission(REPORT_PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;
@@ -197,7 +196,7 @@ int32_t SecurityCollectorManagerService::CollectorStop(const SecurityCollectorSu
     const sptr<IRemoteObject> &callback)
 {
     Event event = subscribeInfo.GetEvent();
-    int32_t ret = HasPermission(PERMISSION);
+    int32_t ret = HasPermission(REPORT_PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;

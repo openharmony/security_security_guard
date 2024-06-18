@@ -289,8 +289,10 @@ static napi_value NapiReportSecurityInfo(napi_env env, napi_callback_info info)
     int32_t code = SecurityGuardSdkAdaptor::ReportSecurityInfo(eventInfo);
     if (code != SUCCESS) {
         SGLOGE("report eventInfo error, code=%{public}d", code);
+        napi_throw(env, GenerateBusinessError(env, code));
+        return nullptr;
     }
-    return NapiCreateInt32(env, ConvertToJsErrCode(code));
+    return NapiCreateInt32(env, SUCCESS);
 }
 
 static bool IsNum(const std::string &s)

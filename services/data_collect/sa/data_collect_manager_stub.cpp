@@ -47,12 +47,72 @@ int32_t DataCollectManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &da
             case CMD_SECURITY_EVENT_QUERY: {
                 return HandleSecurityEventQueryCmd(data, reply);
             }
+            case CMD_SECURITY_COLLECTOR_START: {
+                return HandleStartCmd(data, reply);
+            }
+            case CMD_SECURITY_COLLECTOR_STOP: {
+                return HandleStopCmd(data, reply);
+            }
             default: {
                 break;
             }
         }
     } while (false);
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+}
+
+int32_t DataCollectManagerStub::HandleStartCmd(MessageParcel &data, MessageParcel &reply)
+{
+    SGLOGI("in HandleStartCmd");
+    uint32_t expected = sizeof(uint64_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (expected >= actual) {
+        SGLOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    std::unique_ptr<SecurityCollector::SecurityCollectorSubscribeInfo> info(
+        data.ReadParcelable<SecurityCollector::SecurityCollectorSubscribeInfo>());
+    if (!info) {
+        SGLOGE("failed to read parcelable for subscribeInfo");
+        return BAD_PARAM;
+    }
+
+    auto callback = data.ReadRemoteObject();
+    if (callback == nullptr) {
+        SGLOGE("callback is nullptr");
+        return BAD_PARAM;
+    }
+    int32_t ret = CollectorStart(*info, callback);
+    reply.WriteInt32(ret);
+    return ret;
+}
+
+int32_t DataCollectManagerStub::HandleStopCmd(MessageParcel &data, MessageParcel &reply)
+{
+    SGLOGI("%{public}s", __func__);
+    uint32_t expected = sizeof(uint64_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (expected >= actual) {
+        SGLOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    std::unique_ptr<SecurityCollector::SecurityCollectorSubscribeInfo> info(
+        data.ReadParcelable<SecurityCollector::SecurityCollectorSubscribeInfo>());
+    if (!info) {
+        SGLOGE("failed to read parcelable for subscribeInfo");
+        return BAD_PARAM;
+    }
+
+    auto callback = data.ReadRemoteObject();
+    if (callback == nullptr) {
+        SGLOGE("callback is nullptr");
+        return BAD_PARAM;
+    }
+    int32_t ret = CollectorStop(*info, callback);
+    reply.WriteInt32(ret);
+    return ret;
 }
 
 int32_t DataCollectManagerStub::HandleDataCollectCmd(MessageParcel &data, MessageParcel &reply)
