@@ -41,6 +41,16 @@ void CollectorFwkTestImpl::OnNotify(const Event &event)
 }
 
 namespace OHOS::Security::SecurityGuardTest {
+class SecurityCollectorSubscriber : public SecurityCollector::ICollectorSubscriber {
+public:
+    explicit SecurityCollectorSubscriber(
+        const SecurityCollector::Event &event) : SecurityCollector::ICollectorSubscriber(event) {};
+    ~SecurityCollectorSubscriber() override = default;
+    int32_t OnNotify(const SecurityCollector::Event &event) override
+    {
+        return 0;
+    };
+};
 class TestCollector : public SecurityCollector::ICollector {
 public:
     int Start(std::shared_ptr<SecurityCollector::ICollectorFwk> api) override { return 0; };
@@ -139,6 +149,29 @@ HWTEST_F(CollectorInterfaceTest, Subscribe001, testing::ext::TestSize.Level1)
     EXPECT_EQ(ret, SecurityCollector::BAD_PARAM);
 }
 
+HWTEST_F(CollectorInterfaceTest, Subscribe002, testing::ext::TestSize.Level1)
+{
+    SecurityCollector::CollectorManager manager {};
+    SecurityCollector::Event event {};
+    auto subscriber = std::make_shared<SecurityGuardTest::SecurityCollectorSubscriber> (event);
+    sptr<SecurityCollector::SecurityCollectorManagerCallbackService> callback =
+        new(std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
+    manager.eventListeners_.insert({subscriber, callback});
+    int ret = manager.Subscribe(subscriber);
+    EXPECT_EQ(ret, SecurityCollector::BAD_PARAM);
+}
+
+HWTEST_F(CollectorInterfaceTest, Subscribe003, testing::ext::TestSize.Level1)
+{
+    SecurityCollector::CollectorManager manager {};
+    SecurityCollector::Event event {};
+    auto subscriber = std::make_shared<SecurityGuardTest::SecurityCollectorSubscriber> (event);
+    sptr<SecurityCollector::SecurityCollectorManagerCallbackService> callback =
+        new(std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
+    int ret = manager.Subscribe(subscriber);
+    EXPECT_EQ(ret, SecurityCollector::BAD_PARAM);
+}
+
 /**
  * @tc.name: Unsubscribe001
  * @tc.desc: CollectorManager Unsubscribe
@@ -148,6 +181,27 @@ HWTEST_F(CollectorInterfaceTest, Subscribe001, testing::ext::TestSize.Level1)
 HWTEST_F(CollectorInterfaceTest, Unsubscribe001, testing::ext::TestSize.Level1)
 {
     int ret = SecurityCollector::CollectorManager::GetInstance().Unsubscribe(nullptr);
+    EXPECT_EQ(ret, SecurityCollector::BAD_PARAM);
+}
+
+HWTEST_F(CollectorInterfaceTest, UnSubscribe002, testing::ext::TestSize.Level1)
+{
+    SecurityCollector::CollectorManager manager {};
+    SecurityCollector::Event event {};
+    auto subscriber = std::make_shared<SecurityGuardTest::SecurityCollectorSubscriber> (event);
+    sptr<SecurityCollector::SecurityCollectorManagerCallbackService> callback =
+        new(std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
+    manager.eventListeners_.insert({subscriber, callback});
+    int ret = manager.Unsubscribe(subscriber);
+    EXPECT_EQ(ret, SecurityCollector::BAD_PARAM);
+}
+
+HWTEST_F(CollectorInterfaceTest, UnSubscribe003, testing::ext::TestSize.Level1)
+{
+    SecurityCollector::CollectorManager manager {};
+    SecurityCollector::Event event {};
+    auto subscriber = std::make_shared<SecurityGuardTest::SecurityCollectorSubscriber> (event);
+    int ret = manager.Unsubscribe(subscriber);
     EXPECT_EQ(ret, SecurityCollector::BAD_PARAM);
 }
 
@@ -200,5 +254,39 @@ HWTEST_F(CollectorInterfaceTest, Query003, testing::ext::TestSize.Level1)
     EXPECT_EQ(collector.Subscribe(0), 0);
     EXPECT_EQ(collector.Unsubscribe(0), 0);
     EXPECT_EQ(collector.IsStartWithSub(), 0);
+}
+
+/**
+ * @tc.name: CollectorStart001
+ * @tc.desc: ICollector Start
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CollectorInterfaceTest, CollectorStart001, testing::ext::TestSize.Level1)
+{
+    SecurityCollector::CollectorManager manager {};
+    SecurityCollector::Event event {};
+    SecurityCollector::SecurityCollectorSubscribeInfo subscriber (event, -1, false);
+    sptr<SecurityCollector::SecurityCollectorManagerCallbackService> callback =
+        new(std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
+    int ret = manager.CollectorStart(subscriber);
+    EXPECT_EQ(ret, SecurityCollector::BAD_PARAM);
+}
+
+/**
+ * @tc.name: CollectorStart002
+ * @tc.desc: ICollector Start
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CollectorInterfaceTest, CollectorStop001, testing::ext::TestSize.Level1)
+{
+    SecurityCollector::CollectorManager manager {};
+    SecurityCollector::Event event {};
+    SecurityCollector::SecurityCollectorSubscribeInfo subscriber (event, -1, false);
+    sptr<SecurityCollector::SecurityCollectorManagerCallbackService> callback =
+        new(std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
+    int ret = manager.CollectorStop(subscriber);
+    EXPECT_EQ(ret, SecurityCollector::BAD_PARAM);
 }
 }

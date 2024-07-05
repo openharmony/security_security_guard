@@ -23,6 +23,7 @@
 #include "napi_request_data_manager.h"
 #include "napi_security_event_querier.h"
 #include "security_event.h"
+#include "security_config_update_info.h"
 #include "security_event_ruler.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
@@ -45,6 +46,7 @@ constexpr char NAPI_EVENT_CONTENT_ATTR[] = "content";
 constexpr int NAPI_START_COLLECTOR_ARGS_CNT = 2;
 constexpr int NAPI_STOP_COLLECTOR_ARGS_CNT = 1;
 constexpr int NAPI_REPORT_EVENT_INFO_ARGS_CNT = 1;
+constexpr int NAPI_UPDATE_POLICY_FILE_ARGS_CNT = 1;
 constexpr int NAPI_GET_MODEL_RESULT_ARGS_CNT = 1;
 constexpr int NAPI_QUERY_SECURITY_EVENT_ARGS_CNT = 2;
 
@@ -57,7 +59,7 @@ std::map<napi_env, std::vector<SubscribeCBInfo *>> g_subscribers;
 
 static const std::unordered_map<int32_t, std::pair<int32_t, std::string>> g_errorStringMap = {
     { SUCCESS, { JS_ERR_SUCCESS, "The operation was successful" }},
-    { NO_PERMISSION, { JS_ERR_NO_PERMISSION, "Check permission fail"} },
+    { NO_PERMISSION, { JS_ERR_NO_PERMISSION, "check permission fail"} },
     { BAD_PARAM, { JS_ERR_BAD_PARAM, "Parameter error, please make sure using the correct value"} },
     { NO_SYSTEMCALL, { JS_ERR_NO_SYSTEMCALL, "non-system application uses the system API"} },
 };
@@ -199,6 +201,33 @@ static napi_value ParseInt64(napi_env env, napi_value object, const std::string 
 
     NAPI_CALL(env, napi_get_value_int64(env, result, &value));
     return NapiCreateInt64(env, ConvertToJsErrCode(SUCCESS));
+}
+
+static napi_value ParseInt32(napi_env env, napi_value object, const std::string &key, int32_t &value)
+{
+    napi_value result;
+    bool hasProperty = false;
+    NAPI_CALL(env, napi_has_named_property(env, object, key.c_str(), &hasProperty));
+    if (!hasProperty) {
+        std::string msg = "no such param" + key;
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, msg));
+        return nullptr;
+    }
+    NAPI_CALL(env, napi_get_named_property(env, object, key.c_str(), &result));
+    if (result == nullptr) {
+        SGLOGE("get %{public}s failed", key.c_str());
+        return nullptr;
+    }
+
+    napi_valuetype type;
+    NAPI_CALL(env, napi_typeof(env, result, &type));
+    if (type != napi_number) {
+        SGLOGE("type of param %{public}s is not number", key.c_str());
+        return nullptr;
+    }
+
+    NAPI_CALL(env, napi_get_value_int32(env, result, &value));
+    return NapiCreateInt32(env, ConvertToJsErrCode(SUCCESS));
 }
 
 static napi_value GetString(napi_env env, napi_value object, const std::string &key, char *value, size_t &maxLen)
@@ -504,6 +533,92 @@ static napi_value NapiGetModelResult(napi_env env, napi_callback_info info)
     napi_value resourceName = NapiCreateString(env, "NapiGetModelResult");
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, RequestSecurityModelResultExecute,
         RequestSecurityModelResultComplete, static_cast<void *>(context), &context->asyncWork));
+    NAPI_CALL(env, napi_queue_async_work(env, context->asyncWork));
+    return promise;
+}
+
+static napi_value ParsePolicyFileInfo(napi_env env, napi_value object, NapiSecurityPolicyFileInfo *context)
+{
+    napi_valuetype type = napi_undefined;
+    NAPI_CALL(env, napi_typeof(env, object, &type));
+    if (type != napi_object) {
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "type of param eventInfo is not object"));
+        return nullptr;
+    }
+    if (ParseInt32(env, object, "fd", context->fd) == nullptr) {
+        return nullptr;
+    }
+    char name[FILE_NAME_MAX_LEN] = {0};
+    size_t len = FILE_NAME_MAX_LEN;
+    if (ParseString(env, object, "name", name, len) == nullptr) {
+        return nullptr;
+    }
+    context->fileName = name;
+    return NapiCreateInt32(env, SUCCESS);
+}
+
+static void UpdatePolicyExecute(napi_env env, void *data)
+{
+    if (data == nullptr) {
+        return;
+    }
+    auto *context = static_cast<NapiSecurityPolicyFileInfo *>(data);
+    SecurityConfigUpdateInfo policyInfo(context->fd, context->fileName);
+    context->ret = SecurityGuardSdkAdaptor::ConfigUpdate(policyInfo);
+    if (context->ret != SUCCESS) {
+        SGLOGE("update policy file error, code=%{public}d", context->ret);
+        return;
+    }
+}
+
+static void UpdatePolicyComplete(napi_env env, napi_status status, void *data)
+{
+    if (data == nullptr) {
+        return;
+    }
+    auto *context = static_cast<NapiSecurityPolicyFileInfo *>(data);
+    napi_value result {};
+    result = GenerateBusinessError(env, context->ret);
+    if (context->ret == SUCCESS) {
+        napi_resolve_deferred(env, context->deferred, result);
+    } else {
+        napi_reject_deferred(env, context->deferred, result);
+    }
+    napi_delete_async_work(env, context->asyncWork);
+    delete context;
+}
+
+static napi_value NapiUpdatePolicyFile(napi_env env, napi_callback_info info)
+{
+    SGLOGD("in NapiUpdatePolicyFile");
+    size_t argc = NAPI_UPDATE_POLICY_FILE_ARGS_CNT;
+    napi_value argv[NAPI_UPDATE_POLICY_FILE_ARGS_CNT] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    if (argc != NAPI_START_COLLECTOR_ARGS_CNT) {
+        SGLOGE("update policy file count is not expected");
+        std::string msg = "update policy file count is not expected";
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, msg));
+        return nullptr;
+    }
+
+    NapiSecurityPolicyFileInfo *context = new (std::nothrow) NapiSecurityPolicyFileInfo();
+    if (context == nullptr) {
+        napi_throw(env, GenerateBusinessError(env, NULL_OBJECT, "context new failed, no memory left."));
+        return nullptr;
+    }
+
+    napi_value ret = ParsePolicyFileInfo(env, argv[0], context);
+    if (ret == nullptr) {
+        SGLOGE("policy file parse error");
+        delete context;
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
+    }
+
+    napi_value promise = nullptr;
+    NAPI_CALL(env, napi_create_promise(env, &context->deferred, &promise));
+    napi_value resourceName = NapiCreateString(env, "NapiUpdatePolicyFile");
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, UpdatePolicyExecute,
+        UpdatePolicyComplete, static_cast<void *>(context), &context->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, context->asyncWork));
     return promise;
 }
@@ -1204,6 +1319,7 @@ static napi_value SecurityGuardNapiRegister(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("on", Subscribe),
         DECLARE_NAPI_FUNCTION("off", Unsubscribe),
         DECLARE_NAPI_FUNCTION("getModelResult", NapiGetModelResult),
+        DECLARE_NAPI_FUNCTION("updatePolicyFile", NapiUpdatePolicyFile),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
     return exports;

@@ -16,25 +16,17 @@
 #ifndef SECURITY_GUARD_CONFIG_SUBSCRIBER_H
 #define SECURITY_GUARD_CONFIG_SUBSCRIBER_H
 #include <functional>
-#include "common_event_manager.h"
-#include "common_event_subscribe_info.h"
-#include "common_event_subscriber.h"
+#include <string>
+#include <mutex>
 
 namespace OHOS::Security::SecurityGuard {
 using TimeEventRelatedCallBack = std::function<bool(void)>;
-class ConfigSubscriber : public EventFwk::CommonEventSubscriber {
+class ConfigSubscriber {
 public:
-    explicit ConfigSubscriber(const EventFwk::CommonEventSubscribeInfo &subscriberInfo)
-        : EventFwk::CommonEventSubscriber(subscriberInfo) {};
-    ~ConfigSubscriber() override;
-    void OnReceiveEvent(const EventFwk::CommonEventData &eventData) override;
-    static bool Subscribe(void);
     static bool RegisterTimeEventRelatedCallBack(const TimeEventRelatedCallBack &callBack);
-    bool UpdateRelatedEventAnalysisCfg(const std::string &file);
+    static bool UpdateConfig(const std::string &file);
 private:
-    static bool UnSubscribe(void);
-    static std::shared_ptr<ConfigSubscriber> subscriber_;
-    static std::mutex mutex_;
+    static bool UpdateRelatedEventAnalysisCfg(const std::string &file);
     static TimeEventRelatedCallBack timeEventCallBack_ ;
     static std::mutex callBackMutex_;
 };

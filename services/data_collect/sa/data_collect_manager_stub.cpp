@@ -53,6 +53,9 @@ int32_t DataCollectManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &da
             case CMD_SECURITY_COLLECTOR_STOP: {
                 return HandleStopCmd(data, reply);
             }
+            case CMD_SECURITY_CONFIG_UPDATE: {
+                return HandleConfigUpdateCmd(data, reply);
+            }
             default: {
                 break;
             }
@@ -237,6 +240,32 @@ int32_t DataCollectManagerStub::HandleSecurityEventQueryCmd(MessageParcel &data,
     }
 
     int32_t ret = QuerySecurityEvent(rulers, callback);
+    reply.WriteInt32(ret);
+    return ret;
+}
+
+int32_t DataCollectManagerStub::HandleConfigUpdateCmd(MessageParcel &data, MessageParcel &reply)
+{
+    SGLOGI("%{public}s", __func__);
+    uint64_t expected = sizeof(uint64_t);
+    uint64_t actual = data.GetReadableBytes();
+    if (expected >= actual) {
+        SGLOGE("actual length error, value=%{public}llu", actual);
+        return BAD_PARAM;
+    }
+
+    std::string fileName = data.ReadString();
+    if (fileName.empty()) {
+        SGLOGE("failed to read fileName for config update");
+        return BAD_PARAM;
+    }
+    int32_t fd = data.ReadFileDescriptor();
+    if (fd < 0) {
+        SGLOGE("failed to read file fd for config update");
+        return BAD_PARAM;
+    }
+    SecurityGuard::SecurityConfigUpdateInfo info(fd, fileName);
+    int32_t ret = ConfigUpdate(info);
     reply.WriteInt32(ret);
     return ret;
 }
