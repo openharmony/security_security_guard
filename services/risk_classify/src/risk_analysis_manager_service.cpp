@@ -18,6 +18,7 @@
 #include <thread>
 
 #include "accesstoken_kit.h"
+#include "tokenid_kit.h"
 #include "ipc_skeleton.h"
 
 #include "bigdata.h"
@@ -80,13 +81,21 @@ void RiskAnalysisManagerService::OnStop()
 int32_t RiskAnalysisManagerService::RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
     const std::string &param, const sptr<IRemoteObject> &callback)
 {
+    SGLOGD("%{public}s", __func__);
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, PERMISSION);
     if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
         SGLOGE("caller no permission");
         return NO_PERMISSION;
     }
-    SGLOGD("%{public}s", __func__);
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+            SGLOGE("not system app no permission");
+            return NO_SYSTEMCALL;
+        }
+    }
     ClassifyEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();

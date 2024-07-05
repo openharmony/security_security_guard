@@ -24,6 +24,7 @@
 #include "security_collector_subscribe_info.h"
 #include "security_event_ruler.h"
 #include "security_event.h"
+#include "security_config_update_info.h"
 
 namespace OHOS::Security::SecurityGuard {
 constexpr int32_t DATA_COLLECT_MANAGER_SA_ID = 3524;
@@ -40,6 +41,7 @@ public:
         CMD_SECURITY_EVENT_QUERY = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_EVENT_QUERY),
         CMD_SECURITY_COLLECTOR_START = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_COLLECTOR_START),
         CMD_SECURITY_COLLECTOR_STOP = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_COLLECTOR_STOP),
+        CMD_SECURITY_CONFIG_UPDATE = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_CONFIG_UPDATE),
     };
 
     virtual int32_t RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
@@ -55,6 +57,7 @@ public:
         const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) = 0;
+    virtual int32_t ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &updateInfo) = 0;
 };
 
 class IDataCollectManagerCallback : public IRemoteBroker {

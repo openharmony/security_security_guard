@@ -40,6 +40,7 @@ public:
         std::shared_ptr<SecurityEventQueryCallback> callback);
     static int32_t Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber);
     static int32_t Unsubscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber);
+    static int32_t ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &updateInfo);
 private:
     SecurityGuardSdkAdaptor() = delete;
     ~SecurityGuardSdkAdaptor() = delete;

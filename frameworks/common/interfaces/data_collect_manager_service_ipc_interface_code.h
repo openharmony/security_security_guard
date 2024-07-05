@@ -28,6 +28,7 @@ enum class DataCollectManagerInterfaceCode {
     CMD_SECURITY_EVENT_QUERY = 5,
     CMD_SECURITY_COLLECTOR_START = 6,
     CMD_SECURITY_COLLECTOR_STOP = 7,
+    CMD_SECURITY_CONFIG_UPDATE = 8,
 };
 
 enum class DataCollectManagerCallbackInterfaceCode {

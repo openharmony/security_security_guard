@@ -36,6 +36,7 @@ private:
     int32_t HandleSecurityEventQueryCmd(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStartCmd(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStopCmd(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleConfigUpdateCmd(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace OHOS::Security::SecurityGuard
 
