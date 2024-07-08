@@ -115,13 +115,11 @@ ohos_unittest("SecurityGuardDataCollectTest") {
     "src/security_guard_data_collect_test.cpp",
   ]
 
-  deps = [
-    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "//third_party/googletest:gmock",
-  ]
+  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
@@ -165,11 +163,11 @@ ohos_unittest("SecurityGuardDatabaseManagerTest") {
   deps = [
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
@@ -229,12 +227,12 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
-    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "googletest:gmock",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",
