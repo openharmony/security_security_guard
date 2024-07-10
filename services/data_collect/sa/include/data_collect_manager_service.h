@@ -48,6 +48,7 @@ public:
         const sptr<IRemoteObject> &callback) override;
     int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) override;
+    int32_t ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &info) override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
 
@@ -66,6 +67,7 @@ private:
         std::shared_ptr<std::promise<int32_t>> promise);
     static bool QueryEventByRuler(sptr<ISecurityEventQueryCallback> proxy,
         SecurityCollector::SecurityEventRuler ruler);
+    bool WriteRemoteFileToLocal(const SecurityGuard::SecurityConfigUpdateInfo &info, const std::string &realPath);
     std::mutex mutex_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
 };

@@ -154,13 +154,13 @@ using PathIndex = enum {
 };
 
 const std::vector<std::string> CONFIG_CACHE_FILES = {
-    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/security_guard_event.cfg",
-    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/security_guard_model.cfg",
-    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/signature_rule.cfg",
-    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/url_rule.cfg",
-    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/local_app_attribute.json",
-    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/global_app_attribute.json",
-    "/data/app/el1/100/base/com.ohos.security.hsdr/cache/security_guard/security_guard/related_event_analysis.json"
+    "/data/service/el1/public/security_guard/tmp/security_guard_event.cfg",
+    "/data/service/el1/public/security_guard/tmp/security_guard_model.cfg",
+    "/data/service/el1/public/security_guard/tmp/signature_rule.cfg",
+    "/data/service/el1/public/security_guard/tmp/url_rule.cfg",
+    "/data/service/el1/public/security_guard/tmp/local_app_attribute.json",
+    "/data/service/el1/public/security_guard/tmp/global_app_attribute.json",
+    "/data/service/el1/public/security_guard/tmp/related_event_analysis.json"
 };
 
 const std::vector<std::string> CONFIG_UPTATE_FILES = {
@@ -178,7 +178,7 @@ const std::vector<std::string> CONFIG_PRESET_FILES = {
     "/system/etc/security_guard_model.cfg"
 };
 
-const std::string CONFIG_ROOT_PATH = "/data/app/el1/100/base/com.ohos.security.hsdr/cache/";
+const std::string CONFIG_ROOT_PATH = "/data/service/el1/public/security_guard/";
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_CONFIG_DEFINE_H

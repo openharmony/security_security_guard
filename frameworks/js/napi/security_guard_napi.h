@@ -29,6 +29,7 @@ constexpr int VERSION_MAX_LEN = 50;
 constexpr int CONTENT_MAX_LEN = 900;
 constexpr int EXTRA_MAX_LEN = 2000;
 constexpr int DEVICE_ID_MAX_LEN = 64;
+constexpr int FILE_NAME_MAX_LEN = 64;
 constexpr int MODEL_NAME_MAX_LEN = 64;
 constexpr int PARAM_MAX_LEN = 900;
 constexpr int NAPI_ON_RESULT_ARGS_CNT = 3;
@@ -100,6 +101,15 @@ struct ModelRule {
     std::string param;
 };
 
+struct NapiSecurityPolicyFileInfo {
+    napi_env env = nullptr;
+    napi_ref ref = nullptr;
+    napi_deferred deferred;
+    napi_async_work asyncWork;
+    std::string fileName;
+    int32_t fd;
+    int32_t ret;
+};
 using CALLBACK_FUNC = std::function<void(const napi_env, const napi_ref, pid_t threadId,
     const std::vector<OHOS::Security::SecurityCollector::SecurityEvent> &napiEvents)>;
 using RELEASE_FUNC = std::function<void(pid_t threadId)>;
