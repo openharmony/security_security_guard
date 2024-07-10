@@ -594,7 +594,7 @@ static napi_value NapiUpdatePolicyFile(napi_env env, napi_callback_info info)
     size_t argc = NAPI_UPDATE_POLICY_FILE_ARGS_CNT;
     napi_value argv[NAPI_UPDATE_POLICY_FILE_ARGS_CNT] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
-    if (argc != NAPI_START_COLLECTOR_ARGS_CNT) {
+    if (argc != NAPI_UPDATE_POLICY_FILE_ARGS_CNT) {
         SGLOGE("update policy file count is not expected");
         std::string msg = "update policy file count is not expected";
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM, msg));
