@@ -22,7 +22,7 @@ namespace OHOS::Security::SecurityGuard {
 
 int32_t AcquireDataManagerCallbackService::OnNotify(const SecurityCollector::Event &event)
 {
-    SGLOGI("callback eventId=%{public}" PRId64 "", event.eventId);
+    SGLOGD("callback eventId=%{public}" PRId64 "", event.eventId);
     if (subscriber_ != nullptr) {
         subscriber_->OnNotify(event);
     }

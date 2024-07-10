@@ -17,6 +17,10 @@
 
 #include <thread>
 #include <vector>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "accesstoken_kit.h"
 #include "tokenid_kit.h"
@@ -41,6 +45,8 @@
 #include "config_manager.h"
 #include "risk_event_rdb_helper.h"
 #include "model_cfg_marshalling.h"
+#include "config_subscriber.h"
+
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
@@ -48,6 +54,9 @@ namespace {
     constexpr int32_t TIMEOUT_REPLY = 10000;
     const std::string REPORT_PERMISSION = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
     const std::string REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
+    const std::string MANAGE_CONFIG_PERMISSION = "ohos.permission.securityguard.MANAGE_SECURITY_GUARD_CONFIG";
+    constexpr int32_t CFG_FILE_MAX_SIZE = 1 * 1024 * 1024;
+    constexpr int32_t CFG_FILE_BUFF_SIZE = 1 * 1024 * 1024 + 1;
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DataCollectManagerService, DATA_COLLECT_MANAGER_SA_ID, true);
@@ -142,6 +151,14 @@ int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::strin
         SGLOGE("caller no permission");
         return NO_PERMISSION;
     }
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+            SGLOGE("not system app no permission");
+            return NO_SYSTEMCALL;
+        }
+    }
     if (!DataFormat::CheckRiskContent(content)) {
         SGLOGE("CheckRiskContent error");
         return BAD_PARAM;
@@ -171,6 +188,14 @@ int32_t DataCollectManagerService::RequestRiskData(std::string &devId, std::stri
     if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
         SGLOGE("caller no permission");
         return NO_PERMISSION;
+    }
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+            SGLOGE("not system app no permission");
+            return NO_SYSTEMCALL;
+        }
     }
     ObatinDataEvent event;
     auto pid = IPCSkeleton::GetCallingPid();
@@ -334,13 +359,20 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
     bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(ruler.GetEventId(), config);
     if (!isSuccess) {
         SGLOGE("GetEventConfig error");
-        proxy->OnError("eventId error");
-        return false;
+        return true;
     }
     std::vector<SecurityCollector::SecurityEvent> replyEvents;
     std::vector<int64_t> eventIds{ruler.GetEventId()};
     SGLOGD("eventType is %{public}u", config.eventType);
-    if (config.eventType == 0) { // query in database
+    if (config.eventType == 1) { // query in collector
+        int32_t code = SecurityCollector::CollectorManager::GetInstance().QuerySecurityEvent(
+            {ruler}, replyEvents);
+        if (code != SUCCESS) {
+            proxy->OnError("QuerySecurityEvent failed");
+            return false;
+        }
+        proxy->OnQuery(replyEvents);
+    } else {
         std::vector<SecEvent> events;
         if (ruler.GetBeginTime().empty() && ruler.GetEndTime().empty()) {
             (void) DatabaseManager::GetInstance().QueryEventByEventId(ruler.GetEventId(), events);
@@ -353,16 +385,6 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
             return SecurityCollector::SecurityEvent(event.eventId, event.version, event.content);
         });
         proxy->OnQuery(replyEvents);
-    } else if (config.eventType == 1) { // query in collector
-        int32_t code = SecurityCollector::CollectorManager::GetInstance().QuerySecurityEvent(
-            {ruler}, replyEvents);
-        if (code != SUCCESS) {
-            proxy->OnError("QuerySecurityEvent failed");
-            return false;
-        }
-        proxy->OnQuery(replyEvents);
-    } else {
-        SGLOGE("not support type, %{public}u", config.eventType);
     }
     return true;
 }
@@ -376,6 +398,14 @@ int32_t DataCollectManagerService::QuerySecurityEvent(std::vector<SecurityCollec
     if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
         SGLOGE("caller no permission");
         return NO_PERMISSION;
+    }
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+            SGLOGE("not system app no permission");
+            return NO_SYSTEMCALL;
+        }
     }
     auto proxy = iface_cast<ISecurityEventQueryCallback>(callback);
     if (proxy == nullptr) {
@@ -431,6 +461,14 @@ int32_t DataCollectManagerService::CollectorStart(
         SGLOGE("caller no permission");
         return NO_PERMISSION;
     }
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+            SGLOGE("not system app no permission");
+            return NO_SYSTEMCALL;
+        }
+    }
     code = SecurityCollector::CollectorManager::GetInstance().CollectorStart(subscribeInfo);
     if (code != SUCCESS) {
         SGLOGI("CollectorStart failed, code=%{public}d", code);
@@ -449,10 +487,92 @@ int32_t DataCollectManagerService::CollectorStop(const SecurityCollector::Securi
         SGLOGE("caller no permission");
         return NO_PERMISSION;
     }
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+            SGLOGE("not system app no permission");
+            return NO_SYSTEMCALL;
+        }
+    }
     code = SecurityCollector::CollectorManager::GetInstance().CollectorStop(subscribeInfo);
     if (code != SUCCESS) {
         SGLOGI("CollectorStop failed, code=%{public}d", code);
         return code;
+    }
+    return SUCCESS;
+}
+
+bool DataCollectManagerService::WriteRemoteFileToLocal(const SecurityGuard::SecurityConfigUpdateInfo &info,
+    const std::string &realPath)
+{
+    int32_t fd = info.GetFd();
+    int32_t outputFd = dup(fd);
+    close(fd);
+    if (outputFd == -1) {
+        SGLOGE("dup fd fail reason %{public}s", strerror(errno));
+        return FAILED;
+    }
+    int32_t inputFd = open(realPath.c_str(), O_WRONLY | O_NOFOLLOW | O_CLOEXEC | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+    if (inputFd < 0) {
+        close(outputFd);
+        SGLOGE("open file fail reason %{public}s", strerror(errno));
+        return FAILED;
+    }
+    char buffer[CFG_FILE_BUFF_SIZE] = {0};
+    int offset = -1;
+    while ((offset = read(outputFd, buffer, sizeof(buffer))) > 0) {
+        if (offset > CFG_FILE_MAX_SIZE || offset == 0) {
+            close(outputFd);
+            close(inputFd);
+            SGLOGE("file is empty or too large, len =  %{public}d", offset);
+            return BAD_PARAM;
+        }
+        if (write(inputFd, buffer, offset) < 0) {
+            close(inputFd);
+            close(outputFd);
+            SGLOGE("write file to the tmp dir failed");
+            return FAILED;
+        }
+    }
+    close(inputFd);
+    fsync(outputFd);
+    close(outputFd);
+    return SUCCESS;
+}
+int32_t DataCollectManagerService::ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &info)
+{
+    SGLOGI("enter ConfigUpdate.");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
+    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
+        SGLOGE("caller no permission");
+        return NO_PERMISSION;
+    }
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+            SGLOGE("not system app no permission");
+            return NO_SYSTEMCALL;
+        }
+    }
+    std::string realPath = CONFIG_ROOT_PATH + "tmp/" + info.GetFileName();
+    SGLOGI("config file is %{public}s, fd is %{public}d", realPath.c_str(), info.GetFd());
+    auto it = std::find_if(CONFIG_CACHE_FILES.begin(), CONFIG_CACHE_FILES.end(),
+        [realPath](const std::string &path) { return path == realPath; });
+    if (it ==  CONFIG_CACHE_FILES.end()) {
+        SGLOGE("file name err");
+        return BAD_PARAM;
+    }
+    int32_t ret = WriteRemoteFileToLocal(info, realPath);
+    if (ret != SUCCESS) {
+        SGLOGE("write remote file to local fail");
+        return ret;
+    }
+    if (!ConfigSubscriber::UpdateConfig(realPath)) {
+        SGLOGE("update config fail");
+        return FAILED;
     }
     return SUCCESS;
 }
