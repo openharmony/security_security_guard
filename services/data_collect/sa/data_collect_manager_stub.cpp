@@ -247,10 +247,10 @@ int32_t DataCollectManagerStub::HandleSecurityEventQueryCmd(MessageParcel &data,
 int32_t DataCollectManagerStub::HandleConfigUpdateCmd(MessageParcel &data, MessageParcel &reply)
 {
     SGLOGI("%{public}s", __func__);
-    uint64_t expected = sizeof(uint64_t);
-    uint64_t actual = data.GetReadableBytes();
+    uint32_t expected = sizeof(uint64_t);
+    uint32_t actual = data.GetReadableBytes();
     if (expected >= actual) {
-        SGLOGE("actual length error, value=%{public}llu", actual);
+        SGLOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
 
