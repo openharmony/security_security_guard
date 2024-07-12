@@ -26,6 +26,7 @@
       OHOS::Security::SecurityGuard::ConfigOperator::ConfigOperator*;
       OHOS::Security::SecurityGuard::ConfigOperator::Init*;
       OHOS::Security::SecurityGuard::ConfigSubscriber::RegisterTimeEventRelatedCallBack*;
+      OHOS::Security::SecurityGuard::ConfigSubscriber::UpdateConfig*;
       OHOS::Security::SecurityGuard::ConfigDataManager::GetInstance*;
       OHOS::Security::SecurityGuard::ConfigDataManager::GetAllModelIds*;
       OHOS::Security::SecurityGuard::ConfigDataManager::GetEventConfig*;

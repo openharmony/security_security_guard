@@ -29,11 +29,5 @@ void ConfigManager::StartUpdate()
 {
     int ret = AppInfoRdbHelper::GetInstance().Init();
     SGLOGI("app config  rdb init result is %{public}d", ret);
-    bool success = ConfigSubscriber::Subscribe();
-    if (!success) {
-        SGLOGE("subscribe failed");
-        return;
-    }
-    SGLOGI("subscribe succeed");
 };
 } // OHOS::Security::SecurityGuard
