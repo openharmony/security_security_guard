@@ -26,7 +26,6 @@
 #include "data_collect_manager_stub.h"
 #include "security_guard_define.h"
 #include "security_event_query_callback_proxy.h"
-#include "config_manager.h"
 namespace OHOS::Security::SecurityGuard {
 class DataCollectManagerService : public SystemAbility, public DataCollectManagerStub, public NoCopyable {
 DECLARE_SYSTEM_ABILITY(DataCollectManagerService);
@@ -48,6 +47,7 @@ public:
         const sptr<IRemoteObject> &callback) override;
     int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
         const sptr<IRemoteObject> &callback) override;
+    int32_t ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &info) override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
 
@@ -66,6 +66,7 @@ private:
         std::shared_ptr<std::promise<int32_t>> promise);
     static bool QueryEventByRuler(sptr<ISecurityEventQueryCallback> proxy,
         SecurityCollector::SecurityEventRuler ruler);
+    bool WriteRemoteFileToLocal(const SecurityGuard::SecurityConfigUpdateInfo &info, const std::string &realPath);
     std::mutex mutex_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
 };

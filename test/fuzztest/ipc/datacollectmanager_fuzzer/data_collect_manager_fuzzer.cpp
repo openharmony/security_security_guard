@@ -24,12 +24,15 @@
 
 namespace OHOS::Security::SecurityGuard {
 DataCollectManagerService g_service(DATA_COLLECT_MANAGER_SA_ID, true);
-constexpr int32_t REMAINDER_VALUE = 5;
+constexpr int32_t REMAINDER_VALUE = 8;
 constexpr int32_t CMD_DATA_COLLECT_VALUE = 0;
 constexpr int32_t CMD_DATA_REQUEST_VALUE = 1;
 constexpr int32_t CMD_DATA_SUBSCRIBE = 2;
 constexpr int32_t CMD_DATA_UNSUBSCRIBE_VALUE = 3;
 constexpr int32_t CMD_SECURITY_EVENT_QUERY_VALUE = 4;
+constexpr int32_t CMD_SECURITY_COLLECTOR_START = 5;
+constexpr int32_t CMD_SECURITY_COLLECTOR_STOP = 6;
+constexpr int32_t CMD_SECURITY_CONFIG_UPDATE = 7;
 void OnRemoteCollectRequest(const uint8_t* data, size_t size, MessageParcel* datas,
     MessageParcel* reply, MessageOption* option);
 void OnRemoteRequestRequest(const uint8_t* data, size_t size, MessageParcel* datas,
@@ -40,7 +43,12 @@ void OnRemoteUnsubscribeRequest(const uint8_t* data, size_t size, MessageParcel*
     MessageParcel* reply, MessageOption* option);
 void OnRemoteSecurityEventQuery(const uint8_t* data, size_t size, MessageParcel* datas,
     MessageParcel* reply, MessageOption* option);
-
+void OnRemoteStart(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option);
+void OnRemoteStop(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option);
+void OnRemoteConfigUpdate(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option);
 void OnRemoteRequestFuzzTest(const uint8_t* data, size_t size)
 {
     MessageParcel datas;
@@ -66,6 +74,18 @@ void OnRemoteRequestFuzzTest(const uint8_t* data, size_t size)
     } else if (size % REMAINDER_VALUE == CMD_SECURITY_EVENT_QUERY_VALUE) {
         // handle security event query cmd
         OnRemoteSecurityEventQuery(data, size, &datas, &reply, &option);
+        return;
+    } else if (size % REMAINDER_VALUE == CMD_SECURITY_COLLECTOR_START) {
+        // handle collector start cmd
+        OnRemoteStart(data, size, &datas, &reply, &option);
+        return;
+    } else if (size % REMAINDER_VALUE == CMD_SECURITY_COLLECTOR_STOP) {
+        // handle collector stop cmd
+        OnRemoteStop(data, size, &datas, &reply, &option);
+        return;
+    } else if (size % REMAINDER_VALUE == CMD_SECURITY_CONFIG_UPDATE) {
+        // handle config update cmd
+        OnRemoteConfigUpdate(data, size, &datas, &reply, &option);
         return;
     }
 }
@@ -162,6 +182,63 @@ void OnRemoteSecurityEventQuery(const uint8_t* data, size_t size, MessageParcel*
     g_service.OnRemoteRequest(DataCollectManagerStub::CMD_SECURITY_EVENT_QUERY, *datas, *reply, *option);
 }
 
+void OnRemoteStart(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option)
+{
+    int64_t eventId = static_cast<int64_t>(size);
+    std::string version(reinterpret_cast<const char *>(data), size);
+    std::string content(reinterpret_cast<const char *>(data), size);
+    std::string extra(reinterpret_cast<const char *>(data), size);
+    int64_t duration = static_cast<int64_t>(size);
+    SecurityCollector::Event event;
+    event.eventId = eventId;
+    event.version = version;
+    event.content = content;
+    event.extra = extra;
+    SecurityCollector::SecurityCollectorSubscribeInfo subscriberInfo{event, duration, true};
+    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
+        const std::string &errMsg) -> int32_t {
+        SGLOGI("DataCollectManagerCallbackService called");
+        return 0;
+    };
+    sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
+    datas->WriteRemoteObject(callback);
+    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_SECURITY_COLLECTOR_START, *datas, *reply, *option);
+}
+
+void OnRemoteStop(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option)
+{
+    int64_t eventId = static_cast<int64_t>(size);
+    std::string version(reinterpret_cast<const char *>(data), size);
+    std::string content(reinterpret_cast<const char *>(data), size);
+    std::string extra(reinterpret_cast<const char *>(data), size);
+    int64_t duration = static_cast<int64_t>(size);
+    SecurityCollector::Event event;
+    event.eventId = eventId;
+    event.version = version;
+    event.content = content;
+    event.extra = extra;
+    SecurityCollector::SecurityCollectorSubscribeInfo subscriberInfo{event, duration, true};
+    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
+        const std::string &errMsg) -> int32_t {
+        SGLOGI("DataCollectManagerCallbackService called");
+        return 0;
+    };
+    sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
+    datas->WriteRemoteObject(callback);
+    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_SECURITY_COLLECTOR_STOP, *datas, *reply, *option);
+}
+
+void OnRemoteConfigUpdate(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option)
+{
+    int32_t fd = static_cast<int32_t>(size);
+    std::string fileName(reinterpret_cast<const char *>(data), size);
+    datas->WriteFileDescriptor(fd);
+    datas->WriteString(fileName);
+    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_SECURITY_CONFIG_UPDATE, *datas, *reply, *option);
+}
 }  // namespace OHOS::Security::SecurityGuard
 
 /* Fuzzer entry point */

@@ -230,4 +230,35 @@ int32_t DataCollectManagerProxy::CollectorStop(const SecurityCollector::Security
     SGLOGD("reply=%{public}d", ret);
     return ret;
 }
+
+int32_t DataCollectManagerProxy::ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &updateInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        SGLOGE("WriteInterfaceToken error");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteString(updateInfo.GetFileName())) {
+        SGLOGE("failed to write file for config update");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteFileDescriptor(updateInfo.GetFd())) {
+        SGLOGE("failed to write file descriptor for config update");
+        return WRITE_ERR;
+    }
+
+    MessageOption option = { MessageOption::TF_SYNC };
+    int ret = Remote()->SendRequest(CMD_SECURITY_CONFIG_UPDATE, data, reply, option);
+    if (ret != ERR_NONE) {
+        SGLOGE("ret=%{public}d", ret);
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    SGLOGD("reply=%{public}d", ret);
+    return ret;
+}
 }

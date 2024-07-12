@@ -21,9 +21,6 @@
 #include <thread>
 #include <fstream>
 #include "accesstoken_kit.h"
-#include "common_event_manager.h"
-#include "common_event_subscribe_info.h"
-#include "common_event_subscriber.h"
 #include "nativetoken_kit.h"
 #include "token_setproc.h"
 
@@ -57,7 +54,6 @@ namespace OHOS {
 namespace OHOS::Security::SecurityGuardTest {
 
 namespace {
-    constexpr int SLEEP_TIME = 100;
     constexpr int SUCCESS = 0;
     constexpr int FAILED = 1;
     constexpr size_t MAXAPPSIZE = 500;
@@ -111,20 +107,6 @@ public:
     MOCK_METHOD0(Parse, bool());
     MOCK_METHOD0(Update, bool());
 };
-
-
-static void SendUpdataFileEvent(const std::string &action, const std::string &bundleName, const std::string &moduleName)
-{
-    OHOS::AAFwk::Want want;
-    want.SetAction(action);
-    OHOS::EventFwk::CommonEventData data;
-    data.SetData(bundleName + "." + moduleName);
-    data.SetWant(want);
-    bool success = OHOS::EventFwk::CommonEventManager::PublishCommonEvent(data);
-    EXPECT_TRUE(success);
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
-}
 
 HWTEST_F(SecurityGuardConfigManagerTest, TestConfigOperator001, TestSize.Level1)
 {
@@ -227,85 +209,6 @@ HWTEST_F(SecurityGuardConfigManagerTest, TestConfigDataManager003, TestSize.Leve
 
 HWTEST_F(SecurityGuardConfigManagerTest, TestConfigSubsciber001, TestSize.Level1)
 {
-    ConfigDataManager::GetInstance().ResetEventMap();
-    ConfigDataManager::GetInstance().ResetModelMap();
-    ConfigDataManager::GetInstance().ResetModelToEventMap();
-
-    std::string bundleName = "bundleName";
-    std::string moduleName = "moduleName";
-    std::string hsdrEvent = "usual.event.HSDR_EVENT";
-    SendUpdataFileEvent(hsdrEvent, bundleName, moduleName);
-    ModelCfg config;
-    config.modelId = 1;
-    bool success = ConfigDataManager::GetInstance().GetModelConfig(config.modelId, config);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestConfigSubsciber002, TestSize.Level1)
-{
-    ConfigDataManager::GetInstance().ResetEventMap();
-    ConfigDataManager::GetInstance().ResetModelMap();
-    ConfigDataManager::GetInstance().ResetModelToEventMap();
-
-    std::string bundleName = "bundleName";
-    std::string moduleName = "moduleName";
-    std::string hsdrEvent = "usual.event.HSDR_EVENT";
-    SendUpdataFileEvent(hsdrEvent, bundleName, moduleName);
-    EventCfg config;
-    config.eventId = 1;
-    bool success = ConfigDataManager::GetInstance().GetEventConfig(config.eventId, config);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestConfigSubsciber003, TestSize.Level1)
-{
-    ConfigDataManager::GetInstance().ResetEventMap();
-    ConfigDataManager::GetInstance().ResetModelMap();
-    ConfigDataManager::GetInstance().ResetModelToEventMap();
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), DeleteAppInfoByIsGlobalApp(
-        An<int>())).WillRepeatedly(Return(FAILED));
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), InsertAllAppInfo(
-        An<const std::vector<AppInfo> &>())).WillRepeatedly(Return(FAILED));
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), QueryAllAppInfo(An<std::vector<AppInfo> &>())).
-        WillRepeatedly(Return(FAILED));
-    bool success = ConfigSubscriber::Subscribe();
-    EXPECT_TRUE(success);
-    auto callback = [] () {
-        return true;
-    };
-    ConfigSubscriber::RegisterTimeEventRelatedCallBack(callback);
-    std::string bundleName = "security_guard";
-    std::string moduleName = "security_guard";
-    std::string hsdrEvent = "usual.event.HSDR_EVENT";
-    SendUpdataFileEvent(hsdrEvent, bundleName, moduleName);
-    EventCfg eventCfg;
-    eventCfg.eventId = 1;
-    SGLOGE("begin get event");
-    success = ConfigDataManager::GetInstance().GetEventConfig(eventCfg.eventId, eventCfg);
-    EXPECT_TRUE(success);
-    EXPECT_TRUE(eventCfg.eventName == "cache_event");
-
-    ModelCfg modelCfg;
-    modelCfg.modelId = 1;
-    success = ConfigDataManager::GetInstance().GetModelConfig(modelCfg.modelId, modelCfg);
-    EXPECT_TRUE(success);
-    EXPECT_TRUE(modelCfg.path == "cache_model");
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestConfigSubsciber004, TestSize.Level1)
-{
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), Init()).WillRepeatedly(Return(SUCCESS));
-    ConfigManager::GetInstance().StartUpdate();
-    bool success = ConfigSubscriber::Subscribe();
-    EXPECT_TRUE(success);
-    success = ConfigSubscriber::UnSubscribe();
-    EXPECT_TRUE(success);
-    success = ConfigSubscriber::UnSubscribe();
-    EXPECT_TRUE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestConfigSubsciber005, TestSize.Level1)
-{
     TimeEventRelatedCallBack callBack = nullptr;
     bool success = ConfigSubscriber::RegisterTimeEventRelatedCallBack(callBack);
     EXPECT_FALSE(success);
@@ -349,10 +252,10 @@ HWTEST_F(SecurityGuardConfigManagerTest, TestEventConfig003, TestSize.Level1)
     success = config.Parse();
     EXPECT_TRUE(success);
     EventCfg eventCfg;
-    eventCfg.eventId = 1;
+    eventCfg.eventId = 3;
     success = ConfigDataManager::GetInstance().GetEventConfig(eventCfg.eventId, eventCfg);
     EXPECT_TRUE(success);
-    EXPECT_TRUE(eventCfg.eventName == "cache_event");
+    EXPECT_TRUE(eventCfg.eventName == "update_event");
 }
 
 HWTEST_F(SecurityGuardConfigManagerTest, TestModelConfig001, TestSize.Level1)
@@ -394,10 +297,10 @@ HWTEST_F(SecurityGuardConfigManagerTest, TestModelConfig003, TestSize.Level1)
     success = config.Parse();
     EXPECT_TRUE(success);
     ModelCfg modelCfg;
-    modelCfg.modelId = 1;
+    modelCfg.modelId = 3;
     success = ConfigDataManager::GetInstance().GetModelConfig(modelCfg.modelId, modelCfg);
     EXPECT_TRUE(success);
-    EXPECT_TRUE(modelCfg.path == "cache_model");
+    EXPECT_TRUE(modelCfg.path == "update_model");
 }
 
 HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig000, TestSize.Level1)
@@ -409,8 +312,9 @@ HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig000, TestSize.Level1)
         WillRepeatedly(Return(SUCCESS));
     EXPECT_CALL(AppInfoRdbHelper::GetInstance(), InsertAppInfo(
         An<const AppInfo &>())).WillRepeatedly(Return(SUCCESS));
-    config.stream_.open("/data/test/unittest/resource/local_app_attribute_update.json");
+    config.stream_ = std::ifstream("/data/test/unittest/resource/local_app_attribute_update.json", std::ios::in);
     EXPECT_TRUE(config.stream_.is_open());
+    EXPECT_FALSE(!config.stream_);
     success = config.Parse();
     EXPECT_TRUE(success);
     success = config.Update();
@@ -467,7 +371,8 @@ HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig002, TestSize.Level1)
         }
     ]
     })";
-    out << tmp << std::endl;
+    std::ofstream out1("/data/test/unittest/resource/local_app_attribute_update.json");
+    out1 << tmp << std::endl;
     config.stream_.open("/data/test/unittest/resource/local_app_attribute_update.json");
     EXPECT_TRUE(config.stream_.is_open());
     success = config.Parse();

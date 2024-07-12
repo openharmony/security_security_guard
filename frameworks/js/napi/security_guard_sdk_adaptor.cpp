@@ -31,6 +31,7 @@
 #include "collector_service_loader.h"
 #include "security_event_query_callback_service.h"
 #include "acquire_data_manager_callback_service.h"
+#include "security_config_update_info.h"
 
 namespace OHOS::Security::SecurityGuard {
 namespace  {
@@ -332,4 +333,26 @@ int32_t SecurityGuardSdkAdaptor::Unsubscribe(const std::shared_ptr<SecurityColle
     return SUCCESS;
 }
 
+int32_t SecurityGuardSdkAdaptor::ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &updateInfo)
+{
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return NULL_OBJECT;
+    }
+
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    auto proxy = iface_cast<IDataCollectManager>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+
+    int32_t ret = proxy->ConfigUpdate(updateInfo);
+    if (ret != SUCCESS) {
+        SGLOGE("ConfigUpdate error, ret=%{public}d", ret);
+        return ret;
+    }
+    return SUCCESS;
+}
 } // OHOS::Security::SecurityGuard
