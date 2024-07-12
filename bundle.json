@@ -114,9 +114,9 @@
         }
       ],
       "test": [
-        "//base/security/security_guard:security_guard_build_module_test",
-        "//base/security/security_guard:security_guard_fuzz_test",
-        "//base/security/security_guard:security_guard_unit_test"
+        "//base/security/security_guard/test:security_guard_build_module_test",
+        "//base/security/security_guard/test:security_guard_fuzz_test",
+        "//base/security/security_guard/test:security_guard_unit_test"
       ]
     }
   }
