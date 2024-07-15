@@ -131,6 +131,7 @@ ohos_shared_library("sg_collect_service") {
   ]
 
   external_deps = [
+    "ability_base:want",
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
     "access_token:libtokenid_sdk",
@@ -179,6 +180,7 @@ ohos_shared_library("sg_collect_service_database") {
   deps = []
 
   external_deps = [
+    "c_utils:utils",
     "hilog:libhilog",
     "relational_store:native_rdb",
   ]
