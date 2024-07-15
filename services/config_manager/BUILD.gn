@@ -65,8 +65,10 @@ ohos_shared_library("sg_config_manager") {
   ]
 
   external_deps = [
+    "ability_base:want",
     "c_utils:utils",
     "hilog:libhilog",
+    "ipc:ipc_core",
     "json:nlohmann_json_static",
     "relational_store:native_rdb",
   ]
