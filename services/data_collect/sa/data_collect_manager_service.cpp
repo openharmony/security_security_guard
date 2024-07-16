@@ -53,10 +53,21 @@ namespace {
     constexpr int32_t TWO_ARGS = 2;
     constexpr int32_t TIMEOUT_REPLY = 10000;
     const std::string REPORT_PERMISSION = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
+    const std::string REPORT_PERMISSION_NEW = "ohos.permission.REPORT_SECURITY_INFO";
     const std::string REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
-    const std::string MANAGE_CONFIG_PERMISSION = "ohos.permission.securityguard.MANAGE_SECURITY_GUARD_CONFIG";
+    const std::string MANAGE_CONFIG_PERMISSION = "ohos.permission.MANAGE_SECURITY_GUARD_CONFIG";
+    const std::string QUERY_SECURITY_EVENT_PERMISSION = "ohos.permission.QUERY_SECURITY_EVENT";
     constexpr int32_t CFG_FILE_MAX_SIZE = 1 * 1024 * 1024;
     constexpr int32_t CFG_FILE_BUFF_SIZE = 1 * 1024 * 1024 + 1;
+    const std::unordered_map<std::string, std::vector<std::string>> g_apiPermissionsMap {
+        {"RequestDataSubmit", {REPORT_PERMISSION, REPORT_PERMISSION_NEW}},
+        {"QuerySecurityEvent", {REPORT_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
+        {"CollectorStart", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
+        {"CollectorStop", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
+        {"Subscribe", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
+        {"UnSubscribe", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
+        {"ConfigUpdate", {MANAGE_CONFIG_PERMISSION}}
+    };
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DataCollectManagerService, DATA_COLLECT_MANAGER_SA_ID, true);
@@ -145,19 +156,9 @@ void DataCollectManagerService::DumpEventInfo(int fd, int64_t eventId)
 int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
     std::string &content)
 {
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REPORT_PERMISSION);
-    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
-        SGLOGE("caller no permission");
-        return NO_PERMISSION;
-    }
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
-    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
-        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
-            SGLOGE("not system app no permission");
-            return NO_SYSTEMCALL;
-        }
+    int32_t ret = IsApiHasPermission("RequestDataSubmit");
+    if (ret != SUCCESS) {
+        return ret;
     }
     if (!DataFormat::CheckRiskContent(content)) {
         SGLOGE("CheckRiskContent error");
@@ -287,19 +288,9 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     const sptr<IRemoteObject> &callback)
 {
     SGLOGD("DataCollectManagerService, start subscribe");
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
-    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
-        SGLOGE("caller no permission");
-        return NO_PERMISSION;
-    }
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
-    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
-        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
-            SGLOGE("not system app no permission");
-            return NO_SYSTEMCALL;
-        }
+    int32_t ret = IsApiHasPermission("Subscribe");
+    if (ret != SUCCESS) {
+        return ret;
     }
     std::lock_guard<std::mutex> lock(mutex_);
     if (deathRecipient_ == nullptr) {
@@ -310,7 +301,7 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
         }
     }
     callback->AddDeathRecipient(deathRecipient_);
-    int32_t ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, callback);
+    ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, callback);
     SgSubscribeEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
@@ -323,26 +314,16 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
 
 int32_t DataCollectManagerService::Unsubscribe(const sptr<IRemoteObject> &callback)
 {
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
-    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
-        SGLOGE("caller no permission");
-        return NO_PERMISSION;
-    }
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
-    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
-        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
-            SGLOGE("not system app no permission");
-            return NO_SYSTEMCALL;
-        }
+    int32_t ret = IsApiHasPermission("UnSubscribe");
+    if (ret != SUCCESS) {
+        return ret;
     }
     std::lock_guard<std::mutex> lock(mutex_);
     if (deathRecipient_ != nullptr) {
         callback->RemoveDeathRecipient(deathRecipient_);
     }
 
-    int32_t ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(callback);
+    ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(callback);
     SgUnsubscribeEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
@@ -393,19 +374,9 @@ int32_t DataCollectManagerService::QuerySecurityEvent(std::vector<SecurityCollec
     const sptr<IRemoteObject> &callback)
 {
     SGLOGE("enter QuerySecurityEvent");
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
-    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
-        SGLOGE("caller no permission");
-        return NO_PERMISSION;
-    }
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
-    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
-        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
-            SGLOGE("not system app no permission");
-            return NO_SYSTEMCALL;
-        }
+    int32_t ret = IsApiHasPermission("QuerySecurityEvent");
+    if (ret != SUCCESS) {
+        return ret;
     }
     auto proxy = iface_cast<ISecurityEventQueryCallback>(callback);
     if (proxy == nullptr) {
@@ -455,19 +426,9 @@ int32_t DataCollectManagerService::CollectorStart(
     const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &callback)
 {
     SGLOGI("enter CollectorStart.");
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
-    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
-        SGLOGE("caller no permission");
-        return NO_PERMISSION;
-    }
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
-    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
-        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
-            SGLOGE("not system app no permission");
-            return NO_SYSTEMCALL;
-        }
+    int32_t code = IsApiHasPermission("CollectorStart");
+    if (code != SUCCESS) {
+        return code;
     }
     code = SecurityCollector::CollectorManager::GetInstance().CollectorStart(subscribeInfo);
     if (code != SUCCESS) {
@@ -481,19 +442,9 @@ int32_t DataCollectManagerService::CollectorStop(const SecurityCollector::Securi
     const sptr<IRemoteObject> &callback)
 {
     SGLOGI("enter CollectorStop.");
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
-    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
-        SGLOGE("caller no permission");
-        return NO_PERMISSION;
-    }
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
-    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
-        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
-            SGLOGE("not system app no permission");
-            return NO_SYSTEMCALL;
-        }
+    int32_t code = IsApiHasPermission("CollectorStop");
+    if (code != SUCCESS) {
+        return code;
     }
     code = SecurityCollector::CollectorManager::GetInstance().CollectorStop(subscribeInfo);
     if (code != SUCCESS) {
@@ -501,6 +452,32 @@ int32_t DataCollectManagerService::CollectorStop(const SecurityCollector::Securi
         return code;
     }
     return SUCCESS;
+}
+
+int32_t DataCollectManagerService::IsApiHasPermission(const std::string &api)
+{
+    if (g_apiPermissionsMap.count(api) == 0) {
+        SGLOGE("api not in map");
+        return FAILED;
+    }
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    if (std::any_of(g_apiPermissionsMap.at(api).cbegin(), g_apiPermissionsMap.at(api).cend(),
+        [callerToken](const std::string &per) {
+        int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, per);
+        return code == AccessToken::PermissionState::PERMISSION_GRANTED;
+    })) {
+        AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+        if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+            uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+            if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+                SGLOGE("not system app no permission");
+                return NO_SYSTEMCALL;
+            }
+        }
+        return SUCCESS;
+    }
+    SGLOGE("caller no permission");
+    return NO_PERMISSION;
 }
 
 bool DataCollectManagerService::WriteRemoteFileToLocal(const SecurityGuard::SecurityConfigUpdateInfo &info,
@@ -543,19 +520,9 @@ bool DataCollectManagerService::WriteRemoteFileToLocal(const SecurityGuard::Secu
 int32_t DataCollectManagerService::ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &info)
 {
     SGLOGI("enter ConfigUpdate.");
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
-    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
-        SGLOGE("caller no permission");
-        return NO_PERMISSION;
-    }
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
-    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
-        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
-            SGLOGE("not system app no permission");
-            return NO_SYSTEMCALL;
-        }
+    int32_t code = IsApiHasPermission("ConfigUpdate");
+    if (code != SUCCESS) {
+        return code;
     }
     std::string realPath = CONFIG_ROOT_PATH + "tmp/" + info.GetFileName();
     SGLOGI("config file is %{public}s, fd is %{public}d", realPath.c_str(), info.GetFd());

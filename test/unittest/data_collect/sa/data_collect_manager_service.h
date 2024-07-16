@@ -67,6 +67,7 @@ private:
     static bool QueryEventByRuler(sptr<ISecurityEventQueryCallback> proxy,
         SecurityCollector::SecurityEventRuler ruler);
     bool WriteRemoteFileToLocal(const SecurityGuard::SecurityConfigUpdateInfo &info, const std::string &realPath);
+    int32_t IsApiHasPermission(const std::string &api);
     std::mutex mutex_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
 };
