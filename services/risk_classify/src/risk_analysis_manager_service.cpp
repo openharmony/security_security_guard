@@ -41,8 +41,12 @@ REGISTER_SYSTEM_ABILITY_BY_ID(RiskAnalysisManagerService, RISK_ANALYSIS_MANAGER_
 
 namespace {
     constexpr int32_t TIMEOUT_REPLY = 500;
-    constexpr const char* PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
+    constexpr const char* REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
+    constexpr const char* QUERY_SECURITY_MODEL_RESULT_PERMISSION = "ohos.permission.QUERY_SECURITY_MODEL_RESULT";
     const std::vector<uint32_t> MODELIDS = { 3001000000, 3001000001, 3001000002, 3001000005, 3001000006, 3001000007 };
+    const std::unordered_map<std::string, std::vector<std::string>> g_apiPermissionsMap {
+        {"RequestSecurityModelResult", {REQUEST_PERMISSION, QUERY_SECURITY_MODEL_RESULT_PERMISSION}},
+    };
 }
 
 RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnCreate)
@@ -78,16 +82,22 @@ void RiskAnalysisManagerService::OnStop()
 {
 }
 
-int32_t RiskAnalysisManagerService::RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
-    const std::string &param, const sptr<IRemoteObject> &callback)
+int32_t RiskAnalysisManagerService::IsApiHasPermission(const std::string &api)
 {
-    SGLOGD("%{public}s", __func__);
+    if (g_apiPermissionsMap.count(api) == 0) {
+        SGLOGE("api not in map");
+        return FAILED;
+    }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, PERMISSION);
-    if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
+    if (std::none_of(g_apiPermissionsMap.at(api).cbegin(), g_apiPermissionsMap.at(api).cend(),
+        [callerToken](const std::string &per) {
+        int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, per);
+        return code == AccessToken::PermissionState::PERMISSION_GRANTED;
+    })) {
         SGLOGE("caller no permission");
         return NO_PERMISSION;
     }
+
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
     if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
         uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
@@ -96,6 +106,17 @@ int32_t RiskAnalysisManagerService::RequestSecurityModelResult(const std::string
             return NO_SYSTEMCALL;
         }
     }
+    return SUCCESS;
+}
+
+int32_t RiskAnalysisManagerService::RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
+    const std::string &param, const sptr<IRemoteObject> &callback)
+{
+    SGLOGD("%{public}s", __func__);
+    int32_t ret = IsApiHasPermission("RequestSecurityModelResult");
+    if (ret != SUCCESS) {
+        return ret;
+    }
     ClassifyEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
@@ -103,7 +124,6 @@ int32_t RiskAnalysisManagerService::RequestSecurityModelResult(const std::string
     auto future = promise->get_future();
     PushRiskAnalysisTask(modelId, param, promise);
     std::chrono::milliseconds span(TIMEOUT_REPLY);
-    ErrorCode ret;
     std::string result{};
     if (future.wait_for(span) == std::future_status::timeout) {
         SGLOGE("wait for result timeout");

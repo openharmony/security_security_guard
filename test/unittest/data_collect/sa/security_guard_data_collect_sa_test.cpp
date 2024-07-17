@@ -69,6 +69,7 @@ void SecurityGuardDataCollectSaTest::TearDownTestCase()
 {
     DataFormat::DelInterface();
     AccessToken::AccessTokenKit::DelInterface();
+    AccessToken::TokenIdKit::DelInterface();
 }
 
 void SecurityGuardDataCollectSaTest::SetUp()
@@ -342,7 +343,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_ValidConditions
 HWTEST_F(SecurityGuardDataCollectSaTest, OnAddSystemAbility_RiskAnalysisManagerSaId, TestSize.Level1)
 {
     std::vector<int64_t> whiteList{};
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetAllEventIds()).WillOnce(Return(whiteList));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     service.OnAddSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID, "deviceId");
 }
@@ -360,7 +360,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_NoPermission, TestSiz
     std::string time = "2022-01-01";
     std::string content = "content";
 
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillRepeatedly(
         Return(AccessToken::PermissionState::PERMISSION_DENIED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.RequestDataSubmit(eventId, version, time, content);
@@ -462,7 +462,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Subscribe01, TestSize.Level1)
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
-        .WillOnce(Return(AccessToken::PermissionState::PERMISSION_DENIED));
+        .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_DENIED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.Subscribe(subscribeInfo, obj);
     EXPECT_EQ(result, NO_PERMISSION);
@@ -474,7 +474,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Unsubscribe01, TestSize.Level1)
     sptr<MockRemoteObject> mockObj(new (std::nothrow) MockRemoteObject());
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
-        .WillOnce(Return(AccessToken::PermissionState::PERMISSION_DENIED));
+        .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_DENIED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.Unsubscribe(mockObj);
     EXPECT_EQ(result, NO_PERMISSION);
@@ -795,7 +795,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd09
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     data.WriteRemoteObject(obj);
 
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillRepeatedly(
         Return(AccessToken::PermissionState::PERMISSION_DENIED));
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -1060,7 +1060,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent, TestSize.Level1)
     std::vector<SecurityCollector::SecurityEventRuler> rules {};
     rules.emplace_back(rule);
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillRepeatedly(
         Return(AccessToken::PermissionState::PERMISSION_DENIED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.QuerySecurityEvent(rules, obj);
@@ -1106,7 +1106,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart01, TestSize.Level1)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo {};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillRepeatedly(
         Return(AccessToken::PermissionState::PERMISSION_DENIED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.CollectorStart(subscribeInfo, obj);
@@ -1164,7 +1164,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop01, TestSize.Level1)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo {};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillRepeatedly(
         Return(AccessToken::PermissionState::PERMISSION_DENIED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.CollectorStop(subscribeInfo, obj);

@@ -46,6 +46,9 @@ private:
     ~SecurityGuardSdkAdaptor() = delete;
     static std::map<std::shared_ptr<SecurityCollector::ICollectorSubscriber>,
         sptr<AcquireDataManagerCallbackService>> subscribers_;
+    static sptr<IDataCollectManager> LoadDataCollectManageService();
+    static sptr<IRemoteObject> object_;
+    static std::mutex objMutex_;
 };
 } // OHOS::Security::SecurityGuard
 
