@@ -38,6 +38,7 @@ public:
 
 private:
     void PushRiskAnalysisTask(uint32_t modelId, std::string param, std::shared_ptr<std::promise<std::string>> promise);
+    int32_t IsApiHasPermission(const std::string &api);
 };
 } // namespace OHOS::Security::SecurityGuard
 
