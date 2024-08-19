@@ -83,7 +83,7 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
     const sptr<IRemoteObject> &callback)
 {
     Event event = subscribeInfo.GetEvent();
-    LOGI("in subscribe, subscribinfo: duration:%{public}" PRId64 ", isNotify:%{public}d, eventid:%{public}" PRId64 ", \n"
+    LOGI("in subscribe, subscribinfo: duration:%{public}" PRId64 ", isNotify:%{public}d, eventid:%{public}" PRId64 ",\n"
         "version:%{public}s, extra:%{public}s", subscribeInfo.GetDuration(), (int)subscribeInfo.IsNotify(),
         event.eventId, event.version.c_str(), event.extra.c_str());
     int32_t ret = HasPermission(REPORT_PERMISSION);
