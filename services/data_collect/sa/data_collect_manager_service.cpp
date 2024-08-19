@@ -53,7 +53,7 @@ namespace {
     constexpr int32_t TWO_ARGS = 2;
     constexpr int32_t TIMEOUT_REPLY = 10000;
     const std::string REPORT_PERMISSION = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
-    const std::string REPORT_PERMISSION_NEW = "ohos.permission.REPORT_SECURITY_INFO";
+    const std::string REPORT_PERMISSION_NEW = "ohos.permission.REPORT_SECURITY_EVENT";
     const std::string REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
     const std::string MANAGE_CONFIG_PERMISSION = "ohos.permission.MANAGE_SECURITY_GUARD_CONFIG";
     const std::string QUERY_SECURITY_EVENT_PERMISSION = "ohos.permission.QUERY_SECURITY_EVENT";
