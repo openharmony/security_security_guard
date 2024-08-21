@@ -498,7 +498,7 @@ bool DataCollectManagerService::WriteRemoteFileToLocal(const SecurityGuard::Secu
     }
     auto buffer = std::make_unique<char []>(CFG_FILE_BUFF_SIZE);
     if (buffer == nullptr) {
-         SGLOGE("new fail");
+        SGLOGE("new fail");
         return NULL_OBJECT;
     }
     int offset = -1;
