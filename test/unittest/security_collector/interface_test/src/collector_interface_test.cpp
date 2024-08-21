@@ -193,7 +193,7 @@ HWTEST_F(CollectorInterfaceTest, UnSubscribe002, testing::ext::TestSize.Level1)
         new(std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
     manager.eventListeners_.insert({subscriber, callback});
     int ret = manager.Unsubscribe(subscriber);
-    EXPECT_EQ(ret, SecurityCollector::BAD_PARAM);
+    EXPECT_EQ(ret, SecurityCollector::NO_PERMISSION);
 }
 
 HWTEST_F(CollectorInterfaceTest, UnSubscribe003, testing::ext::TestSize.Level1)
