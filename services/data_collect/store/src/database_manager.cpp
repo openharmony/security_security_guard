@@ -57,12 +57,13 @@ int DatabaseManager::InsertEvent(uint32_t source, SecEvent& event)
         }
         SGLOGD("risk event insert, eventId=%{public}" PRId64 "", event.eventId);
         // Check whether the upper limit is reached.
+        DbChanged(IDbListener::INSERT, event);
+        std::lock_guard<std::mutex> lock(delMutex_);
         int64_t count = RiskEventRdbHelper::GetInstance().CountEventByEventId(event.eventId);
         if (count >= config.storageRomNums) {
             (void) RiskEventRdbHelper::GetInstance().DeleteOldEventByEventId(event.eventId,
                 count + 1 - config.storageRomNums);
         }
-        DbChanged(IDbListener::INSERT, event);
         return RiskEventRdbHelper::GetInstance().InsertEvent(event);
     }
 
