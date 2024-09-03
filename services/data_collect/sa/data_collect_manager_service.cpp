@@ -496,16 +496,20 @@ bool DataCollectManagerService::WriteRemoteFileToLocal(const SecurityGuard::Secu
         SGLOGE("open file fail reason %{public}s", strerror(errno));
         return FAILED;
     }
-    char buffer[CFG_FILE_BUFF_SIZE] = {0};
+    auto buffer = std::make_unique<char []>(CFG_FILE_BUFF_SIZE);
+    if (buffer == nullptr) {
+        SGLOGE("new fail");
+        return NULL_OBJECT;
+    }
     int offset = -1;
-    while ((offset = read(outputFd, buffer, sizeof(buffer))) > 0) {
+    while ((offset = read(outputFd, buffer.get(), sizeof(buffer))) > 0) {
         if (offset > CFG_FILE_MAX_SIZE || offset == 0) {
             close(outputFd);
             close(inputFd);
             SGLOGE("file is empty or too large, len =  %{public}d", offset);
             return BAD_PARAM;
         }
-        if (write(inputFd, buffer, offset) < 0) {
+        if (write(inputFd, buffer.get(), offset) < 0) {
             close(inputFd);
             close(outputFd);
             SGLOGE("write file to the tmp dir failed");
@@ -517,6 +521,7 @@ bool DataCollectManagerService::WriteRemoteFileToLocal(const SecurityGuard::Secu
     close(outputFd);
     return SUCCESS;
 }
+
 int32_t DataCollectManagerService::ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &info)
 {
     SGLOGI("enter ConfigUpdate.");

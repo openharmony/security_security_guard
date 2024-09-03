@@ -48,6 +48,7 @@ public:
 
 private:
     std::mutex mutex_;
+    std::mutex delMutex_;
     std::unordered_map<int64_t, std::set<std::shared_ptr<IDbListener>>> listenerMap_;
     std::string deviceId_;
     void DbChanged(int32_t optType, const SecEvent &event);
