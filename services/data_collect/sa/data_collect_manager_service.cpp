@@ -14,39 +14,38 @@
  */
 
 #include "data_collect_manager_service.h"
-
+#include <cstdio>
 #include <thread>
 #include <vector>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <cinttypes>
 #include <unistd.h>
-
+#include <unordered_set>
 #include "accesstoken_kit.h"
 #include "tokenid_kit.h"
 #include "ipc_skeleton.h"
 #include "string_ex.h"
-
+#include "directory_ex.h"
 #include "acquire_data_subscribe_manager.h"
 #include "bigdata.h"
 #include "collector_manager.h"
 #include "config_data_manager.h"
 #include "data_collect_manager_callback_proxy.h"
+#include "data_collect_manager.h"
 #include "data_format.h"
 #include "database_manager.h"
 #include "data_collection.h"
-#include "hiview_collector.h"
-#include "risk_collect_define.h"
+#include "model_cfg_marshalling.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 #include "system_ability_definition.h"
-#include "task_handler.h"
+#include "ffrt.h"
 #include "config_manager.h"
 #include "risk_event_rdb_helper.h"
-#include "model_cfg_marshalling.h"
 #include "config_subscriber.h"
-
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
@@ -61,13 +60,20 @@ namespace {
     constexpr int32_t CFG_FILE_BUFF_SIZE = 1 * 1024 * 1024 + 1;
     const std::unordered_map<std::string, std::vector<std::string>> g_apiPermissionsMap {
         {"RequestDataSubmit", {REPORT_PERMISSION, REPORT_PERMISSION_NEW}},
-        {"QuerySecurityEvent", {REPORT_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
+        {"QuerySecurityEvent", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
         {"CollectorStart", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
         {"CollectorStop", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
         {"Subscribe", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
         {"UnSubscribe", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
-        {"ConfigUpdate", {MANAGE_CONFIG_PERMISSION}}
+        {"ConfigUpdate", {MANAGE_CONFIG_PERMISSION}},
+        {"QuerySecurityEventConfig", {MANAGE_CONFIG_PERMISSION}},
     };
+
+    const std::string TRUST_LIST_FILE_PATH = "/system/etc/config_update_trust_list.json";
+    std::unordered_set<std::string> g_configCacheFilesSet;
+    constexpr uint32_t FINISH = 0;
+    constexpr uint32_t CONTINUE = 1;
+    constexpr size_t MAX_DISTRIBUTE_LENS = 100;
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DataCollectManagerService, DATA_COLLECT_MANAGER_SA_ID, true);
@@ -81,10 +87,6 @@ DataCollectManagerService::DataCollectManagerService(int32_t saId, bool runOnCre
 void DataCollectManagerService::OnStart()
 {
     SGLOGI("%{public}s", __func__);
-    if (!Publish(this)) {
-        SGLOGE("Publish error");
-        return;
-    }
     DatabaseManager::GetInstance().Init(); // Make sure the database is ready
 
     AddSystemAbilityListener(RISK_ANALYSIS_MANAGER_SA_ID);
@@ -105,6 +107,10 @@ void DataCollectManagerService::OnStart()
         }
     }
     SecurityCollector::DataCollection::GetInstance().SecurityGuardSubscribeCollector(onStartEventList);
+    if (!Publish(this)) {
+        SGLOGE("Publish error");
+        return;
+    }
 }
 
 void DataCollectManagerService::OnStop()
@@ -156,6 +162,7 @@ void DataCollectManagerService::DumpEventInfo(int fd, int64_t eventId)
 int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
     std::string &content)
 {
+    SGLOGD("enter DataCollectManagerService RequestDataSubmit");
     int32_t ret = IsApiHasPermission("RequestDataSubmit");
     if (ret != SUCCESS) {
         return ret;
@@ -171,13 +178,13 @@ int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::strin
         .date = time,
         .content = content
     };
-    TaskHandler::Task task = [event] () mutable {
+    auto task = [event] () mutable {
         int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, event);
         if (code != SUCCESS) {
             SGLOGE("insert event error, %{public}d", code);
         }
     };
-    TaskHandler::GetInstance()->AddTask(task);
+    ffrt::submit(task);
     return SUCCESS;
 }
 
@@ -233,7 +240,7 @@ std::vector<SecEvent> DataCollectManagerService::GetSecEventsFromConditions(Requ
 void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &object,
     std::string conditions, std::string devId, std::shared_ptr<std::promise<int32_t>> promise)
 {
-    TaskHandler::Task task = [object, conditions, devId, promise] () mutable {
+    auto task = [object, conditions, devId, promise] () mutable {
         auto proxy = iface_cast<DataCollectManagerCallbackProxy>(object);
         if (proxy == nullptr) {
             promise->set_value(0);
@@ -250,16 +257,16 @@ void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &o
         }
 
         std::vector<SecEvent> events = GetSecEventsFromConditions(reqCondition);
-        int32_t curIndex = 0;
-        int32_t lastIndex = curIndex + MAX_DISTRIBUTE_LENS;
-        auto maxIndex = static_cast<int32_t>(events.size());
+        size_t curIndex = 0;
+        size_t lastIndex = curIndex + MAX_DISTRIBUTE_LENS;
+        size_t maxIndex = events.size();
         promise->set_value(maxIndex);
-        SGLOGI("events size=%{public}d", maxIndex);
+        SGLOGI("events size=%{public}zu", maxIndex);
         std::vector<SecEvent> dispatchVec;
         while (lastIndex < maxIndex) {
             dispatchVec.assign(events.begin() + curIndex, events.begin() + lastIndex);
             std::string dispatch = nlohmann::json(dispatchVec).dump();
-            SGLOGD("dispatch size=%{public}d", (int)dispatch.size());
+            SGLOGD("dispatch size=%{public}zu", dispatch.size());
             (void) proxy->ResponseRiskData(devId, dispatch, CONTINUE);
             curIndex = lastIndex;
             lastIndex = curIndex + MAX_DISTRIBUTE_LENS;
@@ -271,7 +278,29 @@ void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &o
         (void) proxy->ResponseRiskData(devId, dispatch, FINISH);
         SGLOGI("ResponseRiskData FINISH");
     };
-    TaskHandler::GetInstance()->AddTask(task);
+    ffrt::submit(task);
+}
+
+bool DataCollectManagerService::GetSecurityEventConfig(std::vector<int64_t>& eventIdList)
+{
+    std::string result;
+    if (DataCollectManager::GetInstance().QuerySecurityEventConfig(result) != SUCCESS) {
+        return false;
+    }
+    nlohmann::json jsonObj = nlohmann::json::parse(result, nullptr, false);
+    if (jsonObj.is_discarded() || !jsonObj.is_array()) {
+        SGLOGE("json is discarded or not array");
+        return false;
+    }
+    for (const auto& item : jsonObj) {
+        if (!item.contains("eventId") || !item["eventId"].is_number()) {
+            SGLOGE("json item no eventId");
+            return false;
+        }
+        int64_t eventId = item["eventId"].get<int64_t>();
+        eventIdList.emplace_back(eventId);
+    }
+    return true;
 }
 
 void DataCollectManagerService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
@@ -307,7 +336,7 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     event.time = SecurityGuardUtils::GetDate();
     event.eventId = subscribeInfo.GetEvent().eventId;
     event.ret = ret;
-    SGLOGI("DataCollectManagerService, InsertSubscribeRecord eventId=%{public}" PRId64 "", event.eventId);
+    SGLOGI("DataCollectManagerService, InsertSubscribeRecord eventId=%{public}" PRId64, event.eventId);
     BigData::ReportSgSubscribeEvent(event);
     return ret;
 }
@@ -339,7 +368,7 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
     EventCfg config;
     bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(ruler.GetEventId(), config);
     if (!isSuccess) {
-        SGLOGE("GetEventConfig error");
+        SGLOGE("GetEventConfig error, eventId is 0x%{public}" PRIx64, ruler.GetEventId());
         return true;
     }
     std::vector<SecurityCollector::SecurityEvent> replyEvents;
@@ -349,7 +378,6 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
         int32_t code = SecurityCollector::CollectorManager::GetInstance().QuerySecurityEvent(
             {ruler}, replyEvents);
         if (code != SUCCESS) {
-            proxy->OnError("QuerySecurityEvent failed");
             return false;
         }
         proxy->OnQuery(replyEvents);
@@ -363,7 +391,7 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
         }
         std::transform(events.begin(), events.end(),
             std::back_inserter(replyEvents), [] (SecEvent event) {
-            return SecurityCollector::SecurityEvent(event.eventId, event.version, event.content);
+            return SecurityCollector::SecurityEvent(event.eventId, event.version, event.content, event.date);
         });
         proxy->OnQuery(replyEvents);
     }
@@ -373,7 +401,7 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
 int32_t DataCollectManagerService::QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
     const sptr<IRemoteObject> &callback)
 {
-    SGLOGE("enter QuerySecurityEvent");
+    SGLOGI("enter DataCollectManagerService QuerySecurityEvent");
     int32_t ret = IsApiHasPermission("QuerySecurityEvent");
     if (ret != SUCCESS) {
         return ret;
@@ -384,22 +412,29 @@ int32_t DataCollectManagerService::QuerySecurityEvent(std::vector<SecurityCollec
         return NULL_OBJECT;
     }
 
-    TaskHandler::Task task = [proxy, rulers] {
-        if (std::any_of(rulers.begin(), rulers.end(), [proxy] (auto const &ruler) {
-                return !QueryEventByRuler(proxy, ruler);
-            })) {
+    auto task = [proxy, rulers] {
+        std::string errEventIds;
+        for (auto &ruler : rulers) {
+            if (!QueryEventByRuler(proxy, ruler)) {
+                errEventIds.append(std::to_string(ruler.GetEventId()) + " ");
+            }
+        }
+        if (!errEventIds.empty()) {
+            std::string message = "QuerySecurityEvent " + errEventIds + "failed";
+            SGLOGE("QuerySecurityEvent failed");
+            proxy->OnError(message);
             return;
         }
         proxy->OnComplete();
     };
 
-    TaskHandler::GetInstance()->AddTask(task);
+    ffrt::submit(task);
     return SUCCESS;
 }
 
 void DataCollectManagerService::SubscriberDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
 {
-    SGLOGE("enter");
+    SGLOGI("enter OnRemoteDied");
     if (remote == nullptr) {
         SGLOGE("remote object is nullptr");
         return;
@@ -419,13 +454,13 @@ void DataCollectManagerService::SubscriberDeathRecipient::OnRemoteDied(const wpt
     if (object->IsProxyObject() && service->deathRecipient_ != nullptr) {
         object->RemoveDeathRecipient(service->deathRecipient_);
     }
-    SGLOGE("end");
+    SGLOGI("end OnRemoteDied");
 }
 
 int32_t DataCollectManagerService::CollectorStart(
     const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &callback)
 {
-    SGLOGI("enter CollectorStart.");
+    SGLOGI("enter DataCollectManagerService CollectorStart.");
     int32_t code = IsApiHasPermission("CollectorStart");
     if (code != SUCCESS) {
         return code;
@@ -441,7 +476,7 @@ int32_t DataCollectManagerService::CollectorStart(
 int32_t DataCollectManagerService::CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
     const sptr<IRemoteObject> &callback)
 {
-    SGLOGI("enter CollectorStop.");
+    SGLOGI("enter DataCollectManagerService CollectorStop.");
     int32_t code = IsApiHasPermission("CollectorStop");
     if (code != SUCCESS) {
         return code;
@@ -490,23 +525,23 @@ bool DataCollectManagerService::WriteRemoteFileToLocal(const SecurityGuard::Secu
         SGLOGE("dup fd fail reason %{public}s", strerror(errno));
         return FAILED;
     }
-    int32_t inputFd = open(realPath.c_str(), O_WRONLY | O_NOFOLLOW | O_CLOEXEC | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+    int32_t inputFd = open(realPath.c_str(), O_WRONLY | O_NOFOLLOW | O_CLOEXEC | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
     if (inputFd < 0) {
         close(outputFd);
         SGLOGE("open file fail reason %{public}s", strerror(errno));
         return FAILED;
     }
-    auto buffer = std::make_unique<char []>(CFG_FILE_BUFF_SIZE);
+    auto buffer = std::make_unique<char[]> (CFG_FILE_BUFF_SIZE);
     if (buffer == nullptr) {
         SGLOGE("new fail");
         return NULL_OBJECT;
     }
     int offset = -1;
-    while ((offset = read(outputFd, buffer.get(), sizeof(buffer))) > 0) {
-        if (offset > CFG_FILE_MAX_SIZE || offset == 0) {
+    while ((offset = read(outputFd, buffer.get(), CFG_FILE_BUFF_SIZE)) > 0) {
+        if (offset > CFG_FILE_MAX_SIZE) {
             close(outputFd);
             close(inputFd);
-            SGLOGE("file is empty or too large, len =  %{public}d", offset);
+            SGLOGE("file is empty or too large, len = %{public}d", offset);
             return BAD_PARAM;
         }
         if (write(inputFd, buffer.get(), offset) < 0) {
@@ -522,30 +557,116 @@ bool DataCollectManagerService::WriteRemoteFileToLocal(const SecurityGuard::Secu
     return SUCCESS;
 }
 
+bool DataCollectManagerService::ParseTrustListFile(const std::string &trustListFile)
+{
+    if (trustListFile.empty()) {
+        SGLOGE("path is empty");
+        return false;
+    }
+    std::ifstream stream(trustListFile, std::ios::in);
+    if (!stream.is_open()) {
+        SGLOGE("stream error");
+        return false;
+    }
+    stream.seekg(0, std::ios::end);
+    std::ios::pos_type cfgFileMaxSize = 1 * 1024 * 1024;
+    std::ios::pos_type len = stream.tellg();
+    if (len == 0 || len > cfgFileMaxSize) {
+        SGLOGE("stream is empty or too large");
+        stream.close();
+        return false;
+    }
+    stream.seekg(0, std::ios_base::beg);
+    nlohmann::json jsonObj = nlohmann::json::parse(stream, nullptr, false);
+    stream.close();
+    if (jsonObj.is_discarded()) {
+        SGLOGE("json is discarded");
+        return false;
+    }
+    
+    if (!jsonObj.contains("trust_list_config") || !jsonObj["trust_list_config"].is_array()) {
+        return false;
+    }
+ 
+    for (const auto &ele : jsonObj["trust_list_config"]) {
+        if (!ele.contains("name")) {
+            return false;
+        }
+        g_configCacheFilesSet.emplace(ele["name"]);
+    }
+ 
+    return true;
+}
+
 int32_t DataCollectManagerService::ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &info)
 {
-    SGLOGI("enter ConfigUpdate.");
+    SGLOGI("enter DataCollectManagerService ConfigUpdate.");
     int32_t code = IsApiHasPermission("ConfigUpdate");
     if (code != SUCCESS) {
         return code;
     }
-    std::string realPath = CONFIG_ROOT_PATH + "tmp/" + info.GetFileName();
-    SGLOGI("config file is %{public}s, fd is %{public}d", realPath.c_str(), info.GetFd());
-    auto it = std::find_if(CONFIG_CACHE_FILES.begin(), CONFIG_CACHE_FILES.end(),
-        [realPath](const std::string &path) { return path == realPath; });
-    if (it ==  CONFIG_CACHE_FILES.end()) {
-        SGLOGE("file name err");
+    if (!ParseTrustListFile(TRUST_LIST_FILE_PATH)) {
         return BAD_PARAM;
     }
-    int32_t ret = WriteRemoteFileToLocal(info, realPath);
+    if (g_configCacheFilesSet.empty() || !g_configCacheFilesSet.count(info.GetFileName())) {
+        return BAD_PARAM;
+    }
+    const std::string &realPath = CONFIG_ROOT_PATH + "tmp/" + info.GetFileName();
+    SGLOGI("config file is %{public}s, fd is %{public}d", realPath.c_str(), info.GetFd());
+    std::string tmpPath = realPath + ".t";
+    int32_t ret = WriteRemoteFileToLocal(info, tmpPath);
     if (ret != SUCCESS) {
         SGLOGE("write remote file to local fail");
         return ret;
     }
+    if (rename(tmpPath.c_str(), realPath.c_str()) != 0) {
+        SGLOGE("remote file rename fail");
+        (void)unlink(tmpPath.c_str());
+        return FAILED;
+    }
+    (void)unlink(tmpPath.c_str());
+ 
     if (!ConfigSubscriber::UpdateConfig(realPath)) {
         SGLOGE("update config fail");
         return FAILED;
     }
     return SUCCESS;
 }
+
+int32_t DataCollectManagerService::QueryEventConfig(std::string &result)
+{
+    SGLOGI("Start DataCollectManagerService::QueryEventConfig");
+    std::vector<EventCfg> eventConfigs = ConfigDataManager::GetInstance().GetAllEventConfigs();
+    nlohmann::json resultObj = nlohmann::json::array();
+    for (const auto& event : eventConfigs) {
+        nlohmann::json jObject;
+        jObject["eventId"] = event.eventId;
+        jObject["eventName"] = event.eventName;
+        jObject["version"] = event.version;
+        jObject["eventType"] = event.eventType;
+        jObject["collectOnStart"] = event.collectOnStart;
+        jObject["dataSensitivityLevel"] = event.dataSensitivityLevel;
+        jObject["storageRamNums"] = event.storageRamNums;
+        jObject["storageRomNums"] = event.storageRomNums;
+        jObject["storageTime"] = event.storageTime;
+        jObject["owner"] = event.owner;
+        jObject["source"] = event.source;
+        jObject["dbTable"] = event.dbTable;
+        jObject["prog"] = event.prog;
+        resultObj.push_back(jObject);
+    }
+    result = resultObj.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
+    return SUCCESS;
+}
+
+int32_t DataCollectManagerService::QuerySecurityEventConfig(std::string &result)
+{
+    SGLOGI("enter QuerySecurityEventConfig");
+    int32_t ret = IsApiHasPermission("QuerySecurityEventConfig");
+    if (ret != SUCCESS) {
+        return ret;
+    }
+    return QueryEventConfig(result);
+}
+
 }

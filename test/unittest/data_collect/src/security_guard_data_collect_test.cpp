@@ -14,7 +14,7 @@
  */
 
 #include "security_guard_data_collect_test.h"
-
+#include <fstream>
 #include "directory_ex.h"
 #include "file_ex.h"
 #include "gmock/gmock.h"
@@ -484,4 +484,101 @@ HWTEST_F(SecurityGuardDataCollectTest, TestRiskEventRdbHelperMock012, TestSize.L
     ret = helper.GetResultSetTableInfo(resultSetMock, table);
     EXPECT_EQ(ret, SUCCESS);
 }
+
+HWTEST_F(SecurityGuardDataCollectTest, StrToULL001, TestSize.Level1)
+{
+    std::string test = "abc";
+    unsigned long long value = 0;
+    EXPECT_FALSE(SecurityGuardUtils::StrToULL(test, value));
+    test = "1844674407370955161511111";
+    EXPECT_FALSE(SecurityGuardUtils::StrToULL(test, value));
+    test = "abc111";
+    EXPECT_FALSE(SecurityGuardUtils::StrToULL(test, value));
+    test = "111aaa";
+    EXPECT_FALSE(SecurityGuardUtils::StrToULL(test, value));
+    test = "aaa";
+    EXPECT_FALSE(SecurityGuardUtils::StrToULL(test, value));
+    test = "111";
+    EXPECT_TRUE(SecurityGuardUtils::StrToULL(test, value));
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, StrToLL001, TestSize.Level1)
+{
+    std::string test = "abc";
+    long long value = 0;
+    int32_t dec = 10;
+    EXPECT_FALSE(SecurityGuardUtils::StrToLL(test, value, dec));
+    test = "1844674407370955161511111";
+    EXPECT_FALSE(SecurityGuardUtils::StrToLL(test, value, dec));
+    test = "abc111";
+    EXPECT_FALSE(SecurityGuardUtils::StrToLL(test, value, dec));
+    test = "111aaa";
+    EXPECT_FALSE(SecurityGuardUtils::StrToLL(test, value, dec));
+    test = "aaa";
+    EXPECT_FALSE(SecurityGuardUtils::StrToLL(test, value, dec));
+    test = "111";
+    EXPECT_TRUE(SecurityGuardUtils::StrToLL(test, value, dec));
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, StrToLL002, TestSize.Level1)
+{
+    std::string test = "zzz";
+    long long value = 0;
+    int32_t hec = 16;
+    EXPECT_FALSE(SecurityGuardUtils::StrToLL(test, value, hec));
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, StrToU32001, TestSize.Level1)
+{
+    std::string test = "123";
+    uint32_t value = 0;
+    EXPECT_TRUE(SecurityGuardUtils::StrToU32(test, value));
+    test = "1844674407370955161511111";
+    EXPECT_FALSE(SecurityGuardUtils::StrToU32(test, value));
+    test = "111bac";
+    EXPECT_FALSE(SecurityGuardUtils::StrToU32(test, value));
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, StrToI64001, TestSize.Level1)
+{
+    std::string test = "123";
+    int64_t value = 0;
+    EXPECT_TRUE(SecurityGuardUtils::StrToI64(test, value));
+    test = "1844674407370955161511111";
+    EXPECT_FALSE(SecurityGuardUtils::StrToI64(test, value));
+    test = "-1844674407370955161511111";
+    EXPECT_FALSE(SecurityGuardUtils::StrToI64(test, value));
+    test = "111bac";
+    EXPECT_FALSE(SecurityGuardUtils::StrToI64(test, value));
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, StrToI64Hex001, TestSize.Level1)
+{
+    std::string test = "abc";
+    int64_t value = 0;
+    EXPECT_FALSE(SecurityGuardUtils::StrToI64Hex(test, value));
+    test = "1844674407370955161511111";
+    EXPECT_FALSE(SecurityGuardUtils::StrToI64Hex(test, value));
+    test = "-1844674407370955161511111";
+    EXPECT_FALSE(SecurityGuardUtils::StrToI64Hex(test, value));
+    test = "111bac";
+    EXPECT_FALSE(SecurityGuardUtils::StrToI64Hex(test, value));
+    test = "0x111";
+    EXPECT_TRUE(SecurityGuardUtils::StrToI64Hex(test, value));
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, TestCopyFile001, TestSize.Level1)
+{
+    const std::string CONFIG_CACHE_FILE = "${sg_root_dir}/oem_property/hos/security_guard_event.json";
+    const std::string CONFIG_UPTATE_FILE = "/data/service/el1/public/security_guard/security_guard_event.json";
+    std::ifstream src(CONFIG_CACHE_FILE, std::ios::binary);
+    EXPECT_FALSE(SecurityGuardUtils::CopyFile(CONFIG_CACHE_FILE, CONFIG_UPTATE_FILE));
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, TestGetDate001, TestSize.Level1)
+{
+    std::string date = SecurityGuardUtils::GetDate();
+    EXPECT_TRUE(!date.empty());
+}
+
 }

@@ -15,6 +15,7 @@
 #include "iservice_registry.h"
 #include "data_collect_manager.h"
 #include "security_event_ruler.h"
+#include "data_collect_manager_callback_service.h"
 #include "security_event_query_callback_service.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
@@ -48,5 +49,26 @@ int32_t DataCollectManager::QuerySecurityEvent(std::vector<SecurityCollector::Se
         return ret;
     }
     return 0;
+}
+
+int32_t DataCollectManager::QuerySecurityEventConfig(std::string &result)
+{
+    SGLOGI("Start DataCollectManager QuerySecurityEventConfig");
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return FAILED;
+    }
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    if (object == nullptr) {
+        SGLOGE("object is nullptr");
+        return FAILED;
+    }
+    auto proxy = iface_cast<IDataCollectManager>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return FAILED;
+    }
+    return proxy->QuerySecurityEventConfig(result);
 }
 }

@@ -19,9 +19,7 @@
 #include <mutex>
 #include <set>
 #include <unordered_map>
-
-#include "singleton.h"
-
+#include "security_event_info.h"
 #include "config_define.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -39,10 +37,10 @@ public:
     std::vector<int64_t> GetEventIds(uint32_t modelId);
     std::vector<int64_t> GetAllEventIds();
     std::vector<uint32_t> GetAllModelIds();
+    std::vector<EventCfg> GetAllEventConfigs();
     bool GetModelConfig(uint32_t modelId, ModelCfg &config);
     bool GetEventConfig(int64_t eventId, EventCfg &config);
     std::string GetTableFromEventId(int64_t eventId);
-    std::vector<AppInfo> GetAppInfosByName(const std::string &appName);
 private:
     std::unordered_map<uint32_t, std::set<int64_t>> modelToEventMap_;
     std::unordered_map<uint32_t, ModelCfg> modelMap_;

@@ -24,6 +24,7 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
 
   include_dirs = [
     "include",
+    "${sg_root_dir}/interfaces/inner_api/common/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/interfaces",
     "${sg_root_dir}/frameworks/common/json/include",
@@ -45,14 +46,15 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "${sg_root_dir}/services/config_manager/src/config_operator.cpp",
     "${sg_root_dir}/services/config_manager/src/config_subscriber.cpp",
     "${sg_root_dir}/services/config_manager/src/event_config.cpp",
-    "${sg_root_dir}/services/config_manager/src/global_app_config.cpp",
-    "${sg_root_dir}/services/config_manager/src/local_app_config.cpp",
     "${sg_root_dir}/services/config_manager/src/model_cfg_marshalling.cpp",
     "${sg_root_dir}/services/config_manager/src/model_config.cpp",
     "src/security_guard_config_manager_test.cpp",
   ]
 
-  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
+  deps = [
+    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
+    "//third_party/googletest:gmock",
+  ]
 
   external_deps = [
     "ability_base:base",
@@ -61,7 +63,6 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "c_utils:utils",
-    "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
@@ -78,7 +79,7 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     cfi_cross_dso = true
     blocklist = "${sg_root_dir}/cfi_blocklist.txt"
   }
-  stack_protector_ret = true
+  branch_protector_ret = "pac_ret"
 }
 
 ohos_unittest("AppInfoDatabseTest") {
@@ -103,14 +104,15 @@ ohos_unittest("AppInfoDatabseTest") {
   ]
 
   sources = [
-    "${sg_root_dir}/services/config_manager/src/app_info_rdb_helper.cpp",
-    "${sg_root_dir}/services/config_manager/src/config_database_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database.cpp",
     "${sg_root_dir}/services/data_collect/store/src/rdb_event_store_callback.cpp",
     "src/app_info_database_test.cpp",
   ]
 
-  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
+  deps = [
+    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
+    "//third_party/googletest:gmock",
+  ]
 
   external_deps = [
     "ability_base:base",
@@ -119,7 +121,6 @@ ohos_unittest("AppInfoDatabseTest") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "c_utils:utils",
-    "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
     "kv_store:distributeddata_inner",
@@ -135,7 +136,7 @@ ohos_unittest("AppInfoDatabseTest") {
     cfi_cross_dso = true
     blocklist = "${sg_root_dir}/cfi_blocklist.txt"
   }
-  stack_protector_ret = true
+  branch_protector_ret = "pac_ret"
 }
 
 group("unittest") {

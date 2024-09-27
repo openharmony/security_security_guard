@@ -28,15 +28,19 @@ constexpr int32_t REMAINDER_VALUE = 2;
 
 void OnRemoteRequestFuzzTest(const uint8_t* data, size_t size)
 {
+    if (data == nullptr || size < sizeof(uint32_t)) {
+        return;
+    }
+    size_t offset = 0;
+    uint32_t modelId = *(reinterpret_cast<const uint32_t *>(data + offset));
+    offset += sizeof(uint32_t);
     MessageParcel datas;
     MessageParcel reply;
     MessageOption option;
     datas.WriteInterfaceToken(IRiskAnalysisManager::GetDescriptor());
     if (size % REMAINDER_VALUE == 0) {
         // handle get security model result cmd
-        uint32_t modelId = static_cast<uint32_t>(size);
-        std::string deviceId(reinterpret_cast<const char *>(data), size);
-        datas.WriteString(deviceId);
+        std::string deviceId(reinterpret_cast<const char *>(data + offset), size - offset);
         datas.WriteUint32(modelId);
         ResultCallback func = [] (const std::string &devId, uint32_t modelId, const std::string &result) -> int32_t {
             SGLOGI("RiskAnalysisManagerCallbackService called");
@@ -48,7 +52,6 @@ void OnRemoteRequestFuzzTest(const uint8_t* data, size_t size)
         return;
     }
     // handle set model state cmd
-    uint32_t modelId = static_cast<uint32_t>(size);
     datas.WriteUint32(modelId);
     datas.WriteBool(size % REMAINDER_VALUE == 0);
     g_service.OnRemoteRequest(RiskAnalysisManagerStub::CMD_SET_MODEL_STATE, datas, reply, option);

@@ -13,4 +13,6 @@
 
 sg_root_dir = "//base/security/security_guard"
 fuzz_test_output_path = "security_guard/security_guard"
-security_guard_enable = "true"
+declare_args() {
+  security_guard_enable = true
+}

@@ -27,10 +27,12 @@ NapiSecurityEventQuerier::NapiSecurityEventQuerier(QuerySecurityEventContext *co
 
 NapiSecurityEventQuerier::~NapiSecurityEventQuerier()
 {
-    if (callbackContext_->threadId == getproctid()) {
-        napi_delete_reference(callbackContext_->env, callbackContext_->ref);
+    if (callbackContext_ != nullptr) {
+        if (callbackContext_->threadId == getproctid()) {
+            napi_delete_reference(callbackContext_->env, callbackContext_->ref);
+        }
+        delete callbackContext_;
     }
-    delete callbackContext_;
 };
 
 napi_value NapiSecurityEventQuerier::NapiGetNamedProperty(const napi_env env, const napi_value &object,
@@ -59,7 +61,7 @@ napi_value NapiSecurityEventQuerier::NapiCreateInt64(const napi_env env, int64_t
 {
     napi_value result = nullptr;
     napi_status status = napi_create_int64(env, value, &result);
-    SGLOGI("create napi value of int64 type, value is %{public}" PRId64 ".", value);
+    SGLOGI("create napi value of int64 type, value is %{public}" PRId64, value);
     if (status != napi_ok || result == nullptr) {
         SGLOGE("failed to create napi value of int64 type.");
     }
@@ -92,7 +94,11 @@ void NapiSecurityEventQuerier::RunCallback(QuerySecurityEventContext *context, C
         return;
     }
 
-    QuerySecurityEventContext *tmpContext = new QuerySecurityEventContext(context);
+    QuerySecurityEventContext *tmpContext = new (std::nothrow) QuerySecurityEventContext(context);
+    if (tmpContext == nullptr) {
+        SGLOGE("tmpContext new failed, no memory left.");
+        return;
+    }
     tmpContext->callback = callback;
     tmpContext->release = release;
     uv_work_t* work = new (std::nothrow) uv_work_t();
@@ -102,10 +108,7 @@ void NapiSecurityEventQuerier::RunCallback(QuerySecurityEventContext *context, C
         return;
     }
     work->data = reinterpret_cast<void *>(tmpContext);
-    uv_queue_work_with_qos(
-        loop,
-        work,
-        OnExecute,
+    uv_queue_work_with_qos(loop, work, OnExecute,
         [] (uv_work_t *work, int status) {
             SGLOGD("Begin uv work.");
             if (work == nullptr || work->data == nullptr) {
@@ -160,9 +163,11 @@ void NapiSecurityEventQuerier::OnQuery(const std::vector<SecurityCollector::Secu
                 napi_value eventId = NapiCreateInt64(env, napiEvents[i].GetEventId());
                 napi_value version = NapiCreateString(env, napiEvents[i].GetVersion().c_str());
                 napi_value content = NapiCreateString(env, napiEvents[i].GetContent().c_str());
+                napi_value timestamp = NapiCreateString(env, napiEvents[i].GetTimestamp().c_str());
                 napi_set_named_property(env, item, "eventId", eventId);
                 napi_set_named_property(env, item, "version", version);
                 napi_set_named_property(env, item, "content", content);
+                napi_set_named_property(env, item, "timestamp", timestamp);
                 status = napi_set_element(env, eventJsArray, i, item);
                 if (status != napi_ok) {
                     SGLOGE("napi_set_element failed, %{public}d", status);

@@ -19,6 +19,7 @@
 #include "nativetoken_kit.h"
 #include "securec.h"
 #include "token_setproc.h"
+#include "accesstoken_kit.h"
 #define private public
 #include "security_guard_define.h"
 #include "sg_collect_client.h"
@@ -53,6 +54,7 @@ void DataCollectKitTest::SetUpTestCase()
     };
     tokenId = GetAccessTokenId(&infoParams);
     SetSelfTokenID(tokenId);
+    AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
     string isEnforcing;
     LoadStringFromFile("/sys/fs/selinux/enforce", isEnforcing);
     if (isEnforcing.compare("1") == 0) {
@@ -223,5 +225,10 @@ HWTEST_F(DataCollectKitTest, DeathRecipient001, TestSize.Level1)
     SecurityGuard::SgCollectClientDeathRecipient recipient =
         SecurityGuard::SgCollectClientDeathRecipient();
     recipient.OnRemoteDied(nullptr);
+}
+
+HWTEST_F(DataCollectKitTest, ConfigUpdate001, TestSize.Level1)
+{
+    EXPECT_NE(SecurityGuardConfigUpdate(-1, "test"), SecurityGuard::SUCCESS);
 }
 }

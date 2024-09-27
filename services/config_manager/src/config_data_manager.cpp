@@ -14,9 +14,9 @@
  */
 
 #include "config_data_manager.h"
-
+#include <cinttypes>
 #include "security_guard_log.h"
-#include "app_info_rdb_helper.h"
+
 
 namespace OHOS::Security::SecurityGuard {
 ConfigDataManager &ConfigDataManager::GetInstance()
@@ -90,7 +90,7 @@ std::vector<int64_t> ConfigDataManager::GetAllEventIds()
     std::lock_guard<std::mutex> lock(eventMutex_);
     std::vector<int64_t> vector;
     for (const auto &entry : eventMap_) {
-        SGLOGD("eventId=%{public}" PRId64 "", entry.first);
+        SGLOGD("eventId=%{public}" PRId64, entry.first);
         vector.emplace_back(entry.first);
     }
     return vector;
@@ -103,6 +103,16 @@ std::vector<uint32_t> ConfigDataManager::GetAllModelIds()
     for (const auto &entry : modelMap_) {
         SGLOGD("modelId=%{public}u", entry.first);
         vector.emplace_back(entry.first);
+    }
+    return vector;
+}
+
+std::vector<EventCfg> ConfigDataManager::GetAllEventConfigs()
+{
+    std::lock_guard<std::mutex> lock(eventMutex_);
+    std::vector<EventCfg> vector;
+    for (const auto &entry : eventMap_) {
+        vector.emplace_back(entry.second);
     }
     return vector;
 }
@@ -132,13 +142,10 @@ bool ConfigDataManager::GetEventConfig(int64_t eventId, EventCfg &config)
 std::string ConfigDataManager::GetTableFromEventId(int64_t eventId)
 {
     std::lock_guard<std::mutex> lock(eventToTableMutex_);
+    if (eventToTableMap_.find(eventId) == eventToTableMap_.end()) {
+        SGLOGE("eventToTableMap_ did not find eventId=%{public}" PRId64, eventId);
+        return "";
+    }
     return eventToTableMap_[eventId];
-}
-
-std::vector<AppInfo> ConfigDataManager::GetAppInfosByName(const std::string &appName)
-{
-    std::vector<AppInfo> infos;
-    AppInfoRdbHelper::GetInstance().QueryAppInfosByName(appName, infos);
-    return infos;
 }
 } // OHOS::Security::SecurityGuard

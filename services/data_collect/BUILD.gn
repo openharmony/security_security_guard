@@ -14,55 +14,6 @@
 import("//base/security/security_guard/security_guard.gni")
 import("//build/ohos.gni")
 
-ohos_source_set("sg_uevent_listener_stamp") {
-  subsystem_name = "security"
-  part_name = "security_guard"
-
-  configs = [
-    "${sg_root_dir}/services/risk_classify:security_guard_model_configs",
-    "${sg_root_dir}/resource/config/build:coverage_flags",
-  ]
-
-  include_dirs = [
-    "${sg_root_dir}/services/risk_collect/include",
-    "${sg_root_dir}/frameworks/common/constants/include",
-    "${sg_root_dir}/frameworks/common/database/include",
-    "${sg_root_dir}/frameworks/common/log/include",
-    "${sg_root_dir}/services/config_manager/include",
-    "${sg_root_dir}/frameworks/common/task_handler/include",
-    "${sg_root_dir}/frameworks/common/json/include",
-    "${sg_root_dir}/frameworks/common/utils/include",
-    "${sg_root_dir}/services/data_collect/store/include",
-  ]
-
-  sources = [
-    "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
-    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
-    "${sg_root_dir}/services/risk_collect/src/data_format.cpp",
-  ]
-
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-  stack_protector_ret = true
-
-  deps = [ "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp" ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hdf_core:libhdf_ipc_adapter",
-    "hilog:libhilog",
-    "init:libbegetutil",
-    "json:nlohmann_json_static",
-    "relational_store:native_rdb",
-  ]
-}
-
 ohos_shared_library("sg_collect_service") {
   subsystem_name = "security"
   part_name = "security_guard"
@@ -80,10 +31,8 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/frameworks/common/interfaces",
     "${sg_root_dir}/services/bigdata/include",
     "${sg_root_dir}/services/config_manager/include",
-    "${sg_root_dir}/services/data_collect/collect/hiview",
     "${sg_root_dir}/services/data_collect/sa/include",
     "${sg_root_dir}/services/data_collect/store/include",
-    "${sg_root_dir}/services/risk_collect/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/json/include",
     "${sg_root_dir}/frameworks/common/task_handler/include",
@@ -91,17 +40,19 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/frameworks/common/utils/include",
     "${sg_root_dir}/services/security_collector/include",
+    "${sg_root_dir}/interfaces/inner_api/data_collect_manager/include",
   ]
 
   sources = [
+    "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/interfaces/inner_api/collector/src/security_collector_subscribe_info.cpp",
-    "${sg_root_dir}/services/data_collect/collect/hiview/hiview_collector.cpp",
-    "${sg_root_dir}/services/data_collect/collect/hiview/hiview_listener.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_subscribe_manager.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_service.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_stub.cpp",
+    "${sg_root_dir}/services/data_collect/sa/data_format.cpp",
     "${sg_root_dir}/services/data_collect/sa/security_event_query_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
@@ -119,23 +70,21 @@ ohos_shared_library("sg_collect_service") {
     cfi_cross_dso = true
     debug = false
   }
-  stack_protector_ret = true
+  branch_protector_ret = "pac_ret"
 
   deps = [
-    "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
+    "${sg_root_dir}/interfaces/inner_api/collect:libsg_collect_sdk",
     "${sg_root_dir}/interfaces/inner_api/collector:libsg_collector_sdk",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/data_collect:sg_collect_service_database",
-    "${sg_root_dir}/services/data_collect:sg_uevent_listener_stamp",
   ]
 
   external_deps = [
-    "ability_base:want",
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
-    "access_token:libtokenid_sdk",
     "c_utils:utils",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",
@@ -160,6 +109,7 @@ ohos_shared_library("sg_collect_service_database") {
     "${sg_root_dir}/frameworks/common/database/include",
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/services/data_collect/store/include",
+    "${sg_root_dir}/interfaces/inner_api/data_collect_manager/include",
   ]
 
   sources = [
@@ -175,12 +125,11 @@ ohos_shared_library("sg_collect_service_database") {
     cfi_cross_dso = true
     debug = false
   }
-  stack_protector_ret = true
+  branch_protector_ret = "pac_ret"
 
   deps = []
 
   external_deps = [
-    "c_utils:utils",
     "hilog:libhilog",
     "relational_store:native_rdb",
   ]

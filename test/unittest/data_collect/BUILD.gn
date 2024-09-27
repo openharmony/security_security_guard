@@ -22,11 +22,9 @@ ohos_unittest("data_collect_test") {
 
   include_dirs = [
     "include",
-    "${sg_root_dir}/services/data_collect/collect/hiview",
-    "${sg_root_dir}/services/config_manager/include",
-    "${sg_root_dir}/interfaces/inner_api/collect/include",
-    "${sg_root_dir}/interfaces/inner_api/collector/include",
+
     "${sg_root_dir}/frameworks/common/interfaces",
+    "${sg_root_dir}/services/config_manager/include",
     "${sg_root_dir}/services/bigdata/include",
     "${sg_root_dir}/services/data_collect/store/include",
     "${sg_root_dir}/services/risk_collect/include",
@@ -40,28 +38,26 @@ ohos_unittest("data_collect_test") {
     "${sg_root_dir}/services/security_collector/include",
     "${sg_root_dir}/interfaces/inner_api/collector/include",
     "${sg_root_dir}/interfaces/inner_api/common/include",
+    "${sg_root_dir}/interfaces/inner_api/collect/include",
   ]
 
   sources = [
-    "${sg_root_dir}/services/data_collect/collect/hiview/hiview_listener.cpp",
     "${sg_root_dir}/services/security_collector/src/collector_cfg_marshalling.cpp",
     "${sg_root_dir}/services/security_collector/src/data_collection.cpp",
     "${sg_root_dir}/services/security_collector/src/lib_loader.cpp",
-    "${sg_root_dir}/test/unittest/data_collect/src/hiview_listener_test.cpp",
   ]
 
   deps = [
-    "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/data_collect:sg_collect_service",
-    "${sg_root_dir}/services/data_collect:sg_uevent_listener_stamp",
   ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",
@@ -115,11 +111,11 @@ ohos_unittest("SecurityGuardDataCollectTest") {
     "src/security_guard_data_collect_test.cpp",
   ]
 
-  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
+  deps = [ "//third_party/googletest:gmock" ]
 
   external_deps = [
     "c_utils:utils",
-    "googletest:gmock",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
@@ -152,22 +148,24 @@ ohos_unittest("SecurityGuardDatabaseManagerTest") {
     "${sg_root_dir}/test/unittest/mock/device_manager",
     "${sg_root_dir}/test/unittest/mock/preferences_wrapper",
     "${sg_root_dir}/test/unittest/mock/rdb",
+    "${sg_root_dir}/services/config_manager/include",
   ]
 
   sources = [
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
+    "${sg_root_dir}/services/data_collect/sa/data_format.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
     "database_manager/security_guard_database_manager_test.cpp",
   ]
 
   deps = [
-    "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
+    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
     "c_utils:utils",
-    "googletest:gmock",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
@@ -203,9 +201,8 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "${sg_root_dir}/test/unittest/mock/preferences_wrapper",
     "${sg_root_dir}/test/unittest/mock/rdb",
     "${sg_root_dir}/services/security_collector/include",
-    "${sg_root_dir}/interfaces/inner_api/collector/include",
-    "${sg_root_dir}/services/config_manager/include",
     "${sg_root_dir}/interfaces/inner_api/common/include",
+    "${sg_root_dir}/services/config_manager/include",
   ]
 
   sources = [
@@ -224,19 +221,21 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
   ]
 
   deps = [
-    "${sg_root_dir}/frameworks/common/task_handler:sg_task_stamp",
+    "${sg_root_dir}/interfaces/inner_api/data_collect_manager:libsg_data_collect_manager_sdk",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
+    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
     "c_utils:utils",
     "device_manager:devicemanagersdk",
-    "googletest:gmock",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

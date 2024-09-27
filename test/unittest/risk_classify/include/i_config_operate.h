@@ -17,7 +17,7 @@
 #define SECURITY_GUARD_I_CONFIG_OPERATE_H
 
 #include "config_define.h"
-
+#include "security_event_info.h"
 namespace OHOS::Security::SecurityGuard {
 
 class IConfigOperate {

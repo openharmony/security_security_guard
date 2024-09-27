@@ -27,7 +27,7 @@ int32_t DataCollectManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &da
     SGLOGD("%{public}s", __func__);
     do {
         if (IDataCollectManager::GetDescriptor() != data.ReadInterfaceToken()) {
-            SGLOGE("descriptor error, %{public}s", Str16ToStr8(data.ReadInterfaceToken()).c_str());
+            SGLOGE("Descriptor error");
             break;
         }
 
@@ -56,6 +56,9 @@ int32_t DataCollectManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &da
             case CMD_SECURITY_CONFIG_UPDATE: {
                 return HandleConfigUpdateCmd(data, reply);
             }
+            case CMD_SECURITY_EVENT_CONFIG_QUERY: {
+                return HandleSecurityEventConfigQueryCmd(data, reply);
+            }
             default: {
                 break;
             }
@@ -64,66 +67,12 @@ int32_t DataCollectManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &da
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
-int32_t DataCollectManagerStub::HandleStartCmd(MessageParcel &data, MessageParcel &reply)
-{
-    SGLOGI("in HandleStartCmd");
-    uint32_t expected = sizeof(uint64_t);
-    uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
-        SGLOGE("actual length error, value=%{public}u", actual);
-        return BAD_PARAM;
-    }
-
-    std::unique_ptr<SecurityCollector::SecurityCollectorSubscribeInfo> info(
-        data.ReadParcelable<SecurityCollector::SecurityCollectorSubscribeInfo>());
-    if (!info) {
-        SGLOGE("failed to read parcelable for subscribeInfo");
-        return BAD_PARAM;
-    }
-
-    auto callback = data.ReadRemoteObject();
-    if (callback == nullptr) {
-        SGLOGE("callback is nullptr");
-        return BAD_PARAM;
-    }
-    int32_t ret = CollectorStart(*info, callback);
-    reply.WriteInt32(ret);
-    return ret;
-}
-
-int32_t DataCollectManagerStub::HandleStopCmd(MessageParcel &data, MessageParcel &reply)
-{
-    SGLOGI("%{public}s", __func__);
-    uint32_t expected = sizeof(uint64_t);
-    uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
-        SGLOGE("actual length error, value=%{public}u", actual);
-        return BAD_PARAM;
-    }
-
-    std::unique_ptr<SecurityCollector::SecurityCollectorSubscribeInfo> info(
-        data.ReadParcelable<SecurityCollector::SecurityCollectorSubscribeInfo>());
-    if (!info) {
-        SGLOGE("failed to read parcelable for subscribeInfo");
-        return BAD_PARAM;
-    }
-
-    auto callback = data.ReadRemoteObject();
-    if (callback == nullptr) {
-        SGLOGE("callback is nullptr");
-        return BAD_PARAM;
-    }
-    int32_t ret = CollectorStop(*info, callback);
-    reply.WriteInt32(ret);
-    return ret;
-}
-
 int32_t DataCollectManagerStub::HandleDataCollectCmd(MessageParcel &data, MessageParcel &reply)
 {
     SGLOGD("%{public}s", __func__);
     uint32_t expected = sizeof(int64_t);
     uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
+    if (actual <= expected) {
         SGLOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
@@ -140,12 +89,12 @@ int32_t DataCollectManagerStub::HandleDataRequestCmd(MessageParcel &data, Messag
     SGLOGD("%{public}s", __func__);
     const uint32_t expected = 4;
     uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
+    if (actual <= expected) {
         SGLOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
 
-    std::string devId = data.ReadString();
+    std::string devId = {};
     std::string eventList = data.ReadString();
     auto object = data.ReadRemoteObject();
     if (object == nullptr) {
@@ -160,7 +109,7 @@ int32_t DataCollectManagerStub::HandleDataSubscribeCmd(MessageParcel &data, Mess
     SGLOGI("%{public}s", __func__);
     uint32_t expected = sizeof(uint64_t);
     uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
+    if (actual <= expected) {
         SGLOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
@@ -187,7 +136,7 @@ int32_t DataCollectManagerStub::HandleDataUnsubscribeCmd(MessageParcel &data, Me
     SGLOGI("%{public}s", __func__);
     uint32_t expected = sizeof(uint64_t);
     uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
+    if (actual <= expected) {
         SGLOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
@@ -207,7 +156,7 @@ int32_t DataCollectManagerStub::HandleSecurityEventQueryCmd(MessageParcel &data,
     SGLOGI("%{public}s", __func__);
     uint32_t expected = sizeof(uint32_t);
     uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
+    if (actual <= expected) {
         SGLOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
@@ -244,12 +193,66 @@ int32_t DataCollectManagerStub::HandleSecurityEventQueryCmd(MessageParcel &data,
     return ret;
 }
 
+int32_t DataCollectManagerStub::HandleStartCmd(MessageParcel &data, MessageParcel &reply)
+{
+    SGLOGI("in HandleStartCmd");
+    uint32_t expected = sizeof(uint64_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (actual <= expected) {
+        SGLOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    std::unique_ptr<SecurityCollector::SecurityCollectorSubscribeInfo> info(
+        data.ReadParcelable<SecurityCollector::SecurityCollectorSubscribeInfo>());
+    if (!info) {
+        SGLOGE("failed to read parcelable for start collector");
+        return BAD_PARAM;
+    }
+
+    auto callback = data.ReadRemoteObject();
+    if (callback == nullptr) {
+        SGLOGE("callback is nullptr");
+        return BAD_PARAM;
+    }
+    int32_t ret = CollectorStart(*info, callback);
+    reply.WriteInt32(ret);
+    return ret;
+}
+
+int32_t DataCollectManagerStub::HandleStopCmd(MessageParcel &data, MessageParcel &reply)
+{
+    SGLOGI("%{public}s", __func__);
+    uint32_t expected = sizeof(uint64_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (actual <= expected) {
+        SGLOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    std::unique_ptr<SecurityCollector::SecurityCollectorSubscribeInfo> info(
+        data.ReadParcelable<SecurityCollector::SecurityCollectorSubscribeInfo>());
+    if (!info) {
+        SGLOGE("failed to read parcelable for stop collector");
+        return BAD_PARAM;
+    }
+
+    auto callback = data.ReadRemoteObject();
+    if (callback == nullptr) {
+        SGLOGE("callback is nullptr");
+        return BAD_PARAM;
+    }
+    int32_t ret = CollectorStop(*info, callback);
+    reply.WriteInt32(ret);
+    return ret;
+}
+
 int32_t DataCollectManagerStub::HandleConfigUpdateCmd(MessageParcel &data, MessageParcel &reply)
 {
     SGLOGI("%{public}s", __func__);
     uint32_t expected = sizeof(uint64_t);
     uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
+    if (actual <= expected) {
         SGLOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
@@ -264,9 +267,20 @@ int32_t DataCollectManagerStub::HandleConfigUpdateCmd(MessageParcel &data, Messa
         SGLOGE("failed to read file fd for config update");
         return BAD_PARAM;
     }
-    SecurityGuard::SecurityConfigUpdateInfo info(fd, fileName);
+    SecurityGuard::SecurityConfigUpdateInfo info (fd, fileName);
     int32_t ret = ConfigUpdate(info);
     reply.WriteInt32(ret);
     return ret;
 }
+
+int32_t DataCollectManagerStub::HandleSecurityEventConfigQueryCmd(MessageParcel &data, MessageParcel &reply)
+{
+    SGLOGD("%{public}s", __func__);
+    std::string result;
+    int32_t ret = QuerySecurityEventConfig(result);
+    reply.WriteString(result);
+
+    return ret;
+}
+
 }

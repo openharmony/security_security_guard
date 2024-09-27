@@ -30,11 +30,11 @@ int32_t DataCollectManagerCallbackStub::OnRemoteRequest(uint32_t code, MessagePa
     if (code == DataCollectManagerCallbackStub::CMD_SET_REQUEST_DATA) {
         uint32_t expected = sizeof(uint32_t);
         uint32_t actual = data.GetReadableBytes();
-        if (expected >= actual) {
+        if (actual <= expected) {
             SGLOGE("actual length error, value=%{public}u", actual);
             return BAD_PARAM;
         }
-        std::string devId = data.ReadString();
+        std::string devId = {};
         std::string riskData = data.ReadString();
         uint32_t status = data.ReadUint32();
         SGLOGI("status=%{public}u", status);

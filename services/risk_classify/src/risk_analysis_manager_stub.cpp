@@ -50,12 +50,12 @@ int32_t RiskAnalysisManagerStub::HandleGetSecurityModelResult(MessageParcel &dat
     // UDID + MODELID + CALLBACK
     uint32_t expected = sizeof(uint32_t);
     uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
+    if (actual <= expected) {
         SGLOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
 
-    std::string devId = data.ReadString();
+    std::string devId = {};
     uint32_t modelId = data.ReadUint32();
     std::string param = data.ReadString();
     auto object = data.ReadRemoteObject();
@@ -73,7 +73,7 @@ int32_t RiskAnalysisManagerStub::HandleSetModelState(MessageParcel &data, Messag
     // MODELID + ENABLE
     uint32_t expected = sizeof(uint32_t) + sizeof(bool);
     uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
+    if (actual <= expected) {
         SGLOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }

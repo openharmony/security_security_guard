@@ -18,17 +18,11 @@
 #include <functional>
 #include <string>
 #include <mutex>
-
 namespace OHOS::Security::SecurityGuard {
 using TimeEventRelatedCallBack = std::function<bool(void)>;
 class ConfigSubscriber {
 public:
-    static bool RegisterTimeEventRelatedCallBack(const TimeEventRelatedCallBack &callBack);
     static bool UpdateConfig(const std::string &file);
-private:
-    static bool UpdateRelatedEventAnalysisCfg(const std::string &file);
-    static TimeEventRelatedCallBack timeEventCallBack_ ;
-    static std::mutex callBackMutex_;
 };
 } // OHOS::Security::SecurityGuard
 

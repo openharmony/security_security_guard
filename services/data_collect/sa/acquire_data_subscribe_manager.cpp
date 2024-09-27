@@ -14,13 +14,13 @@
  */
 
 #include "acquire_data_subscribe_manager.h"
-
+#include <cinttypes>
 #include "acquire_data_callback_proxy.h"
 #include "database_manager.h"
 #include "security_guard_define.h"
 #include "security_collector_subscribe_info.h"
 #include "security_guard_log.h"
-#include "task_handler.h"
+#include "ffrt.h"
 #include "event_define.h"
 #include "config_define.h"
 #include "config_data_manager.h"
@@ -45,6 +45,7 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         return BAD_PARAM;
     }
     int64_t event = subscribeInfo.GetEvent().eventId;
+    std::lock_guard<std::mutex> lock(mutex_);
     if (eventIdToSubscriberMap_.count(event)) {
         eventIdToSubscriberMap_[subscribeInfo.GetEvent().eventId].insert(callback);
         return SUCCESS;
@@ -85,7 +86,7 @@ int AcquireDataSubscribeManager::SubscribeSc(int64_t eventId)
         // 订阅SG
         if (config.prog == "security_guard") {
             if (!SecurityCollector::DataCollection::GetInstance().SecurityGuardSubscribeCollector({eventId})) {
-                SGLOGI("Subscribe SG failed, eventId=%{public}" PRId64 "", eventId);
+                SGLOGI("Subscribe SG failed, eventId=%{public}" PRId64, eventId);
                 return FAILED;
             }
         } else {
@@ -118,7 +119,7 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
         // 解订阅SG
         if (config.prog == "security_guard") {
             if (!SecurityCollector::DataCollection::GetInstance().StopCollectors({eventId})) {
-                SGLOGE("UnSubscribe SG failed, eventId=%{public}" PRId64 "", eventId);
+                SGLOGE("UnSubscribe SG failed, eventId=%{public}" PRId64, eventId);
                 return FAILED;
             }
         } else {
@@ -188,15 +189,15 @@ bool AcquireDataSubscribeManager::Publish(const SecEvent &events)
             .content = events.content,
             .timestamp = events.date
         };
-        SecurityGuard::TaskHandler::Task task = [proxy, event] () {
+        auto task = [proxy, event] () {
             proxy->OnNotify(event);
         };
         if (event.eventId == SecurityCollector::FILE_EVENTID ||
             event.eventId == SecurityCollector::PROCESS_EVENTID ||
             event.eventId == SecurityCollector::NETWORK_EVENTID) {
-            SecurityGuard::TaskHandler::GetInstance()->AddMinorsTask(task);
+            ffrt::submit(task, {}, {}, ffrt::task_attr().qos(ffrt::qos_background));
         } else {
-            SecurityGuard::TaskHandler::GetInstance()->AddTask(task);
+            ffrt::submit(task);
         }
     }
     return true;
