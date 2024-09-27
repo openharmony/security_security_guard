@@ -21,7 +21,7 @@
 
 #include "nlohmann/json.hpp"
 #include "config_define.h"
-
+#include "security_event_info.h"
 namespace OHOS::Security::SecurityGuard {
 using Field = struct {
     std::string fieldName;

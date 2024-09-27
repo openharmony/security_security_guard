@@ -37,7 +37,8 @@ public:
 private:
     void HandleDecipient();
     std::mutex mutex_{};
-    sptr<AcquireDataManagerCallbackService> callback_{};
+    std::map<std::shared_ptr<SecurityCollector::ICollectorSubscriber>,
+        sptr<AcquireDataManagerCallbackService>> eventListeners_;
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
 };
 } // namespace OHOS::Security::SecurityGuard

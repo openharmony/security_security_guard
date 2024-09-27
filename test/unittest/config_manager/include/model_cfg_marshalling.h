@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "nlohmann/json.hpp"
-
+#include "security_event_info.h"
 #include "config_define.h"
 
 namespace OHOS::Security::SecurityGuard {

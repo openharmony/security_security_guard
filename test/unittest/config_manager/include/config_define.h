@@ -69,27 +69,12 @@ enum class EventTypeEnum {
     SUBSCRIBE_COLL = 3
 };
 
-using EventCfg = struct {
-    int64_t eventId;
-    std::string eventName;
-    uint32_t version;
-    uint32_t eventType;
-    uint32_t collectOnStart;
-    uint32_t dataSensitivityLevel;
-    uint32_t storageRamNums;
-    uint32_t storageRomNums;
-    int32_t storageTime;
-    std::vector<std::string> owner;
-    uint32_t source;
-    std::string dbTable;
-    std::string prog;
-};
-
 using DataMgrCfgSt = struct {
     uint32_t deviceRom;
     uint32_t deviceRam;
     uint32_t eventMaxRamNum;
     uint32_t eventMaxRomNum;
+    std::string prog;
 };
 
 using EventContentSt = struct {
@@ -110,21 +95,6 @@ using SecEvent = struct {
     std::string deviceId;
 };
 
-using AppAttribute = enum {
-    NORMAL,
-    PAYMENT,
-    MALICIOUS,
-    MONITORING,
-    ATTRMAX
-};
-
-using AppInfo = struct {
-    std::string appName;
-    std::string appHash;
-    std::vector<std::string> attrs;
-    int isGlobalApp;
-    int isUpdate;
-};
 using StartMode = enum {
     NOT_SUPPORT,
     START_ON_STARTUP,
@@ -148,29 +118,17 @@ using PathIndex = enum {
     MODEL_CFG_INDEX,
     SIG_RULE_CFG_INDEX,
     URL_RULE_CFG_INDEX,
-    LOCAL_APP_CFG_INDEX,
-    GLOBAL_APP_CFG_INDEX,
     RELATED_EVENT_ANALYSIS_CFG_INDEX
 };
 
 const std::vector<std::string> CONFIG_CACHE_FILES = {
     "/data/test/unittest/resource/security_guard/security_guard/security_guard_cache_event.cfg",
     "/data/test/unittest/resource/security_guard/security_guard/security_guard_cache_model.cfg",
-    "",
-    "",
-    "/data/test/unittest/resource/security_guard/security_guard/local_app_attribute.json",
-    "/data/test/unittest/resource/security_guard/security_guard/global_app_attribute.json",
-    "/data/test/unittest/resource/security_guard/security_guard/related_event_analysis.json"
 };
 
 const std::vector<std::string> CONFIG_UPTATE_FILES = {
     "/data/test/unittest/resource/security_guard_update_event.cfg",
     "/data/test/unittest/resource/security_guard_update_model.cfg",
-    "",
-    "",
-    "/data/test/unittest/resource/local_app_attribute_update.json.json",
-    "/data/test/unittest/resource/global_app_attribute_update.json.json",
-    "/data/test/unittest/resource/related_event_analysis_update.json"
 };
 
 const std::vector<std::string> CONFIG_PRESET_FILES = {

@@ -17,7 +17,7 @@
 
 #include "file_ex.h"
 #include "gmock/gmock.h"
-
+#include "security_event_info.h"
 #define private public
 #define protected public
 #include "config_data_manager.h"
@@ -30,6 +30,7 @@
 #include "risk_event_rdb_helper.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
+#include "data_format.h"
 #undef private
 #undef protected
 
@@ -43,6 +44,7 @@ namespace OHOS {
     std::shared_ptr<AccountSA::MockOsAccountManagerInterface> AccountSA::OsAccountManager::instance_ = nullptr;
     std::mutex NativeRdb::RdbHelper::mutex_ {};
     std::mutex AccountSA::OsAccountManager::mutex_ {};
+    constexpr uint32_t MAX_CONTENT_SIZE = 900;
 }
 
 namespace OHOS::Security::SecurityGuardTest {
@@ -317,4 +319,79 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock023, TestSize.
     ret = DatabaseManager::GetInstance().UnSubscribeDb(eventIds, mockListener);
     EXPECT_EQ(ret, SUCCESS);
 }
+
+
+HWTEST_F(SecurityGuardDatabaseManagerTest, CheckRiskContent001, TestSize.Level1)
+{
+    std::string content(MAX_CONTENT_SIZE, 'c');
+    bool ret = DataFormat::CheckRiskContent(content);
+    EXPECT_FALSE(ret);
+}
+
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions001, TestSize.Level1)
+{
+    std::string conditions;
+    RequestCondition reqCondition;
+    DataFormat::ParseConditions(conditions, reqCondition);
+    EXPECT_TRUE(reqCondition.riskEvent.empty());
+}
+
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions002, TestSize.Level1)
+{
+    std::string conditions = "{\"eventId\":0}";
+    RequestCondition reqCondition;
+    DataFormat::ParseConditions(conditions, reqCondition);
+    EXPECT_TRUE(reqCondition.riskEvent.empty());
+}
+
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions003, TestSize.Level1)
+{
+    std::string conditions = "{\"eventId\":[\"t\", \"e\", \"s\", \"t\"]}";
+    RequestCondition reqCondition;
+    DataFormat::ParseConditions(conditions, reqCondition);
+    EXPECT_TRUE(reqCondition.riskEvent.empty());
+}
+
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions004, TestSize.Level1)
+{
+    std::string conditions = "{\"eventId\":[1, 2, 3, 4]}";
+    RequestCondition reqCondition;
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetTableFromEventId).WillOnce(Return("risk_event"))
+        .WillRepeatedly(Return("audit_event"));
+    DataFormat::ParseConditions(conditions, reqCondition);
+    EXPECT_FALSE(reqCondition.riskEvent.empty());
+}
+
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions005, TestSize.Level1)
+{
+    std::string conditions = "{\"beginTime\":1}";
+    RequestCondition reqCondition;
+    DataFormat::ParseConditions(conditions, reqCondition);
+    EXPECT_TRUE(reqCondition.beginTime.empty());
+}
+
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions006, TestSize.Level1)
+{
+    std::string conditions = "{\"beginTime\":\"0001\"}";
+    RequestCondition reqCondition;
+    DataFormat::ParseConditions(conditions, reqCondition);
+    EXPECT_TRUE(reqCondition.beginTime == "0001");
+}
+
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions007, TestSize.Level1)
+{
+    std::string conditions = "{\"endTime\":1}";
+    RequestCondition reqCondition;
+    DataFormat::ParseConditions(conditions, reqCondition);
+    EXPECT_TRUE(reqCondition.endTime.empty());
+}
+
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions008, TestSize.Level1)
+{
+    std::string conditions = "{\"endTime\":\"0001\"}";
+    RequestCondition reqCondition;
+    DataFormat::ParseConditions(conditions, reqCondition);
+    EXPECT_TRUE(reqCondition.endTime == "0001");
+}
+
 }

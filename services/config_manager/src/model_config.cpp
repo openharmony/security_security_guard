@@ -45,7 +45,7 @@ bool ModelConfig::Load(int mode)
         return false;
     }
     stream_ = std::ifstream(path, std::ios::in);
-    if (!stream_.is_open() || !stream_) {
+    if (!stream_.is_open()) {
         SGLOGE("stream error, %{public}s", strerror(errno));
         return false;
     }
@@ -54,7 +54,7 @@ bool ModelConfig::Load(int mode)
 
 bool ModelConfig::Parse()
 {
-    if (!stream_.is_open() || !stream_) {
+    if (!stream_.is_open()) {
         SGLOGE("stream error");
         return false;
     }
@@ -80,7 +80,7 @@ bool ModelConfig::Parse()
 
 bool ModelConfig::Update()
 {
-    if (!stream_.is_open() || !stream_) {
+    if (!stream_.is_open()) {
         SGLOGE("stream error");
         return false;
     }
@@ -99,7 +99,10 @@ bool ModelConfig::Update()
         return false;
     }
 
-    SecurityGuardUtils::CopyFile(CONFIG_CACHE_FILES[MODEL_CFG_INDEX], CONFIG_UPTATE_FILES[MODEL_CFG_INDEX]);
+    if (!SecurityGuardUtils::CopyFile(CONFIG_CACHE_FILES[MODEL_CFG_INDEX], CONFIG_UPTATE_FILES[MODEL_CFG_INDEX])) {
+        SGLOGE("copyFile error");
+        return false;
+    }
     ConfigDataManager::GetInstance().ResetModelMap();
     CacheModelConfig(configs);
     CacheModelToEvent(configs);

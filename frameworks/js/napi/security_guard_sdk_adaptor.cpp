@@ -15,7 +15,7 @@
 
 #include <set>
 #include "security_guard_sdk_adaptor.h"
-
+#include <cinttypes>
 #include "iservice_registry.h"
 
 #include "data_collect_manager_callback_service.h"
@@ -38,7 +38,7 @@ namespace  {
     const std::set<int64_t> GRANTED_EVENT{1037000001, 1064001001, 1064001002};
     static std::mutex g_mutex;
 }
-sptr<IRemoteObject> SecurityGuardSdkAdaptor::object_ = nullptr;
+sptr<IDataCollectManager> SecurityGuardSdkAdaptor::proxy_ = nullptr;
 std::map<std::shared_ptr<SecurityCollector::ICollectorSubscriber>,
         sptr<AcquireDataManagerCallbackService>> SecurityGuardSdkAdaptor::subscribers_ {};
 std::mutex SecurityGuardSdkAdaptor::objMutex_;
@@ -67,6 +67,7 @@ int32_t SecurityGuardSdkAdaptor::RequestSecurityEventInfo(std::string &devId, st
 int32_t SecurityGuardSdkAdaptor::RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
     const std::string &param, ResultCallback callback)
 {
+    SGLOGI("enter SecurityGuardSdkAdaptor RequestSecurityModelResult");
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         SGLOGE("GetSystemAbilityManager error");
@@ -92,6 +93,7 @@ int32_t SecurityGuardSdkAdaptor::RequestSecurityModelResult(const std::string &d
 
 int32_t SecurityGuardSdkAdaptor::ReportSecurityInfo(const std::shared_ptr<EventInfo> &info)
 {
+    SGLOGD("enter SecurityGuardSdkAdaptor ReportSecurityInfo");
     if (info == nullptr) {
         return BAD_PARAM;
     }
@@ -167,6 +169,7 @@ int32_t SecurityGuardSdkAdaptor::NotifyCollector(const SecurityCollector::Event 
 int32_t SecurityGuardSdkAdaptor::StartCollector(const SecurityCollector::Event &event,
     int64_t duration)
 {
+    SGLOGI("enter SecurityGuardSdkAdaptor StartCollector");
     auto proxy = LoadDataCollectManageService();
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
@@ -188,7 +191,7 @@ int32_t SecurityGuardSdkAdaptor::StartCollector(const SecurityCollector::Event &
 
 int32_t SecurityGuardSdkAdaptor::StopCollector(const SecurityCollector::Event &event)
 {
-    SGLOGD("in SecurityGuardSdkAdaptor StopCollector ************");
+    SGLOGI("in SecurityGuardSdkAdaptor StopCollector");
     auto proxy = LoadDataCollectManageService();
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
@@ -211,6 +214,7 @@ int32_t SecurityGuardSdkAdaptor::StopCollector(const SecurityCollector::Event &e
 int32_t SecurityGuardSdkAdaptor::QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
     std::shared_ptr<SecurityEventQueryCallback> callback)
 {
+    SGLOGI("enter SecurityGuardSdkAdaptor QuerySecurityEvent");
     auto proxy = LoadDataCollectManageService();
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
@@ -233,6 +237,7 @@ int32_t SecurityGuardSdkAdaptor::QuerySecurityEvent(std::vector<SecurityCollecto
 
 int32_t SecurityGuardSdkAdaptor::Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
 {
+    SGLOGI("enter SecurityGuardSdkAdaptor Subscribe");
     if (subscriber == nullptr) {
         SGLOGE("subscriber is nullptr");
         return NULL_OBJECT;
@@ -267,6 +272,7 @@ int32_t SecurityGuardSdkAdaptor::Subscribe(const std::shared_ptr<SecurityCollect
 
 int32_t SecurityGuardSdkAdaptor::Unsubscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
 {
+    SGLOGI("enter SecurityGuardSdkAdaptor Unsubscribe");
     if (subscriber == nullptr) {
         SGLOGE("subscriber is nullptr");
         return NULL_OBJECT;
@@ -297,21 +303,23 @@ int32_t SecurityGuardSdkAdaptor::Unsubscribe(const std::shared_ptr<SecurityColle
 sptr<IDataCollectManager> SecurityGuardSdkAdaptor::LoadDataCollectManageService()
 {
     std::lock_guard<std::mutex> lock(objMutex_);
-    if (object_ != nullptr) {
-        SGLOGI("object_ not null");
-        return iface_cast<IDataCollectManager>(object_);
+    if (proxy_ != nullptr) {
+        SGLOGI("proxy_ not null");
+        return proxy_;
     }
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         SGLOGE("GetSystemAbilityManager error");
         return nullptr;
     }
-    object_ = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    return iface_cast<IDataCollectManager>(object_);
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    proxy_ = iface_cast<IDataCollectManager>(object);
+    return proxy_;
 }
 
 int32_t SecurityGuardSdkAdaptor::ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &updateInfo)
 {
+    SGLOGI("enter SecurityGuardSdkAdaptor ConfigUpdate");
     auto proxy = LoadDataCollectManageService();
     if (proxy == nullptr) {
         SGLOGE("proxy is null");

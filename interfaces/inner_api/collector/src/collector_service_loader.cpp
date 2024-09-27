@@ -37,6 +37,10 @@ sptr<IRemoteObject> CollectorServiceLoader::LoadCollectorService()
     }
 
     sptr<LoadCallback> callback = new (std::nothrow) LoadCallback();
+    if (callback == nullptr) {
+        LOGE("LoadCallback new error.");
+        return nullptr;
+    }
     int32_t result = registry->LoadSystemAbility(SECURITY_COLLECTOR_MANAGER_SA_ID, callback);
     if (result != ERR_OK) {
         LOGE("LoadSystemAbility error.");

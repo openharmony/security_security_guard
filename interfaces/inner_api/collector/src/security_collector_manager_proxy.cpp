@@ -27,6 +27,7 @@ SecurityCollectorManagerProxy::SecurityCollectorManagerProxy(const sptr<IRemoteO
 int32_t SecurityCollectorManagerProxy::Subscribe(const SecurityCollectorSubscribeInfo &subscribeInfo,
     const sptr<IRemoteObject> &callback)
 {
+    LOGI("enter SecurityCollectorManagerProxy Subscribe");
     MessageParcel data;
     MessageParcel reply;
 
@@ -43,7 +44,12 @@ int32_t SecurityCollectorManagerProxy::Subscribe(const SecurityCollectorSubscrib
     data.WriteRemoteObject(callback);
 
     MessageOption option = { MessageOption::TF_SYNC };
-    int ret = Remote()->SendRequest(CMD_COLLECTOR_SUBCRIBE, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_COLLECTOR_SUBCRIBE, data, reply, option);
     if (ret != ERR_NONE) {
         LOGE("ret=%{public}d", ret);
         return ret;
@@ -55,6 +61,7 @@ int32_t SecurityCollectorManagerProxy::Subscribe(const SecurityCollectorSubscrib
 
 int32_t SecurityCollectorManagerProxy::Unsubscribe(const sptr<IRemoteObject> &callback)
 {
+    LOGI("enter SecurityCollectorManagerProxy Unsubscribe");
     MessageParcel data;
     MessageParcel reply;
     
@@ -66,7 +73,12 @@ int32_t SecurityCollectorManagerProxy::Unsubscribe(const sptr<IRemoteObject> &ca
     data.WriteRemoteObject(callback);
 
     MessageOption option = { MessageOption::TF_SYNC };
-    int ret = Remote()->SendRequest(CMD_COLLECTOR_UNSUBCRIBE, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_COLLECTOR_UNSUBCRIBE, data, reply, option);
     if (ret != ERR_NONE) {
         LOGE("ret=%{public}d", ret);
         return ret;
@@ -81,7 +93,7 @@ int32_t SecurityCollectorManagerProxy::CollectorStart(const SecurityCollectorSub
 {
     MessageParcel data;
     MessageParcel reply;
-    LOGD("==========================in CollectorControl");
+    LOGI("enter SecurityCollectorManagerProxy CollectorStart");
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOGE("WriteInterfaceToken error");
         return WRITE_ERR;
@@ -93,7 +105,12 @@ int32_t SecurityCollectorManagerProxy::CollectorStart(const SecurityCollectorSub
     }
     data.WriteRemoteObject(callback);
     MessageOption option = { MessageOption::TF_SYNC };
-    int ret = Remote()->SendRequest(CMD_COLLECTOR_START, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_COLLECTOR_START, data, reply, option);
     if (ret != ERR_NONE) {
         LOGE("ret=%{public}d", ret);
         return ret;
@@ -108,7 +125,7 @@ int32_t SecurityCollectorManagerProxy::CollectorStop(const SecurityCollectorSubs
 {
     MessageParcel data;
     MessageParcel reply;
-    LOGD("===========================in CollectorControl.");
+    LOGI("enter SecurityCollectorManagerProxy CollectorStop");
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOGE("WriteInterfaceToken error");
         return WRITE_ERR;
@@ -120,7 +137,12 @@ int32_t SecurityCollectorManagerProxy::CollectorStop(const SecurityCollectorSubs
     }
     data.WriteRemoteObject(callback);
     MessageOption option = { MessageOption::TF_SYNC };
-    int ret = Remote()->SendRequest(CMD_COLLECTOR_STOP, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_COLLECTOR_STOP, data, reply, option);
     if (ret != ERR_NONE) {
         LOGE("ret=%{public}d", ret);
         return ret;
@@ -133,6 +155,7 @@ int32_t SecurityCollectorManagerProxy::CollectorStop(const SecurityCollectorSubs
 int32_t SecurityCollectorManagerProxy::QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
     std::vector<SecurityEvent> &events)
 {
+    LOGI("enter SecurityCollectorManagerProxy QuerySecurityEvent");
     MessageParcel data;
     MessageParcel reply;
 
@@ -154,7 +177,12 @@ int32_t SecurityCollectorManagerProxy::QuerySecurityEvent(const std::vector<Secu
     }
 
     MessageOption option = { MessageOption::TF_SYNC };
-    int ret = Remote()->SendRequest(CMD_SECURITY_EVENT_QUERY, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_SECURITY_EVENT_QUERY, data, reply, option);
     if (ret != ERR_NONE) {
         LOGE("ret=%{public}d", ret);
         return ret;

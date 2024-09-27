@@ -14,7 +14,7 @@
  */
 
 #include "data_collect_manager_proxy.h"
-
+#include <cinttypes>
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 
@@ -27,6 +27,7 @@ DataCollectManagerProxy::DataCollectManagerProxy(const sptr<IRemoteObject> &impl
 int32_t DataCollectManagerProxy::RequestDataSubmit(int64_t eventId, std::string &version,
     std::string &time, std::string &content)
 {
+    SGLOGD("enter DataCollectManagerProxy RequestDataSubmit");
     SGLOGD("eventId=%{public}" PRId64 ", version=%{public}s", eventId, version.c_str());
     MessageParcel data;
     MessageParcel reply;
@@ -58,6 +59,7 @@ int32_t DataCollectManagerProxy::RequestDataSubmit(int64_t eventId, std::string 
 int32_t DataCollectManagerProxy::RequestRiskData(std::string &devId, std::string &eventList,
     const sptr<IRemoteObject> &callback)
 {
+    SGLOGI("enter DataCollectManagerProxy RequestRiskData");
     MessageParcel data;
     MessageParcel reply;
 
@@ -65,7 +67,6 @@ int32_t DataCollectManagerProxy::RequestRiskData(std::string &devId, std::string
         SGLOGE("WriteInterfaceToken error");
         return WRITE_ERR;
     }
-    data.WriteString(devId);
     data.WriteString(eventList);
     data.WriteRemoteObject(callback);
 
@@ -88,6 +89,7 @@ int32_t DataCollectManagerProxy::RequestRiskData(std::string &devId, std::string
 int32_t DataCollectManagerProxy::Subscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
     const sptr<IRemoteObject> &callback)
 {
+    SGLOGI("enter DataCollectManagerProxy Subscribe");
     MessageParcel data;
     MessageParcel reply;
 
@@ -104,7 +106,12 @@ int32_t DataCollectManagerProxy::Subscribe(const SecurityCollector::SecurityColl
     data.WriteRemoteObject(callback);
 
     MessageOption option = { MessageOption::TF_SYNC };
-    int ret = Remote()->SendRequest(CMD_DATA_SUBSCRIBE, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_DATA_SUBSCRIBE, data, reply, option);
     if (ret != ERR_NONE) {
         SGLOGE("ret=%{public}d", ret);
         return ret;
@@ -116,6 +123,7 @@ int32_t DataCollectManagerProxy::Subscribe(const SecurityCollector::SecurityColl
 
 int32_t DataCollectManagerProxy::Unsubscribe(const sptr<IRemoteObject> &callback)
 {
+    SGLOGI("enter DataCollectManagerProxy Unsubscribe");
     MessageParcel data;
     MessageParcel reply;
     
@@ -127,7 +135,12 @@ int32_t DataCollectManagerProxy::Unsubscribe(const sptr<IRemoteObject> &callback
     data.WriteRemoteObject(callback);
 
     MessageOption option = { MessageOption::TF_SYNC };
-    int ret = Remote()->SendRequest(CMD_DATA_UNSUBSCRIBE, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_DATA_UNSUBSCRIBE, data, reply, option);
     if (ret != ERR_NONE) {
         SGLOGE("ret=%{public}d", ret);
         return ret;
@@ -140,6 +153,7 @@ int32_t DataCollectManagerProxy::Unsubscribe(const sptr<IRemoteObject> &callback
 int32_t DataCollectManagerProxy::QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
     const sptr<IRemoteObject> &callback)
 {
+    SGLOGI("enter DataCollectManagerProxy QuerySecurityEvent");
     MessageParcel data;
     MessageParcel reply;
 
@@ -163,7 +177,12 @@ int32_t DataCollectManagerProxy::QuerySecurityEvent(std::vector<SecurityCollecto
     data.WriteRemoteObject(callback);
 
     MessageOption option = { MessageOption::TF_SYNC };
-    int ret = Remote()->SendRequest(CMD_SECURITY_EVENT_QUERY, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_SECURITY_EVENT_QUERY, data, reply, option);
     if (ret != ERR_NONE) {
         SGLOGE("ret=%{public}d", ret);
         return ret;
@@ -176,6 +195,7 @@ int32_t DataCollectManagerProxy::QuerySecurityEvent(std::vector<SecurityCollecto
 int32_t DataCollectManagerProxy::CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
     const sptr<IRemoteObject> &callback)
 {
+    SGLOGI("enter DataCollectManagerProxy CollectorStart");
     MessageParcel data;
     MessageParcel reply;
 
@@ -192,7 +212,12 @@ int32_t DataCollectManagerProxy::CollectorStart(const SecurityCollector::Securit
     data.WriteRemoteObject(callback);
 
     MessageOption option = { MessageOption::TF_SYNC };
-    int ret = Remote()->SendRequest(CMD_SECURITY_COLLECTOR_START, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_SECURITY_COLLECTOR_START, data, reply, option);
     if (ret != ERR_NONE) {
         SGLOGE("ret=%{public}d", ret);
         return ret;
@@ -205,6 +230,7 @@ int32_t DataCollectManagerProxy::CollectorStart(const SecurityCollector::Securit
 int32_t DataCollectManagerProxy::CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
     const sptr<IRemoteObject> &callback)
 {
+    SGLOGI("enter DataCollectManagerProxy CollectorStop");
     MessageParcel data;
     MessageParcel reply;
 
@@ -221,7 +247,12 @@ int32_t DataCollectManagerProxy::CollectorStop(const SecurityCollector::Security
     data.WriteRemoteObject(callback);
 
     MessageOption option = { MessageOption::TF_SYNC };
-    int ret = Remote()->SendRequest(CMD_SECURITY_COLLECTOR_STOP, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_SECURITY_COLLECTOR_STOP, data, reply, option);
     if (ret != ERR_NONE) {
         SGLOGE("ret=%{public}d", ret);
         return ret;
@@ -233,6 +264,7 @@ int32_t DataCollectManagerProxy::CollectorStop(const SecurityCollector::Security
 
 int32_t DataCollectManagerProxy::ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &updateInfo)
 {
+    SGLOGI("enter DataCollectManagerProxy ConfigUpdate");
     MessageParcel data;
     MessageParcel reply;
 
@@ -242,17 +274,20 @@ int32_t DataCollectManagerProxy::ConfigUpdate(const SecurityGuard::SecurityConfi
     }
 
     if (!data.WriteString(updateInfo.GetFileName())) {
-        SGLOGE("failed to write file for config update");
+        SGLOGE("failed to write string for config update");
         return WRITE_ERR;
     }
-
     if (!data.WriteFileDescriptor(updateInfo.GetFd())) {
         SGLOGE("failed to write file descriptor for config update");
         return WRITE_ERR;
     }
-
     MessageOption option = { MessageOption::TF_SYNC };
-    int ret = Remote()->SendRequest(CMD_SECURITY_CONFIG_UPDATE, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_SECURITY_CONFIG_UPDATE, data, reply, option);
     if (ret != ERR_NONE) {
         SGLOGE("ret=%{public}d", ret);
         return ret;
@@ -260,5 +295,36 @@ int32_t DataCollectManagerProxy::ConfigUpdate(const SecurityGuard::SecurityConfi
     ret = reply.ReadInt32();
     SGLOGD("reply=%{public}d", ret);
     return ret;
+}
+
+int32_t DataCollectManagerProxy::QuerySecurityEventConfig(std::string &result)
+{
+    SGLOGI("Start DataCollectManagerProxy QuerySecurityEventConfig");
+    MessageParcel data;
+    MessageParcel reply;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        SGLOGE("WriteInterfaceToken error");
+        return WRITE_ERR;
+    }
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    
+    MessageOption option = { MessageOption::TF_SYNC };
+    int ret = remote->SendRequest(CMD_SECURITY_EVENT_CONFIG_QUERY, data, reply, option);
+    if (ret != ERR_NONE) {
+        SGLOGE("ret=%{public}d", ret);
+        return ret;
+    }
+
+    if (!reply.ReadString(result)) {
+        SGLOGE("Failed to get the system integrity result");
+        return BAD_PARAM;
+    }
+    return SUCCESS;
 }
 }

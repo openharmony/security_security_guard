@@ -41,6 +41,7 @@ public:
     int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) override;
     int32_t ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &updateInfo) override;
+    int32_t QuerySecurityEventConfig(std::string &result) override;
 private:
     static inline BrokerDelegator<DataCollectManagerProxy> delegator_;
 };

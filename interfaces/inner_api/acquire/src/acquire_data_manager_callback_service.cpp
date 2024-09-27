@@ -14,7 +14,7 @@
  */
 
 #include "acquire_data_manager_callback_service.h"
- 
+#include <cinttypes>
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 
@@ -22,7 +22,7 @@ namespace OHOS::Security::SecurityGuard {
 
 int32_t AcquireDataManagerCallbackService::OnNotify(const SecurityCollector::Event &event)
 {
-    SGLOGD("callback eventId=%{public}" PRId64 "", event.eventId);
+    SGLOGD("callback eventId=%{public}" PRId64, event.eventId);
     if (subscriber_ != nullptr) {
         subscriber_->OnNotify(event);
     }

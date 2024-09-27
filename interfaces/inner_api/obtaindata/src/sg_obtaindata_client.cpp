@@ -75,7 +75,6 @@ static int32_t RequestSecurityEventInfoAsyncImpl(const DeviceIdentify *devId, co
     std::string eventList(eventJson);
     auto func = [callback] (std::string &devId, std::string &riskData, uint32_t status,
         const std::string &errMsg)-> int32_t {
-        SGLOGI("riskData=%{public}s, status=%{public}u, errMsg=%{public}s", riskData.c_str(), status, errMsg.c_str());
         if (devId.length() >= DEVICE_ID_MAX_LEN) {
             return BAD_PARAM;
         }

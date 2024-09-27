@@ -40,49 +40,18 @@ enum class EventTypeEnum {
     SUBSCRIBE_COLL = 3
 };
 
-using EventCfg = struct {
-    int64_t eventId;
-    std::string eventName;
-    uint32_t version;
-    uint32_t eventType;
-    uint32_t collectOnStart;
-    uint32_t dataSensitivityLevel;
-    uint32_t storageRamNums;
-    uint32_t storageRomNums;
-    int32_t storageTime;
-    std::vector<std::string> owner;
-    uint32_t source;
-    std::string dbTable;
-    std::string prog;
-};
-
 using DataMgrCfgSt = struct {
     uint32_t deviceRom;
     uint32_t deviceRam;
     uint32_t eventMaxRamNum;
     uint32_t eventMaxRomNum;
+    std::string prog;
 };
 
 using EventContentSt = struct {
     uint32_t status;
     uint32_t cred;
     std::string extra;
-};
-
-using AppAttribute = enum {
-    NORMAL,
-    PAYMENT,
-    MALICIOUS,
-    MONITORING,
-    ATTRMAX
-};
-
-using AppInfo = struct {
-    std::string appName;
-    std::string appHash;
-    std::vector<std::string> attrs;
-    int isGlobalApp;
-    int isUpdate;
 };
 
 using SecEvent = struct {
@@ -121,31 +90,21 @@ using PathIndex = enum {
 };
 
 const std::vector<std::string> CONFIG_CACHE_FILES = {
-    "/data/service/el1/public/security_guard/tmp/security_guard_event.cfg",
-    "/data/service/el1/public/security_guard/tmp/security_guard_model.cfg",
-    "/data/service/el1/public/security_guard/tmp/signature_rule.cfg",
-    "/data/service/el1/public/security_guard/tmp/url_rule.cfg",
-    "/data/service/el1/public/security_guard/tmp/local_app_attribute.json",
-    "/data/service/el1/public/security_guard/tmp/global_app_attribute.json",
-    "/data/service/el1/public/security_guard/tmp/related_event_analysis.json"
+    "/data/service/el1/public/security_guard/test/tmp/security_guard_event.json",
+    "/data/service/el1/public/security_guard/test/tmp/security_guard_model.cfg",
 };
 
 const std::vector<std::string> CONFIG_UPTATE_FILES = {
-    "/data/service/el1/public/security_guard/security_guard_event.cfg",
+    "/data/service/el1/public/security_guard/security_guard_event.json",
     "/data/service/el1/public/security_guard/security_guard_model.cfg",
-    "/data/service/el1/public/security_guard/signature_rule.cfg",
-    "/data/service/el1/public/security_guard/url_rule.cfg",
-    "/data/service/el1/public/security_guard/local_app_attr.json",
-    "/data/service/el1/public/security_guard/global_app_attr.json",
-    "/data/service/el1/public/security_guard/related_event_analysis.json"
 };
 
 const std::vector<std::string> CONFIG_PRESET_FILES = {
-    "/system/etc/security_guard_event.cfg",
+    "/system/etc/security_guard_event.json",
     "/system/etc/security_guard_model.cfg"
 };
 
-const std::string CONFIG_ROOT_PATH = "/data/service/el1/public/security_guard/";
+const std::string CONFIG_ROOT_PATH = "/data/service/el1/public/security_guard/test/";
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_CONFIG_DEFINE_H

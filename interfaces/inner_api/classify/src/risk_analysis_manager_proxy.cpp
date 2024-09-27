@@ -27,6 +27,7 @@ RiskAnalysisManagerProxy::RiskAnalysisManagerProxy(const sptr<IRemoteObject> &im
 int32_t RiskAnalysisManagerProxy::RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
     const std::string &param, const sptr<IRemoteObject> &callback)
 {
+    SGLOGI("enter RiskAnalysisManagerProxy RequestSecurityModelResult");
     MessageParcel data;
     MessageParcel reply;
 
@@ -34,13 +35,18 @@ int32_t RiskAnalysisManagerProxy::RequestSecurityModelResult(const std::string &
         SGLOGE("WriteInterfaceToken error");
         return WRITE_ERR;
     }
-    data.WriteString(devId);
+
     data.WriteUint32(modelId);
     data.WriteString(param);
     data.WriteRemoteObject(callback);
 
     MessageOption option = { MessageOption::TF_SYNC };
-    int ret = Remote()->SendRequest(CMD_GET_SECURITY_MODEL_RESULT, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_GET_SECURITY_MODEL_RESULT, data, reply, option);
     if (ret != ERR_NONE) {
         SGLOGE("ret=%{public}d", ret);
         return ret;
@@ -63,7 +69,12 @@ int32_t RiskAnalysisManagerProxy::SetModelState(uint32_t modelId, bool enable)
     data.WriteBool(enable);
 
     MessageOption option = { MessageOption::TF_SYNC };
-    int ret = Remote()->SendRequest(CMD_SET_MODEL_STATE, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_SET_MODEL_STATE, data, reply, option);
     if (ret != ERR_NONE) {
         SGLOGE("ret=%{public}d", ret);
         return ret;

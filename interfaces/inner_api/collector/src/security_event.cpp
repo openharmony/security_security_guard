@@ -27,6 +27,9 @@ bool SecurityEvent::Marshalling(Parcel& parcel) const
     if (!parcel.WriteString(content_)) {
         return false;
     }
+    if (!parcel.WriteString(timestamp_)) {
+        return false;
+    }
     return true;
 };
 
@@ -39,6 +42,9 @@ bool SecurityEvent::ReadFromParcel(Parcel &parcel)
         return false;
     }
     if (!parcel.ReadString(content_)) {
+        return false;
+    }
+    if (!parcel.ReadString(timestamp_)) {
         return false;
     }
     return true;

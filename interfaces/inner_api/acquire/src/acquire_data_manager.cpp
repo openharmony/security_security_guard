@@ -39,7 +39,7 @@ void AcquireDataManager::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> 
 void AcquireDataManager::HandleDecipient()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    callback_ = nullptr;
+    eventListeners_.clear();
 }
 
 int32_t AcquireDataManager::Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
@@ -49,6 +49,12 @@ int32_t AcquireDataManager::Subscribe(const std::shared_ptr<SecurityCollector::I
         SGLOGE("subscriber is nullptr");
         return NULL_OBJECT;
     }
+
+    if (eventListeners_.find(subscriber) != eventListeners_.end()) {
+        SGLOGE("Already subscribed");
+        return BAD_PARAM;
+    }
+
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         SGLOGE("GetSystemAbilityManager error");
@@ -81,8 +87,10 @@ int32_t AcquireDataManager::Subscribe(const std::shared_ptr<SecurityCollector::I
     }
 
     int32_t ret = proxy->Subscribe(subscriber->GetSubscribeInfo(), callback);
+    if (ret == SUCCESS) {
+        eventListeners_[subscriber] = callback;
+    }
     SGLOGI("Subscribe result, ret=%{public}d", ret);
-    callback_ = callback;
     return ret;
 }
 
@@ -95,6 +103,11 @@ int32_t AcquireDataManager::Unsubscribe(const std::shared_ptr<SecurityCollector:
         return NULL_OBJECT;
     }
 
+    if (eventListeners_.find(subscriber) == eventListeners_.end()) {
+        SGLOGE("Not subscribed");
+        return BAD_PARAM;
+    }
+
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
     auto proxy = iface_cast<IDataCollectManager>(object);
     if (proxy == nullptr) {
@@ -102,9 +115,9 @@ int32_t AcquireDataManager::Unsubscribe(const std::shared_ptr<SecurityCollector:
         return NULL_OBJECT;
     }
 
-    int32_t ret = proxy->Unsubscribe(callback_);
+    int32_t ret = proxy->Unsubscribe(eventListeners_[subscriber]);
     SGLOGI("Unsubscribe result, ret=%{public}d", ret);
-    callback_ = nullptr;
+    eventListeners_.erase(subscriber);
     return ret;
 }
 }
