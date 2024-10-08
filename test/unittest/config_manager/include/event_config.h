@@ -17,7 +17,7 @@
 #define SECURITY_GUARD_EVENT_CONFIG_H
 
 #include "nlohmann/json.hpp"
-
+#include "security_event_info.h"
 #include "base_config.h"
 #include "config_define.h"
 

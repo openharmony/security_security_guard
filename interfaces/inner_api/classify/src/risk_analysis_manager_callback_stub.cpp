@@ -30,13 +30,13 @@ int32_t RiskAnalysisManagerCallbackStub::OnRemoteRequest(uint32_t code, MessageP
     if (code == RiskAnalysisManagerCallbackStub::CMD_SET_SECURITY_MODEL_RESULT) {
         uint32_t expected = sizeof(uint32_t);
         uint32_t actual = data.GetReadableBytes();
-        if (expected >= actual) {
+        if (actual <= expected) {
             SGLOGE("actual length error, value=%{public}u", actual);
             return BAD_PARAM;
         }
 
         uint32_t modelId = data.ReadUint32();
-        std::string devId = data.ReadString();
+        std::string devId = {};
         std::string result = data.ReadString();
         return ResponseSecurityModelResult(devId, modelId, result);
     }

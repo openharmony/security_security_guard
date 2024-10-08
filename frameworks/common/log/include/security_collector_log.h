@@ -21,7 +21,6 @@
 #define LOG_DOMAIN 0xD002F07
 
 #include "hilog/log.h"
-#include <cinttypes>
 
 namespace OHOS::Security::SecurityCollector {
 

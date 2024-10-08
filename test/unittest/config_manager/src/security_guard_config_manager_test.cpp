@@ -23,7 +23,8 @@
 #include "accesstoken_kit.h"
 #include "nativetoken_kit.h"
 #include "token_setproc.h"
-
+#include "security_event_info.h"
+#include "json_cfg.h"
 #define private public
 #define protected public
 #include "base_config.h"
@@ -35,10 +36,7 @@
 #include "event_config.h"
 #include "model_cfg_marshalling.h"
 #include "model_config.h"
-#include "local_app_config.h"
-#include "global_app_config.h"
 #include "rdb_helper.h"
-#include "app_info_rdb_helper.h"
 #include "security_guard_log.h"
 #undef private
 #undef protected
@@ -52,12 +50,6 @@ namespace OHOS {
     std::mutex NativeRdb::RdbHelper::mutex_ {};
 }
 namespace OHOS::Security::SecurityGuardTest {
-
-namespace {
-    constexpr int SUCCESS = 0;
-    constexpr int FAILED = 1;
-    constexpr size_t MAXAPPSIZE = 500;
-}
 
 void SecurityGuardConfigManagerTest::SetUpTestCase()
 {
@@ -207,18 +199,13 @@ HWTEST_F(SecurityGuardConfigManagerTest, TestConfigDataManager003, TestSize.Leve
     EXPECT_TRUE(outEventIds.size() == 0);
 }
 
-HWTEST_F(SecurityGuardConfigManagerTest, TestConfigSubsciber001, TestSize.Level1)
+HWTEST_F(SecurityGuardConfigManagerTest, TestConfigSubsciber003, TestSize.Level1)
 {
-    TimeEventRelatedCallBack callBack = nullptr;
-    bool success = ConfigSubscriber::RegisterTimeEventRelatedCallBack(callBack);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestEventConfig001, TestSize.Level1)
-{
-    EventConfig config;
-    bool success = config.Load(INIT_MODE);
-    EXPECT_TRUE(success);
+    EXPECT_TRUE(
+        ConfigSubscriber::UpdateConfig("/data/service/el1/public/security_guard/tmp/security_guard_event.json"));
+    EXPECT_TRUE(
+        ConfigSubscriber::UpdateConfig("/data/service/el1/public/security_guard/tmp/security_guard_model.cfg"));
+    EXPECT_TRUE(ConfigSubscriber::UpdateConfig("/data/service/el1/public/security_guard/tmp/signature_rule.json"));
 }
 
 HWTEST_F(SecurityGuardConfigManagerTest, TestEventConfig002, TestSize.Level1)
@@ -258,11 +245,21 @@ HWTEST_F(SecurityGuardConfigManagerTest, TestEventConfig003, TestSize.Level1)
     EXPECT_TRUE(eventCfg.eventName == "update_event");
 }
 
+HWTEST_F(SecurityGuardConfigManagerTest, TestEventConfig001, TestSize.Level1)
+{
+    EventConfig config;
+    bool success = config.Load(INIT_MODE);
+    EXPECT_TRUE(success);
+    EXPECT_TRUE(config.Load(UPDATE_MODE));
+    config.Update();
+}
+
 HWTEST_F(SecurityGuardConfigManagerTest, TestModelConfig001, TestSize.Level1)
 {
     ModelConfig config;
     bool success = config.Load(INIT_MODE);
     EXPECT_TRUE(success);
+    EXPECT_TRUE(config.Load(UPDATE_MODE));
 }
 
 HWTEST_F(SecurityGuardConfigManagerTest, TestModelConfig002, TestSize.Level1)
@@ -303,824 +300,44 @@ HWTEST_F(SecurityGuardConfigManagerTest, TestModelConfig003, TestSize.Level1)
     EXPECT_TRUE(modelCfg.path == "update_model");
 }
 
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig000, TestSize.Level1)
+HWTEST_F(SecurityGuardConfigManagerTest, TestModelConfig004, TestSize.Level1)
 {
-    LocalAppConfig config;
-    bool success = config.Load(INIT_MODE);
-    EXPECT_TRUE(success);
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), QueryAllAppInfo(An<std::vector<AppInfo> &>())).
-        WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), InsertAppInfo(
-        An<const AppInfo &>())).WillRepeatedly(Return(SUCCESS));
-    config.stream_ = std::ifstream("/data/test/unittest/resource/local_app_attribute_update.json", std::ios::in);
-    EXPECT_TRUE(config.stream_.is_open());
-    EXPECT_FALSE(!config.stream_);
-    success = config.Parse();
-    EXPECT_TRUE(success);
-    success = config.Update();
-    EXPECT_TRUE(success);
-}
-
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig001, TestSize.Level1)
-{
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), QueryAllAppInfo(An<std::vector<AppInfo> &>())).
-        WillRepeatedly(Return(FAILED));
-    LocalAppConfig config;
-    config.stream_.open("/data/test/unittest/resource/local_app_attribute_update.json");
-    EXPECT_TRUE(config.stream_.is_open());
+    ConfigDataManager::GetInstance().ResetEventMap();
+    ConfigDataManager::GetInstance().ResetModelMap();
+    ConfigDataManager::GetInstance().ResetModelToEventMap();
+    ModelConfig config;
+    nlohmann::json jsonObj;
+    ModelCfg modelCfg;
+    to_json(jsonObj, modelCfg);
+    DataMgrCfgSt dataMgrCfg{};
+    to_json(jsonObj, dataMgrCfg);
+    from_json(jsonObj, dataMgrCfg);
+    SecEvent eventDataSt{};
+    to_json(jsonObj, eventDataSt);
+    EventContentSt eventContentSt{};
+    to_json(jsonObj, eventContentSt);
+    from_json(jsonObj, eventContentSt);
+    EventCfg eventCfg{};
+    jsonObj["modelId"] = "xxx";
+    from_json(jsonObj, modelCfg);
+    jsonObj["eventId"] = "xxx";
+    from_json(jsonObj, eventCfg);
     bool success = config.Parse();
-    EXPECT_TRUE(success);
-    success = config.Update();
     EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig002, TestSize.Level1)
-{
-    LocalAppConfig config;
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), InsertAllAppInfo(
-        An<const std::vector<AppInfo> &>())).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), QueryAllAppInfo(An<std::vector<AppInfo> &>())).
-        WillRepeatedly(Return(SUCCESS));
-    std::ofstream out("/data/test/unittest/resource/local_app_attribute_update.json");
-    std::string errtmp = R"({
-    "version":"001",
-    "apps":""
-    })";
-    out << errtmp << std::endl;
-    config.stream_.open("/data/test/unittest/resource/local_app_attribute_update.json");
+    config.stream_.open("/data/test/unittest/resource/security_guard_preset_model.cfg");
     EXPECT_TRUE(config.stream_.is_open());
-    bool success = config.Parse();
-    EXPECT_TRUE(success);
-    success = config.Update();
-    EXPECT_FALSE(success);
-    std::string tmp = R"({
-    "version":"001",
-    "apps":[
-        {
-            "name":"com.sohu.harmonynews",
-            "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-            "attribute":["monitoring"],
-            "isUpdate":1
-        },
-        {
-            "name":"com.sohu.harmonynews",
-            "fingerprint":"ED2D188FACD5EB93248B287366324F6A12DF3A7B8D464C89FDD88FF1588C6596",
-            "attribute":[],
-            "isUpdate":1
-        }
-    ]
-    })";
-    std::ofstream out1("/data/test/unittest/resource/local_app_attribute_update.json");
-    out1 << tmp << std::endl;
-    config.stream_.open("/data/test/unittest/resource/local_app_attribute_update.json");
-    EXPECT_TRUE(config.stream_.is_open());
-    success = config.Parse();
-    EXPECT_TRUE(success);
-    success = config.Update();
-    EXPECT_FALSE(success);
+    EXPECT_TRUE(config.Update());
 }
 
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig003, TestSize.Level1)
+HWTEST_F(SecurityGuardConfigManagerTest, TestModelConfig005, TestSize.Level1)
 {
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001"
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig004, TestSize.Level1)
-{
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps":"111"
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig005, TestSize.Level1)
-{
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": []
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_TRUE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig006, TestSize.Level1)
-{
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoring"],
-                "isUpdate":1
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig007, TestSize.Level1)
-{
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoring"],
-                "isUpdate":2
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig008, TestSize.Level1)
-{
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"com.sohu.harmonynews",
-                "attribute":["monitoring"],
-                "isUpdate":1
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig009, TestSize.Level1)
-{
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoring"],
-                "isUpdate":1
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig010, TestSize.Level1)
-{
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"com.sohu.harmonynews",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "isUpdate":1
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig012, TestSize.Level1)
-{
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"com.sohu.harmonynews",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoring"]
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig013, TestSize.Level1)
-{
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"com.sohu.harmonynews",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoringL"],
-                "isUpdate":1
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig014, TestSize.Level1)
-{
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"com.sohu.harmonynews",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":"monitoringL",
-                "isUpdate":1
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig015, TestSize.Level1)
-{
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"com.sohu.harmonynews",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoring", "payment", "malicious"],
-                "isUpdate":1
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_TRUE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig017, TestSize.Level1)
-{
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), QueryAllAppInfo).WillOnce(Return(FAILED)).WillRepeatedly(
-        [] (std::vector<AppInfo> &infos) {
-            AppInfo info{};
-            info.appName = "com.sohu.harmonynews";
-            infos.emplace_back(info);
-            return SUCCESS;
-        });
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), DeleteAppInfoByNameAndGlobbalFlag(
-        An<const std::string &>(), An<int>())).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), InsertAppInfo(
-        An<const AppInfo &>())).WillRepeatedly(Return(SUCCESS));
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"com.sohu.harmonynews",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoring", "payment", "malicious"],
-                "isUpdate":1
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_TRUE(success);
-    config.UpdateInfoToDb(configs);
-    EXPECT_TRUE(success);
-    config.UpdateInfoToDb(configs);
-    EXPECT_TRUE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig018, TestSize.Level1)
-{
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), QueryAllAppInfo).WillRepeatedly(
-        [] (std::vector<AppInfo> &infos) {
-            AppInfo info{};
-            info.appName = "com.sohu.harmonynews";
-            info.isGlobalApp = 0;
-            infos.emplace_back(info);
-            return SUCCESS;
-        });
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), InsertAppInfo).WillOnce(Return(SUCCESS)).
-        WillRepeatedly(Return(FAILED));
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"com.sohu.harmonynews",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoring", "payment", "malicious"],
-                "isUpdate":1
-            },
-            {
-                "name":"ttttt",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoring", "payment", "malicious"],
-                "isUpdate":1
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_TRUE(success);
-    success = config.UpdateInfoToDb(configs);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig019, TestSize.Level1)
-{
-    LocalAppConfig conf;
-    AppInfo config {};
-    config.appName = "a";
-    config.isUpdate = 1;
-    AppInfo dbConfig {};
-    dbConfig.appName = "a";
-    bool isFind;
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), InsertAppInfo).WillRepeatedly([](
-        const AppInfo & info) {
-        return FAILED;
-    });
-    EXPECT_FALSE(conf.IsNeedUpdate(config, dbConfig, isFind));
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig020, TestSize.Level1)
-{
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), QueryAllAppInfo).WillRepeatedly(
-        [] (std::vector<AppInfo> &infos) {
-            AppInfo info{};
-            info.appName = "com.sohu.harmonynews";
-            info.isGlobalApp = 0;
-            infos.emplace_back(info);
-            return SUCCESS;
-        });
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), InsertAppInfo).WillOnce(Return(SUCCESS)).
-        WillRepeatedly(Return(FAILED));
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"com.sohu.harmonynews",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoring", "payment", "malicious"],
-                "isUpdate":1
-            },
-            {
-                "name":"ttttt",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoring", "payment", "malicious"],
-                "isUpdate":1
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_TRUE(success);
-    success = config.UpdateInfoToDb(configs);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig021, TestSize.Level1)
-{
-    LocalAppConfig config;
-    bool success = config.Load(INIT_MODE);
-    EXPECT_TRUE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestLocalAppConfig022, TestSize.Level1)
-{
-    LocalAppConfig config;
-    std::vector<AppInfo> configs;
-    nlohmann::json::array_t arr;
-    std::vector<std::string> attrs = {"monitoring"};
-    for (size_t i = 0; i < MAXAPPSIZE + 1; i++) {
-        nlohmann::json jsonObj {
-            {"name", std::to_string(i)},
-            {"fingerprint", "C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A"},
-            {"attribute", attrs},
-            {"isUpdate", 1}
-        };
-        arr.push_back(jsonObj);
-    }
-    nlohmann::json jsonOb {
-        {"apps", arr}
-    };
-    std::string jsonStr = jsonOb.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_TRUE(success);
-    EXPECT_TRUE(configs.size() == MAXAPPSIZE + 1);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig000, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    bool success = config.Load(INIT_MODE);
-    EXPECT_TRUE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig001, TestSize.Level1)
-{
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), DeleteAppInfoByIsGlobalApp(
-        An<int>())).WillRepeatedly(Return(FAILED));
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), InsertAllAppInfo(
-        An<const std::vector<AppInfo> &>())).WillRepeatedly(Return(FAILED));
-    GlobalAppConfig config;
-    config.stream_.open("/data/test/unittest/resource/global_app_attribute_update.json");
-    EXPECT_TRUE(config.stream_.is_open());
-    bool success = config.Parse();
-    EXPECT_TRUE(success);
-    success = config.Update();
-    EXPECT_FALSE(success);
-}
-
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig002, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001"
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig003, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001"
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig004, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps":"111"
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig005, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": []
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_TRUE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig006, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoring"]
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig007, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC517572",
-                "attribute":["monitoring"]
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig008, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"com.sohu.harmonynews",
-                "attribute":["monitoring"]
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig009, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoring"]
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig010, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"com.sohu.harmonynews",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A"
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig011, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"com.sohu.harmonynews",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoringL"]
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig012, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"com.sohu.harmonynews",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":"monitoringL"
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig013, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    std::vector<AppInfo> configs;
-    std::string jsonStr = R"({
-        "version":"001",
-        "apps": [
-            {
-                "name":"com.sohu.harmonynews",
-                "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-                "attribute":["monitoring", "payment", "malicious"]
-            }
-        ]
-    })";
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_TRUE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig014, TestSize.Level1)
-{
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), DeleteAppInfoByIsGlobalApp(
-        An<int>())).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), InsertAllAppInfo(
-        An<const std::vector<AppInfo> &>())).WillRepeatedly(Return(SUCCESS));
-    GlobalAppConfig config;
-    config.stream_.open("/data/test/unittest/resource/global_app_attribute_update.json");
-    EXPECT_TRUE(config.stream_.is_open());
-    bool success = config.Parse();
-    EXPECT_TRUE(success);
-    success = config.Update();
-    EXPECT_TRUE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig015, TestSize.Level1)
-{
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), DeleteAppInfoByIsGlobalApp(
-        An<int>())).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(AppInfoRdbHelper::GetInstance(), InsertAllAppInfo(
-        An<const std::vector<AppInfo> &>())).WillRepeatedly(Return(SUCCESS));
-    std::ofstream out("/data/test/unittest/resource/global_app_attribute_update.json");
-    std::string errTmp = R"({
-    "version":"001",
-    "apps":""
-    })";
-    out << errTmp << std::endl;
-    GlobalAppConfig config;
-    config.stream_.open("/data/test/unittest/resource/global_app_attribute_update.json");
-    EXPECT_TRUE(config.stream_.is_open());
-    bool success = config.Parse();
-    EXPECT_TRUE(success);
-    success = config.Update();
-    EXPECT_FALSE(success);
-    std::string tmp = R"({
-    "version":"001",
-    "apps":[
-        {
-            "name":"com.sohu.harmonynews",
-            "fingerprint":"C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A",
-            "attribute":["monitoring"]
-        },
-        {
-            "name":"com.sohu.harmonynews",
-            "fingerprint":"ED2D188FACD5EB93248B287366324F6A12DF3A7B8D464C89FDD88FF1588C6596",
-            "attribute":[]
-        }
-    ]
-    })";
-    out << tmp << std::endl;
-    success = config.Update();
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig016, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    std::vector<AppInfo> configs;
-    nlohmann::json::array_t arr;
-    std::vector<std::string> attrs = {"monitoring"};
-    for (size_t i = 0; i < MAXAPPSIZE + 1; i++) {
-        nlohmann::json jsonObj {
-            {"name", std::to_string(i)},
-            {"fingerprint", "C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A"},
-            {"attribute", attrs},
-        };
-        arr.push_back(jsonObj);
-    }
-    nlohmann::json jsonOb {
-        {"apps", arr}
-    };
-    std::string jsonStr = jsonOb.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_TRUE(success);
-    EXPECT_TRUE(configs.size() == MAXAPPSIZE + 1) ;
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig017, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    bool success = config.Update();
-    EXPECT_FALSE(success);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig018, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    std::vector<AppInfo> configs;
-    nlohmann::json::array_t arr;
-    std::vector<std::string> attrs = {"monitoring"};
-    for (size_t i = 0; i < MAXAPPSIZE + 1; i++) {
-        nlohmann::json jsonObj {
-            {"name", std::to_string(i)},
-            {"fingerprint", "C8C9687FD68B738417ED2BFA6B91609A3F63720D30369130DEB802DC5175724A"},
-            {"attribute", attrs},
-            {"isUpdate", 1},
-        };
-        arr.push_back(jsonObj);
-    }
-    nlohmann::json jsonOb {
-        {"apps", arr}
-    };
-    std::string jsonStr = jsonOb.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
-    nlohmann::json extraJson = nlohmann::json::parse(jsonStr, nullptr, false);
-    EXPECT_FALSE(extraJson.is_discarded());
-    bool success = config.ParseAppListConfig(configs, extraJson);
-    EXPECT_TRUE(success);
-    EXPECT_TRUE(configs.size() == MAXAPPSIZE + 1);
-}
-
-HWTEST_F(SecurityGuardConfigManagerTest, TestGlobalAppConfig019, TestSize.Level1)
-{
-    GlobalAppConfig config;
-    bool success = config.Load(INIT_MODE);
-    EXPECT_TRUE(success);
+    ConfigDataManager::GetInstance().ResetEventMap();
+    ConfigDataManager::GetInstance().ResetModelMap();
+    ConfigDataManager::GetInstance().ResetModelToEventMap();
+    ConfigDataManager::GetInstance().GetAllModelIds();
+    ConfigDataManager::GetInstance().ResetEventToTableMap();
+    EXPECT_TRUE(ConfigDataManager::GetInstance().GetTableFromEventId(0).empty());
+    EXPECT_TRUE(ConfigDataManager::GetInstance().GetAllEventConfigs().empty());
 }
 
 HWTEST_F(SecurityGuardConfigManagerTest, TestModelCfgMarshalling001, TestSize.Level1)
@@ -1469,4 +686,56 @@ HWTEST_F(SecurityGuardConfigManagerTest, TestModelCfgMarshalling027, TestSize.Le
     EXPECT_TRUE(cfg.trueResult == "trueResult");
     EXPECT_TRUE(cfg.falseResult == "falseResult");
 }
+
+HWTEST_F(SecurityGuardConfigManagerTest, TestUnmarshal001, testing::ext::TestSize.Level1)
+{
+    using namespace OHOS::Security::SecurityGuard;
+    nlohmann::json jsonOb {
+        {"version", "xxx"},
+        {"releaseTime", "xxx"},
+        {"detectMaxRecord", 999},
+        {"uidMaxDnsRecord", 10},
+        {"detectMaxTime", 86399},
+        {"ipBlackList", {"1", "2"}},
+        {"ipBlackListMock", {"xxx", "xxx"}},
+        {"dnsBlackList", {"1", "2"}},
+        {"number", {1, 2}}
+    };
+    std::vector<std::string> testVec {};
+    std::vector<int64_t> testVecInt {};
+    std::vector<int32_t> testVecIntS{};
+    uint64_t data;
+    int64_t dataInt;
+    int32_t i32Data;
+    uint32_t u32Data;
+
+    EXPECT_TRUE(JsonCfg::Unmarshal(i32Data, jsonOb, "detectMaxRecord"));
+    EXPECT_FALSE(JsonCfg::Unmarshal(i32Data, jsonOb, "releaseTime"));
+    EXPECT_FALSE(JsonCfg::Unmarshal(i32Data, jsonOb, "isexist"));
+
+    EXPECT_TRUE(JsonCfg::Unmarshal(u32Data, jsonOb, "detectMaxRecord"));
+    EXPECT_FALSE(JsonCfg::Unmarshal(u32Data, jsonOb, "releaseTime"));
+    EXPECT_FALSE(JsonCfg::Unmarshal(u32Data, jsonOb, "isexist"));
+
+    EXPECT_TRUE(JsonCfg::Unmarshal(data, jsonOb, "detectMaxRecord"));
+    EXPECT_FALSE(JsonCfg::Unmarshal(data, jsonOb, "releaseTime"));
+    EXPECT_FALSE(JsonCfg::Unmarshal(data, jsonOb, "isexist"));
+
+    EXPECT_TRUE(JsonCfg::Unmarshal(dataInt, jsonOb, "uidMaxDnsRecord"));
+    EXPECT_FALSE(JsonCfg::Unmarshal(dataInt, jsonOb, "releaseTime"));
+    EXPECT_FALSE(JsonCfg::Unmarshal(dataInt, jsonOb, "isexist"));
+
+    EXPECT_TRUE(JsonCfg::Unmarshal(testVec, jsonOb, "ipBlackList"));
+    EXPECT_FALSE(JsonCfg::Unmarshal(testVec, jsonOb, "isexist"));
+    EXPECT_FALSE(JsonCfg::Unmarshal(testVec, jsonOb, "number"));
+
+    EXPECT_TRUE(JsonCfg::Unmarshal(testVecInt, jsonOb, "number"));
+    EXPECT_FALSE(JsonCfg::Unmarshal(testVecInt, jsonOb, "ipBlackList"));
+    EXPECT_FALSE(JsonCfg::Unmarshal(testVecInt, jsonOb, "isexist"));
+
+    EXPECT_TRUE(JsonCfg::Unmarshal(testVecIntS, jsonOb, "number"));
+    EXPECT_FALSE(JsonCfg::Unmarshal(testVecIntS, jsonOb, "ipBlackList"));
+    EXPECT_FALSE(JsonCfg::Unmarshal(testVecIntS, jsonOb, "isexist"));
+}
+
 }

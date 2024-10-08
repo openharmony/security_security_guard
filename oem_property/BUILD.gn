@@ -30,7 +30,7 @@ ohos_prebuilt_etc("security_guard_model_cfg") {
 }
 
 ohos_prebuilt_etc("security_guard_event_cfg") {
-  source = "hos/security_guard_event.cfg"
+  source = "hos/security_guard_event.json"
   module_install_dir = ""
 
   subsystem_name = "security"
@@ -46,7 +46,15 @@ ohos_prebuilt_etc("security_audit_cfg") {
 }
 
 ohos_prebuilt_etc("real_time_upload_event_cfg") {
-  source = "hos/real_time_upload_event.cfg"
+  source = "hos/real_time_upload_event.json"
+  module_install_dir = ""
+
+  subsystem_name = "security"
+  part_name = "security_guard"
+}
+
+ohos_prebuilt_etc("config_update_trust_list_cfg") {
+  source = "hos/config_update_trust_list.json"
   module_install_dir = ""
 
   subsystem_name = "security"

@@ -31,9 +31,9 @@
       OHOS::Security::SecurityGuard::ConfigDataManager::GetAllModelIds*;
       OHOS::Security::SecurityGuard::ConfigDataManager::GetEventConfig*;
       OHOS::Security::SecurityGuard::ConfigDataManager::GetModelConfig*;
-      OHOS::Security::SecurityGuard::ConfigDataManager::GetAppInfosByName*;
       OHOS::Security::SecurityGuard::ConfigDataManager::GetAllEventIds*;
       OHOS::Security::SecurityGuard::ConfigDataManager::GetTableFromEventId*;
+      OHOS::Security::SecurityGuard::ConfigDataManager::GetAllEventConfigs*;
     };
   local:
     *;

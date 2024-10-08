@@ -18,6 +18,7 @@ ohos_sa_profile("sg_sa_profile_standard") {
   sources = [
     "3523.json",
     "3524.json",
+    "3526.json",
   ]
   part_name = "security_guard"
 }

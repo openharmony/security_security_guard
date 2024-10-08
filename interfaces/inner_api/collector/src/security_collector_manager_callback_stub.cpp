@@ -30,7 +30,7 @@ int32_t SecurityCollectorManagerCallbackStub::OnRemoteRequest(uint32_t code, Mes
     if (code == SecurityCollectorManagerCallbackStub::CMD_COLLECTOR_NOTIFY) {
         uint32_t expected = sizeof(uint64_t);
         uint32_t actual = data.GetReadableBytes();
-        if (expected >= actual) {
+        if (actual <= expected) {
             LOGE("actual length error, value=%{public}u", actual);
             return BAD_PARAM;
         }

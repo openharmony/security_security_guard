@@ -1,5 +1,5 @@
 {
-  "name": "@ohos/security_guard",
+  "name": "@openharmony/security_guard",
   "description": "security_guard",
   "version": "3.1.0",
   "license": "Apache License 2.0",
@@ -18,6 +18,7 @@
     "hisysevent_config": [
       "//base/security/security_guard/hisysevent.yaml"
     ],
+    "features": ["security_guard_enable"],
     "adapted_system_type": [
       "standard"
     ],
@@ -37,8 +38,10 @@
         "hilog",
         "init",
         "ipc",
+        "json",
         "napi",
         "netmanager_base",
+        "openssl",
         "os_account",
         "preferences",
         "relational_store",
@@ -46,12 +49,10 @@
         "samgr",
         "time_service",
         "appverify",
-        "json",
-        "googletest",
+        "ffrt",
         "bundle_framework"
       ],
       "third_party": [
-        "openssl"
       ]
     },
     "build": {
@@ -60,6 +61,9 @@
         "//base/security/security_guard/sa_profile:security_guard.init",
         "//base/security/security_guard/oem_property:security_audit_cfg",
         "//base/security/security_guard/oem_property:security_guard_cfg",
+        "//base/security/security_guard/oem_property:real_time_upload_event_cfg",
+        "//base/security/security_guard/oem_property:config_update_trust_list_cfg",
+        "//base/security/security_guard/oem_property:config_update_trust_list_cfg",
         "//base/security/security_guard/oem_property:security_guard_model_cfg",
         "//base/security/security_guard/oem_property:security_guard_event_cfg",
         "//base/security/security_guard:sg_classify_service_build_module",
@@ -74,7 +78,8 @@
           "name": "//base/security/security_guard/interfaces/inner_api/classify:libsg_classify_sdk",
           "header": {
             "header_files": [
-              "sg_classify_client.h"
+              "sg_classify_client.h",
+              "i_model.h"
             ],
             "header_base": "//base/security/security_guard/interfaces/inner_api/classify/include"
           }
@@ -111,12 +116,21 @@
             ],
             "header_base": "//base/security/security_guard/interfaces/inner_api/obtaindata/include"
           }
+        },
+        {
+          "name": "//base/security/security_guard/interfaces/inner_api/data_collect_manager:libsg_data_collect_manager_sdk",
+          "header": {
+            "header_files": [
+              "data_collect_manager.h"
+            ],
+            "header_base": "//base/security/security_guard/interfaces/inner_api/data_collect_manager/include"
+          }
         }
       ],
       "test": [
-        "//base/security/security_guard/test:security_guard_build_module_test",
-        "//base/security/security_guard/test:security_guard_fuzz_test",
-        "//base/security/security_guard/test:security_guard_unit_test"
+        "//base/security/security_guard:security_guard_build_module_test",
+        "//base/security/security_guard:security_guard_fuzz_test",
+        "//base/security/security_guard:security_guard_unit_test"
       ]
     }
   }

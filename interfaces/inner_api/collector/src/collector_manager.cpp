@@ -24,6 +24,7 @@
 namespace OHOS::Security::SecurityCollector {
 int32_t CollectorManager::Subscribe(const std::shared_ptr<ICollectorSubscriber> &subscriber)
 {
+    LOGI("enter CollectorManager Subscribe");
     if (subscriber == nullptr) {
         LOGE("subscriber is null");
         return BAD_PARAM;
@@ -68,6 +69,7 @@ int32_t CollectorManager::Subscribe(const std::shared_ptr<ICollectorSubscriber> 
 
 int32_t CollectorManager::Unsubscribe(const std::shared_ptr<ICollectorSubscriber> &subscriber)
 {
+    LOGI("enter CollectorManager Unsubscribe");
     if (subscriber == nullptr) {
         LOGE("subscriber is null");
         return BAD_PARAM;
@@ -134,7 +136,7 @@ int32_t CollectorManager::QuerySecurityEvent(const std::vector<SecurityEventRule
 
 int32_t CollectorManager::CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber)
 {
-    LOGI("begin CollectorStart");
+    LOGI("enter CollectorManager CollectorStart");
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
     auto proxy = iface_cast<ISecurityCollectorManager>(object);
     if (proxy == nullptr) {
@@ -158,7 +160,7 @@ int32_t CollectorManager::CollectorStart(const SecurityCollector::SecurityCollec
 
 int32_t CollectorManager::CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber)
 {
-    LOGI("begin CollectorStart");
+    LOGI("enter CollectorManager CollectorStart");
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
     auto proxy = iface_cast<ISecurityCollectorManager>(object);
     if (proxy == nullptr) {
@@ -173,10 +175,10 @@ int32_t CollectorManager::CollectorStop(const SecurityCollector::SecurityCollect
     }
     int32_t ret = proxy->CollectorStop(subscriber, callback);
     if (ret != SUCCESS) {
-        LOGI("CollectorStart failed, ret=%{public}d", ret);
+        LOGI("CollectorStop failed, ret=%{public}d", ret);
         return ret;
     }
-    LOGI("CollectorStart result, ret=%{public}d", ret);
+    LOGI("CollectorStop result, ret=%{public}d", ret);
     return SUCCESS;
 }
 }

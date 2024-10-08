@@ -73,16 +73,20 @@ void OnRemoteRequestFuzzTest(const uint8_t* data, size_t size)
 void OnRemoteSubscribeRequest(const uint8_t* data, size_t size, MessageParcel* datas,
     MessageParcel* reply, MessageOption* option)
 {
-    int64_t eventId = static_cast<int64_t>(size);
-    std::string version(reinterpret_cast<const char *>(data), size);
-    std::string content(reinterpret_cast<const char *>(data), size);
-    std::string extra(reinterpret_cast<const char *>(data), size);
-    int64_t duration = static_cast<int64_t>(size);
+    if (data == nullptr || size < sizeof(int64_t) + sizeof(int64_t)) {
+        return;
+    }
+    size_t offset = 0;
+    int64_t eventId = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    int64_t duration = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    std::string string(reinterpret_cast<const char *>(data + offset), size - offset);
     Event event;
     event.eventId = eventId;
-    event.version = version;
-    event.content = content;
-    event.extra = extra;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     SecurityCollectorSubscribeInfo subscriberInfo{event, duration, true};
     datas->WriteParcelable(&subscriberInfo);
     sptr<SecurityCollectorManagerCallbackService> callback =
@@ -94,15 +98,18 @@ void OnRemoteSubscribeRequest(const uint8_t* data, size_t size, MessageParcel* d
 void OnRemoteUnsubscribeRequest(const uint8_t* data, size_t size, MessageParcel* datas,
     MessageParcel* reply, MessageOption* option)
 {
-    int64_t eventId = static_cast<int64_t>(size);
-    std::string version(reinterpret_cast<const char *>(data), size);
-    std::string content(reinterpret_cast<const char *>(data), size);
-    std::string extra(reinterpret_cast<const char *>(data), size);
+    if (data == nullptr || size < sizeof(int64_t)) {
+        return;
+    }
+    size_t offset = 0;
+    int64_t eventId = *(reinterpret_cast<const int64_t *>(data));
+    offset += sizeof(int64_t);
+    std::string string(reinterpret_cast<const char *>(data + offset), size - offset);
     Event event;
     event.eventId = eventId;
-    event.version = version;
-    event.content = content;
-    event.extra = extra;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     SecurityCollectorSubscribeInfo subscriberInfo{event, -1, true};
     datas->WriteParcelable(&subscriberInfo);
     sptr<SecurityCollectorManagerCallbackService> callback =
@@ -114,16 +121,20 @@ void OnRemoteUnsubscribeRequest(const uint8_t* data, size_t size, MessageParcel*
 void OnRemoteStartRequest(const uint8_t* data, size_t size, MessageParcel* datas,
     MessageParcel* reply, MessageOption* option)
 {
-    int64_t eventId = static_cast<int64_t>(size);
-    std::string version(reinterpret_cast<const char *>(data), size);
-    std::string content(reinterpret_cast<const char *>(data), size);
-    std::string extra(reinterpret_cast<const char *>(data), size);
-    int64_t duration = static_cast<int64_t>(size);
+    if (data == nullptr || size < sizeof(int64_t) + sizeof(int64_t)) {
+        return;
+    }
+    size_t offset = 0;
+    int64_t eventId = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    int64_t duration = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    std::string string(reinterpret_cast<const char *>(data + offset), size - offset);
     Event event;
     event.eventId = eventId;
-    event.version = version;
-    event.content = content;
-    event.extra = extra;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     SecurityCollectorSubscribeInfo subscriberInfo{event, duration, true};
     datas->WriteParcelable(&subscriberInfo);
     sptr<SecurityCollectorManagerCallbackService> callback =
@@ -135,15 +146,18 @@ void OnRemoteStartRequest(const uint8_t* data, size_t size, MessageParcel* datas
 void OnRemoteStopRequest(const uint8_t* data, size_t size, MessageParcel* datas,
     MessageParcel* reply, MessageOption* option)
 {
-    int64_t eventId = static_cast<int64_t>(size);
-    std::string version(reinterpret_cast<const char *>(data), size);
-    std::string content(reinterpret_cast<const char *>(data), size);
-    std::string extra(reinterpret_cast<const char *>(data), size);
+    if (data == nullptr || size < sizeof(int64_t) + sizeof(int64_t)) {
+        return;
+    }
+    size_t offset = 0;
+    int64_t eventId = *(reinterpret_cast<const int64_t *>(data));
+    offset += sizeof(int64_t);
+    std::string string(reinterpret_cast<const char *>(data + offset), size - offset);
     Event event;
     event.eventId = eventId;
-    event.version = version;
-    event.content = content;
-    event.extra = extra;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     SecurityCollectorSubscribeInfo subscriberInfo{event, -1, true};
     datas->WriteParcelable(&subscriberInfo);
     sptr<SecurityCollectorManagerCallbackService> callback =
@@ -155,15 +169,20 @@ void OnRemoteStopRequest(const uint8_t* data, size_t size, MessageParcel* datas,
 void OnRemoteSecurityEventQuery(const uint8_t* data, size_t size, MessageParcel* datas,
     MessageParcel* reply, MessageOption* option)
 {
-    uint32_t rulerSize = size >= MAX_QUERY_EVENT_SIZE ? MAX_QUERY_EVENT_SIZE : static_cast<uint32_t>(size);
+    if (data == nullptr || size < sizeof(uint32_t) + sizeof(int64_t)) {
+        return;
+    }
+    size_t offset = 0;
+    uint32_t uint32 = *(reinterpret_cast<const uint32_t *>(data));
+    uint32_t rulerSize = uint32 >= MAX_QUERY_EVENT_SIZE ? MAX_QUERY_EVENT_SIZE : uint32;
     datas->WriteUint32(rulerSize);
+    offset += sizeof(uint32_t);
+    int64_t eventId = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    std::string string(reinterpret_cast<const char *>(data + offset), size - offset);
     for (uint32_t i = 0; i < rulerSize; i++) {
-        int64_t eventId = static_cast<int64_t>(size);
-        std::string beginTime(reinterpret_cast<const char *>(data), size);
-        std::string endTime(reinterpret_cast<const char *>(data), size);
-        std::string param(reinterpret_cast<const char *>(data), size);
         SecurityEventRuler ruler =
-            SecurityEventRuler(eventId, beginTime, endTime, param);
+            SecurityEventRuler(eventId, string, string, string);
         datas->WriteParcelable(&ruler);
     }
     sptr<SecurityCollectorManagerCallbackService> callback =

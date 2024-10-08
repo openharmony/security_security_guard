@@ -24,13 +24,15 @@ namespace OHOS::Security::SecurityCollector {
 class SecurityEvent : public Parcelable {
 public:
     SecurityEvent() = default;
-    SecurityEvent(int64_t eventId, const std::string &version = "", const std::string &content = "")
-        : eventId_(eventId), version_(version), content_(content) {};
+    SecurityEvent(int64_t eventId, const std::string &version = "",
+        const std::string &content = "", const std::string &timestamp = "")
+        : eventId_(eventId), version_(version), content_(content), timestamp_(timestamp) {};
     ~SecurityEvent() override = default;
 
     int64_t GetEventId() const { return eventId_; };
     std::string GetVersion() const { return version_; };
     std::string GetContent() const { return content_; };
+    std::string GetTimestamp() const { return timestamp_; };
     bool Marshalling(Parcel& parcel) const override { return true; };
     bool ReadFromParcel(Parcel &parcel) { return true; };
     static SecurityEvent* Unmarshalling(Parcel& parcel) { return {}; };
@@ -39,6 +41,7 @@ private:
     int64_t eventId_;
     std::string version_;
     std::string content_;
+    std::string timestamp_;
 };
 } // namespace OHOS::Security::SecurityCollector
 

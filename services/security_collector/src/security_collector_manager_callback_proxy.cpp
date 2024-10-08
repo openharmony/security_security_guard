@@ -40,6 +40,6 @@ int32_t SecurityCollectorManagerCallbackProxy::OnNotify(const Event &event)
     }
 
     MessageOption option = { MessageOption::TF_ASYNC };
-    return Remote()->SendRequest(CMD_COLLECTOR_NOTIFY, data, reply, option);
+    return remote->SendRequest(CMD_COLLECTOR_NOTIFY, data, reply, option);
 }
 }

@@ -17,18 +17,18 @@
 #define SECURITY_GUARD_CONFIG_DATA_MANAGER_MOCK_H
 
 #include "gmock/gmock.h"
-
+#include "security_event_info.h"
 #include "config_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 class BaseConfigDataManager {
 public:
+    virtual std::vector<EventCfg> GetAllEventConfigs() = 0;
     virtual std::vector<uint32_t> GetAllModelIds() = 0;
     virtual bool GetModelConfig(uint32_t modelId, ModelCfg &config) = 0;
     virtual bool GetEventConfig(int64_t eventId, EventCfg &config) = 0;
     virtual std::string GetTableFromEventId(int64_t eventId) = 0;
     virtual std::vector<int64_t> GetAllEventIds() = 0;
-    virtual std::vector<AppInfo> GetAppInfosByName(const std::string &appName) = 0;
 };
 
 class ConfigDataManager : public BaseConfigDataManager {
@@ -43,7 +43,7 @@ public:
     MOCK_METHOD2(GetEventConfig, bool(int64_t eventId, EventCfg &config));
     MOCK_METHOD1(GetTableFromEventId, std::string(int64_t eventId));
     MOCK_METHOD0(GetAllEventIds, std::vector<int64_t>());
-    MOCK_METHOD1(GetAppInfosByName, std::vector<AppInfo>(const std::string &appName));
+    MOCK_METHOD0(GetAllEventConfigs, std::vector<EventCfg>());
 };
 } // OHOS::Security::SecurityGuard
 

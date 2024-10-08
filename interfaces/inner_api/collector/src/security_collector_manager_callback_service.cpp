@@ -14,7 +14,7 @@
  */
 
 #include "security_collector_manager_callback_service.h"
- 
+#include <cinttypes>
 #include "security_collector_define.h"
 #include "security_collector_log.h"
 

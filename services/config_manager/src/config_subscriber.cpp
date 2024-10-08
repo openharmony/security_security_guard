@@ -26,41 +26,10 @@
 #include "config_define.h"
 #include "config_manager.h"
 #include "model_config.h"
-#include "local_app_config.h"
-#include "global_app_config.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 
 namespace OHOS::Security::SecurityGuard {
-TimeEventRelatedCallBack ConfigSubscriber::timeEventCallBack_ {nullptr};
-std::mutex ConfigSubscriber::callBackMutex_ {};
-
-bool ConfigSubscriber::RegisterTimeEventRelatedCallBack(const TimeEventRelatedCallBack &callBack)
-{
-    std::lock_guard<std::mutex> lock(callBackMutex_);
-    if (callBack == nullptr) {
-        SGLOGE("callBack is null");
-        return false;
-    }
-    SGLOGI("RegisterTimeEventRelatedCallBack...");
-    timeEventCallBack_ = callBack;
-    return true;
-}
-
-bool ConfigSubscriber::UpdateRelatedEventAnalysisCfg(const std::string &file)
-{
-    bool isSuccess = false;
-    {
-        std::lock_guard<std::mutex> lock(callBackMutex_);
-        if (timeEventCallBack_ != nullptr) {
-            isSuccess = timeEventCallBack_();
-        }
-    }
-    if (isSuccess) {
-        return SecurityGuardUtils::CopyFile(file, CONFIG_UPTATE_FILES[RELATED_EVENT_ANALYSIS_CFG_INDEX]);
-    }
-    return isSuccess;
-}
 
 bool ConfigSubscriber::UpdateConfig(const std::string &file)
 {
@@ -70,16 +39,6 @@ bool ConfigSubscriber::UpdateConfig(const std::string &file)
         isSuccess = ConfigManager::UpdataConfig<EventConfig>();
     } else if (file == CONFIG_CACHE_FILES[MODEL_CFG_INDEX]) {
         isSuccess = ConfigManager::UpdataConfig<ModelConfig>();
-    } else if (file == CONFIG_CACHE_FILES[SIG_RULE_CFG_INDEX]) {
-        isSuccess = SecurityGuardUtils::CopyFile(file, CONFIG_UPTATE_FILES[SIG_RULE_CFG_INDEX]);
-    } else if (file == CONFIG_CACHE_FILES[URL_RULE_CFG_INDEX]) {
-        isSuccess = SecurityGuardUtils::CopyFile(file, CONFIG_UPTATE_FILES[URL_RULE_CFG_INDEX]);
-    } else if (file == CONFIG_CACHE_FILES[RELATED_EVENT_ANALYSIS_CFG_INDEX]) {
-        isSuccess = UpdateRelatedEventAnalysisCfg(file);
-    } else if (file == CONFIG_CACHE_FILES[LOCAL_APP_CFG_INDEX]) {
-        isSuccess = ConfigManager::UpdataConfig<LocalAppConfig>();
-    } else if (file == CONFIG_CACHE_FILES[GLOBAL_APP_CFG_INDEX]) {
-        isSuccess = ConfigManager::UpdataConfig<GlobalAppConfig>();
     }
     event.path = file;
     event.time = SecurityGuardUtils::GetDate();
@@ -87,9 +46,12 @@ bool ConfigSubscriber::UpdateConfig(const std::string &file)
     SGLOGD("file path=%{public}s, TIME=%{public}s, ret=%{public}d", event.path.c_str(), event.time.c_str(),
         event.ret);
     BigData::ReportConfigUpdateEvent(event);
-    bool success = RemoveFile(file);
-    if (!success) {
-        SGLOGW("remove file error, %{public}s", strerror(errno));
+   
+    if (file != CONFIG_CACHE_FILES[EVENT_CFG_INDEX] && file != CONFIG_CACHE_FILES[MODEL_CFG_INDEX]) {
+        return true;
+    }
+    if (!RemoveFile(file)) {
+        SGLOGE("remove file error, %{public}s", strerror(errno));
     }
     return isSuccess;
 }

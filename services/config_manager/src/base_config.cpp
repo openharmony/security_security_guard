@@ -26,15 +26,15 @@ namespace {
 
 bool BaseConfig::Check()
 {
-    if (!stream_.is_open() ||!stream_) {
+    if (!stream_.is_open()) {
         SGLOGE("stream error");
         return false;
     }
 
     stream_.seekg(0, std::ios::end);
-    int len = static_cast<int>(stream_.tellg());
+    std::ios::pos_type len = stream_.tellg();
     if (len == 0 || len > CFG_FILE_MAX_SIZE) {
-        SGLOGE("stream is empty or too large, len = %{public}d", len);
+        SGLOGE("stream is empty or too large");
         stream_.close();
         return false;
     }

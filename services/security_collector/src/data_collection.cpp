@@ -14,7 +14,7 @@
  */
 
 #include "data_collection.h"
-
+#include <cinttypes>
 #include "json_cfg.h"
 #include "security_collector_log.h"
 #include "collector_cfg_marshalling.h"
@@ -40,21 +40,21 @@ bool DataCollection::StartCollectors(const std::vector<int64_t>& eventIds, std::
     }
     std::vector<int64_t> loadedEventIds_;
     for (int64_t eventId : eventIds) {
-        LOGI("StartCollectors eventId is %{public}" PRId64 "", eventId);
+        LOGI("StartCollectors eventId is 0x%{public}" PRIx64, eventId);
         if (IsCollectorStarted(eventId)) {
-            LOGI("Collector already started, eventId is %{public}" PRId64 "", eventId);
+            LOGI("Collector already started, eventId is 0x%{public}" PRIx64, eventId);
             continue;
         }
         std::string collectorPath;
         ErrorCode ret = GetCollectorPath(eventId, collectorPath);
         if (ret != SUCCESS) {
-            LOGE("GetCollectorPath failed, eventId is %{public}" PRId64 "", eventId);
+            LOGE("GetCollectorPath failed, eventId is 0x%{public}" PRIx64, eventId);
             StopCollectors(loadedEventIds_);
             return false;
         }
         ret = LoadCollector(eventId, collectorPath, api);
         if (ret != SUCCESS) {
-            LOGE("Load collector failed, eventId is %{public}" PRId64 "", eventId);
+            LOGE("Load collector failed, eventId is 0x%{public}" PRIx64, eventId);
             StopCollectors(loadedEventIds_);
             return false;
         }
@@ -67,25 +67,23 @@ bool DataCollection::StartCollectors(const std::vector<int64_t>& eventIds, std::
 bool DataCollection::SecurityGuardSubscribeCollector(const std::vector<int64_t>& eventIds)
 {
     LOGI("Start to subscribe collectors start");
-    std::vector<int64_t> loadedEventIds_;
     for (int64_t eventId : eventIds) {
-        LOGI("StartCollectors eventId is %{public}" PRId64 "", eventId);
+        LOGI("StartCollectors eventId is 0x%{public}" PRIx64, eventId);
         if (IsCollectorStarted(eventId)) {
-            LOGI("Collector already started, eventId is %{public}" PRId64 "", eventId);
+            LOGI("Collector already started, eventId is 0x%{public}" PRIx64, eventId);
             continue;
         }
         std::string collectorPath;
         ErrorCode ret = GetCollectorPath(eventId, collectorPath);
         if (ret != SUCCESS) {
-            LOGE("GetCollectorPath failed, eventId is %{public}" PRId64 "", eventId);
-            return false;
+            LOGE("GetCollectorPath failed, eventId is 0x%{public}" PRIx64, eventId);
+            continue;
         }
         ret = LoadCollector(eventId, collectorPath, nullptr);
         if (ret != SUCCESS) {
-            LOGE("GetCollectorPath failed, eventId is %{public}" PRId64 "", eventId);
-            return false;
+            LOGE("GetCollectorPath failed, eventId is 0x%{public}" PRIx64, eventId);
+            continue;
         }
-        loadedEventIds_.push_back(eventId);
     }
     LOGI("StartCollectors finish");
     return true;
@@ -108,10 +106,10 @@ bool DataCollection::StopCollectors(const std::vector<int64_t>& eventIds)
     bool ret = true;
     std::lock_guard<std::mutex> lock(mutex_);
     for (int64_t eventId : eventIds) {
-        LOGI("StopCollectors eventId is %{public}" PRId64 "", eventId);
+        LOGI("StopCollectors eventId is 0x%{public}" PRIx64, eventId);
         auto loader = eventIdToLoaderMap_.find(eventId);
         if (loader == eventIdToLoaderMap_.end()) {
-            LOGI("Collector not found, eventId is %{public}" PRId64 "", eventId);
+            LOGI("Collector not found, eventId is 0x%{public}" PRIx64, eventId);
             continue;
         }
         ICollector* collector = loader->second->CallGetCollector();
@@ -125,7 +123,7 @@ bool DataCollection::StopCollectors(const std::vector<int64_t>& eventIds)
                 result = collector->Unsubscribe(eventId);
             }
             if (result != 0) {
-                LOGE("Failed to stop collector, eventId is %{public}" PRId64 "", eventId);
+                LOGE("Failed to stop collector, eventId is 0x%{public}" PRIx64, eventId);
                 ret = false;
             }
             LOGI("Stop collector");
@@ -169,7 +167,7 @@ ErrorCode DataCollection::GetCollectorPath(int64_t eventId, std::string& path)
 {
     LOGI("Start GetCollectorPath");
     std::ifstream stream(SA_CONFIG_PATH, std::ios::in);
-    if (!stream.is_open() || !stream) {
+    if (!stream.is_open()) {
         LOGE("Stream error, %{public}s", strerror(errno));
         return STREAM_ERROR;
     }
@@ -197,10 +195,9 @@ ErrorCode DataCollection::GetCollectorPath(int64_t eventId, std::string& path)
         [eventId] (const ModuleCfgSt &module) {
             auto ifIt = std::find(module.eventId.begin(), module.eventId.end(), eventId);
             if (ifIt != module.eventId.end()) {
-                LOGI("seccess to find the %{public}" PRId64 "", eventId);
+                LOGI("success to find the event id: 0x%{public}" PRIx64, eventId);
                 return true;
             } else {
-                LOGI("Failed to find the eventId");
                 return false;
             }
         });
@@ -217,7 +214,7 @@ ErrorCode DataCollection::GetCollectorType(int64_t eventId, int32_t& collectorTy
 {
     LOGI("Start GetCollectorType");
     std::ifstream stream(SA_CONFIG_PATH, std::ios::in);
-    if (!stream.is_open() || !stream) {
+    if (!stream.is_open()) {
         LOGE("Stream error, %{public}s", strerror(errno));
         return STREAM_ERROR;
     }
@@ -254,7 +251,7 @@ ErrorCode DataCollection::GetCollectorType(int64_t eventId, int32_t& collectorTy
         });
     if (it != moduleCfgs.end()) {
         collectorType = it->collectorType;
-        LOGI("get event %{public}" PRId64 " collector type is %{public}d.", eventId, collectorType);
+        LOGI("get event 0x%{public}" PRIx64 "collector type is %{public}d.", eventId, collectorType);
         return SUCCESS;
     }
 
@@ -270,7 +267,7 @@ ErrorCode DataCollection::CheckFileStream(std::ifstream &stream)
     }
 
     stream.seekg(0, std::ios::end);
-    int len = static_cast<int>(stream.tellg());
+    std::ios::pos_type len = stream.tellg();
     if (len == 0) {
         LOGE("stream is empty");
         return STREAM_ERROR;
@@ -312,16 +309,16 @@ int32_t DataCollection::QuerySecurityEvent(const std::vector<SecurityEventRuler>
         return false;
     }
     for (const auto &ruler : rulers) {
-        LOGI("QuerySecurityEvent eventId is %{public}" PRId64 "", ruler.GetEventId());
+        LOGI("QuerySecurityEvent eventId is 0x%{public}" PRIx64, ruler.GetEventId());
         std::string collectorPath;
         ErrorCode ret = GetCollectorPath(ruler.GetEventId(), collectorPath);
         if (ret != SUCCESS) {
-            LOGE("GetCollectorPath failed, eventId is %{public}" PRId64 "", ruler.GetEventId());
+            LOGE("GetCollectorPath failed, eventId is 0x%{public}" PRIx64, ruler.GetEventId());
             return false;
         }
         ret = LoadCollector(collectorPath, ruler, events);
         if (ret != SUCCESS) {
-            LOGE("Load collector failed, eventId is %{public}" PRId64 "", ruler.GetEventId());
+            LOGE("Load collector failed, eventId is 0x%{public}" PRIx64, ruler.GetEventId());
             return false;
         }
     }

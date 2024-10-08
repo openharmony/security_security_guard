@@ -39,7 +39,6 @@ public:
         std::vector<SecurityEvent> &events);
     int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber);
     int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber);
-
 private:
     void HandleDecipient();
     std::mutex mutex_{};

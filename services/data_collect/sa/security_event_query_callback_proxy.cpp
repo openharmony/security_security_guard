@@ -45,7 +45,12 @@ void SecurityEventQueryCallbackProxy::OnQuery(const std::vector<SecurityCollecto
     }
 
     MessageOption option = { MessageOption::TF_SYNC };
-    Remote()->SendRequest(ISecurityEventQueryCallback::CMD_ON_QUERY, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return;
+    }
+    int ret = remote->SendRequest(ISecurityEventQueryCallback::CMD_ON_QUERY, data, reply, option);
 }
 
 void SecurityEventQueryCallbackProxy::OnComplete()
@@ -58,7 +63,12 @@ void SecurityEventQueryCallbackProxy::OnComplete()
     }
 
     MessageOption option = { MessageOption::TF_SYNC };
-    Remote()->SendRequest(ISecurityEventQueryCallback::CMD_ON_COMPLETE, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return;
+    }
+    int ret = remote->SendRequest(ISecurityEventQueryCallback::CMD_ON_COMPLETE, data, reply, option);
 }
 
 void SecurityEventQueryCallbackProxy::OnError(const std::string &message)
@@ -75,6 +85,11 @@ void SecurityEventQueryCallbackProxy::OnError(const std::string &message)
     }
 
     MessageOption option = { MessageOption::TF_SYNC };
-    Remote()->SendRequest(ISecurityEventQueryCallback::CMD_ON_ERROR, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return;
+    }
+    int ret = remote->SendRequest(ISecurityEventQueryCallback::CMD_ON_ERROR, data, reply, option);
 }
 }

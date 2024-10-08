@@ -41,13 +41,14 @@ public:
     int32_t Subscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) override;
     int32_t Unsubscribe(const sptr<IRemoteObject> &callback) override;
+    int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
+        const sptr<IRemoteObject> &callback) override;
     int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) override;
     int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) override;
-    int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
-        const sptr<IRemoteObject> &callback) override;
     int32_t ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &info) override;
+    int32_t QuerySecurityEventConfig(std::string &result) override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
 
@@ -66,8 +67,11 @@ private:
         std::shared_ptr<std::promise<int32_t>> promise);
     static bool QueryEventByRuler(sptr<ISecurityEventQueryCallback> proxy,
         SecurityCollector::SecurityEventRuler ruler);
+    bool GetSecurityEventConfig(std::vector<int64_t>& eventIdList);
+    static int32_t QueryEventConfig(std::string &result);
     bool WriteRemoteFileToLocal(const SecurityGuard::SecurityConfigUpdateInfo &info, const std::string &realPath);
     int32_t IsApiHasPermission(const std::string &api);
+    bool ParseTrustListFile(const std::string &trustListFile);
     std::mutex mutex_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
 };
