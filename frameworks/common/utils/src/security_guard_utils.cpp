@@ -67,10 +67,12 @@ bool SecurityGuardUtils::StrToLL(const std::string &str, long long &value, int32
     if ((errno == ERANGE && (value == LLONG_MAX || value == LLONG_MIN)) || (errno != 0 && value == 0)) {
         SGLOGE("strtoll converse error,str=%{public}s", str.c_str());
         return false;
-    } else if (end == add) {
+    }
+    if (end == add) {
         SGLOGE("strtoll no digit find");
         return false;
-    } else if (end[0] != '\0') {
+    }
+    if (end[0] != '\0') {
         SGLOGE("strtoll no all digit");
         return false;
     }
@@ -87,10 +89,12 @@ bool SecurityGuardUtils::StrToULL(const std::string &str, unsigned long long &va
     if ((errno == ERANGE && value == ULLONG_MAX) || (errno != 0 && value == 0)) {
         SGLOGE("strtoull converse error,str=%{public}s", str.c_str());
         return false;
-    } else if (end == add) {
+    }
+    if (end == add) {
         SGLOGE("strtoull no digit find");
         return false;
-    } else if (end[0] != '\0') {
+    }
+    if (end[0] != '\0') {
         SGLOGE("strtoull no all digit");
         return false;
     }
@@ -114,9 +118,8 @@ std::string SecurityGuardUtils::GetDate()
 bool SecurityGuardUtils::CopyFile(const std::string &srcPath, const std::string &dstPath)
 {
     std::ifstream src(srcPath, std::ios::binary);
-    if (!src.is_open() || !src) {
+    if (!src.is_open()) {
         SGLOGE("copy file stream error");
-        src.close();
         return false;
     }
     if (src.seekg(0, std::ios_base::end).tellg() > FILE_MAX_SIZE) {
@@ -126,10 +129,9 @@ bool SecurityGuardUtils::CopyFile(const std::string &srcPath, const std::string 
     }
     src.seekg(0, std::ios::beg);
     std::ofstream dst(dstPath, std::ios::binary);
-    if (!dst.is_open() || !dst) {
+    if (!dst.is_open()) {
         SGLOGE("copy file stream error");
         src.close();
-        dst.close();
         return false;
     }
 

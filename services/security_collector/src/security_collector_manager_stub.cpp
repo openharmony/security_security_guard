@@ -58,7 +58,7 @@ int32_t SecurityCollectorManagerStub::HandleSubscribeCmd(MessageParcel &data, Me
     LOGI("%{public}s", __func__);
     uint32_t expected = sizeof(uint64_t);
     uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
+    if (actual <= expected) {
         LOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
@@ -84,7 +84,7 @@ int32_t SecurityCollectorManagerStub::HandleUnsubscribeCmd(MessageParcel &data, 
     LOGI("%{public}s", __func__);
     uint32_t expected = sizeof(uint64_t);
     uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
+    if (actual <= expected) {
         LOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
@@ -105,7 +105,7 @@ int32_t SecurityCollectorManagerStub::HandleStartCmd(MessageParcel &data, Messag
     LOGI("in HandleStartCmd");
     uint32_t expected = sizeof(uint64_t);
     uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
+    if (actual <= expected) {
         LOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
@@ -131,7 +131,7 @@ int32_t SecurityCollectorManagerStub::HandleStopCmd(MessageParcel &data, Message
     LOGI("%{public}s", __func__);
     uint32_t expected = sizeof(uint64_t);
     uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
+    if (actual <= expected) {
         LOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
@@ -157,7 +157,7 @@ int32_t SecurityCollectorManagerStub::HandleSecurityEventQueryCmd(MessageParcel 
     LOGI("%{public}s", __func__);
     uint32_t expected = sizeof(uint32_t);
     uint32_t actual = data.GetReadableBytes();
-    if (expected >= actual) {
+    if (actual <= expected) {
         LOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }

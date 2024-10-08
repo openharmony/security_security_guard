@@ -14,6 +14,7 @@
  */
 
 #include "security_collector_run_manager.h"
+#include <cinttypes>
 #include "security_collector_define.h"
 #include "security_collector_log.h"
 #include "data_collection.h"
@@ -49,14 +50,14 @@ bool SecurityCollectorRunManager::StartCollector(const std::shared_ptr<SecurityC
     }
     std::string appName = subscriber->GetAppName();
     int64_t eventId = subscriber->GetSecurityCollectorSubscribeInfo().GetEvent().eventId;
-    LOGI("appName:%{public}s, eventId:%{public}" PRId64 "", appName.c_str(), eventId);
+    LOGI("appName:%{public}s, eventId:%{public}" PRId64, appName.c_str(), eventId);
     if (collectorRunManager_.find(eventId) != collectorRunManager_.end()) {
         LOGE("collector already start");
         return false;
     }
     
     auto collectorListenner = std::make_shared<SecurityCollectorRunManager::CollectorListenner>(subscriber);
-    LOGI("start collector, eventId:%{public}" PRId64 "", eventId);
+    LOGI("start collector, eventId:%{public}" PRId64, eventId);
     if (!DataCollection::GetInstance().StartCollectors(std::vector<int64_t>{eventId}, collectorListenner)) {
         LOGE("failed to start collectors");
         return false;
@@ -74,7 +75,7 @@ bool SecurityCollectorRunManager::StopCollector(const std::shared_ptr<SecurityCo
     }
     std::string appName = subscriber->GetAppName();
     int64_t eventId = subscriber->GetSecurityCollectorSubscribeInfo().GetEvent().eventId;
-    LOGI("appName:%{public}s, eventId:%{public}" PRId64 "", appName.c_str(), eventId);
+    LOGI("appName:%{public}s, eventId:%{public}" PRId64, appName.c_str(), eventId);
     if (collectorRunManager_.find(eventId) == collectorRunManager_.end()) {
         LOGE("collector no start");
         return false;
@@ -85,7 +86,7 @@ bool SecurityCollectorRunManager::StopCollector(const std::shared_ptr<SecurityCo
             collectorRunManager_[eventId]->GetAppName().c_str(), appName.c_str());
         return false;
     }
-    LOGI("Scheduling stop collector, eventId:%{public}" PRId64 "", eventId);
+    LOGI("Scheduling stop collector, eventId:%{public}" PRId64, eventId);
     if (!DataCollection::GetInstance().StopCollectors(std::vector<int64_t>{eventId})) {
         LOGE("failed to stop collectors");
         return false;

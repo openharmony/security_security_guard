@@ -31,8 +31,7 @@
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 #include "system_ability_definition.h"
-#include "task_handler.h"
-#include "model_manager.h"
+#include "ffrt.h"
 #include "config_manager.h"
 #include "store_define.h"
 
@@ -41,9 +40,12 @@ REGISTER_SYSTEM_ABILITY_BY_ID(RiskAnalysisManagerService, RISK_ANALYSIS_MANAGER_
 
 namespace {
     constexpr int32_t TIMEOUT_REPLY = 500;
+    constexpr const char* PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
     constexpr const char* REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
     constexpr const char* QUERY_SECURITY_MODEL_RESULT_PERMISSION = "ohos.permission.QUERY_SECURITY_MODEL_RESULT";
-    const std::vector<uint32_t> MODELIDS = { 3001000000, 3001000001, 3001000002, 3001000005, 3001000006, 3001000007 };
+    const std::vector<uint32_t> MODELIDS = {
+        3001000000, 3001000001, 3001000002, 3001000005, 3001000006, 3001000007, 3001000009
+    };
     const std::unordered_map<std::string, std::vector<std::string>> g_apiPermissionsMap {
         {"RequestSecurityModelResult", {REQUEST_PERMISSION, QUERY_SECURITY_MODEL_RESULT_PERMISSION}},
     };
@@ -58,9 +60,6 @@ RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnC
 void RiskAnalysisManagerService::OnStart()
 {
     SGLOGI("RiskAnalysisManagerService %{public}s", __func__);
-    if (!Publish(this)) {
-        SGLOGE("Publish error");
-    }
     bool success = ConfigManager::InitConfig<EventConfig>();
     if (!success) {
         SGLOGE("init event config error");
@@ -70,12 +69,15 @@ void RiskAnalysisManagerService::OnStart()
         SGLOGE("init model config error");
     }
 
-    TaskHandler::Task task = [] {
+    auto task = [] {
         ModelManager::GetInstance().Init();
     };
-    TaskHandler::GetInstance()->AddTask(task);
+    ffrt::submit(task);
 
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
+    if (!Publish(this)) {
+        SGLOGE("Publish error");
+    }
 }
 
 void RiskAnalysisManagerService::OnStop()
@@ -89,30 +91,29 @@ int32_t RiskAnalysisManagerService::IsApiHasPermission(const std::string &api)
         return FAILED;
     }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    if (std::none_of(g_apiPermissionsMap.at(api).cbegin(), g_apiPermissionsMap.at(api).cend(),
+    if (std::any_of(g_apiPermissionsMap.at(api).cbegin(), g_apiPermissionsMap.at(api).cend(),
         [callerToken](const std::string &per) {
         int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, per);
         return code == AccessToken::PermissionState::PERMISSION_GRANTED;
     })) {
-        SGLOGE("caller no permission");
-        return NO_PERMISSION;
-    }
-
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
-    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
-        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
-            SGLOGE("not system app no permission");
-            return NO_SYSTEMCALL;
+        AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+        if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+            uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+            if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+                SGLOGE("not system app no permission");
+                return NO_SYSTEMCALL;
+            }
         }
+        return SUCCESS;
     }
-    return SUCCESS;
+    SGLOGE("caller no permission");
+    return NO_PERMISSION;
 }
 
 int32_t RiskAnalysisManagerService::RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
     const std::string &param, const sptr<IRemoteObject> &callback)
 {
-    SGLOGD("%{public}s", __func__);
+    SGLOGI("enter RiskAnalysisManagerService RequestSecurityModelResult");
     int32_t ret = IsApiHasPermission("RequestSecurityModelResult");
     if (ret != SUCCESS) {
         return ret;
@@ -147,7 +148,7 @@ int32_t RiskAnalysisManagerService::RequestSecurityModelResult(const std::string
 void RiskAnalysisManagerService::PushRiskAnalysisTask(uint32_t modelId, std::string param,
     std::shared_ptr<std::promise<std::string>> promise)
 {
-    TaskHandler::Task task = [modelId, param, promise] {
+    auto task = [modelId, param, promise] {
         SGLOGD("modelId=%{public}u", modelId);
         if (std::count(MODELIDS.begin(), MODELIDS.end(), modelId) == 0) {
             SGLOGE("model not support, no need to analyse, modelId=%{public}u", modelId);
@@ -158,7 +159,7 @@ void RiskAnalysisManagerService::PushRiskAnalysisTask(uint32_t modelId, std::str
         SGLOGI("result is %{public}s", result.c_str());
         promise->set_value(result);
     };
-    TaskHandler::GetInstance()->AddTask(task);
+    ffrt::submit(task);
 }
 
 int32_t RiskAnalysisManagerService::SetModelState(uint32_t modelId, bool enable)

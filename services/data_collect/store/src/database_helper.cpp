@@ -16,7 +16,7 @@
 #include "database_helper.h"
 
 #include <array>
-
+#include <cinttypes>
 #include "config_define.h"
 #include "rdb_event_store_callback.h"
 #include "security_guard_define.h"
@@ -85,12 +85,12 @@ int DatabaseHelper::QueryRecentEventByEventId(int64_t eventId, SecEvent &event)
 
 int DatabaseHelper::QueryRecentEventByEventId(const std::vector<int64_t> &eventIds, std::vector<SecEvent> &events)
 {
-    int size = static_cast<int>(eventIds.size());
+    size_t size = eventIds.size();
     if (size == 0) {
         return BAD_PARAM;
     }
-    for (int i = 0; i < size; i++) {
-        SGLOGI("eventId=%{public}" PRId64 "", eventIds[i]);
+    for (size_t i = 0; i < size; i++) {
+        SGLOGI("eventId=%{public}" PRId64, eventIds[i]);
         NativeRdb::RdbPredicates predicates(dbTable_);
         predicates.EqualTo(EVENT_ID, std::to_string(eventIds[i]));
         predicates.OrderByDesc(ID);
@@ -112,12 +112,12 @@ int DatabaseHelper::QueryEventByEventId(int64_t eventId, std::vector<SecEvent> &
 
 int DatabaseHelper::QueryEventByEventId(std::vector<int64_t> &eventIds, std::vector<SecEvent> &events)
 {
-    int size = static_cast<int>(eventIds.size());
+    size_t size = eventIds.size();
     if (size == 0) {
         return BAD_PARAM;
     }
     NativeRdb::RdbPredicates predicates(dbTable_);
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         if (i > 0) {
             predicates.Or();
         }
@@ -129,13 +129,13 @@ int DatabaseHelper::QueryEventByEventId(std::vector<int64_t> &eventIds, std::vec
 int DatabaseHelper::QueryEventByEventIdAndDate(std::vector<int64_t> &eventIds, std::vector<SecEvent> &events,
     std::string beginTime, std::string endTime)
 {
-    int size = static_cast<int>(eventIds.size());
+    size_t size = eventIds.size();
     if (size == 0) {
         return BAD_PARAM;
     }
     NativeRdb::RdbPredicates predicates(dbTable_);
     predicates.BeginWrap();
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         if (i > 0) {
             predicates.Or();
         }
@@ -206,7 +206,7 @@ int DatabaseHelper::DeleteOldEventByEventId(int64_t eventId, int64_t count)
     std::vector<std::string> columns { ID };
     std::shared_ptr<NativeRdb::ResultSet> resultSet = Query(queryPredicates, columns);
     if (resultSet == nullptr) {
-        SGLOGI("failed to get event, eventId=%{public}" PRId64 "", eventId);
+        SGLOGI("failed to get event, eventId=%{public}" PRId64, eventId);
         return DB_OPT_ERR;
     }
     int64_t primaryKey = -1;
@@ -289,6 +289,10 @@ int32_t DatabaseHelper::GetResultSetTableInfo(const std::shared_ptr<NativeRdb::R
         resultSet->GetColumnCount(columnCount) != NativeRdb::E_OK ||
         resultSet->GetAllColumnNames(columnNames) != NativeRdb::E_OK) {
         SGLOGE("get table info failed");
+        return DB_LOAD_ERR;
+    }
+    if (columnNames.size() > INT32_MAX) {
+        SGLOGE("columnNames size err");
         return DB_LOAD_ERR;
     }
     int32_t columnNamesCount = static_cast<int32_t>(columnNames.size());

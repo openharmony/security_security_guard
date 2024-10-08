@@ -32,6 +32,7 @@ constexpr int DEVICE_ID_MAX_LEN = 64;
 constexpr int FILE_NAME_MAX_LEN = 64;
 constexpr int MODEL_NAME_MAX_LEN = 64;
 constexpr int PARAM_MAX_LEN = 900;
+constexpr int ALL_PROPERTY_MAX_LEN = 2048;
 constexpr int NAPI_ON_RESULT_ARGS_CNT = 3;
 constexpr char NAPI_ON_RESULT_ATTR[] = "onResult";
 constexpr char NAPI_SECURITY_MODEL_RESULT_DEVICE_ID_ATTR[] = "deviceId";
@@ -62,6 +63,7 @@ struct RequestSecurityModelResultContext {
     napi_deferred deferred;
     napi_async_work asyncWork;
     std::string deviceId;
+    std::string param;
     uint32_t modelId;
     OHOS::Security::SecurityGuard::SecurityModel result;
     int32_t ret;
@@ -110,6 +112,7 @@ struct NapiSecurityPolicyFileInfo {
     int32_t fd;
     int32_t ret;
 };
+
 using CALLBACK_FUNC = std::function<void(const napi_env, const napi_ref, pid_t threadId,
     const std::vector<OHOS::Security::SecurityCollector::SecurityEvent> &napiEvents)>;
 using RELEASE_FUNC = std::function<void(pid_t threadId)>;
@@ -140,6 +143,7 @@ enum ModelIdType : uint32_t {
     DEVICE_COMPLETENESS_MODEL_ID = 3001000001,
     PHYSICAL_MACHINE_DETECTION_MODEL_ID = 3001000002,
     SECURITY_AUDIT_MODEL_ID = 3001000003,
+    SECURITY_RISK_FACTOR_MODEL_ID = 3001000009,
 };
 
 enum JsErrCode : int32_t {
@@ -182,7 +186,7 @@ struct CommonAsyncContext {
 struct SubscribeCBInfo : public CommonAsyncContext {
     explicit SubscribeCBInfo(napi_env napiEnv,
         std::thread::id thId) : CommonAsyncContext(napiEnv, thId) {};
-    OHOS::Security::SecurityCollector::Event events;
+    OHOS::Security::SecurityCollector::Event events {};
     std::shared_ptr<SubscriberPtr> subscriber = nullptr;
 };
 
@@ -192,9 +196,8 @@ struct UnsubscribeCBInfo : public CommonAsyncContext {
     std::vector<std::shared_ptr<SubscriberPtr>> subscribers;
 };
 
-
 struct SubscriberOAWorker : public CommonAsyncContext {
-    NapiSecurityEvent event;
+    NapiSecurityEvent event {};
     napi_ref ref = nullptr;
     SubscriberPtr *subscriber = nullptr;
 };

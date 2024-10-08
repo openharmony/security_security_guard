@@ -14,6 +14,7 @@
  */
 
 #include "risk_analysis_manager_callback_proxy.h"
+#include "security_guard_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 RiskAnalysisManagerCallbackProxy::RiskAnalysisManagerCallbackProxy(const sptr<IRemoteObject> &impl)
@@ -32,10 +33,13 @@ int32_t RiskAnalysisManagerCallbackProxy::ResponseSecurityModelResult(const std:
     }
 
     data.WriteUint32(modelId);
-    data.WriteString(devId);
     data.WriteString(result);
 
     MessageOption option = { MessageOption::TF_ASYNC };
-    return Remote()->SendRequest(CMD_SET_SECURITY_MODEL_RESULT, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        return NULL_OBJECT;
+    }
+    return remote->SendRequest(CMD_SET_SECURITY_MODEL_RESULT, data, reply, option);
 }
 }

@@ -14,8 +14,11 @@
  */
 
 #include "security_collector_manager_service.h"
-
+#include <thread>
+#include <atomic>
+#include <cinttypes>
 #include "hisysevent.h"
+#include "iservice_registry.h"
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
 #include "system_ability_definition.h"
@@ -26,13 +29,13 @@
 #include "security_collector_subscriber_manager.h"
 #include "security_collector_run_manager.h"
 #include "security_collector_manager_callback_proxy.h"
-#include "task_handler.h"
+#include "ffrt.h"
 #include "event_define.h"
 #include "tokenid_kit.h"
-#include "data_collection.h"
 
 namespace OHOS::Security::SecurityCollector {
 namespace {
+    constexpr char PERMISSION[] = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
     constexpr char REPORT_PERMISSION[] = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
     constexpr char NOTIFY_APP_NAME[] = "security_guard";
     constexpr const char* CALLER_PID = "CALLER_PID";
@@ -40,6 +43,8 @@ namespace {
     constexpr const char* SC_EVENT_ID = "EVENT_ID";
     constexpr const char* SUB_RET = "SUB_RET";
     constexpr const char* UNSUB_RET = "UNSUB_RET";
+    constexpr const int SLEEP_INTERVAL = 5000;
+    std::atomic<uint32_t> g_refCount = 0;
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(SecurityCollectorManagerService, SECURITY_COLLECTOR_MANAGER_SA_ID, true);
@@ -53,12 +58,29 @@ SecurityCollectorManagerService::SecurityCollectorManagerService(int32_t saId, b
 void SecurityCollectorManagerService::OnStart()
 {
     LOGI("%{public}s", __func__);
+    auto handler = [this] (const sptr<IRemoteObject> &remote) { CleanSubscriber(remote); };
+    SecurityCollectorSubscriberManager::GetInstance().SetUnsubscribeHandler(handler);
+    auto task = []() {
+        while (true) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+            if (g_refCount.load() != 0) {
+                continue;
+            }
+            LOGI("Unload security collector manager SA begin.");
+            auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+            if (registry == nullptr) {
+                LOGE("GetSystemAbilityManager error.");
+                break;
+            }
+            registry->UnloadSystemAbility(SECURITY_COLLECTOR_MANAGER_SA_ID);
+            LOGI("Unload security collector manager SA end.");
+            break;
+        }
+    };
+    ffrt::submit(task);
     if (!Publish(this)) {
         LOGE("Publish error");
     }
-
-    auto handler = [this] (const sptr<IRemoteObject> &remote) { CleanSubscriber(remote); };
-    SecurityCollectorSubscriberManager::GetInstance().SetUnsubscribeHandler(handler);
 }
 
 void SecurityCollectorManagerService::OnStop()
@@ -83,7 +105,7 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
     const sptr<IRemoteObject> &callback)
 {
     Event event = subscribeInfo.GetEvent();
-    LOGI("in subscribe, subscribinfo: duration:%{public}" PRId64 ", isNotify:%{public}d, eventid:%{public}" PRId64 ",\n"
+    LOGI("in subscribe, subscribinfo: duration:%{public}" PRId64 ", isNotify:%{public}d, eventid:%{public}" PRId64 ","
         "version:%{public}s, extra:%{public}s", subscribeInfo.GetDuration(), (int)subscribeInfo.IsNotify(),
         event.eventId, event.version.c_str(), event.extra.c_str());
     int32_t ret = HasPermission(REPORT_PERMISSION);
@@ -125,13 +147,14 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
     subEvent.ret = SUCCESS;
     ReportScSubscribeEvent(subEvent);
     LOGI("Out subscribe");
+    g_refCount.fetch_add(1);
     return SUCCESS;
 }
 
 int32_t SecurityCollectorManagerService::Unsubscribe(const sptr<IRemoteObject> &callback)
 {
     LOGI("In unsubscribe");
-    int32_t ret = HasPermission(REPORT_PERMISSION);
+    int32_t ret = HasPermission(PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;
@@ -145,6 +168,7 @@ int32_t SecurityCollectorManagerService::Unsubscribe(const sptr<IRemoteObject> &
     ReportScUnsubscribeEvent(subEvent);
 
     LOGI("Out unsubscribe");
+    g_refCount.fetch_sub(1);
     return SUCCESS;
 }
 
@@ -159,12 +183,12 @@ int32_t SecurityCollectorManagerService::CollectorStart(const SecurityCollectorS
     }
     int32_t collectorType = COLLECTOR_NOT_CAN_START;
     if (DataCollection::GetInstance().GetCollectorType(event.eventId, collectorType) != SUCCESS) {
-        LOGE("get collector type error event id: %{public}" PRId64 "", event.eventId);
+        LOGE("get collector type error event id: %{public}" PRId64, event.eventId);
         return BAD_PARAM;
     }
     
     if (collectorType != COLLECTOR_CAN_START) {
-        LOGE("collector type not support be start, event id: %{public}" PRId64 "", event.eventId);
+        LOGE("collector type not support be start, event id: %{public}" PRId64, event.eventId);
         return BAD_PARAM;
     }
     std::string appName = GetAppName();
@@ -189,6 +213,7 @@ int32_t SecurityCollectorManagerService::CollectorStart(const SecurityCollectorS
     subEvent.ret = SUCCESS;
     ReportScSubscribeEvent(subEvent);
     LOGI("Out CollectorStart");
+    g_refCount.fetch_add(1);
     return SUCCESS;
 }
 
@@ -223,6 +248,7 @@ int32_t SecurityCollectorManagerService::CollectorStop(const SecurityCollectorSu
     subEvent.ret = SUCCESS;
     ReportScSubscribeEvent(subEvent);
     LOGI("Out CollectorStop");
+    g_refCount.fetch_sub(1);
     return SUCCESS;
 }
 
@@ -258,6 +284,7 @@ void SecurityCollectorManagerService::UnsetDeathRecipient(const sptr<IRemoteObje
 
 void SecurityCollectorManagerService::SubscriberDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
 {
+    g_refCount.fetch_sub(1);
     LOGD("SecurityCollectorManagerService In");
     if (remote == nullptr) {
         LOGE("remote object is nullptr");
@@ -294,16 +321,16 @@ void SecurityCollectorManagerService::ExecuteOnNotifyByTask(const sptr<IRemoteOb
 {
     auto proxy = iface_cast<SecurityCollectorManagerCallbackProxy>(remote);
     if (proxy != nullptr) {
-        LOGI("report to proxy");
-        SecurityGuard::TaskHandler::Task task = [proxy, event] () {
+        LOGD("report to proxy");
+        auto task = [proxy, event] () {
             proxy->OnNotify(event);
         };
         if (event.eventId == SecurityCollector::FILE_EVENTID ||
             event.eventId == SecurityCollector::PROCESS_EVENTID ||
             event.eventId == SecurityCollector::NETWORK_EVENTID) {
-            SecurityGuard::TaskHandler::GetInstance()->AddMinorsTask(task);
+            ffrt::submit(task, {}, {}, ffrt::task_attr().qos(ffrt::qos_background));
         } else {
-            SecurityGuard::TaskHandler::GetInstance()->AddTask(task);
+            ffrt::submit(task);
         }
     } else {
         LOGE("report proxy is null");
@@ -313,18 +340,22 @@ void SecurityCollectorManagerService::ExecuteOnNotifyByTask(const sptr<IRemoteOb
 int32_t SecurityCollectorManagerService::QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
     std::vector<SecurityEvent> &events)
 {
+    g_refCount.fetch_add(1);
     LOGI("begin QuerySecurityEvent");
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REPORT_PERMISSION);
     if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
         LOGE("caller no permission");
+        g_refCount.fetch_sub(1);
         return NO_PERMISSION;
     }
     bool isSuccess = DataCollection::GetInstance().QuerySecurityEvent(rulers, events);
     if (!isSuccess) {
         LOGI("QuerySecurityEvent error");
+        g_refCount.fetch_sub(1);
         return READ_ERR;
     }
+    g_refCount.fetch_sub(1);
     return SUCCESS;
 }
 

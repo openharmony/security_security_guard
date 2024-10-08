@@ -30,7 +30,7 @@ int32_t AcquireDataManagerCallbackStub::OnRemoteRequest(uint32_t code, MessagePa
     if (code == AcquireDataManagerCallbackStub::CMD_DATA_SUBSCRIBE_CALLBACK) {
         uint32_t expected = sizeof(uint32_t);
         uint32_t actual = data.GetReadableBytes();
-        if (expected >= actual) {
+        if (actual <= expected) {
             SGLOGE("actual length error, value=%{public}u", actual);
             return BAD_PARAM;
         }

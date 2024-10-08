@@ -13,25 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef SECURITY_CONFIG_UPDATE_INFO_H
-#define SECURITY_CONFIG_UPDATE_INFO_H
+#ifndef SECURITY_CONFIG_UPDATE_H
+#define SECURITY_CONFIG_UPDATE_H
 
 #include <string>
+
 #include "parcel.h"
 
 namespace OHOS::Security::SecurityGuard {
-
 class SecurityConfigUpdateInfo : public Parcelable {
 public:
     SecurityConfigUpdateInfo() = default;
     SecurityConfigUpdateInfo(int32_t fd, const std::string &name = "") : fd_(fd), fileName_(name) {};
     ~SecurityConfigUpdateInfo() override = default;
-    bool Marshalling(Parcel &parcle) const override
+    bool Marshalling(Parcel& parcel) const override
     {
-        if (!parcle.WriteInt32(fd_)) {
+        if (!parcel.WriteInt32(fd_)) {
             return false;
         }
-        if (!parcle.WriteString(fileName_)) {
+        if (!parcel.WriteString(fileName_)) {
             return false;
         }
         return true;
@@ -46,9 +46,9 @@ public:
         }
         return true;
     }
-    static SecurityConfigUpdateInfo* Unmarshalling(Parcel &parcel)
+    static SecurityConfigUpdateInfo* Unmarshalling(Parcel& parcel)
     {
-        SecurityConfigUpdateInfo *info = new(std::nothrow) SecurityConfigUpdateInfo();
+        SecurityConfigUpdateInfo *info = new (std::nothrow) SecurityConfigUpdateInfo();
         if (info != nullptr && !info->ReadFromParcel(parcel)) {
             delete info;
             info = nullptr;
@@ -56,11 +56,11 @@ public:
         return info;
     }
     int32_t GetFd() const { return fd_; };
-    std::string GetFileName() const { return fileName_; }
+    std::string GetFileName() const { return fileName_; };
 private:
-    int32_t fd_ {};
-    std::string fileName_ {};
+    int32_t fd_{};
+    std::string fileName_{};
 };
-} // OHOS::Security::SecurityGuard
+} // namespace OHOS::Security::SecurityGuard
 
-#endif //SECURITY_CONFIG_UPDATE_INFO_H
+#endif // SECURITY_CONFIG_UPDATE_H

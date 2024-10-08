@@ -28,9 +28,27 @@ group("sg_collect_service_build_module") {
   if (is_standard_system) {
     deps = [
       "${sg_root_dir}/interfaces/inner_api/collect:libsg_collect_sdk",
+      "${sg_root_dir}/interfaces/inner_api/data_collect_manager:libsg_data_collect_manager_sdk",
       "${sg_root_dir}/interfaces/inner_api/obtaindata:libsg_obtaindata_sdk",
       "${sg_root_dir}/services/data_collect:sg_collect_service",
       "${sg_root_dir}/services/data_collect:sg_collect_service_database",
+    ]
+  }
+}
+
+group("security_guard_fuzz_test") {
+  testonly = true
+  deps = []
+  if (is_standard_system) {
+    deps += [
+      "${sg_root_dir}/test/fuzztest/classify:fuzztest",
+      "${sg_root_dir}/test/fuzztest/collect:fuzztest",
+      "${sg_root_dir}/test/fuzztest/config_manager:fuzztest",
+      "${sg_root_dir}/test/fuzztest/data_collect:fuzztest",
+      "${sg_root_dir}/test/fuzztest/inner_sdk:fuzztest",
+      "${sg_root_dir}/test/fuzztest/ipc:fuzztest",
+      "${sg_root_dir}/test/fuzztest/obtaindata:fuzztest",
+      "${sg_root_dir}/test/fuzztest/security_collector:fuzztest",
     ]
   }
 }
@@ -47,6 +65,34 @@ group("security_collector_service_build_module") {
   if (is_standard_system) {
     deps = [
       "${sg_root_dir}/services/security_collector:security_collector_service",
+    ]
+  }
+}
+
+group("security_guard_unit_test") {
+  testonly = true
+  if (is_standard_system) {
+    deps = [
+      "${sg_root_dir}/test/unittest/config_manager:unittest",
+      "${sg_root_dir}/test/unittest/data_collect:data_collect_test",
+      "${sg_root_dir}/test/unittest/data_collect:unittest",
+      "${sg_root_dir}/test/unittest/inner_api:unittest",
+      "${sg_root_dir}/test/unittest/model_manager:unittest",
+      "${sg_root_dir}/test/unittest/risk_classify:unittest",
+      "${sg_root_dir}/test/unittest/security_collector:security_collector_test",
+      "${sg_root_dir}/test/unittest/security_collector:unittest",
+    ]
+  }
+}
+
+group("security_guard_build_module_test") {
+  testonly = true
+  deps = []
+  if (is_standard_system) {
+    deps += [
+      "${sg_root_dir}/interfaces/inner_api/classify/test:unittest",
+      "${sg_root_dir}/interfaces/inner_api/collect/test:unittest",
+      "${sg_root_dir}/interfaces/inner_api/obtaindata/test:unittest",
     ]
   }
 }

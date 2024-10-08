@@ -31,6 +31,7 @@ SgCollectClient &SgCollectClient::GetInstance()
 
 sptr<IDataCollectManager> SgCollectClient::GetProxy()
 {
+    std::lock_guard<std::mutex> lock(proxyMutex_);
     if (proxy_ == nullptr) {
         InitProxy();
     }
@@ -39,7 +40,6 @@ sptr<IDataCollectManager> SgCollectClient::GetProxy()
 
 void SgCollectClient::InitProxy()
 {
-    std::lock_guard<std::mutex> lock(proxyMutex_);
     if (proxy_ == nullptr) {
         auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (registry == nullptr) {
@@ -99,17 +99,34 @@ int32_t NativeDataCollectKit::ReportSecurityInfo(const std::shared_ptr<EventInfo
     }
     return SUCCESS;
 }
+
+int32_t NativeDataCollectKit::SecurityGuardConfigUpdate(int32_t fd, const std::string &name)
+{
+    sptr<IDataCollectManager> proxy = SgCollectClient::GetInstance().GetProxy();
+    if (proxy == nullptr) {
+        SGLOGE("proxy is nullptr");
+        return NULL_OBJECT;
+    }
+    SecurityGuard::SecurityConfigUpdateInfo updateInfo(fd, name);
+    int32_t ret = proxy->ConfigUpdate(updateInfo);
+    if (ret != SUCCESS) {
+        SGLOGE("ConfigUpdate error, ret=%{public}d", ret);
+        return ret;
+    }
+    return SUCCESS;
 }
+
+}  // namespace OHOS::Security::SecurityGuard
 
 static int32_t ReportSecurityInfoImpl(const struct EventInfoSt *info)
 {
-    if (info == nullptr || info->contentLen >= CONTENT_MAX_LEN) {
+    if (info == nullptr || info->contentLen >= CONTENT_MAX_LEN || info->version == nullptr) {
         return OHOS::Security::SecurityGuard::BAD_PARAM;
     }
     int64_t eventId = info->eventId;
     std::string version = reinterpret_cast<const char *>(info->version);
     uint8_t tmp[CONTENT_MAX_LEN] = {};
-    (void) memset_s(tmp, CONTENT_MAX_LEN, 0, CONTENT_MAX_LEN);
+    (void)memset_s(tmp, CONTENT_MAX_LEN, 0, CONTENT_MAX_LEN);
     errno_t rc = memcpy_s(tmp, CONTENT_MAX_LEN, info->content, info->contentLen);
     if (rc != EOK) {
         return OHOS::Security::SecurityGuard::NULL_OBJECT;
@@ -128,6 +145,10 @@ int32_t ReportSecurityInfo(const struct EventInfoSt *info)
     return ReportSecurityInfoImpl(info);
 }
 
+int32_t SecurityGuardConfigUpdate(int32_t fd, const char *fileName)
+{
+    return OHOS::Security::SecurityGuard::NativeDataCollectKit::SecurityGuardConfigUpdate(fd, fileName);
+}
 #ifdef __cplusplus
 }
 #endif

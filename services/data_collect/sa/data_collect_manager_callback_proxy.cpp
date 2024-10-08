@@ -15,6 +15,7 @@
 
 #include "data_collect_manager_callback_proxy.h"
 
+#include "security_guard_define.h"
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -33,11 +34,15 @@ int32_t DataCollectManagerCallbackProxy::ResponseRiskData(std::string &devId, st
         return ERR_INVALID_OPERATION;
     }
     SGLOGE("start ResponseRiskData");
-    data.WriteString(devId);
     data.WriteString(riskData);
     data.WriteUint32(status);
     data.WriteString(errMsg);
     MessageOption option = { MessageOption::TF_ASYNC };
-    return Remote()->SendRequest(CMD_SET_REQUEST_DATA, data, reply, option);
+    auto remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("remote is nullptr");
+        return NULL_OBJECT;
+    }
+    return remote->SendRequest(CMD_SET_REQUEST_DATA, data, reply, option);
 }
 }

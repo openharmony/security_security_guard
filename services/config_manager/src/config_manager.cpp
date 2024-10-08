@@ -17,7 +17,6 @@
 
 #include "config_subscriber.h"
 #include "security_guard_log.h"
-#include "app_info_rdb_helper.h"
 namespace OHOS::Security::SecurityGuard {
 ConfigManager &ConfigManager::GetInstance()
 {
@@ -27,7 +26,5 @@ ConfigManager &ConfigManager::GetInstance()
 
 void ConfigManager::StartUpdate()
 {
-    int ret = AppInfoRdbHelper::GetInstance().Init();
-    SGLOGI("app config  rdb init result is %{public}d", ret);
 };
 } // OHOS::Security::SecurityGuard

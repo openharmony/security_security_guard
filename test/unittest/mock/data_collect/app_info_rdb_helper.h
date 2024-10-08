@@ -32,21 +32,5 @@ public:
     virtual int DeleteAppInfoByIsGlobalApp(int isGlobalApp) = 0;
     virtual int InsertAllAppInfo(const std::vector<AppInfo> &infos) = 0;
 };
-class AppInfoRdbHelper : public BaseConfigDatabaseHelper {
-public:
-    static AppInfoRdbHelper &GetInstance()
-    {
-        static AppInfoRdbHelper instance;
-        return instance;
-    }
-    MOCK_METHOD0(Init, int());
-    MOCK_METHOD1(InsertAppInfo, int(const AppInfo& info));
-    MOCK_METHOD1(QueryAllAppInfo, int(std::vector<AppInfo> &infos));
-    MOCK_METHOD2(QueryAppInfosByName, int(const std::string &appName, std::vector<AppInfo> &infos));
-    MOCK_METHOD2(DeleteAppInfoByNameAndGlobbalFlag, int(const std::string &appName, int isGlobalApp));
-    MOCK_METHOD2(QueryAppInfoByAttribute, int(const std::string attr, std::vector<AppInfo> &infos));
-    MOCK_METHOD1(DeleteAppInfoByIsGlobalApp, int(int isGlobalApp));
-    MOCK_METHOD1(InsertAllAppInfo, int(const std::vector<AppInfo> &infos));
-};
 } // namespace OHOS::Security::SecurityGuard
 #endif // SECURITY_GUARD_RISK_EVENT_RDB_HELPER_H

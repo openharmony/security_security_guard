@@ -21,7 +21,7 @@
 #define LOG_DOMAIN 0xD002F07
 
 #include "hilog/log.h"
-#include <cinttypes>
+
 namespace OHOS::Security::SecurityGuard {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
     LOG_CORE,

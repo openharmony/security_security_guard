@@ -714,4 +714,43 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd14, TestSize.Level1)
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_SECURITY_EVENT_QUERY, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
+
+HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd15, TestSize.Level1)
+{
+    wptr<SecurityCollectorManagerService> service1
+        = new SecurityCollectorManagerService(1, false);
+    SecurityCollectorManagerService::SubscriberDeathRecipient testRecipient(service1);
+    wptr<MockRemoteObject> remote1 = new MockRemoteObject();
+    testRecipient.OnRemoteDied(remote1);
+    testRecipient.OnRemoteDied(nullptr);
+}
+
+HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd16, TestSize.Level1)
+{
+    int fd = 1;
+    std::vector<std::u16string> args;
+    g_service.Dump(fd, args);
+    int32_t systemAbilityId = 0;
+    const std::string& deviceId = "test";
+    g_service.OnStop();
+    g_service.OnAddSystemAbility(systemAbilityId, deviceId);
+    g_service.OnRemoveSystemAbility(systemAbilityId, deviceId);
+}
+
+HWTEST_F(SecurityCollectorTest, TestLoaderLib001, TestSize.Level1)
+{
+    LibLoader loader("/system/lib64/chipset-pub-sdk/libeventhandler.z.so");
+    EXPECT_FALSE(loader.LoadLib());
+    EXPECT_FALSE(loader.CallGetCollector() != nullptr);
+}
+
+HWTEST_F(SecurityCollectorTest, TestLoaderLib002, TestSize.Level1)
+{
+    LibLoader loader("");
+    EXPECT_EQ(loader.LoadLib(), RET_DLOPEN_LIB_FAIL);
+    EXPECT_EQ(loader.CallGetCollector(), nullptr);
+    LibLoader loader1("/system/etc/security_audit.cfg");
+    EXPECT_EQ(loader1.LoadLib(), RET_DLOPEN_LIB_FAIL);
+}
+
 }

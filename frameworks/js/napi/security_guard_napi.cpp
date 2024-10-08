@@ -54,7 +54,8 @@ constexpr int TIME_MAX_LEN = 15;
 
 using NAPI_QUERIER_PAIR = std::pair<pid_t, std::shared_ptr<NapiSecurityEventQuerier>>;
 static std::unordered_map<napi_ref, NAPI_QUERIER_PAIR> queriers;
-static std::mutex g_mutex;
+static std::mutex g_subscribeMutex;
+static std::mutex g_queryMutex;
 std::map<napi_env, std::vector<SubscribeCBInfo *>> g_subscribers;
 
 static const std::unordered_map<int32_t, std::pair<int32_t, std::string>> g_errorStringMap = {
@@ -109,7 +110,7 @@ static napi_value NapiCreateInt64(const napi_env env, int64_t value)
 {
     napi_value result = nullptr;
     napi_status status = napi_create_int64(env, value, &result);
-    SGLOGI("create napi value of int64 type, value is %{public}" PRId64 ".", value);
+    SGLOGI("create napi value of int64 type, value is %{public}" PRId64, value);
     if (status != napi_ok || result == nullptr) {
         SGLOGE("failed to create napi value of int64 type.");
     }
@@ -189,6 +190,7 @@ static napi_value ParseInt64(napi_env env, napi_value object, const std::string 
     NAPI_CALL(env, napi_get_named_property(env, object, key.c_str(), &result));
     if (result == nullptr) {
         SGLOGE("get %{public}s failed", key.c_str());
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "get key failed."));
         return nullptr;
     }
 
@@ -196,6 +198,7 @@ static napi_value ParseInt64(napi_env env, napi_value object, const std::string 
     NAPI_CALL(env, napi_typeof(env, result, &type));
     if (type != napi_number) {
         SGLOGE("type of param %{public}s is not number", key.c_str());
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "type of param is not number."));
         return nullptr;
     }
 
@@ -216,6 +219,7 @@ static napi_value ParseInt32(napi_env env, napi_value object, const std::string 
     NAPI_CALL(env, napi_get_named_property(env, object, key.c_str(), &result));
     if (result == nullptr) {
         SGLOGE("get %{public}s failed", key.c_str());
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "get key failed."));
         return nullptr;
     }
 
@@ -223,6 +227,7 @@ static napi_value ParseInt32(napi_env env, napi_value object, const std::string 
     NAPI_CALL(env, napi_typeof(env, result, &type));
     if (type != napi_number) {
         SGLOGE("type of param %{public}s is not number", key.c_str());
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "type of param is not number."));
         return nullptr;
     }
 
@@ -376,7 +381,8 @@ static void RequestSecurityModelResultExecute(napi_env env, void *data)
         promise->set_value(model);
         return SUCCESS;
     };
-    context->ret = SecurityGuardSdkAdaptor::RequestSecurityModelResult(context->deviceId, context->modelId, "", func);
+    context->ret =
+        SecurityGuardSdkAdaptor::RequestSecurityModelResult(context->deviceId, context->modelId, context->param, func);
     if (context->ret != SUCCESS) {
         SGLOGE("RequestSecurityModelResultSync error, ret=%{public}d", context->ret);
         return;
@@ -393,6 +399,9 @@ static void RequestSecurityModelResultExecute(napi_env env, void *data)
 static napi_value GenerateSecurityModelResult(napi_env env, RequestSecurityModelResultContext *context)
 {
     napi_value ret = NapiCreateObject(env);
+    if (ret == nullptr) {
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "napi create object error ."));
+    }
     napi_value deviceId = NapiCreateString(env, context->result.devId.c_str());
     napi_value modelId = NapiCreateUint32(env, context->result.modelId);
     napi_value result = NapiCreateString(env, context->result.result.c_str());
@@ -441,7 +450,7 @@ static void RequestSecurityModelResultComplete(napi_env env, napi_status status,
     delete context;
 }
 
-static napi_value ParseModelId(napi_env env, std::string modelNameStr, uint32_t &modelId)
+static napi_value ParseModelId(napi_env env, const std::string &modelNameStr, uint32_t &modelId)
 {
     if (modelNameStr == "SecurityGuard_JailbreakCheck") {
         modelId = ModelIdType::ROOT_SCAN_MODEL_ID;
@@ -449,6 +458,8 @@ static napi_value ParseModelId(napi_env env, std::string modelNameStr, uint32_t 
         modelId = ModelIdType::DEVICE_COMPLETENESS_MODEL_ID;
     } else if (modelNameStr == "SecurityGuard_SimulatorCheck") {
         modelId = ModelIdType::PHYSICAL_MACHINE_DETECTION_MODEL_ID;
+    } else if (modelNameStr == "SecurityGuard_RiskFactorCheck") {
+        modelId = ModelIdType::SECURITY_RISK_FACTOR_MODEL_ID;
     } else {
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM,
             "Parameter error, please make sure using the correct model name"));
@@ -528,6 +539,7 @@ static napi_value NapiGetModelResult(napi_env env, napi_callback_info info)
         return nullptr;
     }
     context->modelId = modelId;
+    context->param = modelRule.param;
     napi_value promise = nullptr;
     NAPI_CALL(env, napi_create_promise(env, &context->deferred, &promise));
     napi_value resourceName = NapiCreateString(env, "NapiGetModelResult");
@@ -542,9 +554,10 @@ static napi_value ParsePolicyFileInfo(napi_env env, napi_value object, NapiSecur
     napi_valuetype type = napi_undefined;
     NAPI_CALL(env, napi_typeof(env, object, &type));
     if (type != napi_object) {
-        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "type of param eventInfo is not object"));
+        GenerateBusinessError(env, BAD_PARAM, "type of param eventInfo is not object");
         return nullptr;
     }
+
     if (ParseInt32(env, object, "fd", context->fd) == nullptr) {
         return nullptr;
     }
@@ -567,7 +580,7 @@ static void UpdatePolicyExecute(napi_env env, void *data)
     context->ret = SecurityGuardSdkAdaptor::ConfigUpdate(policyInfo);
     if (context->ret != SUCCESS) {
         SGLOGE("update policy file error, code=%{public}d", context->ret);
-        return;
+        return ;
     }
 }
 
@@ -590,13 +603,12 @@ static void UpdatePolicyComplete(napi_env env, napi_status status, void *data)
 
 static napi_value NapiUpdatePolicyFile(napi_env env, napi_callback_info info)
 {
-    SGLOGD("in NapiUpdatePolicyFile");
     size_t argc = NAPI_UPDATE_POLICY_FILE_ARGS_CNT;
     napi_value argv[NAPI_UPDATE_POLICY_FILE_ARGS_CNT] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     if (argc != NAPI_UPDATE_POLICY_FILE_ARGS_CNT) {
-        SGLOGE("update policy file count is not expected");
-        std::string msg = "update policy file count is not expected";
+        SGLOGE("update policy file arg count is not expected");
+        std::string msg = "update policy arguments count is not expected";
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM, msg));
         return nullptr;
     }
@@ -606,12 +618,12 @@ static napi_value NapiUpdatePolicyFile(napi_env env, napi_callback_info info)
         napi_throw(env, GenerateBusinessError(env, NULL_OBJECT, "context new failed, no memory left."));
         return nullptr;
     }
-
     napi_value ret = ParsePolicyFileInfo(env, argv[0], context);
     if (ret == nullptr) {
         SGLOGE("policy file parse error");
         delete context;
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
+        return nullptr;
     }
 
     napi_value promise = nullptr;
@@ -620,6 +632,7 @@ static napi_value NapiUpdatePolicyFile(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, UpdatePolicyExecute,
         UpdatePolicyComplete, static_cast<void *>(context), &context->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, context->asyncWork));
+
     return promise;
 }
 
@@ -647,7 +660,7 @@ static bool ParseEventForNotifyCollector(napi_env env, napi_value object,
 
 static napi_value NapiStartSecurityEventCollector(napi_env env, napi_callback_info info)
 {
-    SGLOGD("===========================in NapiStartSecurityEventCollector");
+    SGLOGD("in NapiStartSecurityEventCollector");
     size_t argc = NAPI_START_COLLECTOR_ARGS_CNT;
     napi_value argv[NAPI_START_COLLECTOR_ARGS_CNT] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
@@ -693,7 +706,7 @@ static napi_value NapiStartSecurityEventCollector(napi_env env, napi_callback_in
 
 static napi_value NapiStopSecurityEventCollector(napi_env env, napi_callback_info info)
 {
-    SGLOGD("===========================in NapiStopSecurityEventCollector");
+    SGLOGD("in NapiStopSecurityEventCollector");
     size_t argc = NAPI_STOP_COLLECTOR_ARGS_CNT;
     napi_value argv[NAPI_STOP_COLLECTOR_ARGS_CNT] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
@@ -857,11 +870,10 @@ static napi_value NapiQuerySecurityEvent(napi_env env, napi_callback_info info)
     }
     size_t index = 0;
     std::vector<SecurityEventRuler> rules;
-    if (auto ret = ParseSecurityEventRulers(env, argv[index], rules); ret != SUCCESS) {
+    if (auto ret = ParseSecurityEventRulers(env, argv[index++], rules); ret != SUCCESS) {
         SGLOGE("failed to parse query rules, result code is %{public}d.", ret);
         return nullptr;
     }
-    index++;
     if (IsValueTypeValid(env, argv[index], napi_valuetype::napi_null) ||
         IsValueTypeValid(env, argv[index], napi_valuetype::napi_undefined)) {
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "Parameter error. The type of must querier be Querier."));
@@ -880,7 +892,7 @@ static napi_value NapiQuerySecurityEvent(napi_env env, napi_callback_info info)
             napi_get_reference_value(env, ref, &querier);
             auto iter = CompareAndReturnCacheItem<NapiSecurityEventQuerier>(env, querier, queriers);
             if (iter != queriers.end()) {
-                std::unique_lock<std::mutex> lock(g_mutex);
+                std::unique_lock<std::mutex> lock(g_queryMutex);
                 queriers.erase(iter->first);
                 NapiRequestDataManager::GetInstance().DelDataCallback(env);
             }
@@ -891,6 +903,7 @@ static napi_value NapiQuerySecurityEvent(napi_env env, napi_callback_info info)
         SGLOGE("query error, code=%{public}d", code);
         napi_throw(env, GenerateBusinessError(env, code));
     }
+    std::unique_lock<std::mutex> lock(g_queryMutex);
     queriers[context->ref] = std::make_pair(context->threadId, querier);
     NapiRequestDataManager::GetInstance().AddDataCallback(env);
     SGLOGI("NapiQuerySecurityEvent end.");
@@ -922,6 +935,11 @@ static bool GetStringProperty(napi_env env, napi_value obj, std::string &propert
 
     size_t propLen;
     NAPI_CALL_BASE(env, napi_get_value_string_utf8(env, obj, nullptr, 0, &propLen), false);
+    if (propLen > ALL_PROPERTY_MAX_LEN) {
+        SGLOGE("Parameter error. param is too long");
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "Parameter error. param is too long"));
+        return false;
+    }
     property.reserve(propLen + 1);
     property.resize(propLen);
     NAPI_CALL_BASE(env, napi_get_value_string_utf8(env, obj, property.data(), propLen + 1, &propLen), false);
@@ -962,7 +980,7 @@ static bool ParseSubscribeForEventOccur(const napi_env &env, const std::string &
     if (type != "securityEventOccur") {
         std::string errMsg = "Parameter error. The param of type must be securityEventOccur.";
         SGLOGE("Parameter error. The param of type must be securityEventOccur.");
-        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "Type ERROR!"));
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, errMsg));
         return false;
     }
     SubscribeEventInfo eventInfo;
@@ -1028,7 +1046,7 @@ static bool CompareOnAndOffRef(const napi_env env, napi_ref subscriberRef, napi_
 
 static bool IsSubscribeInMap(napi_env env, SubscribeCBInfo *info)
 {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(g_subscribeMutex);
     auto subscribe = g_subscribers.find(env);
     if (subscribe == g_subscribers.end()) {
         return false;
@@ -1101,14 +1119,112 @@ static bool ParseParaToUnsubscriber(const napi_env &env, napi_callback_info cbIn
 static napi_value GenerateEvent(napi_env env, const NapiSecurityEvent &event)
 {
     napi_value ret = NapiCreateObject(env);
+    if (ret == nullptr) {
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM, "napi create object error ."));
+    }
     napi_value eventId = NapiCreateInt64(env, event.eventId);
-    napi_value version = NapiCreateString(env, event.version.c_str());
-    napi_value content = NapiCreateString(env, event.content.c_str());
+    napi_value version = NapiCreateString(env, event.version);
+    napi_value content = NapiCreateString(env, event.content);
 
     napi_set_named_property(env, ret, NAPI_EVENT_EVENT_ID_ATTR, eventId);
     napi_set_named_property(env, ret, NAPI_EVENT_VERSION_ATTR, version);
     napi_set_named_property(env, ret, NAPI_EVENT_CONTENT_ATTR, content);
     return ret;
+}
+
+static bool InitUvWorkCallbackEnv(CommonAsyncContext *data, napi_handle_scope *scope)
+{
+    if (data == nullptr) {
+        SGLOGE("data is nullptr");
+        return false;
+    }
+    napi_open_handle_scope(data->env, scope);
+    if (scope == nullptr) {
+        SGLOGE("fail to open scope");
+        delete data;
+        data = nullptr;
+        return false;
+    }
+    return true;
+}
+
+static void UvQueueWorkOnSecEventsChanged(uv_work_t *work, int status)
+{
+    SGLOGI("UvQueueWorkOnSecEventsChanged");
+    if (work == nullptr) {
+        SGLOGE("work is nullptr");
+        return;
+    }
+    napi_handle_scope scope = nullptr;
+    if (!InitUvWorkCallbackEnv(reinterpret_cast<CommonAsyncContext *>(work->data), &scope)) {
+        return;
+    }
+    std::unique_ptr<SubscriberOAWorker> subscriberOAWorkerData(reinterpret_cast<SubscriberOAWorker *>(work->data));
+    bool isFound = false;
+    {
+        std::lock_guard<std::mutex> lock(g_subscribeMutex);
+        SubscriberPtr *subscriber = subscriberOAWorkerData->subscriber;
+        for (auto subscriberInstance : g_subscribers) {
+            isFound = std::any_of(subscriberInstance.second.begin(), subscriberInstance.second.end(),
+                [subscriber](const SubscribeCBInfo *item) {
+                    return item->subscriber.get() == subscriber;
+                });
+            if (isFound) {
+                SGLOGI("subscriber has been found.");
+                break;
+            }
+        }
+    }
+    if (isFound) {
+        napi_value result[ARGS_SIZE_ONE] = {nullptr};
+        result[PARAMZERO] = GenerateEvent(subscriberOAWorkerData->env, subscriberOAWorkerData->event);
+        napi_value undefined = nullptr;
+        napi_get_undefined(subscriberOAWorkerData->env, &undefined);
+        napi_value callback = nullptr;
+        napi_get_reference_value(subscriberOAWorkerData->env, subscriberOAWorkerData->ref, &callback);
+        napi_value resultOut = nullptr;
+        napi_status ok = napi_call_function(subscriberOAWorkerData->env, undefined, callback, ARGS_SIZE_ONE,
+            &result[0], &resultOut);
+        SGLOGI("isOk=%{public}d", ok);
+    }
+    napi_close_handle_scope(subscriberOAWorkerData->env, scope);
+}
+
+static int32_t OnNotifyEvent(const Event &event, napi_env env, napi_ref ref, SubscriberPtr *subscriber)
+{
+    SGLOGI("OnNotify");
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env, &loop);
+    if (loop == nullptr) {
+        SGLOGE("loop instance is nullptr");
+        return -1;
+    }
+    uv_work_t *work = new (std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        SGLOGE("insufficient memory for work!");
+        return -1;
+    }
+
+    SubscriberOAWorker *subscriberOAWorker = new (std::nothrow) SubscriberOAWorker();
+
+    if (subscriberOAWorker == nullptr) {
+        SGLOGE("insufficient memory for SubscriberAccountsWorker!");
+        delete work;
+        return -1;
+    }
+
+    subscriberOAWorker->event.eventId = event.eventId;
+    subscriberOAWorker->event.version = event.version;
+    subscriberOAWorker->event.content = event.content;
+    subscriberOAWorker->event.timestamp = event.timestamp;
+    subscriberOAWorker->env = env;
+    subscriberOAWorker->ref = ref;
+    subscriberOAWorker->subscriber = subscriber;
+    work->data = reinterpret_cast<void *>(subscriberOAWorker);
+    uv_queue_work_with_qos(loop, work, [](uv_work_t *work) {
+        SGLOGD("UvQueueWorkOnSecEventsChanged...");
+    }, UvQueueWorkOnSecEventsChanged, uv_qos_default);
+    return 0;
 }
 
 class SubscriberPtr : public ICollectorSubscriber {
@@ -1118,102 +1234,13 @@ public:
 
     int32_t OnNotify(const Event &event) override
     {
-        SGLOGI("OnNotify");
-        uv_loop_s *loop = nullptr;
-        napi_get_uv_event_loop(env_, &loop);
-        if (loop == nullptr) {
-            SGLOGE("loop instance is nullptr");
+        if (OnNotifyEvent(event, env_, ref_, this) != 0) {
             return -1;
         }
-        uv_work_t *work = new (std::nothrow) uv_work_t;
-        if (work == nullptr) {
-            SGLOGE("insufficient memory for work!");
-            return -1;
-        }
-
-        SubscriberOAWorker *subscriberOAWorker = new (std::nothrow) SubscriberOAWorker();
-
-        if (subscriberOAWorker == nullptr) {
-            SGLOGE("insufficient memory for SubscriberAccountsWorker!");
-            delete work;
-            return -1;
-        }
-
-        subscriberOAWorker->event.eventId = event.eventId;
-        subscriberOAWorker->event.version = event.version;
-        subscriberOAWorker->event.content = event.content;
-        subscriberOAWorker->event.timestamp = event.timestamp;
-        subscriberOAWorker->env = env_;
-        subscriberOAWorker->ref = ref_;
-        subscriberOAWorker->subscriber = this;
-        work->data = reinterpret_cast<void *>(subscriberOAWorker);
-        uv_queue_work_with_qos(loop, work, [](uv_work_t *work) {}, UvQueueWorkOnAccountsChanged, uv_qos_default);
         return 0;
     };
-
-    static bool InitUvWorkCallbackEnv(uv_work_t *work, napi_handle_scope &scope)
-    {
-        if (work == nullptr) {
-            SGLOGE("work is nullptr");
-            return false;
-        }
-        if (work->data == nullptr) {
-            SGLOGE("data is nullptr");
-            return false;
-        }
-        CommonAsyncContext *data = reinterpret_cast<CommonAsyncContext *>(work->data);
-        napi_open_handle_scope(data->env, &scope);
-        if (scope == nullptr) {
-            SGLOGE("fail to open scope");
-            delete data;
-            work->data = nullptr;
-            return false;
-        }
-        return true;
-    }
-
-    static void UvQueueWorkOnAccountsChanged(uv_work_t *work, int status)
-    {
-        SGLOGI("UvQueueWorkOnAccountsChanged");
-        std::unique_ptr<uv_work_t> workPtr(work);
-        napi_handle_scope scope = nullptr;
-        if (!InitUvWorkCallbackEnv(work, scope)) {
-            return;
-        }
-        std::unique_ptr<SubscriberOAWorker> subscriberOAWorkerData(reinterpret_cast<SubscriberOAWorker *>(work->data));
-        bool isFound = false;
-        {
-            std::lock_guard<std::mutex> lock(g_mutex);
-            SubscriberPtr *subscriber = subscriberOAWorkerData->subscriber;
-            for (auto subscriberInstance : g_subscribers) {
-                isFound = std::any_of(subscriberInstance.second.begin(), subscriberInstance.second.end(),
-                    [subscriber](const SubscribeCBInfo *item) {
-                        return item->subscriber.get() == subscriber;
-                    });
-                if (isFound) {
-                    SGLOGI("subscriber has been found.");
-                    break;
-                }
-            }
-        }
-        if (isFound) {
-            napi_value result[ARGS_SIZE_ONE] = {nullptr};
-            result[PARAMZERO] = GenerateEvent(subscriberOAWorkerData->env, subscriberOAWorkerData->event);
-            napi_value undefined = nullptr;
-            napi_get_undefined(subscriberOAWorkerData->env, &undefined);
-            napi_value callback = nullptr;
-            napi_get_reference_value(subscriberOAWorkerData->env, subscriberOAWorkerData->ref, &callback);
-            napi_value resultOut = nullptr;
-            napi_status ok = napi_call_function(subscriberOAWorkerData->env, undefined, callback, ARGS_SIZE_ONE,
-                &result[0], &resultOut);
-            SGLOGI("isOk=%{public}d", ok);
-        }
-        napi_close_handle_scope(subscriberOAWorkerData->env, scope);
-    }
-
     void SetEnv(const napi_env &env) { env_ = env; }
     void SetCallbackRef(const napi_ref &ref) { ref_ = ref; }
-
 private:
     napi_env env_ = nullptr;
     napi_ref ref_ = nullptr;
@@ -1246,7 +1273,7 @@ static napi_value Subscribe(napi_env env, napi_callback_info cbInfo)
         napi_throw(env, GenerateBusinessError(env, errCode, "Subscribe failed!"));
         return WrapVoidToJS(env);
     } else {
-        std::lock_guard<std::mutex> lock(g_mutex);
+        std::lock_guard<std::mutex> lock(g_subscribeMutex);
         g_subscribers[env].emplace_back(info);
     }
     return WrapVoidToJS(env);
@@ -1254,7 +1281,7 @@ static napi_value Subscribe(napi_env env, napi_callback_info cbInfo)
 
 static void UnsubscribeSync(napi_env env, UnsubscribeCBInfo *unsubscribeCBInfo)
 {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(g_subscribeMutex);
     auto subscribe = g_subscribers.find(env);
     if (subscribe == g_subscribers.end()) {
         return;
