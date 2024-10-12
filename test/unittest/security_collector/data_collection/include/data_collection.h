@@ -40,6 +40,7 @@ public:
     virtual int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
         std::vector<SecurityEvent> &events);
     virtual bool SecurityGuardSubscribeCollector(const std::vector<int64_t>& eventIds);
+    virtual void CloseLib();
 private:
     DataCollection() = default;
     virtual ErrorCode LoadCollector(int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api);
@@ -49,7 +50,9 @@ private:
     virtual ErrorCode CheckFileStream(std::ifstream &stream);
     virtual bool IsCollectorStarted(int64_t eventId);
     std::mutex mutex_;
-    std::unordered_map<int64_t, std::unique_ptr<LibLoader>> eventIdToLoaderMap_;
+    std::mutex closeLibmutex_;
+    std::unordered_map<int64_t, LibLoader> eventIdToLoaderMap_;
+    std::unordered_map<int64_t, LibLoader> needCloseLibMap_;
 };
 }
 #endif // DATA_COLLECTION_H
