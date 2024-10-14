@@ -740,7 +740,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd16, TestSize.Level1)
 HWTEST_F(SecurityCollectorTest, TestLoaderLib001, TestSize.Level1)
 {
     LibLoader loader("/system/lib64/chipset-pub-sdk/libeventhandler.z.so");
-    EXPECT_TRUE(loader.LoadLib() == RET_DLOPEN_LIB_FAIL);
+    EXPECT_FALSE(loader.LoadLib());
     EXPECT_FALSE(loader.CallGetCollector() != nullptr);
 }
 

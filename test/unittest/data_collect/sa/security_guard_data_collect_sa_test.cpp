@@ -171,6 +171,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, GetSecEventsFromConditions_NoTimeCondit
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     std::vector<SecEvent> events = service.GetSecEventsFromConditions(condition);
     EXPECT_EQ(events[0].eventId, 1);
+    EXPECT_EQ(events[1].eventId, 0);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, GetSecEventsFromConditions_WithTimeCondition, TestSize.Level1) {
@@ -191,6 +192,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, GetSecEventsFromConditions_WithTimeCond
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     std::vector<SecEvent> events = service.GetSecEventsFromConditions(condition);
     EXPECT_EQ(events[0].eventId, 1);
+    EXPECT_EQ(events[1].eventId, 0);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_GetEventConfigError001, TestSize.Level1)

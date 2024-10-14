@@ -145,11 +145,19 @@ HWTEST_F(DataCollectionTest, StopCollectors03, testing::ext::TestSize.Level1)
 HWTEST_F(DataCollectionTest, StopCollectors04, testing::ext::TestSize.Level1)
 {
     DataCollection myOb;
-    myOb.eventIdToLoaderMap_.emplace(1, LibLoader("testPath"));
+    myOb.eventIdToLoaderMap_.insert({1, std::make_unique<LibLoader>("testPath")});
     std::vector<int64_t> eventIds {1};
     EXPECT_FALSE(myOb.StopCollectors(eventIds));
 }
 
+HWTEST_F(DataCollectionTest, StopCollectors05, testing::ext::TestSize.Level1)
+{
+    DataCollection myOb;
+    std::vector<int64_t> eventIds {0x01C000003};
+    std::shared_ptr<SecurityCollector::ICollectorFwk> api = std::make_shared<TestFwk> ();
+    EXPECT_TRUE(myOb.StartCollectors(eventIds, api));
+    EXPECT_TRUE(myOb.StopCollectors(eventIds));
+}
 class MockMyCheckFileStreamClass : public DataCollection {
 public:
     MOCK_METHOD1(CheckFileStream, ErrorCode(std::ifstream &stream));
