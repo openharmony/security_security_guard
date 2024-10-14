@@ -30,11 +30,9 @@ public:
     ~LibLoader();
     ErrorCode LoadLib();
     ICollector* CallGetCollector();
- 
-private:
     void UnLoadLib();
+private:
     void* m_handle{ nullptr };
-    std::atomic<bool> m_isLoaded{ false };
     const std::string m_libPath;
 };
 }
