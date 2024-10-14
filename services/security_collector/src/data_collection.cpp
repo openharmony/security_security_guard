@@ -112,7 +112,7 @@ bool DataCollection::StopCollectors(const std::vector<int64_t>& eventIds)
             LOGI("Collector not found, eventId is 0x%{public}" PRIx64, eventId);
             continue;
         }
-        ICollector* collector = loader->second.CallGetCollector();
+        ICollector* collector = loader->second->CallGetCollector();
         if (collector == nullptr) {
             LOGE("CallGetCollector error");
             ret = false;
@@ -134,28 +134,16 @@ bool DataCollection::StopCollectors(const std::vector<int64_t>& eventIds)
     return ret;
 }
 
-void DataCollection::CloseLib()
-{
-    std::lock_guard<std::mutex> lock(closeLibmutex_);
-    for (auto &it : needCloseLibMap_) {
-        it.second.UnLoadLib();
-    }
-    needCloseLibMap_.clear();
-}
 ErrorCode DataCollection::LoadCollector(int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api)
 {
     LOGI("Start LoadCollector");
-    LibLoader loader(path);
-    ErrorCode ret = loader.LoadLib();
+    std::unique_ptr<LibLoader> loader = std::make_unique<LibLoader>(path);
+    ErrorCode ret = loader->LoadLib();
     if (ret != SUCCESS) {
         LOGE("LoadLib error, ret=%{public}d, path : %{public}s", ret, path.c_str());
         return FAILED;
     }
-    {
-        std::lock_guard<std::mutex> lock(closeLibmutex_);
-        needCloseLibMap_.emplace(eventId, loader);
-    }
-    ICollector* collector = loader.CallGetCollector();
+    ICollector* collector = loader->CallGetCollector();
     if (collector == nullptr) {
         LOGE("CallGetCollector error");
         return FAILED;
@@ -170,7 +158,7 @@ ErrorCode DataCollection::LoadCollector(int64_t eventId, std::string path, std::
         return FAILED;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-    eventIdToLoaderMap_.emplace(eventId, loader);
+    eventIdToLoaderMap_[eventId] = std::move(loader);
     LOGI("End LoadCollector");
     return SUCCESS;
 }
@@ -292,17 +280,13 @@ ErrorCode DataCollection::LoadCollector(std::string path, const SecurityEventRul
     std::vector<SecurityEvent> &events)
 {
     LOGI("Start LoadCollector");
-    LibLoader loader(path);
-    ErrorCode ret = loader.LoadLib();
+    std::unique_ptr<LibLoader> loader = std::make_unique<LibLoader>(path);
+    ErrorCode ret = loader->LoadLib();
     if (ret != SUCCESS) {
         LOGE("LoadLib error, ret=%{public}d", ret);
         return FAILED;
     }
-    {
-        std::lock_guard<std::mutex> lock(closeLibmutex_);
-        needCloseLibMap_.emplace(ruler.GetEventId(), loader);
-    }
-    ICollector* collector = loader.CallGetCollector();
+    ICollector* collector = loader->CallGetCollector();
     if (collector == nullptr) {
         LOGE("CallGetCollector error");
         return FAILED;
