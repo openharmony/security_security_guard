@@ -115,6 +115,7 @@ void DataCollectManagerService::OnStart()
 
 void DataCollectManagerService::OnStop()
 {
+    SecurityCollector::DataCollection::GetInstance().CloseLib();
 }
 
 
@@ -227,7 +228,7 @@ int32_t DataCollectManagerService::RequestRiskData(std::string &devId, std::stri
 
 std::vector<SecEvent> DataCollectManagerService::GetSecEventsFromConditions(RequestCondition &condition)
 {
-    std::vector<SecEvent> events;
+    std::vector<SecEvent> events {};
     if (condition.beginTime.empty() && condition.endTime.empty()) {
         (void) DatabaseManager::GetInstance().QueryEventByEventId(RISK_TABLE, condition.riskEvent, events);
     } else {
