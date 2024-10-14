@@ -29,7 +29,6 @@ LibLoader::LibLoader(const std::string soPath)
  
 LibLoader::~LibLoader()
 {
-    UnLoadLib();
 }
  
 ErrorCode LibLoader::LoadLib()
