@@ -52,6 +52,7 @@ public:
     MOCK_METHOD2(QuerySecurityEvent, int32_t(const std::vector<SecurityEventRuler> rulers,
         std::vector<SecurityEvent> &events));
     MOCK_METHOD1(QuerySecurityEventConfig, int32_t(std::string &result));
+    void CloseLib() {};
 };
 }
 #endif // DATA_COLLECTION_MOCK_H

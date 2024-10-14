@@ -38,37 +38,32 @@ ErrorCode LibLoader::LoadLib()
     std::string realPath;
     if (!PathToRealPath(m_libPath, realPath) || realPath.find("/system/lib") != 0) {
         LOGE("LoadLib m_libPath error, realPath: %{public}s", realPath.c_str());
-        m_isLoaded = false;
         return RET_DLOPEN_LIB_FAIL;
     }
     m_handle = dlopen(realPath.c_str(), RTLD_LAZY);
     if (m_handle == nullptr) {
         LOGE("LoadLib m_handle error");
-        m_isLoaded = false;
         return RET_DLOPEN_LIB_FAIL;
     }
     LOGI("dlopen success");
-    m_isLoaded = true;
     return SUCCESS;
 }
  
 void LibLoader::UnLoadLib()
 {
     LOGI("UnLoadLib start");
-    if (!m_isLoaded) {
-        LOGI("lib not found");
-        return;
+    if (m_handle != nullptr) {
+        dlclose(m_handle);
     }
     // should call dlclose(m_handle)
     LOGI("dlclose end");
     m_handle = nullptr;
-    m_isLoaded = false;
 }
 
 ICollector* LibLoader::CallGetCollector()
 {
     LOGI("CallGetCollector start");
-    if (!m_isLoaded) {
+    if (m_handle == nullptr) {
         LOGE("lib not found");
         return nullptr;
     }

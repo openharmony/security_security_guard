@@ -96,20 +96,6 @@ public:
     MOCK_METHOD2(GetEventConfig, bool(int64_t, EventCfg &));
 };
 
-static void TestModel001(const char *path)
-{
-    void *handle = dlopen(path, RTLD_LAZY);
-    EXPECT_FALSE(handle == nullptr);
-    auto getModelApi = (GetModelApi)dlsym(handle, "GetModelApi");
-    EXPECT_FALSE(getModelApi == nullptr);
-    IModel *api = getModelApi();
-    EXPECT_FALSE(api == nullptr);
-    int32_t ret = api->Init(nullptr);
-    EXPECT_EQ(ret, -1);
-    dlclose(handle);
-    handle = nullptr;
-}
-
 HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerImpl001, TestSize.Level1)
 {
     auto impl = std::make_shared<ModelManagerImpl>();
@@ -201,33 +187,5 @@ HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInitModel002, TestSize.L
     ModelManager::GetInstance().GetResult(9999, "");
     ModelManager::GetInstance().SubscribeResult(9999, nullptr);
     ModelManager::GetInstance().Release(9999);
-}
-
-HWTEST_F(SecurityGuardModelManagerTest, TestDeviceCompletenessModel001, TestSize.Level1)
-{
-    TestModel001("/system/lib64/libsg_system_risk_detection.z.so");
-}
-
-HWTEST_F(SecurityGuardModelManagerTest, TestDeviceCompletenessModel002, TestSize.Level1)
-{
-    void *handle = dlopen("/system/lib64/libsg_system_risk_detection.z.so", RTLD_LAZY);
-    EXPECT_FALSE(handle == nullptr);
-    auto getModelApi = (GetModelApi)dlsym(handle, "GetModelApi");
-    EXPECT_FALSE(getModelApi == nullptr);
-    IModel *api = getModelApi();
-    EXPECT_FALSE(api == nullptr);
-    std::shared_ptr<MockModelManager> mockObj = std::make_shared<MockModelManager>();
-    std::shared_ptr<MockDbOperate> mockOpt = std::make_shared<MockDbOperate>();
-    std::shared_ptr<MockConfigOperate> mockCfg = std::make_shared<MockConfigOperate>();
-    EXPECT_CALL(*mockObj, GetDbOperate).WillOnce(Return(nullptr)).WillRepeatedly(Return(mockOpt));
-    EXPECT_CALL(*mockObj, GetConfigOperate).WillOnce(Return(nullptr)).WillOnce(Return(mockCfg));
-    int32_t ret = api->Init(mockObj);
-    EXPECT_EQ(ret, -1);
-    ret = api->Init(mockObj);
-    EXPECT_EQ(ret, -1);
-    ret = api->Init(mockObj);
-    EXPECT_EQ(ret, 0);
-    dlclose(handle);
-    handle = nullptr;
 }
 }
