@@ -46,7 +46,7 @@
 #include "config_manager.h"
 #include "risk_event_rdb_helper.h"
 #include "config_subscriber.h"
-
+#include "model_manager.h"
 namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr int32_t TWO_ARGS = 2;
@@ -611,6 +611,10 @@ int32_t DataCollectManagerService::ConfigUpdate(const SecurityGuard::SecurityCon
     }
     if (g_configCacheFilesSet.empty() || !g_configCacheFilesSet.count(info.GetFileName())) {
         return BAD_PARAM;
+    }
+    const uint32_t modelId = 3001000008;
+    if (info.GetFileName() == "related_event_analysis.json") {
+        ModelManager::GetInstance().InitModel(modelId);
     }
     const std::string &realPath = CONFIG_ROOT_PATH + "tmp/" + info.GetFileName();
     SGLOGI("config file is %{public}s, fd is %{public}d", realPath.c_str(), info.GetFd());
