@@ -18,7 +18,7 @@
 #include <dlfcn.h>
 
 #include "directory_ex.h"
-
+#include "file_ex.h"
 #include "config_data_manager.h"
 #include "security_guard_log.h"
 #include "model_manager_impl.h"
@@ -50,6 +50,10 @@ void ModelManager::Init()
             (void) InitModel(modelId);
             continue;
         }
+    }
+    const uint32_t modelId = 3001000008;
+    if (FileExists("/data/service/el1/public/security_guard/related_event_analysis.json")) {
+        (void) InitModel(modelId);
     }
 }
 
