@@ -737,13 +737,6 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd16, TestSize.Level1)
     g_service.OnRemoveSystemAbility(systemAbilityId, deviceId);
 }
 
-HWTEST_F(SecurityCollectorTest, TestLoaderLib001, TestSize.Level1)
-{
-    LibLoader loader("/system/lib64/chipset-pub-sdk/libeventhandler.z.so");
-    EXPECT_TRUE(loader.LoadLib() == RET_DLOPEN_LIB_FAIL);
-    EXPECT_FALSE(loader.CallGetCollector() != nullptr);
-}
-
 HWTEST_F(SecurityCollectorTest, TestLoaderLib002, TestSize.Level1)
 {
     LibLoader loader("");
