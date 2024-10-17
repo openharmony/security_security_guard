@@ -49,7 +49,6 @@ ohos_shared_library("libsg_collect_sdk") {
   ]
 
   sources = [
-    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_event.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_event_ruler.cpp",
     "${sg_root_dir}/frameworks/common/data_collect_manager/src/data_collect_manager.cpp",
@@ -58,6 +57,7 @@ ohos_shared_library("libsg_collect_sdk") {
     "${sg_root_dir}/frameworks/common/data_collect_manager/src/data_collect_manager_proxy.cpp",
     "${sg_root_dir}/frameworks/common/obtaindata/src/security_event_query_callback_service.cpp",
     "${sg_root_dir}/frameworks/common/obtaindata/src/security_event_query_callback_stub.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "src/event_info.cpp",
     "src/sg_collect_client.cpp",
   ]
