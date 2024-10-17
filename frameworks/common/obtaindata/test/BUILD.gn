@@ -14,22 +14,26 @@
 import("//base/security/security_guard/security_guard.gni")
 import("//build/test.gni")
 
-ohos_unittest("libsg_classify_sdk_test") {
+ohos_unittest("libsg_obtaindata_sdk_test") {
   subsystem_name = "security"
   part_name = "security_guard"
   module_out_path = part_name + "/" + part_name
 
   include_dirs = [
     "include",
-    "${sg_root_dir}/services/risk_classify/include",
-    "${sg_root_dir}/services/utils/include",
+    "${sg_root_dir}/services/risk_collect/include",
     "${sg_root_dir}/frameworks/common/constants/include",
+    "${sg_root_dir}/frameworks/common/log/include",
+    "${sg_root_dir}/interfaces/inner_api/obtaindata/include",
   ]
 
-  sources = [ "unittest/src/risk_classify_kit_test.cpp" ]
+  sources = [
+    "unittest/src/acquire_data_manager_test.cpp",
+    "unittest/src/obtaindata_kit_test.cpp",
+  ]
 
   deps = [
-    "${sg_root_dir}/interfaces/inner_api/classify:libsg_classify_sdk",
+    "${sg_root_dir}/frameworks/common/obtaindata:libsg_obtaindata_sdk",
     "//third_party/googletest:gmock",
   ]
 
@@ -41,5 +45,5 @@ ohos_unittest("libsg_classify_sdk_test") {
 
 group("unittest") {
   testonly = true
-  deps = [ ":libsg_classify_sdk_test" ]
+  deps = [ ":libsg_obtaindata_sdk_test" ]
 }

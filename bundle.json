@@ -75,7 +75,7 @@
       ],
       "inner_kits": [
         {
-          "name": "//base/security/security_guard/interfaces/inner_api/classify:libsg_classify_sdk",
+          "name": "//base/security/security_guard/frameworks/common/classify:libsg_classify_sdk",
           "header": {
             "header_files": [
               "sg_classify_client.h",
@@ -85,7 +85,7 @@
           }
         },
         {
-          "name": "//base/security/security_guard/interfaces/inner_api/collect:libsg_collect_sdk",
+          "name": "//base/security/security_guard/frameworks/common/collect:libsg_collect_sdk",
           "header": {
             "header_files": [
               "sg_collect_client.h",
@@ -95,7 +95,7 @@
           }
         },
         {
-          "name": "//base/security/security_guard/interfaces/inner_api/collector:libsg_collector_sdk",
+          "name": "//base/security/security_guard/frameworks/common/collector:libsg_collector_sdk",
           "header": {
             "header_files": [
               "collector_manager.h",
@@ -108,7 +108,7 @@
           }
         },
         {
-          "name": "//base/security/security_guard/interfaces/inner_api/obtaindata:libsg_obtaindata_sdk",
+          "name": "//base/security/security_guard/frameworks/common/obtaindata:libsg_obtaindata_sdk",
           "header": {
             "header_files": [
               "sg_obtaindata_client.h",
@@ -118,7 +118,7 @@
           }
         },
         {
-          "name": "//base/security/security_guard/interfaces/inner_api/data_collect_manager:libsg_data_collect_manager_sdk",
+          "name": "//base/security/security_guard/frameworks/common/data_collect_manager:libsg_data_collect_manager_sdk",
           "header": {
             "header_files": [
               "data_collect_manager.h"
