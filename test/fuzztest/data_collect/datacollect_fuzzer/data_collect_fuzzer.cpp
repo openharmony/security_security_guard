@@ -131,7 +131,6 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
     service.RequestDataSubmit(eventId, string, string, string);
     service.OnAddSystemAbility(fd, string);
     service.OnRemoveSystemAbility(fd, string);
-    service.DumpEventInfo(fd, eventId);
     service.QueryEventByRuler(proxy, ruler);
     service.CollectorStart(subscribeInfo, callback);
     service.CollectorStop(subscribeInfo, callback);
