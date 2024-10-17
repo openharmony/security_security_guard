@@ -560,6 +560,19 @@
           "db_table": "risk_event"
         },
         {
+          "eventId":"0x027000006",
+          "eventName":"state_change",
+          "version":0,
+          "eventType":0,
+          "dataSensitivityLevel":1,
+          "storageRamNums":1,
+          "storageRomNums":100,
+          "storageTime" : -1,
+          "owner":[""],
+          "source" : 0,
+          "db_table": "risk_event"
+        },
+        {
           "eventId":"0x12000000",
           "eventName":"virus_detection",
           "version":0,
