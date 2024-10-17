@@ -34,9 +34,7 @@ ohos_fuzztest("RequestSecurityModelResultSyncFuzzTest") {
 
   sources = [ "request_security_model_result_sync_fuzzer.cpp" ]
 
-  deps = [
-    "${sg_root_dir}/services/risk_classify:sg_classify_service",
-  ]
+  deps = [ "${sg_root_dir}/services/risk_classify:sg_classify_service" ]
 
   external_deps = [
     "c_utils:utils",
