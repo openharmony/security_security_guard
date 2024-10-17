@@ -18,7 +18,7 @@ import("//build/test.gni")
 group("sg_classify_service_build_module") {
   if (is_standard_system) {
     deps = [
-      "${sg_root_dir}/interfaces/inner_api/classify:libsg_classify_sdk",
+      "${sg_root_dir}/frameworks/common/classify:libsg_classify_sdk",
       "${sg_root_dir}/services/risk_classify:sg_classify_service",
     ]
   }
@@ -27,9 +27,9 @@ group("sg_classify_service_build_module") {
 group("sg_collect_service_build_module") {
   if (is_standard_system) {
     deps = [
-      "${sg_root_dir}/interfaces/inner_api/collect:libsg_collect_sdk",
-      "${sg_root_dir}/interfaces/inner_api/data_collect_manager:libsg_data_collect_manager_sdk",
-      "${sg_root_dir}/interfaces/inner_api/obtaindata:libsg_obtaindata_sdk",
+      "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
+      "${sg_root_dir}/frameworks/common/data_collect_manager:libsg_data_collect_manager_sdk",
+      "${sg_root_dir}/frameworks/common/obtaindata:libsg_obtaindata_sdk",
       "${sg_root_dir}/services/data_collect:sg_collect_service",
       "${sg_root_dir}/services/data_collect:sg_collect_service_database",
     ]
@@ -90,9 +90,9 @@ group("security_guard_build_module_test") {
   deps = []
   if (is_standard_system) {
     deps += [
-      "${sg_root_dir}/interfaces/inner_api/classify/test:unittest",
-      "${sg_root_dir}/interfaces/inner_api/collect/test:unittest",
-      "${sg_root_dir}/interfaces/inner_api/obtaindata/test:unittest",
+      "${sg_root_dir}/frameworks/common/classify/test:unittest",
+      "${sg_root_dir}/frameworks/common/collect/test:unittest",
+      "${sg_root_dir}/frameworks/common/obtaindata/test:unittest",
     ]
   }
 }
