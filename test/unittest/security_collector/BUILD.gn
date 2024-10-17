@@ -33,7 +33,7 @@ ohos_unittest("security_collector_test") {
   sources = [ "${sg_root_dir}/test/unittest/security_collector/interface_test/src/collector_interface_test.cpp" ]
 
   deps = [
-    "${sg_root_dir}/interfaces/inner_api/collector:libsg_collector_sdk",
+    "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
     "${sg_root_dir}/services/security_collector:security_collector_service",
     "//third_party/googletest:gmock",
   ]
