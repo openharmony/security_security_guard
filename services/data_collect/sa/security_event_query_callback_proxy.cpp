@@ -50,7 +50,7 @@ void SecurityEventQueryCallbackProxy::OnQuery(const std::vector<SecurityCollecto
         SGLOGE("Remote error");
         return;
     }
-    int ret = remote->SendRequest(ISecurityEventQueryCallback::CMD_ON_QUERY, data, reply, option);
+    remote->SendRequest(ISecurityEventQueryCallback::CMD_ON_QUERY, data, reply, option);
 }
 
 void SecurityEventQueryCallbackProxy::OnComplete()
@@ -68,7 +68,7 @@ void SecurityEventQueryCallbackProxy::OnComplete()
         SGLOGE("Remote error");
         return;
     }
-    int ret = remote->SendRequest(ISecurityEventQueryCallback::CMD_ON_COMPLETE, data, reply, option);
+    remote->SendRequest(ISecurityEventQueryCallback::CMD_ON_COMPLETE, data, reply, option);
 }
 
 void SecurityEventQueryCallbackProxy::OnError(const std::string &message)
@@ -90,6 +90,6 @@ void SecurityEventQueryCallbackProxy::OnError(const std::string &message)
         SGLOGE("Remote error");
         return;
     }
-    int ret = remote->SendRequest(ISecurityEventQueryCallback::CMD_ON_ERROR, data, reply, option);
+    remote->SendRequest(ISecurityEventQueryCallback::CMD_ON_ERROR, data, reply, option);
 }
 }
