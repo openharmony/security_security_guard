@@ -533,10 +533,6 @@ bool DataCollectManagerService::WriteRemoteFileToLocal(const SecurityGuard::Secu
         return FAILED;
     }
     auto buffer = std::make_unique<char[]> (CFG_FILE_BUFF_SIZE);
-    if (buffer == nullptr) {
-        SGLOGE("new fail");
-        return NULL_OBJECT;
-    }
     int offset = -1;
     while ((offset = read(outputFd, buffer.get(), CFG_FILE_BUFF_SIZE)) > 0) {
         if (offset > CFG_FILE_MAX_SIZE) {
