@@ -50,7 +50,7 @@ ohos_fuzztest("SecurityCollectorManagerFuzzTest") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "security_guard:libsg_collect_sdk",
     "security_guard:libsg_collector_sdk",
-    "security_guard:libsg_obtaindata_sdk",
   ]
 }

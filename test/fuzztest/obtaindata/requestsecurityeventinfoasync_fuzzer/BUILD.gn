@@ -35,7 +35,7 @@ ohos_fuzztest("RequestSecurityEventInfoAsyncFuzzTest") {
   sources = [ "request_security_event_info_async_fuzzer.cpp" ]
 
   deps = [
-    "${sg_root_dir}/frameworks/common/obtaindata:libsg_obtaindata_sdk",
+    "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
     "${sg_root_dir}/services/data_collect:sg_collect_service",
   ]
 
@@ -44,6 +44,5 @@ ohos_fuzztest("RequestSecurityEventInfoAsyncFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
-    "security_guard:libsg_obtaindata_sdk",
   ]
 }

@@ -29,7 +29,6 @@ group("sg_collect_service_build_module") {
     deps = [
       "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
       "${sg_root_dir}/frameworks/common/data_collect_manager:libsg_data_collect_manager_sdk",
-      "${sg_root_dir}/frameworks/common/obtaindata:libsg_obtaindata_sdk",
       "${sg_root_dir}/services/data_collect:sg_collect_service",
       "${sg_root_dir}/services/data_collect:sg_collect_service_database",
     ]

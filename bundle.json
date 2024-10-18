@@ -89,7 +89,9 @@
           "header": {
             "header_files": [
               "sg_collect_client.h",
-              "event_info.h"
+              "event_info.h",
+              "sg_obtaindata_client.h",
+              "acquire_data_manager.h"
             ],
             "header_base": "//base/security/security_guard/interfaces/inner_api/collect/include"
           }
@@ -105,16 +107,6 @@
               "event_define.h"
             ],
             "header_base": "//base/security/security_guard/interfaces/inner_api/collector/include"
-          }
-        },
-        {
-          "name": "//base/security/security_guard/frameworks/common/obtaindata:libsg_obtaindata_sdk",
-          "header": {
-            "header_files": [
-              "sg_obtaindata_client.h",
-              "acquire_data_manager.h"
-            ],
-            "header_base": "//base/security/security_guard/interfaces/inner_api/obtaindata/include"
           }
         },
         {
