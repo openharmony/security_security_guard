@@ -22,7 +22,6 @@ ohos_unittest("inner_api_test") {
 
   include_dirs = [
     "include",
-    "${sg_root_dir}/frameworks/common/interfaces",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/interfaces/inner_api/common/include",
@@ -62,10 +61,11 @@ ohos_unittest("inner_api_test") {
     "src/inner_api_collector_test.cpp",
   ]
 
-  deps = [ "//third_party/googletest:gmock" ]
+  deps = []
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",

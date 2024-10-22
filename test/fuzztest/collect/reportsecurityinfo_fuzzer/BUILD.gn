@@ -24,6 +24,7 @@ ohos_fuzztest("ReportSecurityInfoFuzzTest") {
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/services/risk_collect/include",
+    "${sg_root_dir}/interfaces/inner_api/common/include",
   ]
   cflags = [
     "-g",
