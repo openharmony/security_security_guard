@@ -19,13 +19,14 @@ config("security_guard_config") {
   include_dirs = [
     "${sg_root_dir}/interfaces/inner_api/classify/include",
     "${sg_root_dir}/interfaces/inner_api/common/include",
-    "${sg_root_dir}/services/risk_classify/model_manager/include",
-    "${sg_root_dir}/services/config_manager/include",
   ]
 }
 
 ohos_shared_library("libsg_classify_sdk") {
-  innerapi_tags = [ "platformsdk" ]
+  innerapi_tags = [
+    "platformsdk",
+    "sasdk",
+  ]
   subsystem_name = "security"
   part_name = "security_guard"
   output_name = "libsg_classify_sdk"
