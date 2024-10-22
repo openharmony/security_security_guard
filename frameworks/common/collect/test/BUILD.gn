@@ -24,21 +24,20 @@ ohos_unittest("libsg_collect_sdk_test") {
     "${sg_root_dir}/services/risk_collect/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/log/include",
+    "${sg_root_dir}/interfaces/inner_api/common/include",
     "${sg_root_dir}/interfaces/inner_api/collect/include",
   ]
 
   sources = [ "unittest/src/data_collect_kit_test.cpp" ]
 
-  deps = [
-    "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
-    "//third_party/googletest:gmock",
-  ]
+  deps = [ "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk" ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "c_utils:utils",
+    "googletest:gmock",
     "hilog:libhilog",
   ]
 }
