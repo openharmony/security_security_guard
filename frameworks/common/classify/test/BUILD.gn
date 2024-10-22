@@ -29,13 +29,11 @@ ohos_unittest("libsg_classify_sdk_test") {
 
   sources = [ "unittest/src/risk_classify_kit_test.cpp" ]
 
-  deps = [
-    "${sg_root_dir}/frameworks/common/classify:libsg_classify_sdk",
-    "//third_party/googletest:gmock",
-  ]
+  deps = [ "${sg_root_dir}/frameworks/common/classify:libsg_classify_sdk" ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock",
     "hilog:libhilog",
   ]
 }

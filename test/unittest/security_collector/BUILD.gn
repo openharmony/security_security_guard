@@ -28,6 +28,8 @@ ohos_unittest("security_collector_test") {
     "${sg_root_dir}/services/security_collector/include",
     "${sg_root_dir}/services/kernel_collector/include",
     "${sg_root_dir}/test/unittest/security_collector/interface_test/include",
+    "${sg_root_dir}/frameworks/common/utils/include",
+    "${sg_root_dir}/interfaces/inner_api/common/include",
   ]
 
   sources = [ "${sg_root_dir}/test/unittest/security_collector/interface_test/src/collector_interface_test.cpp" ]
@@ -35,11 +37,11 @@ ohos_unittest("security_collector_test") {
   deps = [
     "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
     "${sg_root_dir}/services/security_collector:security_collector_service",
-    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
@@ -56,7 +58,7 @@ ohos_unittest("SecurityCollectorTest") {
     "include",
     "${sg_root_dir}/services/bigdata/include",
     "${sg_root_dir}/frameworks/common/constants/include",
-    "${sg_root_dir}/frameworks/common/interfaces",
+    "${sg_root_dir}/interfaces/inner_api/common/include",
     "${sg_root_dir}/frameworks/common/json/include",
     "${sg_root_dir}/frameworks/common/task_handler/include",
     "${sg_root_dir}/frameworks/common/database/include",
@@ -84,15 +86,13 @@ ohos_unittest("SecurityCollectorTest") {
     "src/security_collector_test.cpp",
   ]
 
-  deps = [
-    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "//third_party/googletest:gmock",
-  ]
+  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
 
   external_deps = [
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "ffrt:libffrt",
+    "googletest:gmock",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",
@@ -113,7 +113,7 @@ ohos_unittest("SecurityCollectorRunManagerTest") {
     "include",
     "${sg_root_dir}/services/bigdata/include",
     "${sg_root_dir}/frameworks/common/constants/include",
-    "${sg_root_dir}/frameworks/common/interfaces",
+    "${sg_root_dir}/interfaces/inner_api/common/include",
     "${sg_root_dir}/frameworks/common/json/include",
     "${sg_root_dir}/frameworks/common/task_handler/include",
     "${sg_root_dir}/frameworks/common/database/include",
@@ -137,15 +137,13 @@ ohos_unittest("SecurityCollectorRunManagerTest") {
     "src/security_collector_test.cpp",
   ]
 
-  deps = [
-    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "//third_party/googletest:gmock",
-  ]
+  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
 
   external_deps = [
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "ffrt:libffrt",
+    "googletest:gmock",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",
@@ -180,11 +178,12 @@ ohos_unittest("DataCollectionTest") {
     "data_collection/src/data_collection_test.cpp",
   ]
 
-  deps = [ "//third_party/googletest:gmock" ]
+  deps = []
 
   external_deps = [
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "googletest:gmock",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",

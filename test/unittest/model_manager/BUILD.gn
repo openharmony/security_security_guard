@@ -26,7 +26,6 @@ ohos_unittest("SecurityGuardModelManagerTest") {
     "include",
     "${sg_root_dir}/services/data_collect/store/include",
     "${sg_root_dir}/frameworks/common/constants/include",
-    "${sg_root_dir}/frameworks/common/interfaces",
     "${sg_root_dir}/frameworks/common/json/include",
     "${sg_root_dir}/frameworks/common/task_handler/include",
     "${sg_root_dir}/frameworks/common/database/include",
@@ -48,11 +47,11 @@ ohos_unittest("SecurityGuardModelManagerTest") {
   deps = [
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/data_collect:sg_collect_service",
-    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",

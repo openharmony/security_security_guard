@@ -25,7 +25,6 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
   include_dirs = [
     "include",
     "${sg_root_dir}/frameworks/common/constants/include",
-    "${sg_root_dir}/frameworks/common/interfaces",
     "${sg_root_dir}/frameworks/common/json/include",
     "${sg_root_dir}/frameworks/common/task_handler/include",
     "${sg_root_dir}/frameworks/common/database/include",
@@ -58,7 +57,6 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "${sg_root_dir}/services/data_collect:sg_collect_service",
     "${sg_root_dir}/services/data_collect:sg_collect_service_database",
     "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
-    "//third_party/googletest:gmock",
   ]
 
   external_deps = [
@@ -70,6 +68,7 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "c_utils:utils",
     "device_usage_statistics:usagestatsinner",
     "ffrt:libffrt",
+    "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",

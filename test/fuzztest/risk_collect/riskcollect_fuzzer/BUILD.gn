@@ -23,7 +23,6 @@ ohos_fuzztest("RiskCollectFuzzTest") {
   include_dirs = [
     "${sg_root_dir}/frameworks/common/task_handler/include",
     "${sg_root_dir}/frameworks/common/utils/include",
-    "${sg_root_dir}/frameworks/common/interfaces",
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/json/include",
