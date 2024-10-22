@@ -18,7 +18,11 @@
     "hisysevent_config": [
       "//base/security/security_guard/hisysevent.yaml"
     ],
-    "features": ["security_guard_enable"],
+    "features": [
+      "security_guard_enable",
+      "security_guard_event_file_source",
+      "security_guard_model_file_source"
+    ],
     "adapted_system_type": [
       "standard"
     ],
@@ -61,7 +65,6 @@
         "//base/security/security_guard/sa_profile:security_guard.init",
         "//base/security/security_guard/oem_property:security_audit_cfg",
         "//base/security/security_guard/oem_property:security_guard_cfg",
-        "//base/security/security_guard/oem_property:real_time_upload_event_cfg",
         "//base/security/security_guard/oem_property:config_update_trust_list_cfg",
         "//base/security/security_guard/oem_property:config_update_trust_list_cfg",
         "//base/security/security_guard/oem_property:security_guard_model_cfg",
