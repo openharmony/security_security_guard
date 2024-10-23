@@ -36,7 +36,6 @@ ohos_shared_library("libsg_classify_sdk") {
   public_configs = [ ":security_guard_config" ]
 
   include_dirs = [
-    "${sg_root_dir}/frameworks/common/interfaces",
     "${sg_root_dir}/services/risk_classify/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/log/include",
