@@ -17,18 +17,13 @@ import("//build/test.gni")
 
 group("sg_classify_service_build_module") {
   if (is_standard_system) {
-    deps = [
-      "${sg_root_dir}/frameworks/common/classify:libsg_classify_sdk",
-      "${sg_root_dir}/services/risk_classify:sg_classify_service",
-    ]
+    deps = [ "${sg_root_dir}/services/risk_classify:sg_classify_service" ]
   }
 }
 
 group("sg_collect_service_build_module") {
   if (is_standard_system) {
     deps = [
-      "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
-      "${sg_root_dir}/frameworks/common/data_collect_manager:libsg_data_collect_manager_sdk",
       "${sg_root_dir}/services/data_collect:sg_collect_service",
       "${sg_root_dir}/services/data_collect:sg_collect_service_database",
     ]
