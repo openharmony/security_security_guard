@@ -1414,7 +1414,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate03, TestSize.Level1)
 HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate04, TestSize.Level1)
 {
     SecurityGuard::SecurityConfigUpdateInfo subscribeInfo(-1,
-        "local_app_attribute.json");
+        "security_guard_event.json");
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
