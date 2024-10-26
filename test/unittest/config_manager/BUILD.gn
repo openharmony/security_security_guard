@@ -63,7 +63,6 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
-    "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -118,7 +117,6 @@ ohos_unittest("AppInfoDatabseTest") {
     "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
-    "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
