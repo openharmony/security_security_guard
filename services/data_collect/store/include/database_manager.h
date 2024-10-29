@@ -20,7 +20,7 @@
 #include <set>
 #include <unordered_map>
 
-#include "config_define.h"
+#include "i_model_info.h"
 #include "i_db_listener.h"
 
 namespace OHOS::Security::SecurityGuard {

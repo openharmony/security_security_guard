@@ -21,7 +21,7 @@
 
 #include "nlohmann/json.hpp"
 #include "security_event_info.h"
-#include "config_define.h"
+#include "i_model_info.h"
 
 namespace OHOS::Security::SecurityGuard {
 void from_json(const nlohmann::json &jsonObj, AppDetectionCfg &config);

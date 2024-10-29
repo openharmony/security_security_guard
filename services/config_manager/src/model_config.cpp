@@ -23,6 +23,7 @@
 #include "model_cfg_marshalling.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
+#include "config_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 bool ModelConfig::Load(int mode)
