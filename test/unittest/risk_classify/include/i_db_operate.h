@@ -16,7 +16,7 @@
 #ifndef SECURITY_GUARD_I_DB_OPERATE_H
 #define SECURITY_GUARD_I_DB_OPERATE_H
 
-#include "config_define.h"
+#include "i_model_info.h"
 
 namespace OHOS::Security::SecurityGuard {
 

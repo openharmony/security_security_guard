@@ -20,7 +20,7 @@
 #include <set>
 #include <unordered_map>
 #include "security_event_info.h"
-#include "config_define.h"
+#include "i_model_info.h"
 
 namespace OHOS::Security::SecurityGuard {
 class ConfigDataManager {

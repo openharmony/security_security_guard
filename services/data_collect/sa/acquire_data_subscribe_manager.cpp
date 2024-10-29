@@ -22,7 +22,7 @@
 #include "security_guard_log.h"
 #include "ffrt.h"
 #include "event_define.h"
-#include "config_define.h"
+#include "i_model_info.h"
 #include "config_data_manager.h"
 #include "collector_manager.h"
 #include "data_collection.h"
