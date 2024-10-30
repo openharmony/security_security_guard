@@ -22,7 +22,7 @@
 #include "system_ability.h"
 #include "data_collection.h"
 #include "i_db_listener.h"
-#include "config_define.h"
+#include "i_model_info.h"
 #include "data_collect_manager_stub.h"
 #include "security_guard_define.h"
 #include "security_event_query_callback_proxy.h"

@@ -18,7 +18,7 @@
 #include <vector>
 
 #include "gmock/gmock.h"
-#include "config_define.h"
+#include "i_model_info.h"
 
 namespace OHOS::Security::SecurityGuard {
 class BaseConfigDatabaseHelper {

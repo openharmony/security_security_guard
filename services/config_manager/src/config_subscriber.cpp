@@ -28,6 +28,7 @@
 #include "model_config.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
+#include "i_model_info.h"
 
 namespace OHOS::Security::SecurityGuard {
 

@@ -22,32 +22,6 @@
 #include "nlohmann/json.hpp"
 
 namespace OHOS::Security::SecurityGuard {
-using Field = struct {
-    std::string fieldName;
-    std::string fieldType;
-    std::string value;
-};
-
-using Rule = struct {
-    int64_t eventId;
-    std::vector<Field> fields;
-    std::string fieldsRelation;
-};
-
-using BuildInDetectionCfg = struct {
-    std::vector<Rule> rules;
-    std::string rulesRelation;
-    std::string trueResult;
-    std::string falseResult;
-};
-
-using AppDetectionCfg = struct {
-    std::string detectionCategory;
-    std::string configFileName;
-    std::string trueResult;
-    std::string falseResult;
-};
-
 constexpr const char *AUDIT_TABLE = "audit_event";
 constexpr const char *RISK_TABLE = "risk_event";
 

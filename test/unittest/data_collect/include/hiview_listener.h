@@ -19,7 +19,7 @@
 #include "hisysevent_listener.h"
 #include "nlohmann/json.hpp"
 
-#include "config_define.h"
+#include "i_model_info.h"
 
 namespace OHOS::Security::SecurityGuard {
 class HiviewListener : public HiviewDFX::HiSysEventListener {
