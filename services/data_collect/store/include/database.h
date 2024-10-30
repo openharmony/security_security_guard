@@ -21,7 +21,7 @@
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 
-#include "config_define.h"
+#include "i_model_info.h"
 #include "store_define.h"
 
 namespace OHOS::Security::SecurityGuard {

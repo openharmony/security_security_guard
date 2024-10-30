@@ -17,7 +17,7 @@
 
 #include <array>
 #include <cinttypes>
-#include "config_define.h"
+#include "i_model_info.h"
 #include "rdb_event_store_callback.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"

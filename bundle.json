@@ -86,7 +86,8 @@
           "header": {
             "header_files": [
               "sg_classify_client.h",
-              "i_model.h"
+              "i_model.h",
+              "i_model_info.h"
             ],
             "header_base": "//base/security/security_guard/interfaces/inner_api/classify/include"
           }

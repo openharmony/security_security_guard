@@ -20,35 +20,9 @@
 #include <vector>
 
 #include "nlohmann/json.hpp"
-#include "config_define.h"
+#include "i_model_info.h"
 #include "security_event_info.h"
 namespace OHOS::Security::SecurityGuard {
-using Field = struct {
-    std::string fieldName;
-    std::string fieldType;
-    std::string value;
-};
-
-using Rule = struct {
-    int64_t eventId;
-    std::vector<Field> fields;
-    std::string fieldsRelation;
-};
-
-using BuildInDetectionCfg = struct {
-    std::vector<Rule> rules;
-    std::string rulesRelation;
-    std::string trueResult;
-    std::string falseResult;
-};
-
-using AppDetectionCfg = struct {
-    std::string detectionCategory;
-    std::string configFileName;
-    std::string trueResult;
-    std::string falseResult;
-};
-
 constexpr const char *AUDIT_TABLE = "audit_event";
 constexpr const char *RISK_TABLE = "risk_event";
 

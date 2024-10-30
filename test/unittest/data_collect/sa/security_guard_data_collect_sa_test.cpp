@@ -30,6 +30,7 @@
 #include "security_guard_utils.h"
 #include "security_config_update_info.h"
 #include "security_event_info.h"
+#include "config_define.h"
 #define private public
 #define protected public
 #include "accesstoken_kit.h"

@@ -47,6 +47,8 @@
 #include "risk_event_rdb_helper.h"
 #include "config_subscriber.h"
 #include "model_manager.h"
+#include "config_define.h"
+
 namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr int32_t TWO_ARGS = 2;

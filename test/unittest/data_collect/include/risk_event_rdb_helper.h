@@ -21,7 +21,7 @@
 
 #include "database_helper.h"
 #include "store_define.h"
-#include "config_define.h"
+#include "i_model_info.h"
 
 namespace OHOS::Security::SecurityGuard {
 class RiskEventRdbHelper : public DatabaseHelper {

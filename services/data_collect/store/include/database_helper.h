@@ -17,7 +17,7 @@
 #define SECURITY_GUARD_DATABASE_HELPER_H
 
 #include "database.h"
-#include "config_define.h"
+#include "i_model_info.h"
 
 namespace OHOS::Security::SecurityGuard {
 class DatabaseHelper : public Database {

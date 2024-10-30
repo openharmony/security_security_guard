@@ -29,6 +29,7 @@
 #define protected public
 #include "base_config.h"
 #include "config_data_manager.h"
+#include "i_model_info.h"
 #include "config_define.h"
 #include "config_manager.h"
 #include "config_operator.h"
