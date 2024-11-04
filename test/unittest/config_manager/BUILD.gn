@@ -51,7 +51,10 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "src/security_guard_config_manager_test.cpp",
   ]
 
-  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
+  deps = [
+    "${sg_root_dir}/frameworks/common/classify:libsg_classify_sdk",
+    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
+  ]
 
   external_deps = [
     "ability_base:base",
