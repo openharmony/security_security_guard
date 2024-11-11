@@ -19,6 +19,16 @@
 #include <string>
 #include <vector>
 
+namespace {
+#ifndef SECURITY_GUARD_ENABLE_EXT
+    const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event.json";
+    const std::string &SECURITY_GUARD_MODEL_CFG_FILE = "security_guard_model.cfg";
+#else
+    const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event_ext.json";
+    const std::string &SECURITY_GUARD_MODEL_CFG_FILE = "security_guard_model_ext.cfg";
+#endif
+}
+
 namespace OHOS::Security::SecurityGuard {
 using LoadMode = enum {
     INIT_MODE,
@@ -31,18 +41,18 @@ using PathIndex = enum {
 };
 
 const std::vector<std::string> CONFIG_CACHE_FILES = {
-    "/data/service/el1/public/security_guard/test/tmp/security_guard_event.json",
-    "/data/service/el1/public/security_guard/test/tmp/security_guard_model.cfg",
+    "/data/service/el1/public/security_guard/test/tmp/" + SECURITY_GUARD_EVENT_CFG_FILE,
+    "/data/service/el1/public/security_guard/test/tmp/" + SECURITY_GUARD_MODEL_CFG_FILE,
 };
 
 const std::vector<std::string> CONFIG_UPTATE_FILES = {
-    "/data/service/el1/public/security_guard/security_guard_event.json",
-    "/data/service/el1/public/security_guard/security_guard_model.cfg",
+    "/data/service/el1/public/security_guard/" + SECURITY_GUARD_EVENT_CFG_FILE,
+    "/data/service/el1/public/security_guard/" + SECURITY_GUARD_MODEL_CFG_FILE,
 };
 
 const std::vector<std::string> CONFIG_PRESET_FILES = {
-    "/system/etc/security_guard_event.json",
-    "/system/etc/security_guard_model.cfg"
+    "/system/etc/" + SECURITY_GUARD_EVENT_CFG_FILE,
+    "/system/etc/" + SECURITY_GUARD_MODEL_CFG_FILE
 };
 
 const std::string CONFIG_ROOT_PATH = "/data/service/el1/public/security_guard/test/";

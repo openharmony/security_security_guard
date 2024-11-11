@@ -70,12 +70,15 @@ namespace {
         {"ConfigUpdate", {MANAGE_CONFIG_PERMISSION}},
         {"QuerySecurityEventConfig", {MANAGE_CONFIG_PERMISSION}},
     };
-
-    const std::string TRUST_LIST_FILE_PATH = "/system/etc/config_update_trust_list.json";
     std::unordered_set<std::string> g_configCacheFilesSet;
     constexpr uint32_t FINISH = 0;
     constexpr uint32_t CONTINUE = 1;
     constexpr size_t MAX_DISTRIBUTE_LENS = 100;
+#ifndef SECURITY_GUARD_ENABLE_EXT
+    const std::string TRUST_LIST_FILE_PATH = "/system/etc/config_update_trust_list.json";
+#else
+    const std::string TRUST_LIST_FILE_PATH = "/system/etc/config_update_trust_list_ext.json";
+#endif
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DataCollectManagerService, DATA_COLLECT_MANAGER_SA_ID, true);
