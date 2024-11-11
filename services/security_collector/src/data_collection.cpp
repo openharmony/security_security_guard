@@ -22,7 +22,11 @@
 
 namespace OHOS::Security::SecurityCollector {
 namespace {
+#ifndef SECURITY_GUARD_ENABLE_EXT
     const char* SA_CONFIG_PATH = "/system/etc/security_audit.cfg";
+#else
+    const char* SA_CONFIG_PATH = "/system/etc/security_audit_ext.cfg";
+#endif
 }
 
 DataCollection &DataCollection::GetInstance()

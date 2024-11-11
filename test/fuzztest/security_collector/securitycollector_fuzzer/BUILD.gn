@@ -20,6 +20,11 @@ ohos_fuzztest("SecurityCollectorFuzzTest") {
   fuzz_config_file =
       "${sg_root_dir}/test/fuzztest/security_collector/securitycollector_fuzzer"
 
+  defines = []
+  if (security_guard_enable_ext) {
+    defines += [ "SECURITY_GUARD_ENABLE_EXT" ]
+  }
+
   include_dirs = [
     "${sg_root_dir}/interfaces/inner_api/common/include",
     "${sg_root_dir}/interfaces/inner_api/collector/include",
