@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//base/security/security_guard/security_guard.gni")
 import("//build/ohos.gni")
 
 ohos_prebuilt_etc("security_guard_cfg") {
@@ -23,7 +22,7 @@ ohos_prebuilt_etc("security_guard_cfg") {
 }
 
 ohos_prebuilt_etc("security_guard_model_cfg") {
-  source = security_guard_model_file_source
+  source = "hos/security_guard_model.cfg"
   module_install_dir = ""
 
   subsystem_name = "security"
@@ -31,7 +30,7 @@ ohos_prebuilt_etc("security_guard_model_cfg") {
 }
 
 ohos_prebuilt_etc("security_guard_event_cfg") {
-  source = security_guard_event_file_source
+  source = "hos/security_guard_event.json"
   module_install_dir = ""
 
   subsystem_name = "security"

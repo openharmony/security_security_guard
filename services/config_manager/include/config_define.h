@@ -19,6 +19,16 @@
 #include <string>
 #include <vector>
 
+namespace {
+#ifndef SECURITY_GUARD_ENABLE_EXT
+    const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event.json";
+    const std::string &SECURITY_GUARD_MODEL_CFG_FILE = "security_guard_model.cfg";
+#else
+    const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event_ext.json";
+    const std::string &SECURITY_GUARD_MODEL_CFG_FILE = "security_guard_model_ext.cfg";
+#endif
+}
+
 namespace OHOS::Security::SecurityGuard {
 
 using LoadMode = enum {
@@ -37,8 +47,8 @@ using PathIndex = enum {
 };
 
 const std::vector<std::string> CONFIG_CACHE_FILES = {
-    "/data/service/el1/public/security_guard/tmp/security_guard_event.json",
-    "/data/service/el1/public/security_guard/tmp/security_guard_model.cfg",
+    "/data/service/el1/public/security_guard/tmp/" + SECURITY_GUARD_EVENT_CFG_FILE,
+    "/data/service/el1/public/security_guard/tmp/" + SECURITY_GUARD_MODEL_CFG_FILE,
     "/data/service/el1/public/security_guard/tmp/signature_rule.json",
     "/data/service/el1/public/security_guard/tmp/url_rule.json",
     "/data/service/el1/public/security_guard/tmp/local_app_attribute.json",
@@ -47,8 +57,8 @@ const std::vector<std::string> CONFIG_CACHE_FILES = {
 };
 
 const std::vector<std::string> CONFIG_UPTATE_FILES = {
-    "/data/service/el1/public/security_guard/security_guard_event.json",
-    "/data/service/el1/public/security_guard/security_guard_model.cfg",
+    "/data/service/el1/public/security_guard/" + SECURITY_GUARD_EVENT_CFG_FILE,
+    "/data/service/el1/public/security_guard/" + SECURITY_GUARD_MODEL_CFG_FILE,
     "/data/service/el1/public/security_guard/signature_rule.json",
     "/data/service/el1/public/security_guard/url_rule.json",
     "/data/service/el1/public/security_guard/local_app_attr.json",
@@ -57,8 +67,8 @@ const std::vector<std::string> CONFIG_UPTATE_FILES = {
 };
 
 const std::vector<std::string> CONFIG_PRESET_FILES = {
-    "/system/etc/security_guard_event.json",
-    "/system/etc/security_guard_model.cfg"
+    "/system/etc/" + SECURITY_GUARD_EVENT_CFG_FILE,
+    "/system/etc/" + SECURITY_GUARD_MODEL_CFG_FILE
 };
 
 const std::string CONFIG_ROOT_PATH = "/data/service/el1/public/security_guard/";

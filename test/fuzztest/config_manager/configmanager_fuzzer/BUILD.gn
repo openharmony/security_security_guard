@@ -39,6 +39,11 @@ ohos_fuzztest("ConfigManagerFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
 
+  defines = []
+  if (security_guard_enable_ext) {
+    defines += [ "SECURITY_GUARD_ENABLE_EXT" ]
+  }
+
   sources = [
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",

@@ -203,9 +203,9 @@ HWTEST_F(SecurityGuardConfigManagerTest, TestConfigDataManager003, TestSize.Leve
 HWTEST_F(SecurityGuardConfigManagerTest, TestConfigSubsciber003, TestSize.Level1)
 {
     EXPECT_TRUE(
-        ConfigSubscriber::UpdateConfig("/data/service/el1/public/security_guard/tmp/security_guard_event.json"));
+        ConfigSubscriber::UpdateConfig(CONFIG_CACHE_FILES[EVENT_CFG_INDEX]));
     EXPECT_TRUE(
-        ConfigSubscriber::UpdateConfig("/data/service/el1/public/security_guard/tmp/security_guard_model.cfg"));
+        ConfigSubscriber::UpdateConfig(CONFIG_CACHE_FILES[MODEL_CFG_INDEX]));
     EXPECT_TRUE(ConfigSubscriber::UpdateConfig("/data/service/el1/public/security_guard/tmp/signature_rule.json"));
 }
 

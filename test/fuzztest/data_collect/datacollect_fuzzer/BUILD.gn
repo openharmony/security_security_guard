@@ -50,6 +50,10 @@ ohos_fuzztest("DataCollectFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
 
+  defines = []
+  if (security_guard_enable_ext) {
+    defines += [ "SECURITY_GUARD_ENABLE_EXT" ]
+  }
   sources = [
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",

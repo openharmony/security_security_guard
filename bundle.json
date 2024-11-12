@@ -20,8 +20,7 @@
     ],
     "features": [
       "security_guard_enable",
-      "security_guard_event_file_source",
-      "security_guard_model_file_source"
+      "security_guard_enable_ext"
     ],
     "adapted_system_type": [
       "standard"
