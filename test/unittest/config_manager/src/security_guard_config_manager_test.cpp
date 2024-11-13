@@ -200,15 +200,6 @@ HWTEST_F(SecurityGuardConfigManagerTest, TestConfigDataManager003, TestSize.Leve
     EXPECT_TRUE(outEventIds.size() == 0);
 }
 
-HWTEST_F(SecurityGuardConfigManagerTest, TestConfigSubsciber003, TestSize.Level1)
-{
-    EXPECT_TRUE(
-        ConfigSubscriber::UpdateConfig(CONFIG_CACHE_FILES[EVENT_CFG_INDEX]));
-    EXPECT_TRUE(
-        ConfigSubscriber::UpdateConfig(CONFIG_CACHE_FILES[MODEL_CFG_INDEX]));
-    EXPECT_TRUE(ConfigSubscriber::UpdateConfig("/data/service/el1/public/security_guard/tmp/signature_rule.json"));
-}
-
 HWTEST_F(SecurityGuardConfigManagerTest, TestEventConfig002, TestSize.Level1)
 {
     ConfigDataManager::GetInstance().ResetEventMap();
@@ -339,6 +330,15 @@ HWTEST_F(SecurityGuardConfigManagerTest, TestModelConfig005, TestSize.Level1)
     ConfigDataManager::GetInstance().ResetEventToTableMap();
     EXPECT_TRUE(ConfigDataManager::GetInstance().GetTableFromEventId(0).empty());
     EXPECT_TRUE(ConfigDataManager::GetInstance().GetAllEventConfigs().empty());
+}
+
+HWTEST_F(SecurityGuardConfigManagerTest, TestConfigSubsciber003, TestSize.Level1)
+{
+    EXPECT_TRUE(
+        ConfigSubscriber::UpdateConfig(CONFIG_CACHE_FILES[EVENT_CFG_INDEX]));
+    EXPECT_TRUE(
+        ConfigSubscriber::UpdateConfig(CONFIG_CACHE_FILES[MODEL_CFG_INDEX]));
+    EXPECT_TRUE(ConfigSubscriber::UpdateConfig("/data/service/el1/public/security_guard/tmp/signature_rule.json"));
 }
 
 HWTEST_F(SecurityGuardConfigManagerTest, TestModelCfgMarshalling001, TestSize.Level1)
