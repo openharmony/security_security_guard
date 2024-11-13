@@ -62,6 +62,12 @@ namespace OHOS {
 
 namespace OHOS::Security::SecurityGuardTest {
 
+#ifndef SECURITY_GUARD_ENABLE_EXT
+    const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event.json";
+#else
+    const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event_ext.json";
+#endif
+
 void SecurityGuardDataCollectSaTest::SetUpTestCase()
 {
 }
@@ -145,7 +151,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, DumpEventInfo_Success, TestSize.Level1)
     secEvent.eventId = 1;
     secEvent.date = "2022-01-01";
     secEvent.version = "1.0";
-    
+
     EXPECT_CALL(DatabaseManager::GetInstance(), QueryRecentEventByEventId(1, _))
         .WillOnce(Return(SUCCESS));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -1415,7 +1421,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate03, TestSize.Level1)
 HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate04, TestSize.Level1)
 {
     SecurityGuard::SecurityConfigUpdateInfo subscribeInfo(-1,
-        CONFIG_CACHE_FILES[EVENT_CFG_INDEX]);
+        SECURITY_GUARD_EVENT_CFG_FILE);
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
@@ -1439,7 +1445,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, WriteRemoteFileToLocal01, TestSize.Leve
     out << errtmp << std::endl;
     int32_t fd = open("/data/test/unittest/resource/test.json", O_RDONLY);
     SecurityGuard::SecurityConfigUpdateInfo subscribeInfo(fd, "test.json");
-    
+
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     std::string toPath = "/data/test/unittest/resource/";
     int32_t result = service.WriteRemoteFileToLocal(subscribeInfo, toPath + "testFile.json");
@@ -1457,7 +1463,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, WriteRemoteFileToLocal02, TestSize.Leve
     out << errtmp << std::endl;
     int32_t fd = 0;
     SecurityGuard::SecurityConfigUpdateInfo subscribeInfo(fd, "test.json");
-    
+
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     std::string toPath = "/data/test/unittest/resource/";
     int32_t result = service.WriteRemoteFileToLocal(subscribeInfo, toPath + "testFile.json");
