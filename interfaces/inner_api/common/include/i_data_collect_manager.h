@@ -46,7 +46,7 @@ public:
     };
 
     virtual int32_t RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
-        std::string &content) = 0;
+        std::string &content, bool isSync = true) = 0;
     virtual int32_t RequestRiskData(std::string &devId, std::string &eventList,
         const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t Subscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,

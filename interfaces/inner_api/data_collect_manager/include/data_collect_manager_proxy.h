@@ -30,7 +30,8 @@ public:
     explicit DataCollectManagerProxy(const sptr<IRemoteObject> &impl);
     ~DataCollectManagerProxy() override = default;
     int32_t RequestRiskData(std::string &devId, std::string &eventList, const sptr<IRemoteObject> &callback) override;
-    int32_t RequestDataSubmit(int64_t eventId, std::string &version, std::string &time, std::string &content) override;
+    int32_t RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
+        std::string &content, bool isSync = true) override;
     int32_t Subscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) override;
     int32_t Unsubscribe(const sptr<IRemoteObject> &callback) override;
