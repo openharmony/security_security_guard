@@ -23,6 +23,30 @@
 #include "sg_collect_client.h"
 
 namespace OHOS::Security::SecurityGuard {
+namespace {
+int32_t ReportSecurityEvent(const std::shared_ptr<EventInfo> &info, bool isSync)
+{
+    if (info == nullptr) {
+        return BAD_PARAM;
+    }
+    sptr<IDataCollectManager> proxy = SgCollectClient::GetInstance().GetProxy();
+    if (proxy == nullptr) {
+        return NULL_OBJECT;
+    }
+
+    int64_t eventId = info->GetEventId();
+    std::string version = info->GetVersion();
+    std::string content = info->GetContent();
+    std::string date = SecurityGuardUtils::GetDate();
+    int32_t ret = proxy->RequestDataSubmit(eventId, version, date, content, isSync);
+    if (ret != SUCCESS) {
+        SGLOGE("RequestSecurityInfo error, ret=%{public}d", ret);
+        return ret;
+    }
+    return SUCCESS;
+}
+}
+
 SgCollectClient &SgCollectClient::GetInstance()
 {
     static SgCollectClient instance;
@@ -80,24 +104,12 @@ void SgCollectClientDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remo
 
 int32_t NativeDataCollectKit::ReportSecurityInfo(const std::shared_ptr<EventInfo> &info)
 {
-    if (info == nullptr) {
-        return BAD_PARAM;
-    }
-    sptr<IDataCollectManager> proxy = SgCollectClient::GetInstance().GetProxy();
-    if (proxy == nullptr) {
-        return NULL_OBJECT;
-    }
+    return ReportSecurityEvent(info, true);
+}
 
-    int64_t eventId = info->GetEventId();
-    std::string version = info->GetVersion();
-    std::string content = info->GetContent();
-    std::string date = SecurityGuardUtils::GetDate();
-    int32_t ret = proxy->RequestDataSubmit(eventId, version, date, content);
-    if (ret != SUCCESS) {
-        SGLOGE("RequestSecurityInfo error, ret=%{public}d", ret);
-        return ret;
-    }
-    return SUCCESS;
+int32_t NativeDataCollectKit::ReportSecurityInfoAsync(const std::shared_ptr<EventInfo> &info)
+{
+    return ReportSecurityEvent(info, false);
 }
 
 int32_t NativeDataCollectKit::SecurityGuardConfigUpdate(int32_t fd, const std::string &name)
@@ -118,7 +130,7 @@ int32_t NativeDataCollectKit::SecurityGuardConfigUpdate(int32_t fd, const std::s
 
 }  // namespace OHOS::Security::SecurityGuard
 
-static int32_t ReportSecurityInfoImpl(const struct EventInfoSt *info)
+static int32_t ReportSecurityInfoImpl(const struct EventInfoSt *info, bool isSync)
 {
     if (info == nullptr || info->contentLen >= CONTENT_MAX_LEN || info->version == nullptr) {
         return OHOS::Security::SecurityGuard::BAD_PARAM;
@@ -133,7 +145,11 @@ static int32_t ReportSecurityInfoImpl(const struct EventInfoSt *info)
     }
     std::string content(reinterpret_cast<const char *>(tmp));
     auto eventInfo = std::make_shared<OHOS::Security::SecurityGuard::EventInfo>(eventId, version, content);
-    return OHOS::Security::SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(eventInfo);
+    if (isSync) {
+        return OHOS::Security::SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(eventInfo);
+    } else {
+        return OHOS::Security::SecurityGuard::NativeDataCollectKit::ReportSecurityInfoAsync(eventInfo);
+    }
 }
 
 #ifdef __cplusplus
@@ -142,7 +158,12 @@ extern "C" {
 
 int32_t ReportSecurityInfo(const struct EventInfoSt *info)
 {
-    return ReportSecurityInfoImpl(info);
+    return ReportSecurityInfoImpl(info, true);
+}
+
+int32_t ReportSecurityInfoAsync(const struct EventInfoSt *info)
+{
+    return ReportSecurityInfoImpl(info, false);
 }
 
 int32_t SecurityGuardConfigUpdate(int32_t fd, const char *fileName)

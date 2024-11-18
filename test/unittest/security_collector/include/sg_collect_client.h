@@ -25,6 +25,10 @@ public:
     {
         return {};
     };
+    static int32_t ReportSecurityInfoAsync(const std::shared_ptr<EventInfo> &info)
+    {
+        return {};
+    };
 };
 } // namespace OHOS::Security::SecurityGuard
 
