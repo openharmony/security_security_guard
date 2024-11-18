@@ -33,7 +33,8 @@ public:
     int32_t RequestDataSubmit(int64_t eventId, std::string &version, std::string &time, std::string &content) override;
     int32_t Subscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) override;
-    int32_t Unsubscribe(const sptr<IRemoteObject> &callback) override;
+    int32_t Unsubscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
+        const sptr<IRemoteObject> &callback) override;
     int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
         const sptr<IRemoteObject> &callback) override;
     int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,

@@ -41,4 +41,35 @@ int32_t AcquireDataCallbackProxy::OnNotify(const SecurityCollector::Event &event
     MessageOption option = { MessageOption::TF_SYNC };
     return remote->SendRequest(CMD_DATA_SUBSCRIBE_CALLBACK, data, reply, option);
 }
+
+int32_t AcquireDataCallbackProxy::BatchOnNotify(const std::vector<SecurityCollector::Event> &events)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return ERR_INVALID_OPERATION;
+    }
+    if (!data.WriteUint32(events.size())) {
+        SGLOGE("failed to WriteInt32 for parcelable vector size");
+        return WRITE_ERR;
+    }
+
+    for (const auto &event : events) {
+        data.WriteInt64(event.eventId);
+        data.WriteString(event.version);
+        data.WriteString(event.content);
+        data.WriteString(event.extra);
+        data.WriteString(event.timestamp);
+    }
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("remote is nullptr, code = %{public}u", static_cast<uint32_t>(CMD_DATA_SUBSCRIBE_BATCH_CALLBACK));
+        return NULL_OBJECT;
+    }
+
+    MessageOption option = { MessageOption::TF_SYNC };
+    return remote->SendRequest(CMD_DATA_SUBSCRIBE_BATCH_CALLBACK, data, reply, option);
+}
+
 }

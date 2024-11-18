@@ -16,9 +16,10 @@
 #include "i_collector_subscriber.h"
 
 namespace OHOS::Security::SecurityCollector {
-ICollectorSubscriber::ICollectorSubscriber(const Event &event, int64_t duration, bool isNotify)
+ICollectorSubscriber::ICollectorSubscriber(const Event &event, int64_t duration, bool isNotify,
+    const std::string &eventGroup)
 {
-    subscribeInfo_ = SecurityCollectorSubscribeInfo(event, duration, isNotify);
+    subscribeInfo_ = SecurityCollectorSubscribeInfo(event, duration, isNotify, eventGroup);
 }
 
 SecurityCollectorSubscribeInfo ICollectorSubscriber::GetSubscribeInfo()

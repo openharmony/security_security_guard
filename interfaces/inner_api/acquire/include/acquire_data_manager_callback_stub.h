@@ -25,6 +25,9 @@ public:
     AcquireDataManagerCallbackStub() = default;
     ~AcquireDataManagerCallbackStub() override = default;
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+private:
+    int32_t HandleSubscribeCallback(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleBatchSubscribeCallback(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace OHOS::Security::SecurityGuard
 

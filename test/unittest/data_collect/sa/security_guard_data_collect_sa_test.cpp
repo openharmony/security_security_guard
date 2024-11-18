@@ -531,7 +531,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Unsubscribe01, TestSize.Level1)
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_DENIED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.Unsubscribe(mockObj);
+    int32_t result = service.Unsubscribe(subscribeInfo, mockObj);
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
@@ -563,7 +563,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Unsubscribe02, TestSize.Level1)
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(false));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.Unsubscribe(mockObj);
+    int32_t result = service.Unsubscribe(subscribeInfo, mockObj);
     EXPECT_EQ(result, NO_SYSTEMCALL);
 }
 
@@ -589,7 +589,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Subscribe03, TestSize.Level1)
     EXPECT_NE(result, SUCCESS);
 
     EXPECT_CALL(*obj, RemoveDeathRecipient).Times(1);
-    result = service.Unsubscribe(obj);
+    result = service.Unsubscribe(subscribeInfo, obj);
     EXPECT_EQ(result, SUCCESS);
 }
 
@@ -602,7 +602,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Success, TestSize
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(obj);
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
     EXPECT_EQ(result, SUCCESS);
 }
 
@@ -618,13 +618,13 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Fail01, TestSize.
     EXPECT_NE(result, SUCCESS);
     result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(obj2);
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj2);
     EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(obj);
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
     EXPECT_EQ(result, FAILED);
     result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj2);
     EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(obj);
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
     EXPECT_EQ(result, SUCCESS);
 }
 
@@ -635,7 +635,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_WithSubscribers, TestSize.Level
         .version = "version",
         .content = "content"
     };
-    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().Publish(event));
+    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event));
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NullProxy, TestSize.Level1)
@@ -658,8 +658,8 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NullProxy, TestSize.Level1)
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     EXPECT_EQ(result, SUCCESS);
-    EXPECT_FALSE(AcquireDataSubscribeManager::GetInstance().Publish(event));
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(obj);
+    EXPECT_FALSE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event));
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
     EXPECT_EQ(result, SUCCESS);
 }
 
@@ -689,8 +689,9 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NotNullProxy, TestSize.Level1)
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, mockObject);
     EXPECT_EQ(result, SUCCESS);
-    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().Publish(event));
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(mockObject);
+    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event));
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId,
+        mockObject);
     EXPECT_EQ(result, SUCCESS);
 }
 
@@ -719,8 +720,9 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId01, TestSize.Le
         });
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, mockObj);
     EXPECT_EQ(result, SUCCESS);
-    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().Publish(event));
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(mockObj);
+    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event));
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId,
+        mockObj);
     EXPECT_EQ(result, SUCCESS);
 }
 
@@ -749,8 +751,8 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId02, TestSize.Le
         });
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, object);
     EXPECT_EQ(result, SUCCESS);
-    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().Publish(event));
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(object);
+    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event));
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, object);
     EXPECT_EQ(result, SUCCESS);
 }
 
@@ -779,8 +781,8 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId03, TestSize.Le
         });
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     EXPECT_EQ(result, SUCCESS);
-    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().Publish(event));
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(obj);
+    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event));
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
     EXPECT_EQ(result, SUCCESS);
 }
 

@@ -71,6 +71,7 @@ public:
     explicit MockAcquireDataManagerCallbackStub() = default;
     ~MockAcquireDataManagerCallbackStub() override = default;
     int32_t OnNotify(const Security::SecurityCollector::Event &event) override { return 0; };
+    int32_t BatchOnNotify(const std::vector<Security::SecurityCollector::Event> &events) { return 0; };
 };
 
 class MockRiskAnalysisManagerCallbackStub : public RiskAnalysisManagerCallbackStub {
@@ -156,7 +157,7 @@ HWTEST_F(InnerApiCollectorTest, AcquireDataManagerTest001, testing::ext::TestSiz
     EXPECT_TRUE(ret == BAD_PARAM);
     AcquireDataManager::GetInstance().HandleDecipient();
     
-    AcquireDataManagerCallbackService service{subscriber};
+    AcquireDataManagerCallbackService service;
     ret = service.OnNotify(event);
     EXPECT_TRUE(ret == SUCCESS);
 }
@@ -325,7 +326,7 @@ HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest003, testing::ext::Te
     DataCollectManagerProxy proxy{callback};
     int ret = proxy.Subscribe(subscribeInfo, objSub);
     EXPECT_EQ(ret, NO_PERMISSION);
-    ret = proxy.Unsubscribe(objSub);
+    ret = proxy.Unsubscribe(subscribeInfo, objSub);
     EXPECT_EQ(ret, NO_PERMISSION);
 }
  

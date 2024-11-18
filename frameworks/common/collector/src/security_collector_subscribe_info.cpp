@@ -49,7 +49,10 @@ bool SecurityCollectorSubscribeInfo::Marshalling(Parcel &parcel) const
         LOGE("failed to write extra");
         return false;
     }
-   
+    if (!parcel.WriteString(eventGroup_)) {
+        LOGE("failed to write event group");
+        return false;
+    }
     return true;
 }
 
@@ -80,7 +83,10 @@ bool SecurityCollectorSubscribeInfo::ReadFromParcel(Parcel &parcel)
         LOGE("failed to read extra");
         return false;
     }
-
+    if (!parcel.ReadString(eventGroup_)) {
+        LOGE("failed to read event group");
+        return false;
+    }
     return true;
 }
 
