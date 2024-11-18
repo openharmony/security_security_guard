@@ -28,23 +28,64 @@ int32_t AcquireDataManagerCallbackStub::OnRemoteRequest(uint32_t code, MessagePa
     }
 
     if (code == AcquireDataManagerCallbackStub::CMD_DATA_SUBSCRIBE_CALLBACK) {
-        uint32_t expected = sizeof(uint32_t);
-        uint32_t actual = data.GetReadableBytes();
-        if (actual <= expected) {
-            SGLOGE("actual length error, value=%{public}u", actual);
-            return BAD_PARAM;
-        }
+        return HandleSubscribeCallback(data, reply);
+    }
+    if (code == AcquireDataManagerCallbackStub::CMD_DATA_SUBSCRIBE_BATCH_CALLBACK) {
+        return HandleBatchSubscribeCallback(data, reply);
+    }
+    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+}
 
+int32_t AcquireDataManagerCallbackStub::HandleSubscribeCallback(MessageParcel &data, MessageParcel &reply)
+{
+    uint32_t expected = sizeof(uint32_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (actual <= expected) {
+        SGLOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    SecurityCollector::Event event;
+    event.eventId = data.ReadInt64();
+    event.version = data.ReadString();
+    event.content = data.ReadString();
+    event.extra = data.ReadString();
+    event.timestamp = data.ReadString();
+    OnNotify(event);
+    return SUCCESS;
+}
+
+int32_t AcquireDataManagerCallbackStub::HandleBatchSubscribeCallback(MessageParcel &data, MessageParcel &reply)
+{
+    uint32_t expected = sizeof(uint32_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (actual <= expected) {
+        SGLOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    uint32_t size = 0;
+    if (!data.ReadUint32(size)) {
+        SGLOGE("failed to get the event size");
+        return BAD_PARAM;
+    }
+
+    if (size > MAX_QUERY_EVENT_SIZE) {
+        SGLOGE("the event size error");
+        return BAD_PARAM;
+    }
+    std::vector<SecurityCollector::Event> events;
+    for (uint32_t index = 0; index < size; index++) {
         SecurityCollector::Event event;
         event.eventId = data.ReadInt64();
         event.version = data.ReadString();
         event.content = data.ReadString();
         event.extra = data.ReadString();
         event.timestamp = data.ReadString();
-        OnNotify(event);
-        return SUCCESS;
+        events.emplace_back(event);
     }
 
-    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    BatchOnNotify(events);
+    return SUCCESS;
 }
 }

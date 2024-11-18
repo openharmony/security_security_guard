@@ -1,0 +1,22 @@
+{
+    "eventGroupList" : [
+        {
+            "eventGroupName" : "securityEvent",
+            "eventList" : [
+
+            ],
+            "permission" : [
+
+            ]
+        },
+        {
+            "eventGroupName" : "auditEvent",
+            "eventList" : [
+
+            ],
+            "permission" : [
+                
+            ]
+        }
+    ]
+}

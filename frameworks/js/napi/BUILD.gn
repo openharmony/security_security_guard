@@ -63,7 +63,10 @@ ohos_shared_library("securityguard_napi") {
   }
   branch_protector_ret = "pac_ret"
 
-  deps = [ "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk" ]
+  deps = [
+    "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
+    "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
+  ]
 
   external_deps = [
     "c_utils:utils",

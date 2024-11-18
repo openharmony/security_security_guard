@@ -29,6 +29,7 @@ public:
     virtual bool GetEventConfig(int64_t eventId, EventCfg &config) = 0;
     virtual std::string GetTableFromEventId(int64_t eventId) = 0;
     virtual std::vector<int64_t> GetAllEventIds() = 0;
+    virtual bool GetEventGroupConfig(const std::string &groupName, EventGroupCfg &config) = 0;
 };
 
 class ConfigDataManager : public BaseConfigDataManager {
@@ -44,6 +45,7 @@ public:
     MOCK_METHOD1(GetTableFromEventId, std::string(int64_t eventId));
     MOCK_METHOD0(GetAllEventIds, std::vector<int64_t>());
     MOCK_METHOD0(GetAllEventConfigs, std::vector<EventCfg>());
+    MOCK_METHOD2(GetEventGroupConfig, bool(const std::string &groupName, EventGroupCfg &config));
 };
 } // OHOS::Security::SecurityGuard
 

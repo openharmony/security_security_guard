@@ -68,6 +68,7 @@ public:
     explicit MockAcquireDataManagerCallbackStub() = default;
     ~MockAcquireDataManagerCallbackStub() override = default;
     int32_t OnNotify(const Security::SecurityCollector::Event &event) override { return 0; };
+    int32_t BatchOnNotify(const std::vector<Security::SecurityCollector::Event> &events) override { return 0; };
 };
 
 class MockRiskAnalysisManagerCallbackStub : public RiskAnalysisManagerCallbackStub {
@@ -134,8 +135,7 @@ void AcquireDataManagerCallbackServiceFuzzTest(const uint8_t* data, size_t size)
     offset += sizeof(int64_t);
     std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
     Security::SecurityCollector::Event event{eventId, string, string, string};
-    auto subscriber = std::make_shared<MockCollectorSubscriber>(event);
-    AcquireDataManagerCallbackService service{subscriber};
+    AcquireDataManagerCallbackService service;
     service.OnNotify(event);
 }
 
@@ -310,7 +310,7 @@ void DataCollectManagerProxySubscribeFuzzTest(const uint8_t* data, size_t size)
     SecurityCollectorSubscribeInfo subscribeInfo{};
     DataCollectManagerProxy proxy{callback};
     proxy.Subscribe(subscribeInfo, objSub);
-    proxy.Unsubscribe(objSub);
+    proxy.Unsubscribe(subscribeInfo, objSub);
 }
 
 void DataCollectManagerProxyQuerySecurityEventFuzzTest(const uint8_t* data, size_t size)

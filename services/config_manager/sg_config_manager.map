@@ -19,6 +19,7 @@
       vtable?for?OHOS::Security::SecurityGuard::BaseConfig;
       vtable?for?OHOS::Security::SecurityGuard::EventConfig;
       vtable?for?OHOS::Security::SecurityGuard::ModelConfig;
+      vtable?for?OHOS::Security::SecurityGuard::EventGroupConfig;
       OHOS::Security::SecurityGuard::to_json*;
       OHOS::Security::SecurityGuard::BaseConfig::~BaseConfig*;
       OHOS::Security::SecurityGuard::ConfigManager::GetInstance*;
@@ -34,6 +35,7 @@
       OHOS::Security::SecurityGuard::ConfigDataManager::GetAllEventIds*;
       OHOS::Security::SecurityGuard::ConfigDataManager::GetTableFromEventId*;
       OHOS::Security::SecurityGuard::ConfigDataManager::GetAllEventConfigs*;
+      OHOS::Security::SecurityGuard::ConfigDataManager::GetEventGroupConfig*;
     };
   local:
     *;
