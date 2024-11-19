@@ -28,6 +28,7 @@
 extern "C" {
 #endif
 int32_t ReportSecurityInfo(const struct EventInfoSt *info);
+int32_t ReportSecurityInfoAsync(const struct EventInfoSt *info);
 
 int32_t SecurityGuardConfigUpdate(int32_t fd, const char *fileName);
 #ifdef __cplusplus
@@ -38,6 +39,7 @@ namespace OHOS::Security::SecurityGuard {
 class NativeDataCollectKit {
 public:
     static int32_t ReportSecurityInfo(const std::shared_ptr<EventInfo> &info);
+    static int32_t ReportSecurityInfoAsync(const std::shared_ptr<EventInfo> &info);
     static int32_t SecurityGuardConfigUpdate(int32_t fd, const std::string &fileName);
 };
 
