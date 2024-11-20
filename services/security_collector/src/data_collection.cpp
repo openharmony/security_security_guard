@@ -85,7 +85,7 @@ bool DataCollection::SecurityGuardSubscribeCollector(const std::vector<int64_t>&
         }
         ret = LoadCollector(eventId, collectorPath, nullptr);
         if (ret != SUCCESS) {
-            LOGE("GetCollectorPath failed, eventId is 0x%{public}" PRIx64, eventId);
+            LOGE("LoadCollector failed, eventId is 0x%{public}" PRIx64, eventId);
             continue;
         }
     }

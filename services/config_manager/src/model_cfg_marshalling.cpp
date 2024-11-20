@@ -238,8 +238,8 @@ void to_json(json &jsonObj, const EventContentSt &eventContentSt)
 
 void from_json(const json &jsonObj, EventContentSt &eventContentSt)
 {
-    JsonCfg::Unmarshal(eventContentSt.status, jsonObj, EVENT_CONTENT_STATUS_KEY);
-    JsonCfg::Unmarshal(eventContentSt.cred, jsonObj, EVENT_CONTENT_CRED_KEY);
-    JsonCfg::Unmarshal(eventContentSt.extra, jsonObj, EVENT_CONTENT_EXTRA_KEY);
+    (void)JsonCfg::Unmarshal(eventContentSt.status, jsonObj, EVENT_CONTENT_STATUS_KEY);
+    (void)JsonCfg::Unmarshal(eventContentSt.cred, jsonObj, EVENT_CONTENT_CRED_KEY);
+    (void)JsonCfg::Unmarshal(eventContentSt.extra, jsonObj, EVENT_CONTENT_EXTRA_KEY);
 }
 }
