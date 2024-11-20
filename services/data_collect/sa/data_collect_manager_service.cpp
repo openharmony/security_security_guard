@@ -97,7 +97,7 @@ void DataCollectManagerService::OnStart()
     AddSystemAbilityListener(RISK_ANALYSIS_MANAGER_SA_ID);
     AddSystemAbilityListener(DFX_SYS_HIVIEW_ABILITY_ID);
     bool success = ConfigManager::InitConfig<EventConfig>();
-        if (!success) {
+    if (!success) {
         SGLOGE("init event config error");
     }
     std::vector<int64_t> eventIds = ConfigDataManager::GetInstance().GetAllEventIds();

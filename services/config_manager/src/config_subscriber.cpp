@@ -37,9 +37,9 @@ bool ConfigSubscriber::UpdateConfig(const std::string &file)
     ConfigUpdateEvent event{};
     bool isSuccess = false;
     if (file == CONFIG_CACHE_FILES[EVENT_CFG_INDEX]) {
-        isSuccess = ConfigManager::UpdataConfig<EventConfig>();
+        isSuccess = ConfigManager::UpdateConfig<EventConfig>();
     } else if (file == CONFIG_CACHE_FILES[MODEL_CFG_INDEX]) {
-        isSuccess = ConfigManager::UpdataConfig<ModelConfig>();
+        isSuccess = ConfigManager::UpdateConfig<ModelConfig>();
     }
     event.path = file;
     event.time = SecurityGuardUtils::GetDate();
