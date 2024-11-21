@@ -392,7 +392,9 @@ void SecurityCollectorManagerProxyFuzzTest(const uint8_t* data, size_t size)
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     sptr<Security::SecurityCollector::SecurityCollectorManagerCallbackService> callback =
         new (std::nothrow) Security::SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
-    SecurityCollectorSubscribeInfo subscribeInfo{};
+    std::string string(reinterpret_cast<const char *>(data), size);
+    int64_t int64 = *(reinterpret_cast<const int64_t *>(data));
+    SecurityCollectorSubscribeInfo subscribeInfo({int64, string, string, string});
     SecurityCollectorManagerProxy proxy{obj};
     std::vector<SecurityEventRuler> rulers{};
     std::vector<SecurityEvent> events{};
