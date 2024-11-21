@@ -87,7 +87,7 @@ bool EventGroupConfig::ParseEventGroupConfig(const nlohmann::json &jsonObj)
         }
         std::vector<std::string> eventList;
         EventGroupCfg cfg {};
-        JsonCfg::Unmarshal(cfg.eventGroupName, iter, "groupName");
+        JsonCfg::Unmarshal(cfg.eventGroupName, iter, "eventGroupName");
         JsonCfg::Unmarshal(eventList, iter, "eventList");
         for (auto event : eventList) {
             int64_t tmp = 0;
@@ -96,7 +96,14 @@ bool EventGroupConfig::ParseEventGroupConfig(const nlohmann::json &jsonObj)
             }
             cfg.eventList.insert(tmp);
         }
-        JsonCfg::Unmarshal(cfg.permissionList, iter, "permission");
+        std::vector<std::string> permissonList;
+        JsonCfg::Unmarshal(permissonList, iter, "permission");
+        for (auto it : permissonList) {
+            cfg.permissionList.insert(it);
+        }
+        int32_t isBatchUpload = 0;
+        JsonCfg::Unmarshal(isBatchUpload, iter, "isBatchUpload");
+        cfg.isBatchUpload = isBatchUpload;
         eventGroupMap[cfg.eventGroupName] = cfg;
     }
     ConfigDataManager::GetInstance().InsertEventGroupMap(eventGroupMap);

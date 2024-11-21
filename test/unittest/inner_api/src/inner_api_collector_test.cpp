@@ -70,8 +70,7 @@ class MockAcquireDataManagerCallbackStub : public AcquireDataManagerCallbackStub
 public:
     explicit MockAcquireDataManagerCallbackStub() = default;
     ~MockAcquireDataManagerCallbackStub() override = default;
-    int32_t OnNotify(const Security::SecurityCollector::Event &event) override { return 0; };
-    int32_t BatchOnNotify(const std::vector<Security::SecurityCollector::Event> &events) { return 0; };
+    int32_t OnNotify(const std::vector<Security::SecurityCollector::Event> &events) override { return 0; };
 };
 
 class MockRiskAnalysisManagerCallbackStub : public RiskAnalysisManagerCallbackStub {
@@ -158,7 +157,7 @@ HWTEST_F(InnerApiCollectorTest, AcquireDataManagerTest001, testing::ext::TestSiz
     AcquireDataManager::GetInstance().HandleDecipient();
     
     AcquireDataManagerCallbackService service;
-    ret = service.OnNotify(event);
+    ret = service.OnNotify({event});
     EXPECT_TRUE(ret == SUCCESS);
 }
 

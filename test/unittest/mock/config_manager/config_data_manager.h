@@ -30,6 +30,7 @@ public:
     virtual std::string GetTableFromEventId(int64_t eventId) = 0;
     virtual std::vector<int64_t> GetAllEventIds() = 0;
     virtual bool GetEventGroupConfig(const std::string &groupName, EventGroupCfg &config) = 0;
+    virtual bool GetIsBatchUpload(const std::string &groupName) = 0;
 };
 
 class ConfigDataManager : public BaseConfigDataManager {
@@ -46,6 +47,7 @@ public:
     MOCK_METHOD0(GetAllEventIds, std::vector<int64_t>());
     MOCK_METHOD0(GetAllEventConfigs, std::vector<EventCfg>());
     MOCK_METHOD2(GetEventGroupConfig, bool(const std::string &groupName, EventGroupCfg &config));
+    MOCK_METHOD1(GetIsBatchUpload, bool(const std::string &groupName));
 };
 } // OHOS::Security::SecurityGuard
 

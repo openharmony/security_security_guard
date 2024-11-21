@@ -35,7 +35,7 @@ public:
     }
 
     template<typename T>
-    static bool UpdataConfig()
+    static bool UpdateConfig()
     {
         T config;
         auto cfgOperator = std::make_unique<ConfigOperator>(config);

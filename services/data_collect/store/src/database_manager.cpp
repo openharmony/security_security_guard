@@ -206,6 +206,9 @@ int32_t DatabaseManager::UnSubscribeDb(std::vector<int64_t> eventIds, std::share
     }
     std::lock_guard<std::mutex> lock(mutex_);
     for (int64_t eventId : eventIds) {
+        if (listenerMap_.count(eventId) == 0) {
+            continue;
+        }
         listenerMap_[eventId].erase(listener);
         SGLOGI("size=%{public}zu", listenerMap_[eventId].size());
         if (listenerMap_[eventId].size() == 0) {

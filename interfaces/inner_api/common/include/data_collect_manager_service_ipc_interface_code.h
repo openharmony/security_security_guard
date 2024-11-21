@@ -35,7 +35,6 @@ enum class DataCollectManagerInterfaceCode {
 enum class DataCollectManagerCallbackInterfaceCode {
     CMD_SET_REQUEST_DATA = 1,
     CMD_DATA_SUBSCRIBE_CALLBACK = 2,
-    CMD_DATA_SUBSCRIBE_BATCH_CALLBACK = 3,
 };
 
 enum class SecurityEventQueryCallbackInterfaceCode {

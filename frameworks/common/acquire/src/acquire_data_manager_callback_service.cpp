@@ -20,28 +20,13 @@
 
 namespace OHOS::Security::SecurityGuard {
 
-int32_t AcquireDataManagerCallbackService::OnNotify(const SecurityCollector::Event &event)
+int32_t AcquireDataManagerCallbackService::OnNotify(const std::vector<SecurityCollector::Event> &events)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    SGLOGD("callback eventId=%{public}" PRId64, event.eventId);
-    for (auto iter : subscribers) {
-        if ((iter->GetSubscribeInfo().GetEventGroup() == "security_event" ||
-            iter->GetSubscribeInfo().GetEventGroup() == "") &&
-            iter->GetSubscribeInfo().GetEvent().eventId == event.eventId) {
-            iter->OnNotify(event);
-        }
-    }
-    return SUCCESS;
-}
-
-int32_t AcquireDataManagerCallbackService::BatchOnNotify(const std::vector<SecurityCollector::Event> &events)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    SGLOGD("BatchOnNotify callback");
     for (auto it : events) {
+        SGLOGD("callback eventId=%{public}" PRId64, it.eventId);
         for (auto iter : subscribers) {
-            if (iter->GetSubscribeInfo().GetEventGroup() == "audit_event" &&
-                iter->GetSubscribeInfo().GetEvent().eventId == it.eventId) {
+            if (iter->GetSubscribeInfo().GetEvent().eventId == it.eventId) {
                 iter->OnNotify(it);
             }
         }

@@ -28,7 +28,7 @@ namespace OHOS::Security::SecurityGuard {
 class Database {
 public:
     Database() = default;
-    ~Database() = default;
+    virtual ~Database() = default;
     void CreateRdbStore(const NativeRdb::RdbStoreConfig &config, int version,
         NativeRdb::RdbOpenCallback &openCallback, int &errCode);
     int Insert(int64_t &outRowId, const std::string &table, const NativeRdb::ValuesBucket &initialValues);

@@ -30,6 +30,9 @@ int RdbEventStoreCallback::OnCreate(NativeRdb::RdbStore &rdbStore)
     }
     for (size_t i = 0; i < size; i++) {
         ret = rdbStore.ExecuteSql(createTableSqlVec_[i]);
+        if (ret == NativeRdb::E_ERROR) {
+            return ret;
+        }
     }
     return ret;
 }

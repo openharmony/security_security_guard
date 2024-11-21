@@ -97,7 +97,7 @@ void DataCollectManagerService::OnStart()
     AddSystemAbilityListener(RISK_ANALYSIS_MANAGER_SA_ID);
     AddSystemAbilityListener(DFX_SYS_HIVIEW_ABILITY_ID);
     bool success = ConfigManager::InitConfig<EventConfig>();
-        if (!success) {
+    if (!success) {
         SGLOGE("init event config error");
     }
     std::vector<int64_t> eventIds = ConfigDataManager::GetInstance().GetAllEventIds();
@@ -166,9 +166,10 @@ void DataCollectManagerService::DumpEventInfo(int fd, int64_t eventId)
 }
 
 int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
-    std::string &content)
+    std::string &content, bool isSync)
 {
     SGLOGD("enter DataCollectManagerService RequestDataSubmit");
+    SGLOGD("isSync: %{public}s", isSync ? "true" : "false");
     int32_t ret = IsApiHasPermission("RequestDataSubmit");
     if (ret != SUCCESS) {
         return ret;
@@ -537,6 +538,7 @@ int32_t DataCollectManagerService::IsEventGroupHasPermission(
 {
     EventGroupCfg config {};
     if (!ConfigDataManager::GetInstance().GetEventGroupConfig(subscribeInfo.GetEventGroup(), config)) {
+        SGLOGE("get event group config fail group = %{public}s", subscribeInfo.GetEventGroup().c_str());
         return FAILED;
     }
     if (config.eventList.count(subscribeInfo.GetEvent().eventId) == 0) {

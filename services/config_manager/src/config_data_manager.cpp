@@ -66,6 +66,16 @@ bool ConfigDataManager::GetEventGroupConfig(const std::string &groupName, EventG
     return false;
 }
 
+bool ConfigDataManager::GetIsBatchUpload(const std::string &groupName)
+{
+    std::lock_guard<std::mutex> lock(eventGroupMutex_);
+    auto it = eventGroupMap_.find(groupName);
+    if (it != eventGroupMap_.end()) {
+        return it->second.isBatchUpload;
+    }
+    return false;
+
+}
 void ConfigDataManager::ResetModelMap()
 {
     std::lock_guard<std::mutex> lock(modelMutex_);

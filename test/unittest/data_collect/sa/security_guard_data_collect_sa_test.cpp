@@ -463,6 +463,26 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success02, TestSize.L
     EXPECT_EQ(result, SUCCESS);
 }
 
+HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success03, TestSize.Level1)
+{
+    int64_t eventId = 1;
+    std::string version = "1.0";
+    std::string time = "2022-01-01";
+    std::string content = "content";
+
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+        .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
+        .WillOnce(Return(true));
+    EXPECT_CALL(*(DataFormat::GetInterface()), CheckRiskContent).WillOnce(Return(true));
+    EXPECT_CALL(DatabaseManager::GetInstance(), InsertEvent).WillRepeatedly(Return(SUCCESS));
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    int32_t result = service.RequestDataSubmit(eventId, version, time, content, false);
+    EXPECT_EQ(result, SUCCESS);
+}
+
 HWTEST_F(SecurityGuardDataCollectSaTest, RequestRiskData01, TestSize.Level1)
 {
     std::string devId = "devId";

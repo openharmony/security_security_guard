@@ -36,6 +36,7 @@
       OHOS::Security::SecurityGuard::ConfigDataManager::GetTableFromEventId*;
       OHOS::Security::SecurityGuard::ConfigDataManager::GetAllEventConfigs*;
       OHOS::Security::SecurityGuard::ConfigDataManager::GetEventGroupConfig*;
+      OHOS::Security::SecurityGuard::ConfigDataManager::GetIsBatchUpload*;
     };
   local:
     *;

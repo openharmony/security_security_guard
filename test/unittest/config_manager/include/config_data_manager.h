@@ -32,6 +32,7 @@ public:
     void InsertEventToTableMap(int64_t eventId, std::string table);
     void InsertEventGroupMap(const std::unordered_map<std::string, EventGroupCfg> &eventGroupMap);
     bool GetEventGroupConfig(const std::string &groupName, EventGroupCfg &config);
+    bool GetIsBatchUpload(const std::string &groupName);
     void ResetModelMap();
     void ResetEventMap();
     void ResetModelToEventMap();
