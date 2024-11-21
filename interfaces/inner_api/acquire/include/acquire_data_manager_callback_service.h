@@ -25,8 +25,7 @@ public:
     explicit AcquireDataManagerCallbackService() = default;
     ~AcquireDataManagerCallbackService() override = default;
 
-    int32_t OnNotify(const SecurityCollector::Event &event) override;
-    int32_t BatchOnNotify(const std::vector<SecurityCollector::Event> &events) override;
+    int32_t OnNotify(const std::vector<SecurityCollector::Event> &events) override;
     void InserSubscriberCache(std::shared_ptr<SecurityCollector::ICollectorSubscriber> sub)
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -50,6 +49,21 @@ public:
     {
         std::lock_guard<std::mutex> lock(mutex_);
         subscribers.clear();
+    }
+    bool IsCurrentSubscriberEventIdExist(std::shared_ptr<SecurityCollector::ICollectorSubscriber> sub)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        for (auto i : subscribers) {
+            if (i->GetSubscribeInfo().GetEvent().eventId == sub->GetSubscribeInfo().GetEvent().eventId) {
+                return true;
+            }
+        }
+        return false;
+    }
+    size_t GetsubscribersSize()
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return subscribers.size();
     }
 private:
     std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> subscribers;

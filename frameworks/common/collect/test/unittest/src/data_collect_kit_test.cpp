@@ -32,6 +32,7 @@ using namespace OHOS::Security::SecurityGuardTest;
 extern "C" {
 #endif
     int32_t ReportSecurityInfo(const struct EventInfoSt *info);
+    int32_t ReportSecurityInfoAsync(const struct EventInfoSt *info);
 #ifdef __cplusplus
 }
 #endif
@@ -200,6 +201,28 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo006, TestSize.Level1)
 {
     int ret = ReportSecurityInfo(nullptr);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+}
+
+/**
+ * @tc.name: ReportSecurityInfoAsync001
+ * @tc.desc: ReportSecurityInfoAsync with right param
+ * @tc.type: FUNC
+ * @tc.require: SR000H96L5
+ */
+HWTEST_F(DataCollectKitTest, ReportSecurityInfoAsync001, TestSize.Level1)
+{
+    static int64_t eventId = 1011009000;
+    static std::string version = "0";
+    static std::string content = "{\"cred\":0,\"extra\":\"\",\"status\":0}";
+    EventInfoSt info;
+    info.eventId = eventId;
+    info.version = version.c_str();
+    (void) memset_s(info.content, CONTENT_MAX_LEN, 0, CONTENT_MAX_LEN);
+    errno_t rc = memcpy_s(info.content, CONTENT_MAX_LEN, content.c_str(), content.length());
+    EXPECT_TRUE(rc == EOK);
+    info.contentLen = static_cast<uint32_t>(content.length());
+    int ret = ReportSecurityInfoAsync(&info);
+    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
 }
 
 /**

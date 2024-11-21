@@ -74,6 +74,10 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         SGLOGE("SubscribeSc error");
         return code;
     }
+    SGLOGI("InsertSubscribeRecord subscriberInfoMap_size  %{public}zu", subscriberInfoMap_.size());
+    for (auto i : subscriberInfoMap_) {
+        SGLOGI("InsertSubscribeRecord subscriberInfoMap_subscribe_size  %{public}zu", i.second.subscribe.size());
+    }
     return SUCCESS;
 }
 
@@ -88,7 +92,7 @@ int AcquireDataSubscribeManager::SubscribeSc(int64_t eventId)
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
-    if (config.dbTable == "risk_event" && config.eventType == static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
+    if (config.eventType == static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         SecurityCollector::Event scEvent;
         scEvent.eventId = eventId;
         auto subscriber = std::make_shared<AcquireDataSubscribeManager::SecurityCollectorSubscriber>(scEvent);
@@ -120,7 +124,7 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
-    if (config.dbTable == "risk_event" && config.eventType == static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
+    if (config.eventType == static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         auto it = scSubscribeMap_.find(eventId);
         if (it == scSubscribeMap_.end()) {
             return FAILED;
@@ -189,6 +193,10 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sp
             }
         }
     }
+    SGLOGI("RemoveSubscribeRecord subscriberInfoMap__size %{public}zu", subscriberInfoMap_.size());
+    for (auto i : subscriberInfoMap_) {
+        SGLOGI("RemoveSubscribeRecord subscriberInfoMap_subscribe_size  %{public}zu", i.second.subscribe.size());
+    }
     return UnSubscribeScAndDb(eventId);
 }
 
@@ -216,12 +224,18 @@ void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<I
             (void)UnSubscribeScAndDb(i);
         }
     }
+    SGLOGI("RemoveSubscribeRecordOnRemoteDied subscriberInfoMap__size %{public}zu", subscriberInfoMap_.size());
+    for (auto i : subscriberInfoMap_) {
+        SGLOGI("RemoveSubscribeRecordOnRemoteDied subscriberInfoMap_subscribe_size  %{public}zu",
+            i.second.subscribe.size());
+    }
 }
-
 void AcquireDataSubscribeManager::CleanupTimer::ClearEventCache(const sptr<IRemoteObject> &remote)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    SGLOGD("timer running");
     if (subscriberInfoMap_.count(remote) == 0) {
+        SGLOGI("not found callback");
         return;
     }
     std::vector<SecurityCollector::Event> tmp = subscriberInfoMap_.at(remote).events;
@@ -230,18 +244,20 @@ void AcquireDataSubscribeManager::CleanupTimer::ClearEventCache(const sptr<IRemo
     }
     auto proxy = iface_cast<IAcquireDataCallback>(remote);
     if (proxy == nullptr) {
+        SGLOGE("proxy is null");
         return;
     }
     auto task = [proxy, tmp] () {
-        proxy->BatchOnNotify(tmp);
+        proxy->OnNotify(tmp);
     };
+    ffrt::submit(task);
     subscriberInfoMap_.at(remote).events.clear();
     subscriberInfoMap_.at(remote).eventsBuffSize = 0;
 }
 
 bool AcquireDataSubscribeManager::BatchPublish(const SecEvent &events)
 {
-    for (auto it : subscriberInfoMap_) {
+    for (auto &it : subscriberInfoMap_) {
         for (auto i : it.second.subscribe) {
             if (i.GetEvent().eventId != events.eventId) {
                 continue;
@@ -252,22 +268,18 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecEvent &events)
                 .content = events.content,
                 .timestamp = events.date
             };
-            if (i.GetEventGroup() == "" || i.GetEventGroup() == "security_event") {
+            if (!ConfigDataManager::GetInstance().GetIsBatchUpload(i.GetEventGroup())) {
                 auto proxy = iface_cast<IAcquireDataCallback>(it.first);
                 auto task = [proxy, event] () {
-                    proxy->OnNotify(event);
+                    proxy->OnNotify({event});
                 };
-                if (event.eventId == SecurityCollector::FILE_EVENTID ||
-                    event.eventId == SecurityCollector::PROCESS_EVENTID ||
-                    event.eventId == SecurityCollector::NETWORK_EVENTID) {
-                    ffrt::submit(task, {}, {}, ffrt::task_attr().qos(ffrt::qos_background));
-                } else {
-                    ffrt::submit(task);
-                }
+                SGLOGI("upload event to subscribe");
+                ffrt::submit(task);
                 continue;
             }
             it.second.events.emplace_back(event);
             it.second.eventsBuffSize += sizeof(event);
+            SGLOGD("cache batch upload event to subscribe %{public}zu", it.second.eventsBuffSize);
             if (it.second.eventsBuffSize >= MAX_CACHE_EVENT_SIZE) {
                 auto proxy = iface_cast<IAcquireDataCallback>(it.first);
                 if (proxy == nullptr) {
@@ -275,8 +287,9 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecEvent &events)
                 }
                 std::vector<SecurityCollector::Event> tmp = it.second.events;
                 auto task = [proxy, tmp] () {
-                    proxy->BatchOnNotify(tmp);
+                    proxy->OnNotify(tmp);
                 };
+                SGLOGI("upload events to batch subscribe, size is %{public}zu", it.second.eventsBuffSize);
                 ffrt::submit(task);
                 it.second.events.clear();
                 it.second.eventsBuffSize = 0;

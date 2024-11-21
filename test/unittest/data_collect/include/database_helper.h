@@ -23,7 +23,7 @@ namespace OHOS::Security::SecurityGuard {
 class DatabaseHelper : public Database {
 public:
     explicit DatabaseHelper(std::string dbTable);
-    ~DatabaseHelper() = default;
+    ~DatabaseHelper() override = default;
     virtual int Init();
     virtual void Release();
     virtual int InsertEvent(const SecEvent& event);

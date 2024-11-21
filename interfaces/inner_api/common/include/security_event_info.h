@@ -40,6 +40,7 @@ using EventGroupCfg = struct {
     std::string eventGroupName;
     std::set<int64_t> eventList;
     std::set<std::string> permissionList;
+    bool isBatchUpload;
 };
 }  // namespace OHOS::Security::SecurityGuard
 

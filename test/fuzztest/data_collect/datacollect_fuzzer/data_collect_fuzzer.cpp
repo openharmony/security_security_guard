@@ -87,7 +87,7 @@ bool AcquireDataCallbackProxyFuzzTest(const uint8_t* data, size_t size)
     Security::SecurityCollector::Event event{eventId, string, string, string};
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     AcquireDataCallbackProxy proxy{obj};
-    proxy.OnNotify(event);
+    proxy.OnNotify({event});
     return true;
 }
 

@@ -44,33 +44,28 @@ void AcquireDataManager::HandleDecipient()
 
 int32_t AcquireDataManager::Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
 {
-    SGLOGE("wwwwwwwwwww11111111111111111111111111");
+    SGLOGI("enter AcquireDataManager Subscribe");
     std::lock_guard<std::mutex> lock(mutex_);
     if (subscriber == nullptr) {
         SGLOGE("subscriber is nullptr");
         return NULL_OBJECT;
     }
-    SGLOGE("wwwwwwwwwwww222222222222222222222");
     if (callback_ == nullptr) {
-        sptr<AcquireDataManagerCallbackService> callback_ =
-            new (std::nothrow) AcquireDataManagerCallbackService();
+        callback_ = new (std::nothrow) AcquireDataManagerCallbackService();
         if (callback_ == nullptr) {
             SGLOGE("callback is null");
             return NULL_OBJECT;
         }
     }
-    SGLOGE("wwwwwwwwwwww33333333333333333333");
     if (callback_->IsCurrentSubscriberExist(subscriber)) {
         SGLOGE("Already subscribed");
         return BAD_PARAM;
     }
-    SGLOGE("wwwwwwwwwwww444444444444444444444");
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         SGLOGE("GetSystemAbilityManager error");
         return NULL_OBJECT;
     }
-    SGLOGE("wwwwwwwwwwww55555555555555555555");
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
     auto proxy = iface_cast<IDataCollectManager>(object);
     if (proxy == nullptr) {
@@ -89,18 +84,22 @@ int32_t AcquireDataManager::Subscribe(const std::shared_ptr<SecurityCollector::I
     if (!object->AddDeathRecipient(deathRecipient_)) {
         SGLOGE("Failed to add death recipient");
     }
-    SGLOGE("wwwwwwwwwwww6666666666666666666");
-    callback_->InserSubscriberCache(subscriber);
-    int32_t ret = proxy->Subscribe(subscriber->GetSubscribeInfo(), callback_);
-    if (ret != SUCCESS) {
-        callback_->EraseSubscriber(subscriber);
+
+    if (!callback_->IsCurrentSubscriberEventIdExist(subscriber)) {
+        int32_t ret = proxy->Subscribe(subscriber->GetSubscribeInfo(), callback_);
+        if (ret != SUCCESS) {
+            SGLOGI("Subscribe result, ret=%{public}d", ret);
+            return ret;
+        }
     }
-    SGLOGI("Subscribe result, ret=%{public}d", ret);
-    return ret;
+    callback_->InserSubscriberCache(subscriber);
+    SGLOGI("current subscrbe size %{public}zu", callback_->GetsubscribersSize());
+    return SUCCESS;
 }
 
 int32_t AcquireDataManager::Unsubscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
 {
+    SGLOGI("enter AcquireDataManager Subscribe");
     std::lock_guard<std::mutex> lock(mutex_);
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
@@ -108,7 +107,7 @@ int32_t AcquireDataManager::Unsubscribe(const std::shared_ptr<SecurityCollector:
         return NULL_OBJECT;
     }
 
-    if (callback_->IsCurrentSubscriberExist(subscriber)) {
+    if (!callback_->IsCurrentSubscriberExist(subscriber)) {
         SGLOGE("Not subscribed");
         return BAD_PARAM;
     }
@@ -119,11 +118,16 @@ int32_t AcquireDataManager::Unsubscribe(const std::shared_ptr<SecurityCollector:
         SGLOGE("proxy is null");
         return NULL_OBJECT;
     }
-    int32_t ret = proxy->Unsubscribe(subscriber->GetSubscribeInfo(), callback_);
-    if (ret == SUCCESS) {
-        callback_->EraseSubscriber(subscriber);
+    callback_->EraseSubscriber(subscriber);
+    if (!callback_->IsCurrentSubscriberEventIdExist(subscriber)) {
+        int32_t ret = proxy->Unsubscribe(subscriber->GetSubscribeInfo(), callback_);
+        if (ret != SUCCESS) {
+            callback_->InserSubscriberCache(subscriber);
+            return ret;
+        }
+        SGLOGI("Unsubscribe result, ret=%{public}d", ret);
     }
-    SGLOGI("Unsubscribe result, ret=%{public}d", ret);
-    return ret;
+    SGLOGI("current subscrbe size %{public}zu", callback_->GetsubscribersSize());
+    return SUCCESS;
 }
 }
