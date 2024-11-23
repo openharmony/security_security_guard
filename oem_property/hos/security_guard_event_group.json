@@ -3,11 +3,13 @@
         {
             "eventGroupName" : "securityEvent",
             "eventList" : [
-                
+                "1011015001",
+                "1011015014"
             ],
             "permission" : [
-
-            ]
+                "ohos.permission.QUERY_SECURITY_EVENT"
+            ],
+            "isBatchUpload" : 0
         }
     ]
 }

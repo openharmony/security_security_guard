@@ -66,6 +66,7 @@ public:
         size_t eventsBuffSize;
         std::vector<SecurityCollector::SecurityCollectorSubscribeInfo> subscribe;
     };
+    void BatchUpload(sptr<IRemoteObject> obj, const std::vector<SecurityCollector::Event> &events);
 private:
     AcquireDataSubscribeManager();
     ~AcquireDataSubscribeManager() = default;

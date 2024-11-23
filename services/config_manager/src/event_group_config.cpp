@@ -87,8 +87,14 @@ bool EventGroupConfig::ParseEventGroupConfig(const nlohmann::json &jsonObj)
         }
         std::vector<std::string> eventList;
         EventGroupCfg cfg {};
-        JsonCfg::Unmarshal(cfg.eventGroupName, iter, "eventGroupName");
-        JsonCfg::Unmarshal(eventList, iter, "eventList");
+        if (!JsonCfg::Unmarshal(cfg.eventGroupName, iter, "eventGroupName") || cfg.eventGroupName == "") {
+            SGLOGE("fail to parse eventGroupName");
+            return false;
+        }
+        if (!JsonCfg::Unmarshal(eventList, iter, "eventList")) {
+            SGLOGE("fail to parse eventList");
+            return false;
+        }
         for (auto event : eventList) {
             int64_t tmp = 0;
             if (event == "" || !SecurityGuardUtils::StrToI64(event, tmp)) {
@@ -97,12 +103,18 @@ bool EventGroupConfig::ParseEventGroupConfig(const nlohmann::json &jsonObj)
             cfg.eventList.insert(tmp);
         }
         std::vector<std::string> permissonList;
-        JsonCfg::Unmarshal(permissonList, iter, "permission");
+        if (!JsonCfg::Unmarshal(permissonList, iter, "permission")) {
+            SGLOGE("fail to parse permission");
+            return false;
+        }
         for (auto it : permissonList) {
             cfg.permissionList.insert(it);
         }
         int32_t isBatchUpload = 0;
-        JsonCfg::Unmarshal(isBatchUpload, iter, "isBatchUpload");
+        if (!JsonCfg::Unmarshal(isBatchUpload, iter, "isBatchUpload")) {
+            SGLOGE("fail to parse isBatchUpload");
+            return false;
+        }
         cfg.isBatchUpload = isBatchUpload;
         eventGroupMap[cfg.eventGroupName] = cfg;
     }

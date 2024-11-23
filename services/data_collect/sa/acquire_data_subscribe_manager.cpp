@@ -255,6 +255,21 @@ void AcquireDataSubscribeManager::CleanupTimer::ClearEventCache(const sptr<IRemo
     subscriberInfoMap_.at(remote).eventsBuffSize = 0;
 }
 
+void AcquireDataSubscribeManager::BatchUpload(sptr<IRemoteObject> obj,
+    const std::vector<SecurityCollector::Event> &events)
+{
+    auto proxy = iface_cast<IAcquireDataCallback>(obj);
+    if (proxy == nullptr) {
+        SGLOGI("proxy is null");
+        return;
+    }
+    auto task = [proxy, events] () {
+        proxy->OnNotify(events);
+    };
+    SGLOGI("upload event to subscribe");
+    ffrt::submit(task);
+}
+
 bool AcquireDataSubscribeManager::BatchPublish(const SecEvent &events)
 {
     for (auto &it : subscriberInfoMap_) {
@@ -269,32 +284,18 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecEvent &events)
                 .timestamp = events.date
             };
             if (!ConfigDataManager::GetInstance().GetIsBatchUpload(i.GetEventGroup())) {
-                auto proxy = iface_cast<IAcquireDataCallback>(it.first);
-                auto task = [proxy, event] () {
-                    proxy->OnNotify({event});
-                };
-                SGLOGI("upload event to subscribe");
-                ffrt::submit(task);
+                BatchUpload(it.first, {event});
                 continue;
             }
             it.second.events.emplace_back(event);
             it.second.eventsBuffSize += sizeof(event);
             SGLOGD("cache batch upload event to subscribe %{public}zu", it.second.eventsBuffSize);
             if (it.second.eventsBuffSize >= MAX_CACHE_EVENT_SIZE) {
-                auto proxy = iface_cast<IAcquireDataCallback>(it.first);
-                if (proxy == nullptr) {
-                    return false;
-                }
-                std::vector<SecurityCollector::Event> tmp = it.second.events;
-                auto task = [proxy, tmp] () {
-                    proxy->OnNotify(tmp);
-                };
+                BatchUpload(it.first, it.second.events);
                 SGLOGI("upload events to batch subscribe, size is %{public}zu", it.second.eventsBuffSize);
-                ffrt::submit(task);
                 it.second.events.clear();
                 it.second.eventsBuffSize = 0;
             }
-            // 只处理第一个相同的eventid
             break;
         }
     }

@@ -73,7 +73,7 @@ HWTEST_F(AcquireDataManagerTest, Subscribe001, TestSize.Level1)
 HWTEST_F(AcquireDataManagerTest, Unsubscribe001, TestSize.Level1)
 {
     int ret = SecurityGuard::AcquireDataManager::GetInstance().Unsubscribe(nullptr);
-    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
 }
 
 /**
