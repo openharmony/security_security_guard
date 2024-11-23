@@ -25,7 +25,7 @@ public:
     SecurityCollectorSubscribeInfo() {}
     explicit SecurityCollectorSubscribeInfo(const Event &event, int64_t duration = -1, bool isNotify = false,
         const std::string &eventGroup = "") : event_(event), duration_(duration), isNotify_(isNotify),
-        eventGroup_(eventGroup){}
+        eventGroup_(eventGroup) {}
     ~SecurityCollectorSubscribeInfo() override = default;
 
     Event GetEvent() const { return event_; };

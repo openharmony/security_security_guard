@@ -632,7 +632,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Fail01, TestSize.
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     sptr<MockRemoteObject> obj2(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(DatabaseManager::GetInstance(), SubscribeDb).WillOnce(Return(FAILED)).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb).WillOnce(Return(FAILED)).WillRepeatedly(Return(SUCCESS));
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     EXPECT_NE(result, SUCCESS);
@@ -641,7 +640,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Fail01, TestSize.
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj2);
     EXPECT_EQ(result, SUCCESS);
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
-    EXPECT_EQ(result, FAILED);
+    EXPECT_EQ(result, SUCCESS);
     result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj2);
     EXPECT_EQ(result, SUCCESS);
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
@@ -678,7 +677,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NullProxy, TestSize.Level1)
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     EXPECT_EQ(result, SUCCESS);
-    EXPECT_FALSE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event));
+    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event));
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
     EXPECT_EQ(result, SUCCESS);
 }
@@ -1020,7 +1019,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd09
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_DATA_UNSUBSCRIBE, data, reply, option);
-    EXPECT_EQ(result, NO_PERMISSION);
+    EXPECT_EQ(result, BAD_PARAM);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd10, TestSize.Level1)

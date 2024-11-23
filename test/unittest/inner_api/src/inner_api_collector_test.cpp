@@ -477,6 +477,7 @@ HWTEST_F(InnerApiCollectorTest, SecurityCollectorSubscribeInfoTest001, testing::
     parcel.WriteString(string);
     parcel.WriteString(string);
     parcel.WriteString(string);
+    parcel.WriteString(string);
     ret = info.ReadFromParcel(parcel);
     EXPECT_TRUE(ret);
 

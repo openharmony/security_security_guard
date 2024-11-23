@@ -74,8 +74,8 @@ bool ConfigDataManager::GetIsBatchUpload(const std::string &groupName)
         return it->second.isBatchUpload;
     }
     return false;
-
 }
+
 void ConfigDataManager::ResetModelMap()
 {
     std::lock_guard<std::mutex> lock(modelMutex_);

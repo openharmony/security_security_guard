@@ -101,6 +101,10 @@ int32_t AcquireDataManager::Unsubscribe(const std::shared_ptr<SecurityCollector:
 {
     SGLOGI("enter AcquireDataManager Subscribe");
     std::lock_guard<std::mutex> lock(mutex_);
+    if (subscriber == nullptr) {
+        SGLOGE("subscriber is nullptr");
+        return NULL_OBJECT;
+    }
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         SGLOGE("GetSystemAbilityManager error");
