@@ -140,13 +140,19 @@ int32_t DataCollectManagerStub::HandleDataUnsubscribeCmd(MessageParcel &data, Me
         SGLOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
+    std::unique_ptr<SecurityCollector::SecurityCollectorSubscribeInfo> info(
+        data.ReadParcelable<SecurityCollector::SecurityCollectorSubscribeInfo>());
+    if (!info) {
+        SGLOGE("failed to read parcelable for unsubscribeInfo");
+        return BAD_PARAM;
+    }
     auto callback = data.ReadRemoteObject();
     if (callback == nullptr) {
         SGLOGE("callback is nullptr");
         return BAD_PARAM;
     }
 
-    int32_t ret = Unsubscribe(callback);
+    int32_t ret = Unsubscribe(*info, callback);
     reply.WriteInt32(ret);
     return ret;
 }

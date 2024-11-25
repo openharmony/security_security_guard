@@ -70,7 +70,7 @@ class MockAcquireDataManagerCallbackStub : public AcquireDataManagerCallbackStub
 public:
     explicit MockAcquireDataManagerCallbackStub() = default;
     ~MockAcquireDataManagerCallbackStub() override = default;
-    int32_t OnNotify(const Security::SecurityCollector::Event &event) override { return 0; };
+    int32_t OnNotify(const std::vector<Security::SecurityCollector::Event> &events) override { return 0; };
 };
 
 class MockRiskAnalysisManagerCallbackStub : public RiskAnalysisManagerCallbackStub {
@@ -156,8 +156,8 @@ HWTEST_F(InnerApiCollectorTest, AcquireDataManagerTest001, testing::ext::TestSiz
     EXPECT_TRUE(ret == BAD_PARAM);
     AcquireDataManager::GetInstance().HandleDecipient();
     
-    AcquireDataManagerCallbackService service{subscriber};
-    ret = service.OnNotify(event);
+    AcquireDataManagerCallbackService service;
+    ret = service.OnNotify({event});
     EXPECT_TRUE(ret == SUCCESS);
 }
 
@@ -325,7 +325,7 @@ HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest003, testing::ext::Te
     DataCollectManagerProxy proxy{callback};
     int ret = proxy.Subscribe(subscribeInfo, objSub);
     EXPECT_EQ(ret, NO_PERMISSION);
-    ret = proxy.Unsubscribe(objSub);
+    ret = proxy.Unsubscribe(subscribeInfo, objSub);
     EXPECT_EQ(ret, NO_PERMISSION);
 }
  
@@ -474,6 +474,7 @@ HWTEST_F(InnerApiCollectorTest, SecurityCollectorSubscribeInfoTest001, testing::
     parcel.WriteInt64(int64);
     parcel.WriteBool(true);
     parcel.WriteInt64(int64);
+    parcel.WriteString(string);
     parcel.WriteString(string);
     parcel.WriteString(string);
     parcel.WriteString(string);

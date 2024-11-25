@@ -324,7 +324,12 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     const sptr<IRemoteObject> &callback)
 {
     SGLOGD("DataCollectManagerService, start subscribe");
-    int32_t ret = IsApiHasPermission("Subscribe");
+    int32_t ret = FAILED;
+    if (subscribeInfo.GetEventGroup() == "") {
+        ret = IsApiHasPermission("Subscribe");
+    } else {
+        ret = IsEventGroupHasPermission(subscribeInfo);
+    }
     if (ret != SUCCESS) {
         return ret;
     }
@@ -348,9 +353,15 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     return ret;
 }
 
-int32_t DataCollectManagerService::Unsubscribe(const sptr<IRemoteObject> &callback)
+int32_t DataCollectManagerService::Unsubscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
+    const sptr<IRemoteObject> &callback)
 {
-    int32_t ret = IsApiHasPermission("UnSubscribe");
+    int32_t ret = FAILED;
+    if (subscribeInfo.GetEventGroup() == "") {
+        ret = IsApiHasPermission("Subscribe");
+    } else {
+        ret = IsEventGroupHasPermission(subscribeInfo);
+    }
     if (ret != SUCCESS) {
         return ret;
     }
@@ -359,7 +370,7 @@ int32_t DataCollectManagerService::Unsubscribe(const sptr<IRemoteObject> &callba
         callback->RemoveDeathRecipient(deathRecipient_);
     }
 
-    ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(callback);
+    ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, callback);
     SgUnsubscribeEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
@@ -457,7 +468,7 @@ void DataCollectManagerService::SubscriberDeathRecipient::OnRemoteDied(const wpt
         SGLOGE("service is nullptr");
         return;
     }
-    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(object);
+    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecordOnRemoteDied(object);
     if (object->IsProxyObject() && service->deathRecipient_ != nullptr) {
         object->RemoveDeathRecipient(service->deathRecipient_);
     }
@@ -504,6 +515,38 @@ int32_t DataCollectManagerService::IsApiHasPermission(const std::string &api)
     }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     if (std::any_of(g_apiPermissionsMap.at(api).cbegin(), g_apiPermissionsMap.at(api).cend(),
+        [callerToken](const std::string &per) {
+        int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, per);
+        return code == AccessToken::PermissionState::PERMISSION_GRANTED;
+    })) {
+        AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+        if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+            uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+            if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+                SGLOGE("not system app no permission");
+                return NO_SYSTEMCALL;
+            }
+        }
+        return SUCCESS;
+    }
+    SGLOGE("caller no permission");
+    return NO_PERMISSION;
+}
+
+int32_t DataCollectManagerService::IsEventGroupHasPermission(
+    const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo)
+{
+    EventGroupCfg config {};
+    if (!ConfigDataManager::GetInstance().GetEventGroupConfig(subscribeInfo.GetEventGroup(), config)) {
+        SGLOGE("get event group config fail group = %{public}s", subscribeInfo.GetEventGroup().c_str());
+        return FAILED;
+    }
+    if (config.eventList.count(subscribeInfo.GetEvent().eventId) == 0) {
+        SGLOGE("eventid not in eventid list");
+        return FAILED;
+    }
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    if (std::any_of(config.permissionList.cbegin(), config.permissionList.cend(),
         [callerToken](const std::string &per) {
         int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, per);
         return code == AccessToken::PermissionState::PERMISSION_GRANTED;

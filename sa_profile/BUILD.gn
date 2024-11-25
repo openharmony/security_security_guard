@@ -11,15 +11,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//base/security/security_guard/security_guard.gni")
 import("//build/ohos.gni")
 import("//build/ohos/sa_profile/sa_profile.gni")
 
 ohos_sa_profile("sg_sa_profile_standard") {
-  sources = [
-    "3523.json",
-    "3524.json",
-    "3526.json",
-  ]
+  if (security_guard_enable_ext) {
+    sources = [
+      "3523.json",
+      "3524.json",
+    ]
+  } else {
+    sources = [
+      "3523.json",
+      "3524.json",
+      "3526.json",
+    ]
+  }
   part_name = "security_guard"
 }
 

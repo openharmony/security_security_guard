@@ -30,6 +30,9 @@ public:
     void InsertEventMap(int64_t eventId, const EventCfg &config);
     void InsertModelToEventMap(uint32_t modelId, std::set<int64_t> eventIds);
     void InsertEventToTableMap(int64_t eventId, std::string table);
+    void InsertEventGroupMap(const std::unordered_map<std::string, EventGroupCfg> &eventGroupMap);
+    bool GetIsBatchUpload(const std::string &groupName);
+    bool GetEventGroupConfig(const std::string &groupName, EventGroupCfg &config);
     void ResetModelMap();
     void ResetEventMap();
     void ResetModelToEventMap();
@@ -46,9 +49,11 @@ private:
     std::unordered_map<uint32_t, ModelCfg> modelMap_;
     std::unordered_map<int64_t, EventCfg> eventMap_;
     std::unordered_map<int64_t, std::string> eventToTableMap_;
+    std::unordered_map<std::string, EventGroupCfg> eventGroupMap_;
     std::mutex modelToEventMutex_;
     std::mutex modelMutex_;
     std::mutex eventMutex_;
+    std::mutex eventGroupMutex_;
     std::mutex eventToTableMutex_;
 };
 } // OHOS::Security::SecurityGuard

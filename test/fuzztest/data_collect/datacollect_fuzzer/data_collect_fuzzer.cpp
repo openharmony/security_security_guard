@@ -68,8 +68,8 @@ bool AcquireDataSubscribeManagerFuzzTest(const uint8_t* data, size_t size)
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
     AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
-    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(obj);
-    AcquireDataSubscribeManager::GetInstance().Publish(events);
+    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
+    AcquireDataSubscribeManager::GetInstance().BatchPublish(events);
     AcquireDataSubscribeManager::GetInstance().SubscribeSc(eventId);
     AcquireDataSubscribeManager::GetInstance().UnSubscribeSc(eventId);
     return true;
@@ -87,7 +87,7 @@ bool AcquireDataCallbackProxyFuzzTest(const uint8_t* data, size_t size)
     Security::SecurityCollector::Event event{eventId, string, string, string};
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     AcquireDataCallbackProxy proxy{obj};
-    proxy.OnNotify(event);
+    proxy.OnNotify({event});
     return true;
 }
 

@@ -51,7 +51,8 @@ public:
         const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t Subscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) = 0;
-    virtual int32_t Unsubscribe(const sptr<IRemoteObject> &callback) = 0;
+    virtual int32_t Unsubscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
+        const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
         const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
@@ -82,7 +83,7 @@ public:
         CMD_DATA_SUBSCRIBE_CALLBACK = static_cast<uint32_t>(InterfaceCode::CMD_DATA_SUBSCRIBE_CALLBACK),
     };
 
-    virtual int32_t OnNotify(const SecurityCollector::Event &event) = 0;
+    virtual int32_t OnNotify(const std::vector<SecurityCollector::Event> &events) = 0;
 };
 
 class ISecurityEventQueryCallback : public IRemoteBroker {

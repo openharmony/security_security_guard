@@ -49,6 +49,7 @@ ohos_shared_library("sg_config_manager") {
     "${sg_root_dir}/services/config_manager/src/config_operator.cpp",
     "${sg_root_dir}/services/config_manager/src/config_subscriber.cpp",
     "${sg_root_dir}/services/config_manager/src/event_config.cpp",
+    "${sg_root_dir}/services/config_manager/src/event_group_config.cpp",
     "${sg_root_dir}/services/config_manager/src/model_cfg_marshalling.cpp",
     "${sg_root_dir}/services/config_manager/src/model_config.cpp",
   ]
