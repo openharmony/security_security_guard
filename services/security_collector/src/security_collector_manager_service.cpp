@@ -37,6 +37,7 @@ namespace OHOS::Security::SecurityCollector {
 namespace {
     constexpr char PERMISSION[] = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
     constexpr char REPORT_PERMISSION[] = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
+    constexpr char QUERY_EVENT_PERMISSION[] = "ohos.permission.QUERY_SECURITY_EVENT";
     constexpr char NOTIFY_APP_NAME[] = "security_guard";
     constexpr const char* CALLER_PID = "CALLER_PID";
     constexpr const char* EVENT_VERSION = "EVENT_VERSION";
@@ -109,7 +110,7 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
     LOGI("in subscribe, subscribinfo: duration:%{public}" PRId64 ", isNotify:%{public}d, eventid:%{public}" PRId64 ","
         "version:%{public}s, extra:%{public}s", subscribeInfo.GetDuration(), (int)subscribeInfo.IsNotify(),
         event.eventId, event.version.c_str(), event.extra.c_str());
-    int32_t ret = HasPermission(REPORT_PERMISSION);
+    int32_t ret = HasPermission(QUERY_EVENT_PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;
@@ -155,7 +156,7 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
 int32_t SecurityCollectorManagerService::Unsubscribe(const sptr<IRemoteObject> &callback)
 {
     LOGI("In unsubscribe");
-    int32_t ret = HasPermission(PERMISSION);
+    int32_t ret = HasPermission(QUERY_EVENT_PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;

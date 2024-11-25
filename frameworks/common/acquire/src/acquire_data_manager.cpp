@@ -39,28 +39,33 @@ void AcquireDataManager::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> 
 void AcquireDataManager::HandleDecipient()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    eventListeners_.clear();
+    callback_->ClearSubscriber();
 }
 
 int32_t AcquireDataManager::Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
 {
+    SGLOGI("enter AcquireDataManager Subscribe");
     std::lock_guard<std::mutex> lock(mutex_);
     if (subscriber == nullptr) {
         SGLOGE("subscriber is nullptr");
         return NULL_OBJECT;
     }
-
-    if (eventListeners_.find(subscriber) != eventListeners_.end()) {
+    if (callback_ == nullptr) {
+        callback_ = new (std::nothrow) AcquireDataManagerCallbackService();
+        if (callback_ == nullptr) {
+            SGLOGE("callback is null");
+            return NULL_OBJECT;
+        }
+    }
+    if (callback_->IsCurrentSubscriberExist(subscriber)) {
         SGLOGE("Already subscribed");
         return BAD_PARAM;
     }
-
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         SGLOGE("GetSystemAbilityManager error");
         return NULL_OBJECT;
     }
-
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
     auto proxy = iface_cast<IDataCollectManager>(object);
     if (proxy == nullptr) {
@@ -80,30 +85,33 @@ int32_t AcquireDataManager::Subscribe(const std::shared_ptr<SecurityCollector::I
         SGLOGE("Failed to add death recipient");
     }
 
-    sptr<AcquireDataManagerCallbackService> callback = new (std::nothrow) AcquireDataManagerCallbackService(subscriber);
-    if (callback == nullptr) {
-        SGLOGE("callback is null");
-        return NULL_OBJECT;
+    if (!callback_->IsCurrentSubscriberEventIdExist(subscriber)) {
+        int32_t ret = proxy->Subscribe(subscriber->GetSubscribeInfo(), callback_);
+        if (ret != SUCCESS) {
+            SGLOGI("Subscribe result, ret=%{public}d", ret);
+            return ret;
+        }
     }
-
-    int32_t ret = proxy->Subscribe(subscriber->GetSubscribeInfo(), callback);
-    if (ret == SUCCESS) {
-        eventListeners_[subscriber] = callback;
-    }
-    SGLOGI("Subscribe result, ret=%{public}d", ret);
-    return ret;
+    callback_->InserSubscriberCache(subscriber);
+    SGLOGI("current subscrbe size %{public}zu", callback_->GetsubscribersSize());
+    return SUCCESS;
 }
 
 int32_t AcquireDataManager::Unsubscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
 {
+    SGLOGI("enter AcquireDataManager Subscribe");
     std::lock_guard<std::mutex> lock(mutex_);
+    if (subscriber == nullptr) {
+        SGLOGE("subscriber is nullptr");
+        return NULL_OBJECT;
+    }
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         SGLOGE("GetSystemAbilityManager error");
         return NULL_OBJECT;
     }
 
-    if (eventListeners_.find(subscriber) == eventListeners_.end()) {
+    if (!callback_->IsCurrentSubscriberExist(subscriber)) {
         SGLOGE("Not subscribed");
         return BAD_PARAM;
     }
@@ -114,10 +122,16 @@ int32_t AcquireDataManager::Unsubscribe(const std::shared_ptr<SecurityCollector:
         SGLOGE("proxy is null");
         return NULL_OBJECT;
     }
-
-    int32_t ret = proxy->Unsubscribe(eventListeners_[subscriber]);
-    SGLOGI("Unsubscribe result, ret=%{public}d", ret);
-    eventListeners_.erase(subscriber);
-    return ret;
+    callback_->EraseSubscriber(subscriber);
+    if (!callback_->IsCurrentSubscriberEventIdExist(subscriber)) {
+        int32_t ret = proxy->Unsubscribe(subscriber->GetSubscribeInfo(), callback_);
+        if (ret != SUCCESS) {
+            callback_->InserSubscriberCache(subscriber);
+            return ret;
+        }
+        SGLOGI("Unsubscribe result, ret=%{public}d", ret);
+    }
+    SGLOGI("current subscrbe size %{public}zu", callback_->GetsubscribersSize());
+    return SUCCESS;
 }
 }

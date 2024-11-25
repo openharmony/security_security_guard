@@ -193,6 +193,7 @@ struct SubscribeCBInfo : public CommonAsyncContext {
 struct UnsubscribeCBInfo : public CommonAsyncContext {
     explicit UnsubscribeCBInfo(napi_env napiEnv,
         std::thread::id thId) : CommonAsyncContext(napiEnv, thId){};
+    OHOS::Security::SecurityCollector::Event events {};
     std::vector<std::shared_ptr<SubscriberPtr>> subscribers;
 };
 

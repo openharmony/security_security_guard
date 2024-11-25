@@ -15,21 +15,59 @@
 
 #ifndef SECURITY_GUARD_ACQUIRE_DATA_MANAGER_CALBACK_SERVICE_H
 #define SECURITY_GUARD_ACQUIRE_DATA_MANAGER_CALBACK_SERVICE_H
-
+#include <mutex>
 #include "acquire_data_manager_callback_stub.h"
 #include "i_collector_subscriber.h"
 
 namespace OHOS::Security::SecurityGuard {
 class AcquireDataManagerCallbackService : public AcquireDataManagerCallbackStub {
 public:
-    explicit AcquireDataManagerCallbackService(
-        const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber) : subscriber_(subscriber) {}
+    explicit AcquireDataManagerCallbackService() = default;
     ~AcquireDataManagerCallbackService() override = default;
 
-    int32_t OnNotify(const SecurityCollector::Event &event) override;
-
+    int32_t OnNotify(const std::vector<SecurityCollector::Event> &events) override;
+    void InserSubscriberCache(std::shared_ptr<SecurityCollector::ICollectorSubscriber> sub)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        subscribers.insert(sub);
+    }
+    bool IsCurrentSubscriberExist(std::shared_ptr<SecurityCollector::ICollectorSubscriber> sub)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return (subscribers.count(sub) != 0);
+    }
+    void EraseSubscriber(std::shared_ptr<SecurityCollector::ICollectorSubscriber> sub)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto it = subscribers.find(sub);
+        if (it == subscribers.end()) {
+            return;
+        }
+        subscribers.erase(it);
+    }
+    void ClearSubscriber()
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        subscribers.clear();
+    }
+    bool IsCurrentSubscriberEventIdExist(std::shared_ptr<SecurityCollector::ICollectorSubscriber> sub)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        for (auto i : subscribers) {
+            if (i->GetSubscribeInfo().GetEvent().eventId == sub->GetSubscribeInfo().GetEvent().eventId) {
+                return true;
+            }
+        }
+        return false;
+    }
+    size_t GetsubscribersSize()
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return subscribers.size();
+    }
 private:
-    std::shared_ptr<SecurityCollector::ICollectorSubscriber> subscriber_;
+    std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> subscribers;
+    std::mutex mutex_;
 };
 } // namespace OHOS::Security::SecurityGuard
 

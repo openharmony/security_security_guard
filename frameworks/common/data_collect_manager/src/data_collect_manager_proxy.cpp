@@ -123,7 +123,8 @@ int32_t DataCollectManagerProxy::Subscribe(const SecurityCollector::SecurityColl
     return ret;
 }
 
-int32_t DataCollectManagerProxy::Unsubscribe(const sptr<IRemoteObject> &callback)
+int32_t DataCollectManagerProxy::Unsubscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
+    const sptr<IRemoteObject> &callback)
 {
     SGLOGI("enter DataCollectManagerProxy Unsubscribe");
     MessageParcel data;
@@ -131,6 +132,11 @@ int32_t DataCollectManagerProxy::Unsubscribe(const sptr<IRemoteObject> &callback
     
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         SGLOGE("WriteInterfaceToken error");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteParcelable(&subscribeInfo)) {
+        SGLOGE("failed to write parcelable for subscribeInfo");
         return WRITE_ERR;
     }
 

@@ -23,8 +23,9 @@ namespace OHOS::Security::SecurityCollector {
 class SecurityCollectorSubscribeInfo : public Parcelable {
 public:
     SecurityCollectorSubscribeInfo() {}
-    explicit SecurityCollectorSubscribeInfo(const Event &event, int64_t duration = -1, bool isNotify = false)
-        : event_(event), duration_(duration), isNotify_(isNotify) {}
+    explicit SecurityCollectorSubscribeInfo(const Event &event, int64_t duration = -1, bool isNotify = false,
+        const std::string &eventGroup = "") : event_(event), duration_(duration), isNotify_(isNotify),
+        eventGroup_(eventGroup) {}
     ~SecurityCollectorSubscribeInfo() override = default;
 
     bool IsNotify() const { return isNotify_; };
@@ -32,12 +33,13 @@ public:
     static SecurityCollectorSubscribeInfo *Unmarshalling(Parcel &parcel) { return {}; };
     Event GetEvent() const { return event_; };
     int64_t GetDuration() const { return duration_; };
-
+    std::string GetEventGroup() const { return eventGroup_; };
 private:
     bool ReadFromParcel(Parcel &parcel);
     Event event_{};
     int64_t duration_{};
     bool isNotify_{};
+    std::string eventGroup_{};
 };
 } // namespace OHOS::Security::SecurityCollector
 

@@ -21,6 +21,7 @@
 #include "data_collect_manager_callback_service.h"
 #include "data_collect_manager_proxy.h"
 #include "i_data_collect_manager.h"
+#include "acquire_data_manager.h"
 #include "i_risk_analysis_manager.h"
 #include "risk_analysis_manager_callback_service.h"
 #include "risk_analysis_manager_proxy.h"
@@ -30,7 +31,6 @@
 #include "security_guard_utils.h"
 #include "collector_service_loader.h"
 #include "security_event_query_callback_service.h"
-#include "acquire_data_manager_callback_service.h"
 #include "security_config_update_info.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -238,66 +238,13 @@ int32_t SecurityGuardSdkAdaptor::QuerySecurityEvent(std::vector<SecurityCollecto
 int32_t SecurityGuardSdkAdaptor::Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
 {
     SGLOGI("enter SecurityGuardSdkAdaptor Subscribe");
-    if (subscriber == nullptr) {
-        SGLOGE("subscriber is nullptr");
-        return NULL_OBJECT;
-    }
-    if (subscribers_.find(subscriber) != subscribers_.end()) {
-        SGLOGE("the callback has been registered.");
-        return BAD_PARAM;
-    }
-    auto proxy = LoadDataCollectManageService();
-    if (proxy == nullptr) {
-        SGLOGE("proxy is null");
-        return NULL_OBJECT;
-    }
-
-    auto obj = new (std::nothrow) AcquireDataManagerCallbackService(subscriber);
-    if (obj == nullptr) {
-        SGLOGE("obj is null");
-        return NULL_OBJECT;
-    }
-
-    int32_t ret = proxy->Subscribe(subscriber->GetSubscribeInfo(), obj);
-    if (ret != SUCCESS) {
-        SGLOGE("Subscribe error, ret=%{public}d", ret);
-        return ret;
-    }
-    {
-        std::lock_guard<std::mutex> lock(g_mutex);
-        subscribers_[subscriber] = obj;
-    }
-    return SUCCESS;
+    return AcquireDataManager::GetInstance().Subscribe(subscriber);
 }
 
 int32_t SecurityGuardSdkAdaptor::Unsubscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
 {
     SGLOGI("enter SecurityGuardSdkAdaptor Unsubscribe");
-    if (subscriber == nullptr) {
-        SGLOGE("subscriber is nullptr");
-        return NULL_OBJECT;
-    }
-    auto iter = subscribers_.find(subscriber);
-    if (iter == subscribers_.end()) {
-        SGLOGE("the callback has not been registered.");
-        return BAD_PARAM;
-    }
-    auto proxy = LoadDataCollectManageService();
-    if (proxy == nullptr) {
-        SGLOGE("proxy is null");
-        return NULL_OBJECT;
-    }
-
-    int32_t ret = proxy->Unsubscribe(subscribers_[subscriber]);
-    if (ret != SUCCESS) {
-        SGLOGE("Unsubscribe error, ret=%{public}d", ret);
-        return ret;
-    }
-    {
-        std::lock_guard<std::mutex> lock(g_mutex);
-        subscribers_.erase(iter);
-    }
-    return SUCCESS;
+    return AcquireDataManager::GetInstance().Unsubscribe(subscriber);
 }
 
 sptr<IDataCollectManager> SecurityGuardSdkAdaptor::LoadDataCollectManageService()

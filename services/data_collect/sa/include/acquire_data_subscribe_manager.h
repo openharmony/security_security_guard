@@ -21,7 +21,7 @@
 #include <set>
 
 #include "iremote_object.h"
-
+#include "timer.h"
 #include "i_db_listener.h"
 #include "security_collector_subscribe_info.h"
 #include "i_collector_subscriber.h"
@@ -31,14 +31,48 @@ public:
     static AcquireDataSubscribeManager& GetInstance();
     int InsertSubscribeRecord(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback);
-    int RemoveSubscribeRecord(const sptr<IRemoteObject> &callback);
-    bool Publish(const SecEvent &events);
-
+    int RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback);
+    bool BatchPublish(const SecEvent &events);
+    void RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback);
+    class CleanupTimer {
+    public:
+        CleanupTimer() = default;
+        ~CleanupTimer() { Shutdown(); }
+        void ClearEventCache(const sptr<IRemoteObject> &remote);
+        void Start(const sptr<IRemoteObject> &remote, int64_t duration)
+        {
+            timer_.Setup();
+            timerId_ = timer_.Register([this, remote] { this->ClearEventCache(remote); }, duration);
+        }
+        void Shutdown()
+        {
+            if (timerId_ != 0) {
+                timer_.Unregister(timerId_);
+            }
+            timer_.Shutdown();
+            timerId_ = 0;
+        }
+        uint32_t GetTimeId()
+        {
+            return timerId_;
+        }
+    private:
+        Utils::Timer timer_{"cleanup_subscriber"};
+        uint32_t timerId_{};
+    };
+    using SubscriberInfo = struct {
+        std::shared_ptr<CleanupTimer> timer;
+        std::vector<SecurityCollector::Event> events;
+        size_t eventsBuffSize;
+        std::vector<SecurityCollector::SecurityCollectorSubscribeInfo> subscribe;
+    };
+    void BatchUpload(sptr<IRemoteObject> obj, const std::vector<SecurityCollector::Event> &events);
 private:
     AcquireDataSubscribeManager();
     ~AcquireDataSubscribeManager() = default;
     int SubscribeSc(int64_t eventId);
     int UnSubscribeSc(int64_t eventId);
+    int UnSubscribeScAndDb(int64_t eventId);
     class DbListener : public IDbListener {
     public:
         DbListener() = default;
@@ -56,8 +90,8 @@ private:
         };
     };
     std::shared_ptr<IDbListener> listener_{};
-    std::mutex mutex_{};
-    std::map<int64_t, std::set<sptr<IRemoteObject>>> eventIdToSubscriberMap_{};
+    static std::mutex mutex_;
+    static std::map<sptr<IRemoteObject>, SubscriberInfo> g_subscriberInfoMap_;
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
 };
 } // namespace OHOS::Security::SecurityGuard
