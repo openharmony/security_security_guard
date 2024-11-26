@@ -30,9 +30,9 @@ namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr size_t MAX_CACHE_EVENT_SIZE = 64 * 1024;
     constexpr int64_t MAX_DURATION_TEN_SECOND = 10 * 1000;
+    std::mutex g_mutex_{};
+    std::map<sptr<IRemoteObject>, AcquireDataSubscribeManager::SubscriberInfo> subscriberInfoMap_{};
 }
-std::mutex AcquireDataSubscribeManager::mutex_{};
-std::map<sptr<IRemoteObject>, AcquireDataSubscribeManager::SubscriberInfo> subscriberInfoMap_{};
 
 AcquireDataSubscribeManager& AcquireDataSubscribeManager::GetInstance()
 {
@@ -52,7 +52,7 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         return BAD_PARAM;
     }
     int64_t event = subscribeInfo.GetEvent().eventId;
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(g_mutex_);
 
     SubscriberInfo subInfo {};
     if (subscriberInfoMap_.count(callback) == 0) {
@@ -167,7 +167,7 @@ int AcquireDataSubscribeManager::UnSubscribeScAndDb(int64_t eventId)
 
 int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(g_mutex_);
     auto iter = subscriberInfoMap_.find(callback);
     if (iter == subscriberInfoMap_.end()) {
         SGLOGI("not find caller in subscriberInfoMap_");
@@ -202,7 +202,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sp
 
 void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(g_mutex_);
     auto iter = subscriberInfoMap_.find(callback);
     if (iter == subscriberInfoMap_.end()) {
         SGLOGI("not find caller in subscriberInfoMap_");
@@ -232,7 +232,7 @@ void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<I
 }
 void AcquireDataSubscribeManager::CleanupTimer::ClearEventCache(const sptr<IRemoteObject> &remote)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(g_mutex_);
     SGLOGD("timer running");
     if (subscriberInfoMap_.count(remote) == 0) {
         SGLOGI("not found callback");
@@ -304,7 +304,7 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecEvent &events)
 
 void AcquireDataSubscribeManager::DbListener::OnChange(uint32_t optType, const SecEvent &events)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(g_mutex_);
     AcquireDataSubscribeManager::GetInstance().BatchPublish(events);
 }
 }

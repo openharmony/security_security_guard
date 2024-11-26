@@ -91,8 +91,6 @@ private:
     };
 
     std::shared_ptr<IDbListener> listener_{};
-    static std::mutex mutex_;
-    static std::map<sptr<IRemoteObject>, SubscriberInfo> g_subscriberInfoMap_;
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
 };
 } // namespace OHOS::Security::SecurityGuard
