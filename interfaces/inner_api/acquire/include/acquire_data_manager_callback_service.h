@@ -53,7 +53,7 @@ public:
     bool IsCurrentSubscriberEventIdExist(std::shared_ptr<SecurityCollector::ICollectorSubscriber> sub)
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        for (auto i : subscribers) {
+        for (const auto &i : subscribers) {
             if (i->GetSubscribeInfo().GetEvent().eventId == sub->GetSubscribeInfo().GetEvent().eventId) {
                 return true;
             }
