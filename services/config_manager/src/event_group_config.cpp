@@ -22,10 +22,6 @@
 #include "security_guard_utils.h"
 #include "config_define.h"
 namespace OHOS::Security::SecurityGuard {
-namespace {
-
-}
-
 bool EventGroupConfig::Load(int mode)
 {
     std::string path;
@@ -81,7 +77,7 @@ bool EventGroupConfig::ParseEventGroupConfig(const nlohmann::json &jsonObj)
         return false;
     }
     std::unordered_map<std::string, EventGroupCfg> eventGroupMap;
-    for (auto iter : jsonObj["eventGroupList"]) {
+    for (const auto &iter : jsonObj["eventGroupList"]) {
         if (!iter.is_object()) {
             return false;
         }
@@ -95,7 +91,7 @@ bool EventGroupConfig::ParseEventGroupConfig(const nlohmann::json &jsonObj)
             SGLOGE("fail to parse eventList");
             return false;
         }
-        for (auto event : eventList) {
+        for (const auto &event : eventList) {
             int64_t tmp = 0;
             if (event == "" || !SecurityGuardUtils::StrToI64Hex(event, tmp)) {
                 continue;
@@ -107,7 +103,7 @@ bool EventGroupConfig::ParseEventGroupConfig(const nlohmann::json &jsonObj)
             SGLOGE("fail to parse permission");
             return false;
         }
-        for (auto it : permissonList) {
+        for (const auto &it : permissonList) {
             cfg.permissionList.insert(it);
         }
         int32_t isBatchUpload = 0;
