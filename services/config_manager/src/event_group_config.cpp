@@ -97,7 +97,7 @@ bool EventGroupConfig::ParseEventGroupConfig(const nlohmann::json &jsonObj)
         }
         for (auto event : eventList) {
             int64_t tmp = 0;
-            if (event == "" || !SecurityGuardUtils::StrToI64(event, tmp)) {
+            if (event == "" || !SecurityGuardUtils::StrToI64Hex(event, tmp)) {
                 continue;
             }
             cfg.eventList.insert(tmp);
