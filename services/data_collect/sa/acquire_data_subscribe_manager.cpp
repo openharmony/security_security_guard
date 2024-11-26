@@ -30,8 +30,8 @@ namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr size_t MAX_CACHE_EVENT_SIZE = 64 * 1024;
     constexpr int64_t MAX_DURATION_TEN_SECOND = 10 * 1000;
-    std::mutex g_mutex_{};
-    std::map<sptr<IRemoteObject>, AcquireDataSubscribeManager::SubscriberInfo> subscriberInfoMap_{};
+    std::mutex g_mutex{};
+    std::map<sptr<IRemoteObject>, AcquireDataSubscribeManager::SubscriberInfo> g_subscriberInfoMap{};
 }
 
 AcquireDataSubscribeManager& AcquireDataSubscribeManager::GetInstance()
@@ -52,16 +52,16 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         return BAD_PARAM;
     }
     int64_t event = subscribeInfo.GetEvent().eventId;
-    std::lock_guard<std::mutex> lock(g_mutex_);
+    std::lock_guard<std::mutex> lock(g_mutex);
 
     SubscriberInfo subInfo {};
-    if (subscriberInfoMap_.count(callback) == 0) {
+    if (g_subscriberInfoMap.count(callback) == 0) {
         subInfo.subscribe.emplace_back(subscribeInfo);
         subInfo.timer = std::make_shared<CleanupTimer>();
         subInfo.timer->Start(callback, MAX_DURATION_TEN_SECOND);
-        subscriberInfoMap_[callback] = subInfo;
+        g_subscriberInfoMap[callback] = subInfo;
     } else {
-        subscriberInfoMap_.at(callback).subscribe.emplace_back(subscribeInfo);
+        g_subscriberInfoMap.at(callback).subscribe.emplace_back(subscribeInfo);
     }
 
     int32_t code = DatabaseManager::GetInstance().SubscribeDb({subscribeInfo.GetEvent().eventId}, listener_);
@@ -74,8 +74,8 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         SGLOGE("SubscribeSc error");
         return code;
     }
-    SGLOGI("InsertSubscribeRecord subscriberInfoMap_size  %{public}zu", subscriberInfoMap_.size());
-    for (auto i : subscriberInfoMap_) {
+    SGLOGI("InsertSubscribeRecord subscriberInfoMap_size  %{public}zu", g_subscriberInfoMap.size());
+    for (const auto &i : g_subscriberInfoMap) {
         SGLOGI("InsertSubscribeRecord subscriberInfoMap_subscribe_size  %{public}zu", i.second.subscribe.size());
     }
     return SUCCESS;
@@ -167,34 +167,34 @@ int AcquireDataSubscribeManager::UnSubscribeScAndDb(int64_t eventId)
 
 int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback)
 {
-    std::lock_guard<std::mutex> lock(g_mutex_);
-    auto iter = subscriberInfoMap_.find(callback);
-    if (iter == subscriberInfoMap_.end()) {
-        SGLOGI("not find caller in subscriberInfoMap_");
+    std::lock_guard<std::mutex> lock(g_mutex);
+    auto iter = g_subscriberInfoMap.find(callback);
+    if (iter == g_subscriberInfoMap.end()) {
+        SGLOGI("not find caller in g_subscriberInfoMap");
         return SUCCESS;
     }
     // first erase current callback subscribed info
-    for (auto it = subscriberInfoMap_.at(callback).subscribe.begin();
-        it != subscriberInfoMap_.at(callback).subscribe.end(); it++) {
+    for (auto it = g_subscriberInfoMap.at(callback).subscribe.begin();
+        it != g_subscriberInfoMap.at(callback).subscribe.end(); it++) {
         if (it->GetEvent().eventId == eventId) {
-            subscriberInfoMap_.at(callback).subscribe.erase(it);
+            g_subscriberInfoMap.at(callback).subscribe.erase(it);
             break;
         }
     }
     // second erase current callback  when subscribed member is empty
-    if (subscriberInfoMap_.at(callback).subscribe.empty()) {
-        subscriberInfoMap_.erase(iter);
+    if (g_subscriberInfoMap.at(callback).subscribe.empty()) {
+        g_subscriberInfoMap.erase(iter);
     }
     
-    for (auto it : subscriberInfoMap_) {
-        for (auto i : it.second.subscribe) {
+    for (const auto &it : g_subscriberInfoMap) {
+        for (const auto &i : it.second.subscribe) {
             if (i.GetEvent().eventId == eventId) {
                 return SUCCESS;
             }
         }
     }
-    SGLOGI("RemoveSubscribeRecord subscriberInfoMap__size %{public}zu", subscriberInfoMap_.size());
-    for (auto i : subscriberInfoMap_) {
+    SGLOGI("RemoveSubscribeRecord subscriberInfoMap__size %{public}zu", g_subscriberInfoMap.size());
+    for (const auto &i : g_subscriberInfoMap) {
         SGLOGI("RemoveSubscribeRecord subscriberInfoMap_subscribe_size  %{public}zu", i.second.subscribe.size());
     }
     return UnSubscribeScAndDb(eventId);
@@ -202,43 +202,43 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sp
 
 void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback)
 {
-    std::lock_guard<std::mutex> lock(g_mutex_);
-    auto iter = subscriberInfoMap_.find(callback);
-    if (iter == subscriberInfoMap_.end()) {
-        SGLOGI("not find caller in subscriberInfoMap_");
+    std::lock_guard<std::mutex> lock(g_mutex);
+    auto iter = g_subscriberInfoMap.find(callback);
+    if (iter == g_subscriberInfoMap.end()) {
+        SGLOGI("not find caller in g_subscriberInfoMap");
         return;
     }
     std::set<int64_t> eventIdNeedUnSub {};
     std::set<int64_t> currentEventId {};
-    for (auto i : subscriberInfoMap_.at(callback).subscribe) {
+    for (const auto &i : g_subscriberInfoMap.at(callback).subscribe) {
         eventIdNeedUnSub.insert(i.GetEvent().eventId);
     }
-    subscriberInfoMap_.erase(iter);
-    for (auto i : subscriberInfoMap_) {
-        for (auto iter : i.second.subscribe) {
+    g_subscriberInfoMap.erase(iter);
+    for (const auto &i : g_subscriberInfoMap) {
+        for (const auto &iter : i.second.subscribe) {
             currentEventId.insert(iter.GetEvent().eventId);
         }
     }
-    for (auto i : eventIdNeedUnSub) {
+    for (const auto &i : eventIdNeedUnSub) {
         if (currentEventId.count(i) == 0) {
             (void)UnSubscribeScAndDb(i);
         }
     }
-    SGLOGI("RemoveSubscribeRecordOnRemoteDied subscriberInfoMap__size %{public}zu", subscriberInfoMap_.size());
-    for (auto i : subscriberInfoMap_) {
+    SGLOGI("RemoveSubscribeRecordOnRemoteDied subscriberInfoMap__size %{public}zu", g_subscriberInfoMap.size());
+    for (const auto &i : g_subscriberInfoMap) {
         SGLOGI("RemoveSubscribeRecordOnRemoteDied subscriberInfoMap_subscribe_size  %{public}zu",
             i.second.subscribe.size());
     }
 }
 void AcquireDataSubscribeManager::CleanupTimer::ClearEventCache(const sptr<IRemoteObject> &remote)
 {
-    std::lock_guard<std::mutex> lock(g_mutex_);
+    std::lock_guard<std::mutex> lock(g_mutex);
     SGLOGD("timer running");
-    if (subscriberInfoMap_.count(remote) == 0) {
+    if (g_subscriberInfoMap.count(remote) == 0) {
         SGLOGI("not found callback");
         return;
     }
-    std::vector<SecurityCollector::Event> tmp = subscriberInfoMap_.at(remote).events;
+    std::vector<SecurityCollector::Event> tmp = g_subscriberInfoMap.at(remote).events;
     if (tmp.empty()) {
         return;
     }
@@ -251,8 +251,8 @@ void AcquireDataSubscribeManager::CleanupTimer::ClearEventCache(const sptr<IRemo
         proxy->OnNotify(tmp);
     };
     ffrt::submit(task);
-    subscriberInfoMap_.at(remote).events.clear();
-    subscriberInfoMap_.at(remote).eventsBuffSize = 0;
+    g_subscriberInfoMap.at(remote).events.clear();
+    g_subscriberInfoMap.at(remote).eventsBuffSize = 0;
 }
 
 void AcquireDataSubscribeManager::BatchUpload(sptr<IRemoteObject> obj,
@@ -272,8 +272,8 @@ void AcquireDataSubscribeManager::BatchUpload(sptr<IRemoteObject> obj,
 
 bool AcquireDataSubscribeManager::BatchPublish(const SecEvent &events)
 {
-    for (auto &it : subscriberInfoMap_) {
-        for (auto i : it.second.subscribe) {
+    for (auto &it : g_subscriberInfoMap) {
+        for (const auto &i : it.second.subscribe) {
             if (i.GetEvent().eventId != events.eventId) {
                 continue;
             }
@@ -304,7 +304,7 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecEvent &events)
 
 void AcquireDataSubscribeManager::DbListener::OnChange(uint32_t optType, const SecEvent &events)
 {
-    std::lock_guard<std::mutex> lock(g_mutex_);
+    std::lock_guard<std::mutex> lock(g_mutex);
     AcquireDataSubscribeManager::GetInstance().BatchPublish(events);
 }
 }

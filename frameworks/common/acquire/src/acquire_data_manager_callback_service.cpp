@@ -23,9 +23,9 @@ namespace OHOS::Security::SecurityGuard {
 int32_t AcquireDataManagerCallbackService::OnNotify(const std::vector<SecurityCollector::Event> &events)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    for (auto it : events) {
+    for (const auto &it : events) {
         SGLOGD("callback eventId=%{public}" PRId64, it.eventId);
-        for (auto iter : subscribers) {
+        for (const auto &iter : subscribers) {
             if (iter->GetSubscribeInfo().GetEvent().eventId == it.eventId) {
                 iter->OnNotify(it);
             }
