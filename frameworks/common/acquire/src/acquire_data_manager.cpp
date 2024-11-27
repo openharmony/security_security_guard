@@ -39,6 +39,10 @@ void AcquireDataManager::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> 
 void AcquireDataManager::HandleDecipient()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (callback_ == nullptr) {
+        SGLOGE("subscriber is nullptr");
+        return;
+    }
     callback_->ClearSubscriber();
 }
 
