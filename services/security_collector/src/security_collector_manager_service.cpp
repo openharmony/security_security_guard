@@ -124,7 +124,7 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
     }
     auto eventHandler = [this] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {
         if (appName == NOTIFY_APP_NAME) {
-            LOGI("eventid:%{public}" PRId64 " callback default", event.eventId);
+            LOGD("eventid:%{public}" PRId64 " callback default", event.eventId);
             auto reportEvent = [event] () {
                 auto info = std::make_shared<SecurityGuard::EventInfo>(event.eventId, event.version, event.content);
                 (void)SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(info);
