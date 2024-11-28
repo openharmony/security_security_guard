@@ -119,7 +119,7 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
     if (appName.empty()) {
         return BAD_PARAM;
     }
-    if (appName != NOTIFY_APP_NAME && !SetDeathRecipient(callback)) {
+    if (!SetDeathRecipient(callback)) {
         return NULL_OBJECT;
     }
     auto eventHandler = [this] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {
