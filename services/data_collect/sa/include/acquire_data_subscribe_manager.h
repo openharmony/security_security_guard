@@ -25,6 +25,7 @@
 #include "i_db_listener.h"
 #include "security_collector_subscribe_info.h"
 #include "i_collector_subscriber.h"
+#include "i_collector_fwk.h"
 namespace OHOS::Security::SecurityGuard {
 class AcquireDataSubscribeManager {
 public:
@@ -32,7 +33,7 @@ public:
     int InsertSubscribeRecord(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback);
     int RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback);
-    bool BatchPublish(const SecEvent &events);
+    bool BatchPublish(const SecurityCollector::Event &event);
     void RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback);
     class CleanupTimer {
     public:
@@ -79,17 +80,21 @@ private:
         ~DbListener() override = default;
         void OnChange(uint32_t optType, const SecEvent &events) override;
     };
+    class CollectorListenner : public SecurityCollector::ICollectorFwk {
+    public:
+        CollectorListenner() = default;
+        ~CollectorListenner() override = default;
+        void OnNotify(const SecurityCollector::Event &event) override;
+    };
     class SecurityCollectorSubscriber : public SecurityCollector::ICollectorSubscriber {
     public:
         explicit SecurityCollectorSubscriber(
             SecurityCollector::Event event) : SecurityCollector::ICollectorSubscriber(event) {};
         ~SecurityCollectorSubscriber() override = default;
-        int32_t OnNotify(const SecurityCollector::Event &event) override
-        {
-            return 0;
-        };
+        int32_t OnNotify(const SecurityCollector::Event &event) override;
     };
     std::shared_ptr<IDbListener> listener_{};
+    std::shared_ptr<SecurityCollector::ICollectorFwk> collectorListenner_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
 };
 } // namespace OHOS::Security::SecurityGuard
