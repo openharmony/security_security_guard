@@ -288,28 +288,6 @@ void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &o
     ffrt::submit(task);
 }
 
-bool DataCollectManagerService::GetSecurityEventConfig(std::vector<int64_t>& eventIdList)
-{
-    std::string result;
-    if (DataCollectManager::GetInstance().QuerySecurityEventConfig(result) != SUCCESS) {
-        return false;
-    }
-    nlohmann::json jsonObj = nlohmann::json::parse(result, nullptr, false);
-    if (jsonObj.is_discarded() || !jsonObj.is_array()) {
-        SGLOGE("json is discarded or not array");
-        return false;
-    }
-    for (const auto& item : jsonObj) {
-        if (!item.contains("eventId") || !item["eventId"].is_number()) {
-            SGLOGE("json item no eventId");
-            return false;
-        }
-        int64_t eventId = item["eventId"].get<int64_t>();
-        eventIdList.emplace_back(eventId);
-    }
-    return true;
-}
-
 void DataCollectManagerService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     SGLOGI("OnAddSystemAbility, systemAbilityId=%{public}d", systemAbilityId);

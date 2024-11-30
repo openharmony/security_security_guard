@@ -50,7 +50,6 @@ ohos_shared_library("libsg_obtaindata_sdk") {
     "${sg_root_dir}/frameworks/common/acquire/src/acquire_data_manager.cpp",
     "${sg_root_dir}/frameworks/common/acquire/src/acquire_data_manager_callback_service.cpp",
     "${sg_root_dir}/frameworks/common/acquire/src/acquire_data_manager_callback_stub.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/i_collector_subscriber.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/frameworks/common/data_collect_manager/src/data_collect_manager_callback_service.cpp",
     "${sg_root_dir}/frameworks/common/data_collect_manager/src/data_collect_manager_callback_stub.cpp",

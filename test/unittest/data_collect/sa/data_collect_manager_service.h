@@ -69,7 +69,6 @@ private:
         std::shared_ptr<std::promise<int32_t>> promise);
     static bool QueryEventByRuler(sptr<ISecurityEventQueryCallback> proxy,
         SecurityCollector::SecurityEventRuler ruler);
-    bool GetSecurityEventConfig(std::vector<int64_t>& eventIdList);
     static int32_t QueryEventConfig(std::string &result);
     bool WriteRemoteFileToLocal(const SecurityGuard::SecurityConfigUpdateInfo &info, const std::string &realPath);
     int32_t IsApiHasPermission(const std::string &api);

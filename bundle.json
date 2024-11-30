@@ -74,6 +74,7 @@
         "//base/security/security_guard/sa_profile:security_collector_sa_profile_standard",
         "//base/security/security_guard/sa_profile:security_collector.init",
         "//base/security/security_guard:security_collector_service_build_module",
+        "//base/security/security_guard:security_collector_manager_build_module",
         "//base/security/security_guard/frameworks/common/classify:libsg_classify_sdk",
         "//base/security/security_guard/frameworks/common/collect:libsg_collect_sdk",
         "//base/security/security_guard/frameworks/common/collector:libsg_collector_sdk",
