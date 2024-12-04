@@ -171,16 +171,20 @@ void OnRemoteUnsubscribeRequest(const uint8_t* data, size_t size, MessageParcel*
         SGLOGI("DataCollectManagerCallbackService called");
         return 0;
     };
-    int64_t eventId = static_cast<int64_t>(size);
-    std::string version(reinterpret_cast<const char *>(data), size);
-    std::string content(reinterpret_cast<const char *>(data), size);
-    std::string extra(reinterpret_cast<const char *>(data), size);
-    int64_t duration = static_cast<int64_t>(size);
+    if (data == nullptr || size < sizeof(int64_t) + sizeof(int64_t)) {
+        return;
+    }
+    size_t offset = 0;
+    int64_t duration = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    int64_t eventId = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    std::string string(reinterpret_cast<const char *>(data + offset), size - offset);
     SecurityCollector::Event event;
     event.eventId = eventId;
-    event.version = version;
-    event.content = content;
-    event.extra = extra;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     SecurityCollector::SecurityCollectorSubscribeInfo subscriberInfo{event, duration, true};
     sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
     datas->WriteRemoteObject(callback);
@@ -219,16 +223,20 @@ void OnRemoteSecurityEventQuery(const uint8_t* data, size_t size, MessageParcel*
 void OnRemoteStart(const uint8_t* data, size_t size, MessageParcel* datas,
     MessageParcel* reply, MessageOption* option)
 {
-    int64_t eventId = static_cast<int64_t>(size);
-    std::string version(reinterpret_cast<const char *>(data), size);
-    std::string content(reinterpret_cast<const char *>(data), size);
-    std::string extra(reinterpret_cast<const char *>(data), size);
-    int64_t duration = static_cast<int64_t>(size);
+    if (data == nullptr || size < sizeof(int64_t) + sizeof(int64_t)) {
+        return;
+    }
+    size_t offset = 0;
+    int64_t duration = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    int64_t eventId = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    std::string string(reinterpret_cast<const char *>(data + offset), size - offset);
     SecurityCollector::Event event;
     event.eventId = eventId;
-    event.version = version;
-    event.content = content;
-    event.extra = extra;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     SecurityCollector::SecurityCollectorSubscribeInfo subscriberInfo{event, duration, true};
     RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
         const std::string &errMsg) -> int32_t {
@@ -243,16 +251,20 @@ void OnRemoteStart(const uint8_t* data, size_t size, MessageParcel* datas,
 void OnRemoteStop(const uint8_t* data, size_t size, MessageParcel* datas,
     MessageParcel* reply, MessageOption* option)
 {
-    int64_t eventId = static_cast<int64_t>(size);
-    std::string version(reinterpret_cast<const char *>(data), size);
-    std::string content(reinterpret_cast<const char *>(data), size);
-    std::string extra(reinterpret_cast<const char *>(data), size);
-    int64_t duration = static_cast<int64_t>(size);
+    if (data == nullptr || size < sizeof(int64_t) + sizeof(int64_t)) {
+        return;
+    }
+    size_t offset = 0;
+    int64_t duration = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    int64_t eventId = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    std::string string(reinterpret_cast<const char *>(data + offset), size - offset);
     SecurityCollector::Event event;
     event.eventId = eventId;
-    event.version = version;
-    event.content = content;
-    event.extra = extra;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     SecurityCollector::SecurityCollectorSubscribeInfo subscriberInfo{event, duration, true};
     RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
         const std::string &errMsg) -> int32_t {
@@ -282,16 +294,20 @@ void OnRemoteSecurityEventConfigQuery(const uint8_t* data, size_t size, MessageP
         SGLOGI("DataCollectManagerCallbackService called");
         return 0;
     };
-    int64_t eventId = static_cast<int64_t>(size);
-    std::string version(reinterpret_cast<const char *>(data), size);
-    std::string content(reinterpret_cast<const char *>(data), size);
-    std::string extra(reinterpret_cast<const char *>(data), size);
-    int64_t duration = static_cast<int64_t>(size);
+    if (data == nullptr || size < sizeof(int64_t) + sizeof(int64_t)) {
+        return;
+    }
+    size_t offset = 0;
+    int64_t duration = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    int64_t eventId = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    std::string string(reinterpret_cast<const char *>(data + offset), size - offset);
     SecurityCollector::Event event;
     event.eventId = eventId;
-    event.version = version;
-    event.content = content;
-    event.extra = extra;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     SecurityCollector::SecurityCollectorSubscribeInfo subscriberInfo{event, duration, true};
     sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
     datas->WriteRemoteObject(callback);

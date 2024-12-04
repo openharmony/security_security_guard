@@ -389,6 +389,9 @@ void SecurityCollectorManagerCallbackStubFuzzTest(const uint8_t* data, size_t si
 
 void SecurityCollectorManagerProxyFuzzTest(const uint8_t* data, size_t size)
 {
+    if (data == nullptr || size < sizeof(int64_t)) {
+        return;
+    }
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     sptr<Security::SecurityCollector::SecurityCollectorManagerCallbackService> callback =
         new (std::nothrow) Security::SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
