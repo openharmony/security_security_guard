@@ -25,11 +25,7 @@ int32_t AcquireDataManagerCallbackService::OnNotify(const std::vector<SecurityCo
     std::lock_guard<std::mutex> lock(mutex_);
     for (const auto &it : events) {
         SGLOGD("callback eventId=%{public}" PRId64, it.eventId);
-        for (const auto &iter : subscribers) {
-            if (iter->GetSubscribeInfo().GetEvent().eventId == it.eventId) {
-                iter->OnNotify(it);
-            }
-        }
+        callback_(it);
     }
     return SUCCESS;
 }

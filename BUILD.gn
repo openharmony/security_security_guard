@@ -63,6 +63,14 @@ group("security_collector_service_build_module") {
   }
 }
 
+group("security_collector_manager_build_module") {
+  if (is_standard_system) {
+    deps = [
+      "${sg_root_dir}/services/collector_manager:security_collector_manager",
+    ]
+  }
+}
+
 group("security_guard_unit_test") {
   testonly = true
   if (is_standard_system) {

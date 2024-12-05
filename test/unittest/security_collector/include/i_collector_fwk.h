@@ -22,7 +22,7 @@ namespace OHOS::Security::SecurityCollector {
 class ICollectorFwk {
 public:
     virtual ~ICollectorFwk() = default;
-    virtual std::string GetExtraInfo();
+    virtual std::string GetExtraInfo() {return {};};
     virtual void OnNotify(const Event &event) = 0;
 };
 } // namespace OHOS::Security::SecurityCollector

@@ -24,50 +24,14 @@ class AcquireDataManagerCallbackService : public AcquireDataManagerCallbackStub 
 public:
     explicit AcquireDataManagerCallbackService() = default;
     ~AcquireDataManagerCallbackService() override = default;
-
+    void RegistCallBack(std::function<void(const SecurityCollector::Event &event)> callback)
+    {
+        callback_ = callback;
+    }
     int32_t OnNotify(const std::vector<SecurityCollector::Event> &events) override;
-    void InserSubscriberCache(std::shared_ptr<SecurityCollector::ICollectorSubscriber> sub)
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        subscribers.insert(sub);
-    }
-    bool IsCurrentSubscriberExist(std::shared_ptr<SecurityCollector::ICollectorSubscriber> sub)
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        return (subscribers.count(sub) != 0);
-    }
-    void EraseSubscriber(std::shared_ptr<SecurityCollector::ICollectorSubscriber> sub)
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        auto it = subscribers.find(sub);
-        if (it == subscribers.end()) {
-            return;
-        }
-        subscribers.erase(it);
-    }
-    void ClearSubscriber()
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        subscribers.clear();
-    }
-    bool IsCurrentSubscriberEventIdExist(std::shared_ptr<SecurityCollector::ICollectorSubscriber> sub)
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        for (const auto &i : subscribers) {
-            if (i->GetSubscribeInfo().GetEvent().eventId == sub->GetSubscribeInfo().GetEvent().eventId) {
-                return true;
-            }
-        }
-        return false;
-    }
-    size_t GetsubscribersSize()
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        return subscribers.size();
-    }
 private:
-    std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> subscribers;
     std::mutex mutex_;
+    std::function<void(const SecurityCollector::Event &event)> callback_;
 };
 } // namespace OHOS::Security::SecurityGuard
 
