@@ -181,4 +181,44 @@ int32_t CollectorManager::CollectorStop(const SecurityCollector::SecurityCollect
     LOGI("CollectorStop result, ret=%{public}d", ret);
     return SUCCESS;
 }
+
+int32_t CollectorManager::SetSubscribeMute(const SecurityCollectorEventFilter &subscribeMute,
+    const std::string &callbackFlag)
+{
+    LOGI("enter CollectorManager SetSubscribeMute");
+    auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
+    auto proxy = iface_cast<ISecurityCollectorManager>(object);
+    if (proxy == nullptr) {
+        LOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+
+    int32_t ret = proxy->SetSubscribeMute(subscribeMute, callbackFlag);
+    if (ret != SUCCESS) {
+        LOGI("SetSubscribeMute failed, ret=%{public}d", ret);
+        return ret;
+    }
+    LOGI("SetSubscribeMute result, ret=%{public}d", ret);
+    return SUCCESS;
+}
+
+int32_t CollectorManager::SetSubscribeUnMute(const SecurityCollectorEventFilter &subscribeMute,
+    const std::string &callbackFlag)
+{
+    LOGI("enter CollectorManager SetSubscribeUnMute");
+    auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
+    auto proxy = iface_cast<ISecurityCollectorManager>(object);
+    if (proxy == nullptr) {
+        LOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+
+    int32_t ret = proxy->SetSubscribeUnMute(subscribeMute, callbackFlag);
+    if (ret != SUCCESS) {
+        LOGI("SetSubscribeUnMute failed, ret=%{public}d", ret);
+        return ret;
+    }
+    LOGI("SetSubscribeUnMute result, ret=%{public}d", ret);
+    return SUCCESS;
+}
 }

@@ -34,6 +34,8 @@ public:
     };
     int32_t Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber);
     int32_t Unsubscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber);
+    int32_t SetSubscribeMute(const std::shared_ptr<EventMuteFilter> &subscribeMute);
+    int32_t SetSubscribeUnMute(const std::shared_ptr<EventMuteFilter> &subscribeMute);
 private:
     AcquireDataManager();
     ~AcquireDataManager() = default;
@@ -42,7 +44,8 @@ private:
     std::mutex mutex_{};
     sptr<AcquireDataManagerCallbackService> callback_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
-    std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> subscribers_ {};
+    std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> subscribers_{};
+    std::set<std::shared_ptr<EventMuteFilter>> subscribeMutes_{};
     uint32_t count_ = 0;
 };
 } // namespace OHOS::Security::SecurityGuard

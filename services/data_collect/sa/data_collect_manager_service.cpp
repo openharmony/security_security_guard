@@ -69,6 +69,8 @@ namespace {
         {"UnSubscribe", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
         {"ConfigUpdate", {MANAGE_CONFIG_PERMISSION}},
         {"QuerySecurityEventConfig", {MANAGE_CONFIG_PERMISSION}},
+        {"SetSubscribeMute", {QUERY_SECURITY_EVENT_PERMISSION}},
+        {"SetSubscribeUnMute", {QUERY_SECURITY_EVENT_PERMISSION}},
     };
     std::unordered_set<std::string> g_configCacheFilesSet;
     constexpr uint32_t FINISH = 0;
@@ -697,4 +699,24 @@ int32_t DataCollectManagerService::QuerySecurityEventConfig(std::string &result)
     return QueryEventConfig(result);
 }
 
+int32_t DataCollectManagerService::SetSubscribeMute(const SecurityEventFilter &subscribeMute,
+    const sptr<IRemoteObject> &callback)
+{
+    SGLOGI("enter DataCollectManagerService SetSubscribeMute.");
+    int32_t ret = IsApiHasPermission("SetSubscribeMute");
+    if (ret != SUCCESS) {
+        return ret;
+    }
+    return AcquireDataSubscribeManager::GetInstance().InsertSubscribeMutue(subscribeMute, callback);;
+}
+int32_t DataCollectManagerService::SetSubscribeUnMute(const SecurityEventFilter &subscribeMute,
+    const sptr<IRemoteObject> &callback)
+{
+    SGLOGI("enter DataCollectManagerService SetSubscribeUnMute.");
+    int32_t ret = IsApiHasPermission("SetSubscribeUnMute");
+    if (ret != SUCCESS) {
+        return ret;
+    }
+    return AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMutue(subscribeMute, callback);
+}
 }

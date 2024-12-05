@@ -51,9 +51,10 @@ public:
         const sptr<IRemoteObject> &callback) override;
     int32_t ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &info) override;
     int32_t QuerySecurityEventConfig(std::string &result) override;
+    int32_t SetSubscribeMute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback) override;
+    int32_t SetSubscribeUnMute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback) override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
-
 private:
     class SubscriberDeathRecipient : public IRemoteObject::DeathRecipient {
     public:

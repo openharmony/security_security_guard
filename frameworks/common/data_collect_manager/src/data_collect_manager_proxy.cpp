@@ -335,4 +335,71 @@ int32_t DataCollectManagerProxy::QuerySecurityEventConfig(std::string &result)
     }
     return SUCCESS;
 }
+
+int32_t DataCollectManagerProxy::SetSubscribeMute(const SecurityEventFilter &subscribeMute,
+    const sptr<IRemoteObject> &callback)
+{
+    SGLOGI("Start DataCollectManagerProxy SetSubscribeMute");
+    MessageParcel data;
+    MessageParcel reply;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        SGLOGE("WriteInterfaceToken error");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteParcelable(&subscribeMute)) {
+        SGLOGE("failed to write parcelable for subscribeMute");
+        return WRITE_ERR;
+    }
+
+    data.WriteRemoteObject(callback);
+    MessageOption option = { MessageOption::TF_SYNC };
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_SECURITY_EVENT_MUTE, data, reply, option);
+    if (ret != ERR_NONE) {
+        SGLOGE("ret=%{public}d", ret);
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    SGLOGD("reply=%{public}d", ret);
+    return ret;
+}
+int32_t DataCollectManagerProxy::SetSubscribeUnMute(const SecurityEventFilter &subscribeMute,
+    const sptr<IRemoteObject> &callback)
+{
+    SGLOGI("Start DataCollectManagerProxy SetSubscribeUnMute");
+    MessageParcel data;
+    MessageParcel reply;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        SGLOGE("WriteInterfaceToken error");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteParcelable(&subscribeMute)) {
+        SGLOGE("failed to write parcelable for subscribeMute");
+        return WRITE_ERR;
+    }
+
+    data.WriteRemoteObject(callback);
+    MessageOption option = { MessageOption::TF_SYNC };
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_SECURITY_EVENT_UNMUTE, data, reply, option);
+    if (ret != ERR_NONE) {
+        SGLOGE("ret=%{public}d", ret);
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    SGLOGD("reply=%{public}d", ret);
+    return ret;
+}
 }

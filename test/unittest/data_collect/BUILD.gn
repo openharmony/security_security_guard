@@ -190,6 +190,7 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "${sg_root_dir}/services/bigdata/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/interfaces/inner_api/common/include",
+    "${sg_root_dir}/interfaces/inner_api/collect/include",
     "${sg_root_dir}/frameworks/common/json/include",
     "${sg_root_dir}/frameworks/common/task_handler/include",
     "${sg_root_dir}/frameworks/common/database/include",
@@ -221,6 +222,7 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
   sources = [
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
+    "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
     "${sg_root_dir}/services/collector_manager/src/collector_cfg_marshalling.cpp",
     "${sg_root_dir}/services/collector_manager/src/data_collection.cpp",
     "${sg_root_dir}/services/collector_manager/src/lib_loader.cpp",

@@ -15,6 +15,7 @@
 
 #include "acquire_data_subscribe_manager.h"
 #include <cinttypes>
+#include <functional>
 #include "acquire_data_callback_proxy.h"
 #include "database_manager.h"
 #include "security_guard_define.h"
@@ -26,6 +27,7 @@
 #include "config_data_manager.h"
 #include "collector_manager.h"
 #include "data_collection.h"
+#include "security_event_filter.h"
 namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr size_t MAX_CACHE_EVENT_SIZE = 64 * 1024;
@@ -320,5 +322,47 @@ int32_t AcquireDataSubscribeManager::SecurityCollectorSubscriber::OnNotify(const
     std::lock_guard<std::mutex> lock(g_mutex);
     AcquireDataSubscribeManager::GetInstance().BatchPublish(event);
     return 0;
+}
+
+int AcquireDataSubscribeManager::InsertSubscribeMutue(const SecurityEventFilter &subscribeMute,
+    const sptr<IRemoteObject> &callback)
+{
+    std::lock_guard<std::mutex> lock(g_mutex);
+    std::size_t hash = std::hash<std::string>{}(std::to_string(reinterpret_cast<int64_t>(callback.GetRefPtr())));
+    std::string hashStr = std::to_string(hash);
+    SecurityCollector::EventMuteFilter collectorFilter {};
+    EventMuteFilter sgFilter = subscribeMute.GetMuteFilter();
+    collectorFilter.eventId = sgFilter.eventId;
+    collectorFilter.mutes = sgFilter.mutes;
+    collectorFilter.type = static_cast<SecurityCollector::EventMuteType>(sgFilter.type);
+    int ret = SecurityCollector::CollectorManager::GetInstance().SetSubscribeMute(collectorFilter, hashStr);
+    if (ret != SUCCESS) {
+        SGLOGE("InsertSubscribeMutue failed, ret=%{public}d", ret);
+        return ret;
+    }
+    callbackHashMap_[hashStr] = callback;
+    return SUCCESS;
+}
+int AcquireDataSubscribeManager::RemoveSubscribeMutue(const SecurityEventFilter &subscribeMute,
+    const sptr<IRemoteObject> &callback)
+{
+    std::lock_guard<std::mutex> lock(g_mutex);
+    std::size_t hash = std::hash<std::string>{}(std::to_string(reinterpret_cast<int64_t>(callback.GetRefPtr())));
+    std::string hashStr = std::to_string(hash);
+    if (callbackHashMap_.count(hashStr) == 0) {
+        SGLOGI("not find caller in callbackHashMap_");
+        return FAILED;
+    }
+    SecurityCollector::EventMuteFilter collectorFilter {};
+    EventMuteFilter sgFilter = subscribeMute.GetMuteFilter();
+    collectorFilter.eventId = sgFilter.eventId;
+    collectorFilter.mutes = sgFilter.mutes;
+    collectorFilter.type = static_cast<SecurityCollector::EventMuteType>(sgFilter.type);
+    int ret = SecurityCollector::CollectorManager::GetInstance().SetSubscribeUnMute(collectorFilter, hashStr);
+    if (ret != SUCCESS) {
+        SGLOGE("RemoveSubscribeMutue failed, ret=%{public}d", ret);
+        return ret;
+    }
+    return SUCCESS;
 }
 }

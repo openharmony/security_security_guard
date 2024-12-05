@@ -390,4 +390,34 @@ int32_t SecurityCollectorManagerService::HasPermission(const std::string &permis
 
     return SUCCESS;
 }
+
+int32_t SecurityCollectorManagerService::SetSubscribeMute(const SecurityCollectorEventFilter &subscribeMute,
+    const std::string &callbackFlag)
+{
+    LOGI("In SecurityCollectorManagerService SetSubscribeMute");
+    int32_t ret = HasPermission(QUERY_EVENT_PERMISSION);
+    if (ret != SUCCESS) {
+        LOGE("caller no permission");
+        return ret;
+    }
+    subscribeMute.GetMuteFilter()
+    !SecurityCollectorSubscriberManager::GetInstance().SubscribeCollector(subscribeMute.GetMuteFilter(), callbackFlag);
+    g_refCount.fetch_add(1);
+    return SUCCESS;
+}
+
+int32_t SecurityCollectorManagerService::SetSubscribeUnMute(const SecurityCollectorEventFilter &subscribeMute,
+    const std::string &callbackFlag)
+{
+    LOGI("In SecurityCollectorManagerService SetSubscribeUnMute");
+    int32_t ret = HasPermission(QUERY_EVENT_PERMISSION);
+    if (ret != SUCCESS) {
+        LOGE("caller no permission");
+        return ret;
+    }
+    
+    // !SecurityCollectorSubscriberManager::GetInstance().SubscribeCollector(subscriber)
+    g_refCount.fetch_add(1);
+    return SUCCESS;
+}
 }

@@ -68,6 +68,7 @@ ohos_shared_library("libsg_collect_sdk") {
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "src/event_info.cpp",
     "src/sg_collect_client.cpp",
+    "src/security_event_filter.cpp",
   ]
 
   sanitize = {

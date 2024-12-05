@@ -52,6 +52,8 @@ ohos_shared_library("sg_collect_service") {
 
   sources = [
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
+    "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_collector_event_filter.cpp",
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_callback_proxy.cpp",
