@@ -34,6 +34,7 @@ public:
     SecurityCollectorRunManager();
     bool StartCollector(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber);
     bool StopCollector(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber);
+    void NotifySubscriber(const Event &event);
 private:
     class CollectorListenner : public ICollectorFwk {
     public:

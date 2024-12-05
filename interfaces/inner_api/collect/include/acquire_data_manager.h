@@ -18,13 +18,14 @@
 
 #include <map>
 #include <mutex>
-#include "singleton.h"
 #include "acquire_data_manager_callback_service.h"
 #include "i_collector_subscriber.h"
+#include "event_info.h"
 
 namespace OHOS::Security::SecurityGuard {
-class AcquireDataManager : public Singleton<AcquireDataManager> {
+class AcquireDataManager {
 public:
+    static AcquireDataManager& GetInstance();
     class DeathRecipient : public IRemoteObject::DeathRecipient {
     public:
         DeathRecipient() = default;
@@ -33,12 +34,16 @@ public:
     };
     int32_t Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber);
     int32_t Unsubscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber);
-
 private:
+    AcquireDataManager();
+    ~AcquireDataManager() = default;
     void HandleDecipient();
+    bool IsCurrentSubscriberEventIdExist(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &sub);
     std::mutex mutex_{};
     sptr<AcquireDataManagerCallbackService> callback_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
+    std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> subscribers_ {};
+    uint32_t count_ = 0;
 };
 } // namespace OHOS::Security::SecurityGuard
 #endif // SECURITY_GUARD_ACQUIRE_DATA_MANAGER_H

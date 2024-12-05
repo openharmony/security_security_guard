@@ -40,7 +40,8 @@ AcquireDataSubscribeManager& AcquireDataSubscribeManager::GetInstance()
     return instance;
 }
 
-AcquireDataSubscribeManager::AcquireDataSubscribeManager() : listener_(std::make_shared<DbListener>()) {}
+AcquireDataSubscribeManager::AcquireDataSubscribeManager() : listener_(std::make_shared<DbListener>()),
+    collectorListenner_(std::make_shared<CollectorListenner>()) {}
 
 int AcquireDataSubscribeManager::InsertSubscribeRecord(
     const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &callback)
@@ -52,8 +53,8 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         return BAD_PARAM;
     }
     int64_t event = subscribeInfo.GetEvent().eventId;
-    std::lock_guard<std::mutex> lock(g_mutex);
 
+    std::lock_guard<std::mutex> lock(g_mutex);
     SubscriberInfo subInfo {};
     if (g_subscriberInfoMap.count(callback) == 0) {
         subInfo.subscribe.emplace_back(subscribeInfo);
@@ -83,36 +84,34 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
 
 int AcquireDataSubscribeManager::SubscribeSc(int64_t eventId)
 {
-    if (scSubscribeMap_.count(eventId)) {
-        return SUCCESS;
-    }
-    EventCfg config;
+    EventCfg config {};
     bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(eventId, config);
     if (!isSuccess) {
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
-    if (config.eventType == static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
-        SecurityCollector::Event scEvent;
-        scEvent.eventId = eventId;
-        auto subscriber = std::make_shared<AcquireDataSubscribeManager::SecurityCollectorSubscriber>(scEvent);
-        // 订阅SG
-        if (config.prog == "security_guard") {
-            if (!SecurityCollector::DataCollection::GetInstance().SecurityGuardSubscribeCollector({eventId})) {
-                SGLOGI("Subscribe SG failed, eventId=%{public}" PRId64, eventId);
-                return FAILED;
-            }
-        } else {
-            // 订阅SC
-            int code = SecurityCollector::CollectorManager::GetInstance().Subscribe(subscriber);
-            if (code != SUCCESS) {
-                SGLOGI("Subscribe SC failed, code=%{public}d", code);
-                return code;
-            }
-        }
-        scSubscribeMap_[scEvent.eventId] = subscriber;
+    if (config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
+        return SUCCESS;
     }
-    SGLOGI("SubscribeSc scSubscribeMap_size  %{public}zu", scSubscribeMap_.size());
+    // 订阅SG
+    if (config.prog == "security_guard") {
+        SGLOGI("start collector, eventId:%{public}" PRId64, eventId);
+        if (!SecurityCollector::DataCollection::GetInstance().StartCollectors({eventId}, collectorListenner_)) {
+            SGLOGI("Subscribe SG failed, eventId=%{public}" PRId64, eventId);
+            return FAILED;
+        }
+        return SUCCESS;
+    }
+    // 订阅SC
+    SecurityCollector::Event scEvent;
+    scEvent.eventId = eventId;
+    auto subscriber = std::make_shared<AcquireDataSubscribeManager::SecurityCollectorSubscriber>(scEvent);
+    int code = SecurityCollector::CollectorManager::GetInstance().Subscribe(subscriber);
+    if (code != SUCCESS) {
+        SGLOGI("Subscribe SC failed, code=%{public}d", code);
+        return code;
+    }
+    scSubscribeMap_[eventId] = subscriber;
     return SUCCESS;
 }
 
@@ -124,29 +123,31 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
-    if (config.eventType == static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
-        auto it = scSubscribeMap_.find(eventId);
-        if (it == scSubscribeMap_.end()) {
+    if (config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
+        return SUCCESS;
+    }
+    // 解订阅SG
+    if (config.prog == "security_guard") {
+        if (!SecurityCollector::DataCollection::GetInstance().StopCollectors({eventId})) {
+            SGLOGE("UnSubscribe SG failed, eventId=%{public}" PRId64, eventId);
             return FAILED;
         }
-        // 解订阅SG
-        if (config.prog == "security_guard") {
-            if (!SecurityCollector::DataCollection::GetInstance().StopCollectors({eventId})) {
-                SGLOGE("UnSubscribe SG failed, eventId=%{public}" PRId64, eventId);
-                return FAILED;
-            }
-        } else {
-            // 解订阅SC
-            int ret = SecurityCollector::CollectorManager::GetInstance().Unsubscribe(it->second);
-            if (ret != SUCCESS) {
-                SGLOGE("UnSubscribe SC failed, ret=%{public}d", ret);
-                return ret;
-            }
-        }
-        it->second = nullptr;
-        scSubscribeMap_.erase(it);
+        SGLOGI("UnSubscribeSc scSubscribeMap_size  %{public}zu", scSubscribeMap_.size());
+        return SUCCESS;
     }
-    SGLOGI("UnSubscribeSc scSubscribeMap_size  %{public}zu", scSubscribeMap_.size());
+    // 解订阅SC
+    auto it = scSubscribeMap_.find(eventId);
+    if (it == scSubscribeMap_.end()) {
+        SGLOGE("event not subscribe eventId=%{public}" PRId64, eventId);
+        return FAILED;
+    }
+    int ret = SecurityCollector::CollectorManager::GetInstance().Unsubscribe(it->second);
+    if (ret != SUCCESS) {
+        SGLOGE("UnSubscribe SC failed, ret=%{public}d", ret);
+        return ret;
+    }
+    it->second = nullptr;
+    scSubscribeMap_.erase(it);
     return SUCCESS;
 }
 
@@ -270,19 +271,14 @@ void AcquireDataSubscribeManager::BatchUpload(sptr<IRemoteObject> obj,
     ffrt::submit(task);
 }
 
-bool AcquireDataSubscribeManager::BatchPublish(const SecEvent &events)
+bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &event)
 {
     for (auto &it : g_subscriberInfoMap) {
         for (const auto &i : it.second.subscribe) {
-            if (i.GetEvent().eventId != events.eventId) {
+            if (i.GetEvent().eventId != event.eventId) {
                 continue;
             }
-            SecurityCollector::Event event {
-                .eventId = events.eventId,
-                .version = events.version,
-                .content = events.content,
-                .timestamp = events.date
-            };
+
             if (!ConfigDataManager::GetInstance().GetIsBatchUpload(i.GetEventGroup())) {
                 BatchUpload(it.first, {event});
                 continue;
@@ -305,6 +301,24 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecEvent &events)
 void AcquireDataSubscribeManager::DbListener::OnChange(uint32_t optType, const SecEvent &events)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
-    AcquireDataSubscribeManager::GetInstance().BatchPublish(events);
+    SecurityCollector::Event event {
+        .eventId = events.eventId,
+        .version = events.version,
+        .content = events.content,
+        .timestamp = events.date
+    };
+    AcquireDataSubscribeManager::GetInstance().BatchPublish(event);
+}
+
+void AcquireDataSubscribeManager::CollectorListenner::OnNotify(const SecurityCollector::Event &event)
+{
+    std::lock_guard<std::mutex> lock(g_mutex);
+    AcquireDataSubscribeManager::GetInstance().BatchPublish(event);
+}
+int32_t AcquireDataSubscribeManager::SecurityCollectorSubscriber::OnNotify(const SecurityCollector::Event &event)
+{
+    std::lock_guard<std::mutex> lock(g_mutex);
+    AcquireDataSubscribeManager::GetInstance().BatchPublish(event);
+    return 0;
 }
 }

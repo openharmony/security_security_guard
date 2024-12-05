@@ -64,12 +64,11 @@ bool AcquireDataSubscribeManagerFuzzTest(const uint8_t* data, size_t size)
     offset += sizeof(int64_t);
     std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
     Security::SecurityCollector::Event event{eventId, string, string, string};
-    SecEvent events{eventId, string};
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
     AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
-    AcquireDataSubscribeManager::GetInstance().BatchPublish(events);
+    AcquireDataSubscribeManager::GetInstance().BatchPublish(event);
     AcquireDataSubscribeManager::GetInstance().SubscribeSc(eventId);
     AcquireDataSubscribeManager::GetInstance().UnSubscribeSc(eventId);
     return true;

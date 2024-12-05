@@ -649,7 +649,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Fail01, TestSize.
 
 HWTEST_F(SecurityGuardDataCollectSaTest, Publish_WithSubscribers, TestSize.Level1)
 {
-    SecEvent event {
+    SecurityCollector::Event event {
         .eventId = 1,
         .version = "version",
         .content = "content"
@@ -659,11 +659,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_WithSubscribers, TestSize.Level
 
 HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NullProxy, TestSize.Level1)
 {
-    SecEvent event {
-        .eventId = 2,
-        .version = "version",
-        .content = "content"
-    };
     SecurityCollector::Event event2 {
         .eventId = 2,
         .version = "version",
@@ -677,18 +672,13 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NullProxy, TestSize.Level1)
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     EXPECT_EQ(result, SUCCESS);
-    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event));
+    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event2));
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
     EXPECT_EQ(result, SUCCESS);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NotNullProxy, TestSize.Level1)
 {
-    SecEvent event {
-        .eventId = SecurityCollector::FILE_EVENTID,
-        .version = "version",
-        .content = "content"
-    };
     SecurityCollector::Event event2 {
         .eventId = SecurityCollector::FILE_EVENTID,
         .version = "version",
@@ -708,7 +698,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NotNullProxy, TestSize.Level1)
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, mockObject);
     EXPECT_EQ(result, SUCCESS);
-    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event));
+    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event2));
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId,
         mockObject);
     EXPECT_EQ(result, SUCCESS);
@@ -716,11 +706,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NotNullProxy, TestSize.Level1)
 
 HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId01, TestSize.Level1)
 {
-    SecEvent event {
-        .eventId = 1,
-        .version = "version",
-        .content = "content"
-    };
     SecurityCollector::Event event2 {
         .eventId = 1,
         .version = "version",
@@ -739,7 +724,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId01, TestSize.Le
         });
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, mockObj);
     EXPECT_EQ(result, SUCCESS);
-    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event));
+    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event2));
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId,
         mockObj);
     EXPECT_EQ(result, SUCCESS);
@@ -747,11 +732,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId01, TestSize.Le
 
 HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId02, TestSize.Level1)
 {
-    SecEvent event {
-        .eventId = SecurityCollector::PROCESS_EVENTID,
-        .version = "version",
-        .content = "content"
-    };
     SecurityCollector::Event event2 {
         .eventId = SecurityCollector::PROCESS_EVENTID,
         .version = "version",
@@ -770,18 +750,13 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId02, TestSize.Le
         });
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, object);
     EXPECT_EQ(result, SUCCESS);
-    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event));
+    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event2));
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, object);
     EXPECT_EQ(result, SUCCESS);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId03, TestSize.Level1)
 {
-    SecEvent event {
-        .eventId = SecurityCollector::NETWORK_EVENTID,
-        .version = "version",
-        .content = "content"
-    };
     SecurityCollector::Event event2 {
         .eventId = SecurityCollector::NETWORK_EVENTID,
         .version = "version",
@@ -800,7 +775,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId03, TestSize.Le
         });
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     EXPECT_EQ(result, SUCCESS);
-    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event));
+    EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event2));
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
     EXPECT_EQ(result, SUCCESS);
 }
@@ -831,7 +806,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc02, TestSiz
         return true;
     });
     int result = adsm.SubscribeSc(111);
-    EXPECT_EQ(result, SUCCESS);
+    EXPECT_EQ(result, FAILED);
     result = adsm.UnSubscribeSc(111);
     EXPECT_EQ(result, SUCCESS);
 }
@@ -1523,77 +1498,5 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ParseTrustListFile001, TestSize.Level1)
 {
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     EXPECT_FALSE(service.ParseTrustListFile(""));
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, GetSecurityEventConfig_Success, TestSize.Level1) {
-    std::vector<int64_t> eventIdList;
-    EXPECT_CALL(DataCollectManager::GetInstance(), QuerySecurityEventConfig(_))
-        .WillRepeatedly([] (std::string &mockResult) {
-            mockResult = "[{\"eventId\":123}]";
-            return SUCCESS;
-        });
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    EXPECT_EQ(service.GetSecurityEventConfig(eventIdList), true);
-    EXPECT_EQ(eventIdList.size(), 1);
-    EXPECT_EQ(eventIdList[0], 123);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, GetSecurityEventConfig_Failed001, TestSize.Level1) {
-    std::vector<int64_t> eventIdList;
-    EXPECT_CALL(DataCollectManager::GetInstance(), QuerySecurityEventConfig(_))
-        .WillRepeatedly([] (std::string &mockResult) {
-            mockResult = "{\"eventId\":123}";
-            return SUCCESS;
-        });
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    EXPECT_EQ(service.GetSecurityEventConfig(eventIdList), false);
-    EXPECT_TRUE(eventIdList.empty());
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, GetSecurityEventConfig_Failed002, TestSize.Level1) {
-    std::vector<int64_t> eventIdList;
-    EXPECT_CALL(DataCollectManager::GetInstance(), QuerySecurityEventConfig(_))
-        .WillRepeatedly([] (std::string &mockResult) {
-            mockResult = "invalid json";
-            return SUCCESS;
-        });
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    EXPECT_EQ(service.GetSecurityEventConfig(eventIdList), false);
-    EXPECT_TRUE(eventIdList.empty());
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, GetSecurityEventConfig_Failed003, TestSize.Level1) {
-    std::vector<int64_t> eventIdList;
-    EXPECT_CALL(DataCollectManager::GetInstance(), QuerySecurityEventConfig(_))
-        .WillRepeatedly([] (std::string &mockResult) {
-            mockResult = "[{\"noEventId\":123}]";
-            return SUCCESS;
-        });
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    EXPECT_EQ(service.GetSecurityEventConfig(eventIdList), false);
-    EXPECT_TRUE(eventIdList.empty());
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, GetSecurityEventConfig_Failed004, TestSize.Level1) {
-    std::vector<int64_t> eventIdList;
-    EXPECT_CALL(DataCollectManager::GetInstance(), QuerySecurityEventConfig(_))
-        .WillRepeatedly([] (std::string &mockResult) {
-            mockResult = "[{\"eventId\":\"123\"}]";
-            return SUCCESS;
-        });
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    EXPECT_EQ(service.GetSecurityEventConfig(eventIdList), false);
-    EXPECT_TRUE(eventIdList.empty());
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, GetSecurityEventConfig_Failed005, TestSize.Level1) {
-    std::vector<int64_t> eventIdList;
-    EXPECT_CALL(DataCollectManager::GetInstance(), QuerySecurityEventConfig(_))
-        .WillRepeatedly([] (std::string &mockResult) {
-            return FAILED;
-        });
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    EXPECT_EQ(service.GetSecurityEventConfig(eventIdList), false);
-    EXPECT_TRUE(eventIdList.empty());
 }
 }
