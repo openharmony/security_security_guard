@@ -17,7 +17,7 @@
 
 #include "security_collector_define.h"
 #include "security_collector_log.h"
-
+#include "security_collector_event_filter.h"
 namespace OHOS::Security::SecurityCollector {
 
 int32_t SecurityCollectorManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
@@ -201,5 +201,56 @@ int32_t SecurityCollectorManagerStub::HandleSecurityEventQueryCmd(MessageParcel 
         }
     }
     return SUCCESS;
+}
+
+int32_t SecurityCollectorManagerStub::HandleSetSubscribeMute(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("%{public}s", __func__);
+    uint32_t expected = sizeof(uint64_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (actual <= expected) {
+        LOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    std::unique_ptr<SecurityCollectorEventFilter> info(
+        data.ReadParcelable<SecurityCollectorEventFilter>());
+    if (!info) {
+        LOGE("failed to read parcelable for mute Info");
+        return BAD_PARAM;
+    }
+    std::string flag {};
+    if(!data.ReadString(flag)) {
+        LOGE("failed to get SubscribeMute flag");
+    }
+    int32_t ret = SetSubscribeMute(*info, flag);
+    reply.WriteInt32(ret);
+    return ret;
+}
+
+int32_t SecurityCollectorManagerStub::HandleSetSubscribeUnMute(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("%{public}s", __func__);
+    uint32_t expected = sizeof(uint64_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (actual <= expected) {
+        LOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    std::unique_ptr<SecurityCollectorEventFilter> info(
+        data.ReadParcelable<SecurityCollectorEventFilter>());
+    if (!info) {
+        LOGE("failed to read parcelable for mute Info");
+        return BAD_PARAM;
+    }
+
+    std::string flag {};
+    if(!data.ReadString(flag)) {
+        LOGE("failed to get SubscribeUnMute flag");
+    }
+    int32_t ret = SetSubscribeUnMute(*info, flag);
+    reply.WriteInt32(ret);
+    return ret;
 }
 }

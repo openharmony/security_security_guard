@@ -24,7 +24,7 @@
 
 #include "i_collector_fwk.h"
 #include "security_collector_subscriber.h"
-
+#include "security_collector_event_filter.h"
 
 namespace OHOS::Security::SecurityCollector {
 class SecurityCollectorSubscriberManager {

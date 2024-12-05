@@ -19,6 +19,7 @@
 #include "security_collector_log.h"
 #include "collector_cfg_marshalling.h"
 #include "i_collector.h"
+#include "event_define.h"
 
 namespace OHOS::Security::SecurityCollector {
 namespace {
@@ -343,6 +344,15 @@ int32_t DataCollection::QuerySecurityEvent(const std::vector<SecurityEventRuler>
         }
     }
     LOGI("StartCollectors finish");
+    return true;
+}
+
+bool DataCollection::SetMute(const EventMuteFilter &filter, std::shared_ptr<ICollectorFwk> api)
+{
+    return true;
+}
+bool DataCollection::SetUnMute(const std::vector<int64_t>& eventIds)
+{
     return true;
 }
 }

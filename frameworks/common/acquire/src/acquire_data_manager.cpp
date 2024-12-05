@@ -19,8 +19,9 @@
 #include "acquire_data_manager_callback_service.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
+#include "security_event_filter.h"
 namespace {
-    constexpr uint32_t MAXRESUBCOUNTS = 3;
+    constexpr uint32_t MAX_RESUB_COUNTS = 3;
 }
 namespace OHOS::Security::SecurityGuard {
 
@@ -40,7 +41,9 @@ AcquireDataManager::AcquireDataManager() : callback_(new (std::nothrow) AcquireD
             }
         }
     };
-    callback_->RegistCallBack(func);
+    if (callback_ != nullptr) {
+        callback_->RegistCallBack(func);
+    }
 }
 
 void AcquireDataManager::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
@@ -60,27 +63,29 @@ void AcquireDataManager::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> 
 
 void AcquireDataManager::HandleDecipient()
 {
-    if (count_ >= MAXRESUBCOUNTS) {
-        SGLOGE("reSubscriber too many times");
-        return;
-    }
-    if (callback_ == nullptr) {
-        SGLOGE("subscriber is nullptr");
-        return;
-    }
     std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> tmp {};
     {
         std::lock_guard<std::mutex> lock(mutex_);
+        if (count_ >= MAX_RESUB_COUNTS) {
+            SGLOGE("reSubscriber too many times");
+            return;
+        }
+        if (callback_ == nullptr) {
+            SGLOGE("subscriber is nullptr");
+            return;
+        }
         subscribers_.swap(tmp);
     }
     for (const auto &iter : tmp) {
         int32_t ret = Subscribe(iter);
         if (ret != SUCCESS) {
-            SGLOGI("Subscribe result, ret=%{public}d", ret);
-            return;
+            SGLOGE("ReSubscribe fail, ret=%{public}d", ret);
         }
     }
-    count_++;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        count_++;
+    }
 }
 
 int32_t AcquireDataManager::Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
@@ -187,5 +192,69 @@ bool AcquireDataManager::IsCurrentSubscriberEventIdExist(
         }
     }
     return false;
+}
+
+int32_t AcquireDataManager::SetSubscribeMute(const std::shared_ptr<EventMuteFilter> &subscribeMute)
+{
+    SGLOGI("enter AcquireDataManager SetSubscribeMute");
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (subscribeMute == nullptr) {
+        SGLOGE("subscriber is nullptr");
+        return NULL_OBJECT;
+    }
+    if (callback_ == nullptr) {
+        SGLOGE("callback is null");
+        return NULL_OBJECT;
+    }
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return NULL_OBJECT;
+    }
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    auto proxy = iface_cast<IDataCollectManager>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+    SecurityEventFilter filter(*subscribeMute);
+    int32_t ret = proxy->SetSubscribeMute(filter, callback_);
+    if (ret != SUCCESS) {
+        return ret;
+    }
+    subscribeMutes_.insert(subscribeMute);
+    return 0;
+}
+
+int32_t AcquireDataManager::SetSubscribeUnMute(const std::shared_ptr<EventMuteFilter> &subscribeMute)
+{
+    SGLOGI("enter AcquireDataManager SetSubscribeUnMute");
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (subscribeMute == nullptr) {
+        SGLOGE("subscriber is nullptr");
+        return NULL_OBJECT;
+    }
+    if (callback_ == nullptr) {
+        SGLOGE("callback is null");
+        return NULL_OBJECT;
+    }
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return NULL_OBJECT;
+    }
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    auto proxy = iface_cast<IDataCollectManager>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+    SecurityEventFilter filter(*subscribeMute);
+    int32_t ret = proxy->SetSubscribeUnMute(filter, callback_);
+    if (ret != SUCCESS) {
+        return ret;
+    }
+    subscribeMutes_.erase(subscribeMute);
+    return 0;
 }
 }

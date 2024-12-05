@@ -187,4 +187,25 @@ bool SecurityCollectorSubscriberManager::UnsubscribeCollector(const sptr<IRemote
     LOGI("erase timer after remoteObject");
     return true;
 }
+
+bool SecurityCollectorSubscriberManager::SetSubscribeMuteToCollector(const SecurityCollectorEventFilter &subscribeMute,
+    const std::string &callbackFlag)
+{
+    if (!DataCollection::GetInstance().SetMute(const EventMuteFilter &filter, collectorListenner)) {
+        LOGE("failed to start collectors");
+        return false;
+    }
+    return true;
+}
+
+bool SecurityCollectorSubscriberManager::SetSubscribeUnMuteToCollector(
+    const SecurityCollectorEventFilter &subscribeMute,
+    const std::string &callbackFlag)
+{
+    if (!DataCollection::GetInstance().SetUnMute(std::vector<int64_t>{eventId}, collectorListenner)) {
+        LOGE("failed to start collectors");
+        return false;
+    }
+    return true;
+}
 }
