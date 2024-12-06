@@ -20,7 +20,7 @@
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 namespace {
-    constexpr uint32_t MAXRESUBCOUNTS = 3;
+    constexpr uint32_t MAX_RESUB_COUNTS = 3;
 }
 namespace OHOS::Security::SecurityGuard {
 
@@ -40,7 +40,9 @@ AcquireDataManager::AcquireDataManager() : callback_(new (std::nothrow) AcquireD
             }
         }
     };
-    callback_->RegistCallBack(func);
+    if (callback_ != nullptr) {
+        callback_->RegistCallBack(func);
+    }
 }
 
 void AcquireDataManager::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
@@ -60,27 +62,45 @@ void AcquireDataManager::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> 
 
 void AcquireDataManager::HandleDecipient()
 {
-    if (count_ >= MAXRESUBCOUNTS) {
-        SGLOGE("reSubscriber too many times");
-        return;
-    }
-    if (callback_ == nullptr) {
-        SGLOGE("subscriber is nullptr");
-        return;
-    }
     std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> tmp {};
     {
         std::lock_guard<std::mutex> lock(mutex_);
+        if (count_ >= MAX_RESUB_COUNTS) {
+            SGLOGE("reSubscriber too many times");
+            return;
+        }
+        if (callback_ == nullptr) {
+            SGLOGE("callback is nullptr");
+            return;
+        }
         subscribers_.swap(tmp);
+    }
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return;
+    }
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    auto proxy = iface_cast<IDataCollectManager>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return;
+    }
+    if (deathRecipient_ == nullptr || !object->AddDeathRecipient(deathRecipient_)) {
+        SGLOGE("Failed to add death recipient");
+        return;
     }
     for (const auto &iter : tmp) {
         int32_t ret = Subscribe(iter);
         if (ret != SUCCESS) {
-            SGLOGI("Subscribe result, ret=%{public}d", ret);
+            SGLOGE("Subscribe result, ret=%{public}d", ret);
             return;
         }
     }
-    count_++;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        count_++;
+    }
 }
 
 int32_t AcquireDataManager::Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
@@ -118,10 +138,9 @@ int32_t AcquireDataManager::Subscribe(const std::shared_ptr<SecurityCollector::I
             SGLOGE("deathRecipient_ is nullptr.");
             return NULL_OBJECT;
         }
-    }
-
-    if (!object->AddDeathRecipient(deathRecipient_)) {
-        SGLOGE("Failed to add death recipient");
+        if (!object->AddDeathRecipient(deathRecipient_)) {
+            SGLOGE("Failed to add death recipient");
+        }
     }
 
     if (!IsCurrentSubscriberEventIdExist(subscriber)) {
