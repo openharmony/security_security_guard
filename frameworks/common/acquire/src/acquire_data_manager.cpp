@@ -71,10 +71,25 @@ void AcquireDataManager::HandleDecipient()
             return;
         }
         if (callback_ == nullptr) {
-            SGLOGE("subscriber is nullptr");
+            SGLOGE("callback is nullptr");
             return;
         }
         subscribers_.swap(tmp);
+    }
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return;
+    }
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    auto proxy = iface_cast<IDataCollectManager>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return;
+    }
+    if (deathRecipient_ == nullptr || !object->AddDeathRecipient(deathRecipient_)) {
+        SGLOGE("Failed to add death recipient");
+        return;
     }
     for (const auto &iter : tmp) {
         int32_t ret = Subscribe(iter);
@@ -123,10 +138,9 @@ int32_t AcquireDataManager::Subscribe(const std::shared_ptr<SecurityCollector::I
             SGLOGE("deathRecipient_ is nullptr.");
             return NULL_OBJECT;
         }
-    }
-
-    if (!object->AddDeathRecipient(deathRecipient_)) {
-        SGLOGE("Failed to add death recipient");
+        if (!object->AddDeathRecipient(deathRecipient_)) {
+            SGLOGE("Failed to add death recipient");
+        }
     }
 
     if (!IsCurrentSubscriberEventIdExist(subscriber)) {
