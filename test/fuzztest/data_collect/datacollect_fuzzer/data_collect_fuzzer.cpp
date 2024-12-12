@@ -26,7 +26,6 @@
 #include "acquire_data_subscribe_manager.h"
 #include "acquire_data_callback_proxy.h"
 #include "data_collect_manager_callback_proxy.h"
-#include "data_collect_manager_callback_proxy.h"
 #include "data_collect_manager_service.h"
 #include "data_collect_manager_stub.h"
 #include "security_event_query_callback_proxy.h"

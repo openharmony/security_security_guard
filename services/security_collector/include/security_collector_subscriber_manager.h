@@ -36,10 +36,6 @@ public:
     bool SubscribeCollector(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber);
     bool UnsubscribeCollector(const sptr<IRemoteObject> &remote);
     void SetUnsubscribeHandler(UnsubscribeHandler handler) { unsubscribeHandler_ = handler; }
-    bool SetSubscribeMuteToCollector(const SecurityCollectorEventFilter &subscribeMute,
-        const std::string &callbackFlag);
-    bool SetSubscribeUnMuteToCollector(const SecurityCollectorEventFilter &subscribeMute,
-        const std::string &callbackFlag);
 private:
     auto FindSecurityCollectorSubscribers(const sptr<IRemoteObject> &remote);
     std::set<int64_t> FindEventIds(const sptr<IRemoteObject> &remote);
@@ -52,6 +48,7 @@ private:
     public:
         CollectorListenner(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber) : subscriber_(subscriber) {}
         std::string GetExtraInfo() override;
+        int64_t GetEventId() override;
         void OnNotify(const Event &event) override;
     private:
         std::shared_ptr<SecurityCollectorSubscriber> subscriber_;

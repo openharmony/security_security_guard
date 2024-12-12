@@ -13,21 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef SECURITY_GUARD_DATA_COLLECT_MANAGER_H
-#define SECURITY_GUARD_DATA_COLLECT_MANAGER_H
+#include "acquire_data_manager_callback_service.h"
+#include <cinttypes>
+#include "security_guard_define.h"
+#include "security_guard_log.h"
 
-#include <map>
-#include <mutex>
-#include "singleton.h"
-
-#include "security_event_query_callback.h"
-#include "security_event_ruler.h"
 namespace OHOS::Security::SecurityGuard {
-class DataCollectManager : public Singleton<DataCollectManager> {
-public:
-    int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
-                            std::shared_ptr<SecurityEventQueryCallback> callback);
-    int32_t QuerySecurityEventConfig(std::string &result);
-};
-}  // namespace OHOS::Security::SecurityGuard
-#endif  // SECURITY_GUARD_DATA_COLLECT_MANAGER_H
+
+int32_t AcquireDataManagerCallbackService::OnNotify(const std::vector<SecurityCollector::Event> &events)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (const auto &it : events) {
+        SGLOGD("callback eventId=%{public}" PRId64, it.eventId);
+        if (callback_ == nullptr) {
+            SGLOGE("callback is null");
+            return FAILED;
+        }
+        callback_(it);
+    }
+    return SUCCESS;
+}
+}

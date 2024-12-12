@@ -311,8 +311,14 @@ int32_t DataCollectManagerStub::HandleEventMuteCmd(MessageParcel &data, MessageP
         SGLOGE("failed to read parcelable for mute Info");
         return BAD_PARAM;
     }
+
+    std::string sdkFlag = data.ReadString();
+    if (sdkFlag.empty()) {
+        SGLOGE("failed to read sdkFlag for mute Info");
+        return BAD_PARAM;
+    }
     auto callback = data.ReadRemoteObject();
-    int32_t ret = SetSubscribeMute(*info, callback);
+    int32_t ret = SetSubscribeMute(*info, callback, sdkFlag);
     reply.WriteInt32(ret);
     return ret;
 }
@@ -333,8 +339,13 @@ int32_t DataCollectManagerStub::HandleEventUnMuteCmd(MessageParcel &data, Messag
         SGLOGE("failed to read parcelable for mute Info");
         return BAD_PARAM;
     }
+    std::string sdkFlag = data.ReadString();
+    if (sdkFlag.empty()) {
+        SGLOGE("failed to read sdkFlag for mute Info");
+        return BAD_PARAM;
+    }
     auto callback = data.ReadRemoteObject();
-    int32_t ret = SetSubscribeUnMute(*info, callback);
+    int32_t ret = SetSubscribeUnMute(*info, callback, sdkFlag);
     reply.WriteInt32(ret);
     return ret;
 }

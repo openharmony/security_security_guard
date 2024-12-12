@@ -347,12 +347,33 @@ int32_t DataCollection::QuerySecurityEvent(const std::vector<SecurityEventRuler>
     return true;
 }
 
-bool DataCollection::SetMute(const EventMuteFilter &filter, std::shared_ptr<ICollectorFwk> api)
+bool DataCollection::SetMute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
 {
+    if (!IsCollectorStarted(filter.eventId)) {
+        LOGE("collector not start, eventId is 0x%{public}" PRIx64, filter.eventId);
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto loader = eventIdToLoaderMap_.at(filter.eventId);
+    if (loader.CallGetCollector()->SetMute(filter, sdkFlag) != 0) {
+        LOGE("fail to set mute to collector, eventId is 0x%{public}" PRIx64, filter.eventId);
+        return false;
+    }
     return true;
 }
-bool DataCollection::SetUnMute(const std::vector<int64_t>& eventIds)
+
+bool DataCollection::SetUnMute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
 {
+    if (!IsCollectorStarted(filter.eventId)) {
+        LOGE("collector not start, eventId is 0x%{public}" PRIx64, filter.eventId);
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto loader = eventIdToLoaderMap_.at(filter.eventId);
+    if (loader.CallGetCollector()->SetUnMute(filter, sdkFlag) != 0) {
+        LOGE("fail to set unmute to collector, eventId is 0x%{public}" PRIx64, filter.eventId);
+        return false;
+    }
     return true;
 }
 }

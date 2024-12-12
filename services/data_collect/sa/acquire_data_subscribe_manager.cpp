@@ -280,7 +280,11 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &e
             if (i.GetEvent().eventId != event.eventId) {
                 continue;
             }
-
+            // has set mute, but this event not belong the sub, means the filter of this sub set has work
+            if (callbackHashMap_.count(it.first) != 0 &&
+                event.eventSubscribes.count(callbackHashMap_.at(it.first)) == 0) {
+                continue;
+            }
             if (!ConfigDataManager::GetInstance().GetIsBatchUpload(i.GetEventGroup())) {
                 BatchUpload(it.first, {event});
                 continue;
@@ -325,40 +329,44 @@ int32_t AcquireDataSubscribeManager::SecurityCollectorSubscriber::OnNotify(const
 }
 
 int AcquireDataSubscribeManager::InsertSubscribeMutue(const SecurityEventFilter &subscribeMute,
-    const sptr<IRemoteObject> &callback)
+    const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
-    std::size_t hash = std::hash<std::string>{}(std::to_string(reinterpret_cast<int64_t>(callback.GetRefPtr())));
-    std::string hashStr = std::to_string(hash);
-    SecurityCollector::EventMuteFilter collectorFilter {};
-    EventMuteFilter sgFilter = subscribeMute.GetMuteFilter();
+    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
+    SecurityGuard::EventMuteFilter sgFilter = subscribeMute.GetMuteFilter();
     collectorFilter.eventId = sgFilter.eventId;
     collectorFilter.mutes = sgFilter.mutes;
-    collectorFilter.type = static_cast<SecurityCollector::EventMuteType>(sgFilter.type);
-    int ret = SecurityCollector::CollectorManager::GetInstance().SetSubscribeMute(collectorFilter, hashStr);
+    collectorFilter.type = static_cast<SecurityCollector::SecurityCollectorEventMuteType>(sgFilter.type);
+    if (scSubscribeMap_.count(sgFilter.eventId) == 0) {
+        SGLOGE("event id not support set mute 0x%{public}" PRIx64, sgFilter.eventId);
+        return BAD_PARAM;
+    }
+    int ret = SecurityCollector::CollectorManager::GetInstance().SetSubscribeMute(collectorFilter, sdkFlag);
     if (ret != SUCCESS) {
         SGLOGE("InsertSubscribeMutue failed, ret=%{public}d", ret);
         return ret;
     }
-    callbackHashMap_[hashStr] = callback;
+    callbackHashMap_[callback] = sdkFlag;
     return SUCCESS;
 }
 int AcquireDataSubscribeManager::RemoveSubscribeMutue(const SecurityEventFilter &subscribeMute,
-    const sptr<IRemoteObject> &callback)
+    const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
-    std::size_t hash = std::hash<std::string>{}(std::to_string(reinterpret_cast<int64_t>(callback.GetRefPtr())));
-    std::string hashStr = std::to_string(hash);
-    if (callbackHashMap_.count(hashStr) == 0) {
+    if (callbackHashMap_.count(callback) == 0) {
         SGLOGI("not find caller in callbackHashMap_");
         return FAILED;
     }
-    SecurityCollector::EventMuteFilter collectorFilter {};
-    EventMuteFilter sgFilter = subscribeMute.GetMuteFilter();
+    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
+    SecurityGuard::EventMuteFilter sgFilter = subscribeMute.GetMuteFilter();
     collectorFilter.eventId = sgFilter.eventId;
     collectorFilter.mutes = sgFilter.mutes;
-    collectorFilter.type = static_cast<SecurityCollector::EventMuteType>(sgFilter.type);
-    int ret = SecurityCollector::CollectorManager::GetInstance().SetSubscribeUnMute(collectorFilter, hashStr);
+    collectorFilter.type = static_cast<SecurityCollector::SecurityCollectorEventMuteType>(sgFilter.type);
+    if (scSubscribeMap_.count(sgFilter.eventId) == 0) {
+        SGLOGE("event id not support set unmute 0x%{public}" PRIx64, sgFilter.eventId);
+        return BAD_PARAM;
+    }
+    int ret = SecurityCollector::CollectorManager::GetInstance().SetSubscribeUnMute(collectorFilter, sdkFlag);
     if (ret != SUCCESS) {
         SGLOGE("RemoveSubscribeMutue failed, ret=%{public}d", ret);
         return ret;

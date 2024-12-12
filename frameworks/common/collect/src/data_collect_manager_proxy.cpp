@@ -337,7 +337,7 @@ int32_t DataCollectManagerProxy::QuerySecurityEventConfig(std::string &result)
 }
 
 int32_t DataCollectManagerProxy::SetSubscribeMute(const SecurityEventFilter &subscribeMute,
-    const sptr<IRemoteObject> &callback)
+    const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
 {
     SGLOGI("Start DataCollectManagerProxy SetSubscribeMute");
     MessageParcel data;
@@ -353,6 +353,10 @@ int32_t DataCollectManagerProxy::SetSubscribeMute(const SecurityEventFilter &sub
         return WRITE_ERR;
     }
 
+    if (!data.WriteString(sdkFlag)) {
+        SGLOGE("failed to write sdkFlag for subscribeMute");
+        return WRITE_ERR;
+    }
     data.WriteRemoteObject(callback);
     MessageOption option = { MessageOption::TF_SYNC };
     sptr<IRemoteObject> remote = Remote();
@@ -370,7 +374,7 @@ int32_t DataCollectManagerProxy::SetSubscribeMute(const SecurityEventFilter &sub
     return ret;
 }
 int32_t DataCollectManagerProxy::SetSubscribeUnMute(const SecurityEventFilter &subscribeMute,
-    const sptr<IRemoteObject> &callback)
+    const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
 {
     SGLOGI("Start DataCollectManagerProxy SetSubscribeUnMute");
     MessageParcel data;
@@ -386,6 +390,10 @@ int32_t DataCollectManagerProxy::SetSubscribeUnMute(const SecurityEventFilter &s
         return WRITE_ERR;
     }
 
+    if (!data.WriteString(sdkFlag)) {
+        SGLOGE("failed to write sdkFlag for SetSubscribeUnMute");
+        return WRITE_ERR;
+    }
     data.WriteRemoteObject(callback);
     MessageOption option = { MessageOption::TF_SYNC };
     sptr<IRemoteObject> remote = Remote();

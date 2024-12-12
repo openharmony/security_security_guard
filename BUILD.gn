@@ -94,7 +94,6 @@ group("security_guard_build_module_test") {
     deps += [
       "${sg_root_dir}/frameworks/common/classify/test:unittest",
       "${sg_root_dir}/frameworks/common/collect/test:unittest",
-      "${sg_root_dir}/frameworks/common/obtaindata/test:unittest",
     ]
   }
 }

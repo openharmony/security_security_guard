@@ -37,13 +37,13 @@ ohos_shared_library("security_collector_service") {
   }
 
   sources = [
+    "${sg_root_dir}/frameworks/common/collector/src/security_collector_event_filter.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_service.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_stub.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_run_manager.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_subscriber_manager.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/security_collector_event_filter.cpp",
   ]
 
   sanitize = {

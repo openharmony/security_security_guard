@@ -44,8 +44,10 @@ public:
         const sptr<IRemoteObject> &callback) override;
     int32_t ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &updateInfo) override;
     int32_t QuerySecurityEventConfig(std::string &result) override;
-    int32_t SetSubscribeMute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback) override;
-    int32_t SetSubscribeUnMute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback) override;
+    int32_t SetSubscribeMute(const SecurityEventFilter &subscribeMute,
+        const sptr<IRemoteObject> &callback, const std::string &sdkFlag) override;
+    int32_t SetSubscribeUnMute(const SecurityEventFilter &subscribeMute,
+        const sptr<IRemoteObject> &callback, const std::string &sdkFlag) override;
 private:
     static inline BrokerDelegator<DataCollectManagerProxy> delegator_;
 };

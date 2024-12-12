@@ -45,6 +45,12 @@ int32_t SecurityCollectorManagerStub::OnRemoteRequest(uint32_t code, MessageParc
             case CMD_SECURITY_EVENT_QUERY: {
                 return HandleSecurityEventQueryCmd(data, reply);
             }
+            case CMD_SECURITY_EVENT_MUTE: {
+                return HandleSetSubscribeMute(data, reply);
+            }
+            case CMD_SECURITY_EVENT_UNMUTE: {
+                return HandleSetSubscribeUnMute(data, reply);
+            }
             default: {
                 break;
             }
@@ -220,7 +226,7 @@ int32_t SecurityCollectorManagerStub::HandleSetSubscribeMute(MessageParcel &data
         return BAD_PARAM;
     }
     std::string flag {};
-    if(!data.ReadString(flag)) {
+    if (!data.ReadString(flag)) {
         LOGE("failed to get SubscribeMute flag");
     }
     int32_t ret = SetSubscribeMute(*info, flag);
@@ -246,7 +252,7 @@ int32_t SecurityCollectorManagerStub::HandleSetSubscribeUnMute(MessageParcel &da
     }
 
     std::string flag {};
-    if(!data.ReadString(flag)) {
+    if (!data.ReadString(flag)) {
         LOGE("failed to get SubscribeUnMute flag");
     }
     int32_t ret = SetSubscribeUnMute(*info, flag);

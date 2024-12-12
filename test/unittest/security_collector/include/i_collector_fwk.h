@@ -23,6 +23,7 @@ class ICollectorFwk {
 public:
     virtual ~ICollectorFwk() = default;
     virtual std::string GetExtraInfo() {return {};};
+    virtual int64_t GetEventId() {return {};};
     virtual void OnNotify(const Event &event) = 0;
 };
 } // namespace OHOS::Security::SecurityCollector
