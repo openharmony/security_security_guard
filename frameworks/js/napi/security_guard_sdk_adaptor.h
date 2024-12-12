@@ -24,16 +24,15 @@
 #include "security_event_ruler.h"
 #include "i_collector_subscriber.h"
 #include "acquire_data_manager_callback_service.h"
+#include "sg_classify_client.h"
 namespace OHOS::Security::SecurityGuard {
 class SecurityGuardSdkAdaptor {
 public:
     static int32_t RequestSecurityEventInfo(std::string &devId, std::string &eventList,
         RequestRiskDataCallback callback);
-    static int32_t RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
-        const std::string &param, ResultCallback callback);
-    static int32_t ReportSecurityInfo(const std::shared_ptr<EventInfo> &info);
-    static int32_t SetModelState(uint32_t modelId, bool enable);
-    static int32_t NotifyCollector(const SecurityCollector::Event &event, int64_t duration);
+    static int32_t InnerRequestSecurityModelResult(const std::string &devId, uint32_t modelId,
+        const std::string &param, SecurityGuardRiskCallback callback);
+    static int32_t InnerReportSecurityInfo(const std::shared_ptr<EventInfo> &info);
     static int32_t StartCollector(const SecurityCollector::Event &event, int64_t duration);
     static int32_t StopCollector(const SecurityCollector::Event &event);
     static int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
@@ -44,11 +43,6 @@ public:
 private:
     SecurityGuardSdkAdaptor() = delete;
     ~SecurityGuardSdkAdaptor() = delete;
-    static std::map<std::shared_ptr<SecurityCollector::ICollectorSubscriber>,
-        sptr<AcquireDataManagerCallbackService>> subscribers_;
-    static sptr<IDataCollectManager> LoadDataCollectManageService();
-    static sptr<IDataCollectManager> proxy_;
-    static std::mutex objMutex_;
 };
 } // OHOS::Security::SecurityGuard
 

@@ -21,7 +21,7 @@
 
 #define private public
 #define protected public
-#include "acquire_data_manager.h"
+#include "data_collect_manager.h"
 #include "acquire_data_manager_callback_service.h"
 #include "acquire_data_manager_callback_stub.h"
 #include "data_collect_manager_callback_service.h"
@@ -119,9 +119,9 @@ void AcquireDataManagerFuzzTest(const uint8_t* data, size_t size)
     std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
     Security::SecurityCollector::Event event{eventId, string, string, string};
     auto subscriber = std::make_shared<MockCollectorSubscriber>(event);
-    AcquireDataManager::GetInstance().Subscribe(subscriber);
-    AcquireDataManager::GetInstance().Unsubscribe(subscriber);
-    AcquireDataManager::GetInstance().HandleDecipient();
+    DataCollectManager::GetInstance().Subscribe(subscriber);
+    DataCollectManager::GetInstance().Unsubscribe(subscriber);
+    DataCollectManager::GetInstance().HandleDecipient();
 }
 
 void AcquireDataManagerCallbackServiceFuzzTest(const uint8_t* data, size_t size)

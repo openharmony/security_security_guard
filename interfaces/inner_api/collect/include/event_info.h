@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <functional>
 namespace OHOS::Security::SecurityGuard {
 using EventMuteType = enum {
     EVENT_TYPE_EQUAL = 0,
@@ -32,6 +33,7 @@ using EventMuteFilter = struct {
     int64_t eventId;
     EventMuteType type;
     std::vector<std::string> mutes;
+    std::string eventGroup;
 };
 class EventInfo {
 public:
@@ -46,6 +48,8 @@ private:
     std::string version_{};
     std::string content_{};
 };
+
+using RequestRiskDataCallback = std::function<int32_t(std::string &, std::string &, uint32_t, const std::string &)>;
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_EVENT_INFO_H

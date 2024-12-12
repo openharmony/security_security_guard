@@ -29,17 +29,22 @@ bool SecurityEventFilter::Marshalling(Parcel& parcel) const
         SGLOGE("failed to write type");
         return false;
     }
+    if (!parcel.WriteString(filter_.eventGroup)) {
+        SGLOGE("failed to write event group");
+        return false;
+    }
     if (filter_.mutes.size() > MAX_MUTE_SIZE) {
         SGLOGE("the mutes size err");
         return false;
     }
-    if (!parcel.WriteUint32(filter_.mutes.size())) {
+    uint32_t size = static_cast<uint32_t>(filter_.mutes.size());
+    if (!parcel.WriteUint32(size)) {
         SGLOGE("failed to write mutes size");
         return false;
     }
     for (const auto &iter : filter_.mutes) {
         if (!parcel.WriteString(iter)) {
-            SGLOGE("failed to mutele");
+            SGLOGE("failed to write mute");
             return false;
         }
     }
@@ -58,7 +63,11 @@ bool SecurityEventFilter::ReadFromParcel(Parcel &parcel)
         return false;
     }
     filter_.type = static_cast<EventMuteType>(muteType);
-    uint32_t size = 0; 
+    if (!parcel.ReadString(filter_.eventGroup)) {
+        SGLOGE("failed to read event group");
+        return false;
+    }
+    uint32_t size = 0;
     if (!parcel.ReadUint32(size)) {
         SGLOGE("failed to read mutes size");
         return false;
@@ -69,7 +78,7 @@ bool SecurityEventFilter::ReadFromParcel(Parcel &parcel)
     }
     for (uint32_t index = 0; index < size; index++) {
         std::string tmp;
-        if (parcel.ReadString(tmp)) {
+        if (!parcel.ReadString(tmp)) {
             SGLOGE("failed to read mute");
             return false;
         }

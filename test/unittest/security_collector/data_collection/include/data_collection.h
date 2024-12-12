@@ -41,8 +41,8 @@ public:
         std::vector<SecurityEvent> &events);
     virtual bool SecurityGuardSubscribeCollector(const std::vector<int64_t>& eventIds);
     virtual void CloseLib();
-    virtual bool SetMute(const std::vector<int64_t>& eventIds, std::shared_ptr<ICollectorFwk> api);
-    virtual bool SetUnMute(const std::vector<int64_t>& eventIds);
+    virtual bool SetMute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag);
+    virtual bool SetUnMute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag);
 private:
     DataCollection() = default;
     virtual ErrorCode LoadCollector(int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api);

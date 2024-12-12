@@ -39,7 +39,7 @@ bool SecurityCollectorEventFilter::Marshalling(Parcel& parcel) const
     }
     for (const auto &iter : filter_.mutes) {
         if (!parcel.WriteString(iter)) {
-            LOGE("failed to mutele");
+            LOGE("failed to write mute");
             return false;
         }
     }
@@ -57,8 +57,8 @@ bool SecurityCollectorEventFilter::ReadFromParcel(Parcel &parcel)
         LOGE("failed to read type");
         return false;
     }
-    filter_.type = static_cast<EventMuteType>(muteType);
-    uint32_t size = 0; 
+    filter_.type = static_cast<SecurityCollectorEventMuteType>(muteType);
+    uint32_t size = 0;
     if (!parcel.ReadUint32(size)) {
         LOGE("failed to read mutes size");
         return false;
@@ -69,7 +69,7 @@ bool SecurityCollectorEventFilter::ReadFromParcel(Parcel &parcel)
     }
     for (uint32_t index = 0; index < size; index++) {
         std::string tmp;
-        if (parcel.ReadString(tmp)) {
+        if (!parcel.ReadString(tmp)) {
             LOGE("failed to read mute");
             return false;
         }
@@ -88,7 +88,7 @@ SecurityCollectorEventFilter* SecurityCollectorEventFilter::Unmarshalling(Parcel
     return filter;
 };
 
-EventMuteFilter SecurityCollectorEventFilter::GetMuteFilter()
+SecurityCollectorEventMuteFilter SecurityCollectorEventFilter::GetMuteFilter() const
 {
     return filter_;
 }

@@ -26,6 +26,9 @@ public:
     ~AcquireDataManagerCallbackService() override = default;
     void RegistCallBack(std::function<void(const SecurityCollector::Event &event)> callback)
     {
+        if (callback == nullptr) {
+            return;
+        }
         callback_ = callback;
     }
     int32_t OnNotify(const std::vector<SecurityCollector::Event> &events) override;

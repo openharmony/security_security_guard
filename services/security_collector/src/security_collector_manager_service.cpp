@@ -400,8 +400,10 @@ int32_t SecurityCollectorManagerService::SetSubscribeMute(const SecurityCollecto
         LOGE("caller no permission");
         return ret;
     }
-    subscribeMute.GetMuteFilter()
-    !SecurityCollectorSubscriberManager::GetInstance().SubscribeCollector(subscribeMute.GetMuteFilter(), callbackFlag);
+    if (!DataCollection::GetInstance().SetMute(subscribeMute.GetMuteFilter(), callbackFlag)) {
+        LOGE("fail to set mute");
+        return FAILED;
+    }
     g_refCount.fetch_add(1);
     return SUCCESS;
 }
@@ -415,8 +417,10 @@ int32_t SecurityCollectorManagerService::SetSubscribeUnMute(const SecurityCollec
         LOGE("caller no permission");
         return ret;
     }
-    
-    // !SecurityCollectorSubscriberManager::GetInstance().SubscribeCollector(subscriber)
+    if (!DataCollection::GetInstance().SetUnMute(subscribeMute.GetMuteFilter(), callbackFlag)) {
+        LOGE("fail to set unmute");
+        return FAILED;
+    }
     g_refCount.fetch_add(1);
     return SUCCESS;
 }

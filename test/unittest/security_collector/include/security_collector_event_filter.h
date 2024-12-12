@@ -23,13 +23,13 @@ namespace OHOS::Security::SecurityCollector {
 class SecurityCollectorEventFilter : public Parcelable {
 public:
     SecurityCollectorEventFilter() = default;
-    SecurityCollectorEventFilter(const EventMuteFilter &filter) :filter_(filter) {}
+    SecurityCollectorEventFilter(const SecurityCollectorEventMuteFilter &filter) :filter_(filter) {}
     bool Marshalling(Parcel& parcel) const override;
     bool ReadFromParcel(Parcel &parcel);
     static SecurityCollectorEventFilter* Unmarshalling(Parcel& parcel);
-    EventMuteFilter GetMuteFilter();
+    SecurityCollectorEventMuteFilter GetMuteFilter() const;
 private:
-    EventMuteFilter filter_;
+    SecurityCollectorEventMuteFilter filter_;
 };
 }
 #endif // SECURITY_COLLECTOR_SECURITY_EVENT_FILTER_H
