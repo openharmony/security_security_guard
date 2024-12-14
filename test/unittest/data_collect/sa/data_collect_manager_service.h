@@ -75,7 +75,7 @@ private:
     bool ParseTrustListFile(const std::string &trustListFile);
     std::mutex mutex_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
-    std::atomic<uint32_t> taskCount = 0;
+    std::atomic<uint32_t> taskCount_ = 0;
     std::atomic<uint32_t> discardedCount_ = 0;
     std::mutex eventsMutex_{};
     std::map<int64_t, std::atomic<uint32_t>> reportedEventsMap_;
