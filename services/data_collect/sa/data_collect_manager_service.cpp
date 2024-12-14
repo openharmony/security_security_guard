@@ -75,6 +75,7 @@ namespace {
     constexpr uint32_t CONTINUE = 1;
     constexpr size_t MAX_DISTRIBUTE_LENS = 100;
     constexpr uint64_t CLEAR_TIME = 3600000000;
+    constexpr uint32_t FFRT_MAX_NUM = 256;
 #ifndef SECURITY_GUARD_ENABLE_EXT
     const std::string TRUST_LIST_FILE_PATH = "/system/etc/config_update_trust_list.json";
 #else
@@ -226,7 +227,7 @@ int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::strin
         SGLOGD("ffrt task num is %{public}u", taskCount_.load());
         taskCount_--;
     };
-    if (taskCount_.load() > 256) {
+    if (taskCount_.load() > FFRT_MAX_NUM) {
         discardedCount_++;
         SGLOGD("too much event reported, ffrt task num is %{public}u, eventid is %{public}" PRId64,
             discardedCount_.load(), eventId);
