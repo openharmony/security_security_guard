@@ -166,7 +166,7 @@ void DataCollectManagerService::DumpEventInfo(int fd, int64_t eventId)
     dprintf(fd, "report version : %s\n", secEvent.version.c_str());
 }
 
-bool DataCollectManagerService::isDiscardEventInThisHour(int64_t eventId)
+bool DataCollectManagerService::IsDiscardEventInThisHour(int64_t eventId)
 {
     std::lock_guard<std::mutex> lock(eventsMutex_);
     {
@@ -232,7 +232,7 @@ int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::strin
             discardedCount_.load(), eventId);
         return SUCCESS;
     }
-    if(isDiscardEventInThisHour(eventId)) {
+    if (IsDiscardEventInThisHour(eventId)) {
         return SUCCESS;
     }
     ffrt::submit(task);

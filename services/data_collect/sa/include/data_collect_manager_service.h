@@ -80,7 +80,7 @@ private:
     std::atomic<uint32_t> discardedCount_ = 0;
     std::mutex eventsMutex_{};
     std::map<int64_t, std::atomic<uint32_t>> reportedEventsMap_;
-    bool isDiscardEventInThisHour(int64_t eventId);
+    bool IsDiscardEventInThisHour(int64_t eventId);
 };
 } // namespace OHOS::Security::SecurityGuard
 #endif // SECURITY_GUARD_DATA_COLLECT_MANAGER_SERVICE_H
