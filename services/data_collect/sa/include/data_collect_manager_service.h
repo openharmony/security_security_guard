@@ -76,6 +76,11 @@ private:
     bool ParseTrustListFile(const std::string &trustListFile);
     std::mutex mutex_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
+    std::atomic<uint32_t> taskCount_ = 0;
+    std::atomic<uint32_t> discardedCount_ = 0;
+    std::mutex eventsMutex_{};
+    std::map<int64_t, std::atomic<uint32_t>> reportedEventsMap_;
+    bool IsDiscardEventInThisHour(int64_t eventId);
 };
 } // namespace OHOS::Security::SecurityGuard
 #endif // SECURITY_GUARD_DATA_COLLECT_MANAGER_SERVICE_H
