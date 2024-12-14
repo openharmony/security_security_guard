@@ -35,6 +35,14 @@ std::string SecurityCollectorSubscriberManager::CollectorListenner::GetExtraInfo
     return {};
 }
 
+int64_t SecurityCollectorSubscriberManager::CollectorListenner::GetEventId()
+{
+    if (subscriber_) {
+        return subscriber_->GetSecurityCollectorSubscribeInfo().GetEvent().eventId;
+    }
+    return {};
+}
+
 void SecurityCollectorSubscriberManager::CollectorListenner::OnNotify(const Event &event)
 {
     SecurityCollectorSubscriberManager::GetInstance().NotifySubscriber(event);

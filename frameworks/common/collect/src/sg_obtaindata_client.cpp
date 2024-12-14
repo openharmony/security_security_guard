@@ -20,6 +20,7 @@
 
 #include "data_collect_manager_callback_service.h"
 #include "data_collect_manager_proxy.h"
+#include "data_collect_manager.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 
@@ -27,36 +28,6 @@ using namespace OHOS;
 using namespace OHOS::Security::SecurityGuard;
 
 static std::mutex g_mutex;
-
-static int32_t RequestSecurityEventInfo(std::string &devId, std::string &eventList,
-    RequestRiskDataCallback callback)
-{
-    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (registry == nullptr) {
-        SGLOGE("GetSystemAbilityManager error");
-        return NULL_OBJECT;
-    }
-
-    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerProxy>(object);
-    if (proxy == nullptr) {
-        SGLOGE("proxy is null");
-        return NULL_OBJECT;
-    }
-
-    auto obj = new (std::nothrow) DataCollectManagerCallbackService(callback);
-    if (obj == nullptr) {
-        SGLOGE("stub is null");
-        return NULL_OBJECT;
-    }
-    int32_t ret = proxy->RequestRiskData(devId, eventList, obj);
-    if (ret != 0) {
-        SGLOGE("RequestSecurityEventInfo error, ret=%{public}d", ret);
-        return ret;
-    }
-    return SUCCESS;
-}
-
 static int32_t RequestSecurityEventInfoAsyncImpl(const DeviceIdentify *devId, const char *eventJson,
     RequestSecurityEventInfoCallBack callback)
 {
@@ -89,7 +60,7 @@ static int32_t RequestSecurityEventInfoAsyncImpl(const DeviceIdentify *devId, co
         callback(&identity, riskData.c_str(), status);
         return SUCCESS;
     };
-    return RequestSecurityEventInfo(identity, eventList, func);
+    return DataCollectManager::GetInstance().RequestSecurityEventInfo(identity, eventList, func);
 }
 
 

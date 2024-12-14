@@ -321,7 +321,7 @@ static napi_value NapiReportSecurityInfo(napi_env env, napi_callback_info info)
     }
 
     auto eventInfo = std::make_shared<EventInfo>(context.eventId, context.version, context.content);
-    int32_t code = SecurityGuardSdkAdaptor::ReportSecurityInfo(eventInfo);
+    int32_t code = SecurityGuardSdkAdaptor::InnerReportSecurityInfo(eventInfo);
     if (code != SUCCESS) {
         SGLOGE("report eventInfo error, code=%{public}d", code);
         napi_throw(env, GenerateBusinessError(env, code));
@@ -373,17 +373,18 @@ static void RequestSecurityModelResultExecute(napi_env env, void *data)
     auto *context = static_cast<RequestSecurityModelResultContext *>(data);
     auto promise = std::make_shared<std::promise<SecurityModel>>();
     auto future = promise->get_future();
-    auto func = [promise] (const std::string &devId, uint32_t modelId, const std::string &result) mutable -> int32_t {
+    auto func = [promise] (const OHOS::Security::SecurityGuard::SecurityModelResult &result) mutable -> int32_t {
         SecurityModel model = {
-            .devId = devId,
-            .modelId = modelId,
-            .result = result
+            .devId = result.devId,
+            .modelId = result.modelId,
+            .result = result.result
         };
         promise->set_value(model);
         return SUCCESS;
     };
     context->ret =
-        SecurityGuardSdkAdaptor::RequestSecurityModelResult(context->deviceId, context->modelId, context->param, func);
+        SecurityGuardSdkAdaptor::InnerRequestSecurityModelResult(context->deviceId, context->modelId,
+            context->param, func);
     if (context->ret != SUCCESS) {
         SGLOGE("RequestSecurityModelResultSync error, ret=%{public}d", context->ret);
         return;

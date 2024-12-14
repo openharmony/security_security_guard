@@ -13,37 +13,50 @@
  * limitations under the License.
  */
 
-#ifndef SECURITY_GUARD_ACQUIRE_DATA_MANAGER_H
-#define SECURITY_GUARD_ACQUIRE_DATA_MANAGER_H
+#ifndef SECURITY_GUARD_DATA_COLLECT_MANAGER_H
+#define SECURITY_GUARD_DATA_COLLECT_MANAGER_H
 
 #include <map>
 #include <mutex>
-#include "acquire_data_manager_callback_service.h"
 #include "i_collector_subscriber.h"
+#include "security_event_query_callback.h"
+#include "security_event_ruler.h"
+#include "acquire_data_manager_callback_service.h"
 #include "event_info.h"
-
 namespace OHOS::Security::SecurityGuard {
-class AcquireDataManager {
+class DataCollectManager {
 public:
-    static AcquireDataManager& GetInstance();
+    static DataCollectManager& GetInstance();
     class DeathRecipient : public IRemoteObject::DeathRecipient {
     public:
         DeathRecipient() = default;
         ~DeathRecipient() override = default;
         void OnRemoteDied(const wptr<IRemoteObject> &remote) override;
     };
+    int32_t ReportSecurityEvent(const std::shared_ptr<EventInfo> &info, bool isSync);
+    int32_t SecurityGuardConfigUpdate(int32_t fd, const std::string &name);
     int32_t Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber);
     int32_t Unsubscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber);
+    int32_t SetSubscribeMute(const std::shared_ptr<EventMuteFilter> &subscribeMute);
+    int32_t SetSubscribeUnMute(const std::shared_ptr<EventMuteFilter> &subscribeMute);
+    int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
+                            std::shared_ptr<SecurityEventQueryCallback> callback);
+    int32_t QuerySecurityEventConfig(std::string &result);
+    int32_t StartCollector(const SecurityCollector::Event &event, int64_t duration);
+    int32_t StopCollector(const SecurityCollector::Event &event);
+    int32_t RequestSecurityEventInfo(std::string &devId, std::string &eventList, RequestRiskDataCallback callback);
 private:
-    AcquireDataManager();
-    ~AcquireDataManager() = default;
+    DataCollectManager();
+    ~DataCollectManager() = default;
     void HandleDecipient();
     bool IsCurrentSubscriberEventIdExist(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &sub);
     std::mutex mutex_{};
     sptr<AcquireDataManagerCallbackService> callback_{};
+    std::string sdkFlag_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
-    std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> subscribers_ {};
+    std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> subscribers_{};
+    std::set<std::shared_ptr<EventMuteFilter>> subscribeMutes_{};
     uint32_t count_ = 0;
 };
-} // namespace OHOS::Security::SecurityGuard
-#endif // SECURITY_GUARD_ACQUIRE_DATA_MANAGER_H
+}  // namespace OHOS::Security::SecurityGuard
+#endif  // SECURITY_GUARD_DATA_COLLECT_MANAGER_H

@@ -225,31 +225,6 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfoAsync001, TestSize.Level1)
     EXPECT_EQ(ret, SecurityGuard::SUCCESS);
 }
 
-/**
- * @tc.name: ReleaseProxy001
- * @tc.desc: SgCollectClient ReleaseProxy
- * @tc.type: FUNC
- * @tc.require: SR000H96L5
- */
-HWTEST_F(DataCollectKitTest, ReleaseProxy001, TestSize.Level1)
-{
-    SecurityGuard::SgCollectClient::GetInstance().ReleaseProxy();
-    ASSERT_NE(nullptr, &SecurityGuard::SgCollectClient::GetInstance().proxy_);
-}
-
-/**
- * @tc.name: ReportSecurityInfo007
- * @tc.desc: SgCollectClient DeathRecipient OnRemoteDied
- * @tc.type: FUNC
- * @tc.require: SR000H96L5
- */
-HWTEST_F(DataCollectKitTest, DeathRecipient001, TestSize.Level1)
-{
-    SecurityGuard::SgCollectClientDeathRecipient recipient =
-        SecurityGuard::SgCollectClientDeathRecipient();
-    recipient.OnRemoteDied(nullptr);
-}
-
 HWTEST_F(DataCollectKitTest, ConfigUpdate001, TestSize.Level1)
 {
     EXPECT_NE(SecurityGuardConfigUpdate(-1, "test"), SecurityGuard::SUCCESS);

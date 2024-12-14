@@ -19,7 +19,7 @@
 #include <string>
 
 #include "data_collect_manager_callback_stub.h"
-#include "security_guard_define.h"
+#include "event_info.h"
 
 namespace OHOS::Security::SecurityGuard {
 class DataCollectManagerCallbackService : public DataCollectManagerCallbackStub {

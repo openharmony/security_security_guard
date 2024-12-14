@@ -78,6 +78,7 @@ ohos_unittest("SecurityCollectorTest") {
   ]
 
   sources = [
+    "${sg_root_dir}/frameworks/common/collector/src/security_collector_event_filter.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/collector_manager/src/lib_loader.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_callback_proxy.cpp",

@@ -26,6 +26,7 @@
 #include "security_collector_subscribe_info.h"
 #include "i_collector_subscriber.h"
 #include "i_collector_fwk.h"
+#include "security_event_filter.h"
 namespace OHOS::Security::SecurityGuard {
 class AcquireDataSubscribeManager {
 public:
@@ -35,6 +36,10 @@ public:
     int RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback);
     bool BatchPublish(const SecurityCollector::Event &event);
     void RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback);
+    int InsertSubscribeMutue(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
+        const std::string &sdkFlag);
+    int RemoveSubscribeMutue(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
+        const std::string &sdkFlag);
     class CleanupTimer {
     public:
         CleanupTimer() = default;
@@ -96,6 +101,7 @@ private:
     std::shared_ptr<IDbListener> listener_{};
     std::shared_ptr<SecurityCollector::ICollectorFwk> collectorListenner_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
+    std::map<sptr<IRemoteObject>, std::string> callbackHashMap_{};
 };
 } // namespace OHOS::Security::SecurityGuard
 
