@@ -59,6 +59,12 @@ int32_t DataCollectManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &da
             case CMD_SECURITY_EVENT_CONFIG_QUERY: {
                 return HandleSecurityEventConfigQueryCmd(data, reply);
             }
+            case CMD_SECURITY_EVENT_MUTE: {
+                return HandleEventMuteCmd(data, reply);
+            }
+            case CMD_SECURITY_EVENT_UNMUTE: {
+                return HandleEventUnMuteCmd(data, reply);
+            }
             default: {
                 break;
             }
@@ -289,4 +295,58 @@ int32_t DataCollectManagerStub::HandleSecurityEventConfigQueryCmd(MessageParcel 
     return ret;
 }
 
+int32_t DataCollectManagerStub::HandleEventMuteCmd(MessageParcel &data, MessageParcel &reply)
+{
+    SGLOGI("%{public}s", __func__);
+    uint32_t expected = sizeof(uint64_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (actual <= expected) {
+        SGLOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    std::unique_ptr<SecurityGuard::SecurityEventFilter> info(
+        data.ReadParcelable<SecurityGuard::SecurityEventFilter>());
+    if (!info) {
+        SGLOGE("failed to read parcelable for mute Info");
+        return BAD_PARAM;
+    }
+
+    std::string sdkFlag = data.ReadString();
+    if (sdkFlag.empty()) {
+        SGLOGE("failed to read sdkFlag for mute Info");
+        return BAD_PARAM;
+    }
+    auto callback = data.ReadRemoteObject();
+    int32_t ret = SetSubscribeMute(*info, callback, sdkFlag);
+    reply.WriteInt32(ret);
+    return ret;
+}
+
+int32_t DataCollectManagerStub::HandleEventUnMuteCmd(MessageParcel &data, MessageParcel &reply)
+{
+    SGLOGI("%{public}s", __func__);
+    uint32_t expected = sizeof(uint64_t);
+    uint32_t actual = data.GetReadableBytes();
+    if (actual <= expected) {
+        SGLOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    std::unique_ptr<SecurityGuard::SecurityEventFilter> info(
+        data.ReadParcelable<SecurityGuard::SecurityEventFilter>());
+    if (!info) {
+        SGLOGE("failed to read parcelable for mute Info");
+        return BAD_PARAM;
+    }
+    std::string sdkFlag = data.ReadString();
+    if (sdkFlag.empty()) {
+        SGLOGE("failed to read sdkFlag for mute Info");
+        return BAD_PARAM;
+    }
+    auto callback = data.ReadRemoteObject();
+    int32_t ret = SetSubscribeUnMute(*info, callback, sdkFlag);
+    reply.WriteInt32(ret);
+    return ret;
+}
 }

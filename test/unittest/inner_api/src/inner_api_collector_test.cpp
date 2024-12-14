@@ -21,7 +21,6 @@
 #include "security_guard_log.h"
 #define private public
 #define protected public
-#include "acquire_data_manager.h"
 #include "acquire_data_manager_callback_service.h"
 #include "acquire_data_manager_callback_stub.h"
 #include "data_collect_manager_callback_service.h"
@@ -150,13 +149,19 @@ HWTEST_F(InnerApiCollectorTest, AcquireDataManagerTest001, testing::ext::TestSiz
 {
     Security::SecurityCollector::Event event;
     auto subscriber = std::make_shared<MockCollectorSubscriber>(event);
-    int ret = AcquireDataManager::GetInstance().Subscribe(subscriber);
+    int ret = DataCollectManager::GetInstance().Subscribe(subscriber);
     EXPECT_FALSE(ret == SUCCESS);
-    ret = AcquireDataManager::GetInstance().Unsubscribe(subscriber);
+    ret = DataCollectManager::GetInstance().Unsubscribe(subscriber);
     EXPECT_TRUE(ret == BAD_PARAM);
-    AcquireDataManager::GetInstance().HandleDecipient();
+    DataCollectManager::GetInstance().HandleDecipient();
     
     AcquireDataManagerCallbackService service;
+    ret = service.OnNotify({event});
+    EXPECT_TRUE(ret == FAILED);
+
+    service.RegistCallBack(
+        [] (const Security::SecurityCollector::Event &event) {}
+    );
     ret = service.OnNotify({event});
     EXPECT_TRUE(ret == SUCCESS);
 }

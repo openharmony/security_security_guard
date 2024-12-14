@@ -69,6 +69,8 @@ namespace {
         {"UnSubscribe", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
         {"ConfigUpdate", {MANAGE_CONFIG_PERMISSION}},
         {"QuerySecurityEventConfig", {MANAGE_CONFIG_PERMISSION}},
+        {"SetSubscribeMute", {QUERY_SECURITY_EVENT_PERMISSION}},
+        {"SetSubscribeUnMute", {QUERY_SECURITY_EVENT_PERMISSION}},
     };
     std::unordered_set<std::string> g_configCacheFilesSet;
     constexpr uint32_t FINISH = 0;
@@ -306,7 +308,7 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     if (subscribeInfo.GetEventGroup() == "") {
         ret = IsApiHasPermission("Subscribe");
     } else {
-        ret = IsEventGroupHasPermission(subscribeInfo);
+        ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(), subscribeInfo.GetEvent().eventId);
     }
     if (ret != SUCCESS) {
         return ret;
@@ -338,7 +340,7 @@ int32_t DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
     if (subscribeInfo.GetEventGroup() == "") {
         ret = IsApiHasPermission("Subscribe");
     } else {
-        ret = IsEventGroupHasPermission(subscribeInfo);
+        ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(), subscribeInfo.GetEvent().eventId);
     }
     if (ret != SUCCESS) {
         return ret;
@@ -511,15 +513,14 @@ int32_t DataCollectManagerService::IsApiHasPermission(const std::string &api)
     return NO_PERMISSION;
 }
 
-int32_t DataCollectManagerService::IsEventGroupHasPermission(
-    const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo)
+int32_t DataCollectManagerService::IsEventGroupHasPermission(const std::string &eventGroup, int64_t eventId)
 {
     EventGroupCfg config {};
-    if (!ConfigDataManager::GetInstance().GetEventGroupConfig(subscribeInfo.GetEventGroup(), config)) {
-        SGLOGE("get event group config fail group = %{public}s", subscribeInfo.GetEventGroup().c_str());
+    if (!ConfigDataManager::GetInstance().GetEventGroupConfig(eventGroup, config)) {
+        SGLOGE("get event group config fail group = %{public}s", eventGroup.c_str());
         return FAILED;
     }
-    if (config.eventList.count(subscribeInfo.GetEvent().eventId) == 0) {
+    if (config.eventList.count(eventId) == 0) {
         SGLOGE("eventid not in eventid list");
         return FAILED;
     }
@@ -697,4 +698,34 @@ int32_t DataCollectManagerService::QuerySecurityEventConfig(std::string &result)
     return QueryEventConfig(result);
 }
 
+int32_t DataCollectManagerService::SetSubscribeMute(const SecurityEventFilter &subscribeMute,
+    const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
+{
+    SGLOGI("enter DataCollectManagerService SetSubscribeMute.");
+    if (subscribeMute.GetMuteFilter().eventGroup == "") {
+        SGLOGE("event group empty");
+        return BAD_PARAM;
+    }
+    int32_t ret = IsEventGroupHasPermission(subscribeMute.GetMuteFilter().eventGroup,
+        subscribeMute.GetMuteFilter().eventId);
+    if (ret != SUCCESS) {
+        return ret;
+    }
+    return AcquireDataSubscribeManager::GetInstance().InsertSubscribeMutue(subscribeMute, callback, sdkFlag);
+}
+int32_t DataCollectManagerService::SetSubscribeUnMute(const SecurityEventFilter &subscribeMute,
+    const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
+{
+    SGLOGI("enter DataCollectManagerService SetSubscribeUnMute.");
+    if (subscribeMute.GetMuteFilter().eventGroup == "") {
+        SGLOGE("event group empty");
+        return BAD_PARAM;
+    }
+    int32_t ret = IsEventGroupHasPermission(subscribeMute.GetMuteFilter().eventGroup,
+        subscribeMute.GetMuteFilter().eventId);
+    if (ret != SUCCESS) {
+        return ret;
+    }
+    return AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMutue(subscribeMute, callback, sdkFlag);
+}
 }

@@ -42,29 +42,6 @@ public:
     static int32_t ReportSecurityInfoAsync(const std::shared_ptr<EventInfo> &info);
     static int32_t SecurityGuardConfigUpdate(int32_t fd, const std::string &fileName);
 };
-
-class SgCollectClient {
-public:
-    static SgCollectClient &GetInstance();
-    sptr<IDataCollectManager> GetProxy();
-    void InitProxy();
-    void ReleaseProxy();
-
-private:
-    SgCollectClient() = default;
-    ~SgCollectClient() = default;
-    std::mutex proxyMutex_;
-    sptr<IDataCollectManager> proxy_ = nullptr;
-    sptr<IRemoteObject::DeathRecipient> deathRecipient_ = nullptr;
-};
-
-class SgCollectClientDeathRecipient : public IRemoteObject::DeathRecipient {
-public:
-    SgCollectClientDeathRecipient() = default;
-    ~SgCollectClientDeathRecipient() override = default;
-
-    void OnRemoteDied(const wptr<IRemoteObject> &object) override;
-};
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_SG_COLLECT_CLIENT_H
