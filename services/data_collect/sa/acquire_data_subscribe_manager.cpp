@@ -232,6 +232,7 @@ void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<I
         SGLOGI("RemoveSubscribeRecordOnRemoteDied subscriberInfoMap_subscribe_size  %{public}zu",
             i.second.subscribe.size());
     }
+    callbackHashMap_.erase(callback);
 }
 void AcquireDataSubscribeManager::CleanupTimer::ClearEventCache(const sptr<IRemoteObject> &remote)
 {
@@ -337,7 +338,7 @@ int AcquireDataSubscribeManager::InsertSubscribeMutue(const SecurityEventFilter 
     collectorFilter.eventId = sgFilter.eventId;
     collectorFilter.mutes = sgFilter.mutes;
     collectorFilter.type = static_cast<SecurityCollector::SecurityCollectorEventMuteType>(sgFilter.type);
-    if (scSubscribeMap_.count(sgFilter.eventId) == 0) {
+    if (scSubscribeMap_.count(sgFilter.eventId) == 0 || g_subscriberInfoMap.count(callback) == 0) {
         SGLOGE("event id not support set mute 0x%{public}" PRIx64, sgFilter.eventId);
         return BAD_PARAM;
     }
@@ -362,7 +363,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeMutue(const SecurityEventFilter 
     collectorFilter.eventId = sgFilter.eventId;
     collectorFilter.mutes = sgFilter.mutes;
     collectorFilter.type = static_cast<SecurityCollector::SecurityCollectorEventMuteType>(sgFilter.type);
-    if (scSubscribeMap_.count(sgFilter.eventId) == 0) {
+    if (scSubscribeMap_.count(sgFilter.eventId) == 0 || g_subscriberInfoMap.count(callback) == 0) {
         SGLOGE("event id not support set unmute 0x%{public}" PRIx64, sgFilter.eventId);
         return BAD_PARAM;
     }
