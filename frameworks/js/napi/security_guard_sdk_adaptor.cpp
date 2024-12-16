@@ -37,7 +37,7 @@ int32_t SecurityGuardSdkAdaptor::InnerRequestSecurityModelResult(const std::stri
 int32_t SecurityGuardSdkAdaptor::InnerReportSecurityInfo(const std::shared_ptr<EventInfo> &info)
 {
     SGLOGD("enter SecurityGuardSdkAdaptor InnerReportSecurityInfo");
-    return  DataCollectManager::GetInstance().ReportSecurityEvent(info, false);
+    return  DataCollectManager::GetInstance().ReportSecurityEvent(info, true);
 }
 
 int32_t SecurityGuardSdkAdaptor::StartCollector(const SecurityCollector::Event &event,
