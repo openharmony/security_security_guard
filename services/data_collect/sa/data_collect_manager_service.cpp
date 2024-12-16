@@ -518,11 +518,11 @@ int32_t DataCollectManagerService::IsEventGroupHasPermission(const std::string &
     EventGroupCfg config {};
     if (!ConfigDataManager::GetInstance().GetEventGroupConfig(eventGroup, config)) {
         SGLOGE("get event group config fail group = %{public}s", eventGroup.c_str());
-        return FAILED;
+        return BAD_PARAM;
     }
     if (config.eventList.count(eventId) == 0) {
         SGLOGE("eventid not in eventid list");
-        return FAILED;
+        return BAD_PARAM;
     }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     if (std::any_of(config.permissionList.cbegin(), config.permissionList.cend(),
