@@ -73,6 +73,7 @@ public:
         std::vector<SecurityCollector::SecurityCollectorSubscribeInfo> subscribe;
     };
     void BatchUpload(sptr<IRemoteObject> obj, const std::vector<SecurityCollector::Event> &events);
+    void UploadEvent(const SecurityCollector::Event &event);
 private:
     AcquireDataSubscribeManager();
     ~AcquireDataSubscribeManager() = default;
@@ -85,12 +86,6 @@ private:
         ~DbListener() override = default;
         void OnChange(uint32_t optType, const SecEvent &events) override;
     };
-    class CollectorListenner : public SecurityCollector::ICollectorFwk {
-    public:
-        CollectorListenner() = default;
-        ~CollectorListenner() override = default;
-        void OnNotify(const SecurityCollector::Event &event) override;
-    };
     class SecurityCollectorSubscriber : public SecurityCollector::ICollectorSubscriber {
     public:
         explicit SecurityCollectorSubscriber(
@@ -98,10 +93,20 @@ private:
         ~SecurityCollectorSubscriber() override = default;
         int32_t OnNotify(const SecurityCollector::Event &event) override;
     };
+    class CollectorListenner : public SecurityCollector::ICollectorFwk {
+    public:
+        CollectorListenner(const SecurityCollector::Event &event) : event_(event) {}
+        int64_t GetEventId() override;
+        void OnNotify(const SecurityCollector::Event &event) override;
+    private:
+        SecurityCollector::Event event_;
+    };
     std::shared_ptr<IDbListener> listener_{};
     std::shared_ptr<SecurityCollector::ICollectorFwk> collectorListenner_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
     std::map<sptr<IRemoteObject>, std::string> callbackHashMap_{};
+    std::mutex delMutex_;
+    std::map<int64_t, std::shared_ptr<SecurityCollector::ICollectorFwk>> eventToListenner_;
 };
 } // namespace OHOS::Security::SecurityGuard
 
