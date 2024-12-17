@@ -17,9 +17,6 @@
 #define SECURITY_GUARD_SG_COLLECT_CLIENT_H
 
 #include <mutex>
-
-#include "iremote_object.h"
-
 #include "event_info.h"
 #include "i_data_collect_manager.h"
 #include "security_guard_api.h"
