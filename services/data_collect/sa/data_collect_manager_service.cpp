@@ -305,12 +305,18 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
 {
     SGLOGD("DataCollectManagerService, start subscribe");
     int32_t ret = FAILED;
+    SgSubscribeEvent event;
+    event.pid = IPCSkeleton::GetCallingPid();
+    event.time = SecurityGuardUtils::GetDate();
+    event.eventId = subscribeInfo.GetEvent().eventId;
     if (subscribeInfo.GetEventGroup() == "") {
         ret = IsApiHasPermission("Subscribe");
     } else {
         ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(), subscribeInfo.GetEvent().eventId);
     }
     if (ret != SUCCESS) {
+        event.ret = ret;
+        BigData::ReportSgSubscribeEvent(event);
         return ret;
     }
     std::lock_guard<std::mutex> lock(mutex_);
@@ -318,15 +324,13 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
         deathRecipient_ = new (std::nothrow) SubscriberDeathRecipient(this);
         if (deathRecipient_ == nullptr) {
             SGLOGE("no memory");
+            event.ret = NULL_OBJECT;
+            BigData::ReportSgSubscribeEvent(event);
             return NULL_OBJECT;
         }
     }
     callback->AddDeathRecipient(deathRecipient_);
     ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, callback);
-    SgSubscribeEvent event;
-    event.pid = IPCSkeleton::GetCallingPid();
-    event.time = SecurityGuardUtils::GetDate();
-    event.eventId = subscribeInfo.GetEvent().eventId;
     event.ret = ret;
     SGLOGI("DataCollectManagerService, InsertSubscribeRecord eventId=%{public}" PRId64, event.eventId);
     BigData::ReportSgSubscribeEvent(event);
@@ -337,12 +341,17 @@ int32_t DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
     const sptr<IRemoteObject> &callback)
 {
     int32_t ret = FAILED;
+    SgUnsubscribeEvent event;
+    event.pid = IPCSkeleton::GetCallingPid();
+    event.time = SecurityGuardUtils::GetDate();
     if (subscribeInfo.GetEventGroup() == "") {
         ret = IsApiHasPermission("Subscribe");
     } else {
         ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(), subscribeInfo.GetEvent().eventId);
     }
     if (ret != SUCCESS) {
+        event.ret = ret;
+        BigData::ReportSgUnsubscribeEvent(event);
         return ret;
     }
     std::lock_guard<std::mutex> lock(mutex_);
@@ -351,9 +360,6 @@ int32_t DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
     }
 
     ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, callback);
-    SgUnsubscribeEvent event;
-    event.pid = IPCSkeleton::GetCallingPid();
-    event.time = SecurityGuardUtils::GetDate();
     event.ret = ret;
     SGLOGI("DataCollectManagerService, RemoveSubscribeRecord ret=%{public}d", ret);
     BigData::ReportSgUnsubscribeEvent(event);
@@ -702,30 +708,52 @@ int32_t DataCollectManagerService::SetSubscribeMute(const SecurityEventFilter &s
     const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
 {
     SGLOGI("enter DataCollectManagerService SetSubscribeMute.");
+    SgSubscribeEvent event;
+    event.pid = IPCSkeleton::GetCallingPid();
+    event.time = SecurityGuardUtils::GetDate();
+    event.eventId = subscribeMute.GetMuteFilter().eventId;
     if (subscribeMute.GetMuteFilter().eventGroup == "") {
         SGLOGE("event group empty");
+        event.ret = BAD_PARAM;
+        BigData::ReportSetMuteEvent(event);
         return BAD_PARAM;
     }
     int32_t ret = IsEventGroupHasPermission(subscribeMute.GetMuteFilter().eventGroup,
         subscribeMute.GetMuteFilter().eventId);
     if (ret != SUCCESS) {
+        event.ret = ret;
+        BigData::ReportSetMuteEvent(event);
         return ret;
     }
-    return AcquireDataSubscribeManager::GetInstance().InsertSubscribeMutue(subscribeMute, callback, sdkFlag);
+    ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMutue(subscribeMute, callback, sdkFlag);
+    event.ret = ret;
+    BigData::ReportSetMuteEvent(event);
+    return ret;
 }
 int32_t DataCollectManagerService::SetSubscribeUnMute(const SecurityEventFilter &subscribeMute,
     const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
 {
     SGLOGI("enter DataCollectManagerService SetSubscribeUnMute.");
+    SgSubscribeEvent event;
+    event.pid = IPCSkeleton::GetCallingPid();
+    event.time = SecurityGuardUtils::GetDate();
+    event.eventId = subscribeMute.GetMuteFilter().eventId;
     if (subscribeMute.GetMuteFilter().eventGroup == "") {
         SGLOGE("event group empty");
+        event.ret = BAD_PARAM;
+        BigData::ReportSetUnMuteEvent(event);
         return BAD_PARAM;
     }
     int32_t ret = IsEventGroupHasPermission(subscribeMute.GetMuteFilter().eventGroup,
         subscribeMute.GetMuteFilter().eventId);
     if (ret != SUCCESS) {
+        event.ret = ret;
+        BigData::ReportSetUnMuteEvent(event);
         return ret;
     }
-    return AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMutue(subscribeMute, callback, sdkFlag);
+    ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMutue(subscribeMute, callback, sdkFlag);
+    event.ret = ret;
+    BigData::ReportSetUnMuteEvent(event);
+    return ret;
 }
 }
