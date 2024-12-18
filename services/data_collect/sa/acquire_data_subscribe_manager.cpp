@@ -286,7 +286,7 @@ void AcquireDataSubscribeManager::BatchUpload(sptr<IRemoteObject> obj,
     ffrt::submit(task);
 }
 
-void  AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &event)
+void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &event)
 {
     if (!DataFormat::CheckRiskContent(event.content)) {
         SGLOGE("CheckRiskContent error");
