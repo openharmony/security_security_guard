@@ -28,6 +28,7 @@
 #include "ipc_skeleton.h"
 #include "string_ex.h"
 #include "directory_ex.h"
+#include "file_ex.h"
 #include "acquire_data_subscribe_manager.h"
 #include "bigdata.h"
 #include "collector_manager.h"
@@ -660,7 +661,8 @@ int32_t DataCollectManagerService::ConfigUpdate(const SecurityGuard::SecurityCon
         return BAD_PARAM;
     }
     const uint32_t modelId = 3001000008;
-    if (info.GetFileName() == "related_event_analysis.json") {
+    if (info.GetFileName() == "related_event_analysis.json" &&
+        !FileExists("/data/service/el1/public/security_guard/related_event_analysis.json")) {
         ModelManager::GetInstance().InitModel(modelId);
     }
     const std::string &realPath = CONFIG_ROOT_PATH + "tmp/" + info.GetFileName();
