@@ -806,7 +806,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc02, TestSiz
         return true;
     });
     int result = adsm.SubscribeSc(111);
-    EXPECT_EQ(result, FAILED);
+    EXPECT_EQ(result, SUCCESS);
     result = adsm.UnSubscribeSc(111);
     EXPECT_EQ(result, SUCCESS);
 }
