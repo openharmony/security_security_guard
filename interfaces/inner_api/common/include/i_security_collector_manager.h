@@ -54,9 +54,9 @@ public:
         const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
         std::vector<SecurityEvent> &events) = 0;
-    virtual int32_t SetSubscribeMute(const SecurityCollectorEventFilter &subscribeMute,
+    virtual int32_t Mute(const SecurityCollectorEventFilter &subscribeMute,
         const std::string &callbackFlag) = 0;
-    virtual int32_t SetSubscribeUnMute(const SecurityCollectorEventFilter &subscribeMute,
+    virtual int32_t Unmute(const SecurityCollectorEventFilter &subscribeMute,
         const std::string &callbackFlag) = 0;
 };
 

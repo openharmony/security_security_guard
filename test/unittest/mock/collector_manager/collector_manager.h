@@ -33,9 +33,9 @@ public:
         std::vector<SecurityEvent> &events) = 0;
     virtual int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber) = 0;
     virtual int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber) = 0;
-    virtual int32_t SetSubscribeMute(const SecurityCollectorEventFilter &subscribeMute,
+    virtual int32_t Mute(const SecurityCollectorEventFilter &subscribeMute,
         const std::string &callbackFlag) = 0;
-    virtual int32_t SetSubscribeUnMute(const SecurityCollectorEventFilter &subscribeMute,
+    virtual int32_t Unmute(const SecurityCollectorEventFilter &subscribeMute,
         const std::string &callbackFlag) = 0;
 };
 
@@ -54,9 +54,9 @@ public:
         std::vector<SecurityEvent> &events));
     MOCK_METHOD1(CollectorStart, int32_t(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber));
     MOCK_METHOD1(CollectorStop, int32_t(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber));
-    MOCK_METHOD2(SetSubscribeMute, int32_t(const SecurityCollectorEventFilter &subscribeMute,
+    MOCK_METHOD2(Mute, int32_t(const SecurityCollectorEventFilter &subscribeMute,
         const std::string &callbackFlag));
-    MOCK_METHOD2(SetSubscribeUnMute, int32_t(const SecurityCollectorEventFilter &subscribeMute,
+    MOCK_METHOD2(Unmute, int32_t(const SecurityCollectorEventFilter &subscribeMute,
         const std::string &callbackFlag));
 };
 } // OHOS::Security::SecurityCollector

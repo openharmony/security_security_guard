@@ -37,8 +37,8 @@ public:
     int32_t SecurityGuardConfigUpdate(int32_t fd, const std::string &name);
     int32_t Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber);
     int32_t Unsubscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber);
-    int32_t SetSubscribeMute(const std::shared_ptr<EventMuteFilter> &subscribeMute);
-    int32_t SetSubscribeUnMute(const std::shared_ptr<EventMuteFilter> &subscribeMute);
+    int32_t Mute(const std::shared_ptr<EventMuteFilter> &subscribeMute);
+    int32_t Unmute(const std::shared_ptr<EventMuteFilter> &subscribeMute);
     int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
                             std::shared_ptr<SecurityEventQueryCallback> callback);
     int32_t QuerySecurityEventConfig(std::string &result);

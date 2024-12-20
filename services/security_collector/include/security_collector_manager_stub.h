@@ -34,8 +34,8 @@ private:
     int32_t HandleUnsubscribeCmd(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStartCmd(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStopCmd(MessageParcel &data, MessageParcel &reply);
-    int32_t HandleSetSubscribeMute(MessageParcel &data, MessageParcel &reply);
-    int32_t HandleSetSubscribeUnMute(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleMute(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleUnmute(MessageParcel &data, MessageParcel &reply);
     int32_t HandleSecurityEventQueryCmd(MessageParcel &data, MessageParcel &reply);
     std::shared_ptr<ICollectorSubscriber> UnMarshalSubscriber(MessageParcel &data);
 };

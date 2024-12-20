@@ -77,14 +77,17 @@ public:
 private:
     AcquireDataSubscribeManager();
     ~AcquireDataSubscribeManager() = default;
-    int SubscribeSc(int64_t eventId);
+    int SubscribeSc(int64_t eventId, const sptr<IRemoteObject> &callback);
     int UnSubscribeSc(int64_t eventId);
     int UnSubscribeScAndDb(int64_t eventId);
+    int SubscribeScInSg(int64_t eventId, const sptr<IRemoteObject> &callback);
+    int SubscribeScInSc(int64_t eventId, const sptr<IRemoteObject> &callback);
     class DbListener : public IDbListener {
     public:
         DbListener() = default;
         ~DbListener() override = default;
-        void OnChange(uint32_t optType, const SecEvent &events) override;
+        void OnChange(uint32_t optType, const SecEvent &events,
+            const std::set<std::string> &eventSubscribes) override;
     };
     class SecurityCollectorSubscriber : public SecurityCollector::ICollectorSubscriber {
     public:
@@ -104,8 +107,10 @@ private:
     std::shared_ptr<IDbListener> listener_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
     std::map<sptr<IRemoteObject>, std::string> callbackHashMap_{};
-    std::mutex delMutex_;
     std::map<int64_t, std::shared_ptr<SecurityCollector::ICollectorFwk>> eventToListenner_;
+    std::map<int64_t, std::map<sptr<IRemoteObject>,
+        std::vector<SecurityCollector::SecurityCollectorEventMuteFilter>>> muteCache_;
+    std::map<sptr<IRemoteObject>, std::string> callbackHashMapNotSetMute_{};
 };
 } // namespace OHOS::Security::SecurityGuard
 

@@ -336,10 +336,10 @@ int32_t DataCollectManagerProxy::QuerySecurityEventConfig(std::string &result)
     return SUCCESS;
 }
 
-int32_t DataCollectManagerProxy::SetSubscribeMute(const SecurityEventFilter &subscribeMute,
+int32_t DataCollectManagerProxy::Mute(const SecurityEventFilter &subscribeMute,
     const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
 {
-    SGLOGI("Start DataCollectManagerProxy SetSubscribeMute");
+    SGLOGI("Start DataCollectManagerProxy Mute");
     MessageParcel data;
     MessageParcel reply;
 
@@ -373,10 +373,10 @@ int32_t DataCollectManagerProxy::SetSubscribeMute(const SecurityEventFilter &sub
     SGLOGD("reply=%{public}d", ret);
     return ret;
 }
-int32_t DataCollectManagerProxy::SetSubscribeUnMute(const SecurityEventFilter &subscribeMute,
+int32_t DataCollectManagerProxy::Unmute(const SecurityEventFilter &subscribeMute,
     const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
 {
-    SGLOGI("Start DataCollectManagerProxy SetSubscribeUnMute");
+    SGLOGI("Start DataCollectManagerProxy Unmute");
     MessageParcel data;
     MessageParcel reply;
 
@@ -391,7 +391,7 @@ int32_t DataCollectManagerProxy::SetSubscribeUnMute(const SecurityEventFilter &s
     }
 
     if (!data.WriteString(sdkFlag)) {
-        SGLOGE("failed to write sdkFlag for SetSubscribeUnMute");
+        SGLOGE("failed to write sdkFlag for Unmute");
         return WRITE_ERR;
     }
     data.WriteRemoteObject(callback);

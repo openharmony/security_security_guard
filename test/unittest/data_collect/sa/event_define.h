@@ -57,6 +57,7 @@ using SecurityCollectorEventMuteFilter = struct {
     int64_t eventId;
     SecurityCollectorEventMuteType type;
     std::vector<std::string> mutes;
+    bool isSetMute;
 };
 } // namespace OHOS::Security::SecurityCollector
 #endif // SECURITY_COLLECTOR_EVENT_INFO_H

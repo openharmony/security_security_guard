@@ -68,7 +68,7 @@ bool AcquireDataSubscribeManagerFuzzTest(const uint8_t* data, size_t size)
     AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
     AcquireDataSubscribeManager::GetInstance().BatchPublish(event);
-    AcquireDataSubscribeManager::GetInstance().SubscribeSc(eventId);
+    AcquireDataSubscribeManager::GetInstance().SubscribeSc(eventId, obj);
     AcquireDataSubscribeManager::GetInstance().UnSubscribeSc(eventId);
     return true;
 }

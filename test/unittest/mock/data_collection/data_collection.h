@@ -35,8 +35,8 @@ public:
     virtual int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
         std::vector<SecurityEvent> &events) = 0;
     virtual int32_t QuerySecurityEventConfig(std::string &result) = 0;
-    virtual bool SetMute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag) = 0;
-    virtual bool SetUnMute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag) = 0;
+    virtual bool Mute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag) = 0;
+    virtual bool Unmute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag) = 0;
 };
 
 class DataCollection : public BaseDataCollection {
@@ -54,8 +54,8 @@ public:
     MOCK_METHOD2(QuerySecurityEvent, int32_t(const std::vector<SecurityEventRuler> rulers,
         std::vector<SecurityEvent> &events));
     MOCK_METHOD1(QuerySecurityEventConfig, int32_t(std::string &result));
-    MOCK_METHOD2(SetMute, bool(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag));
-    MOCK_METHOD2(SetUnMute, bool(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag));
+    MOCK_METHOD2(Mute, bool(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag));
+    MOCK_METHOD2(Unmute, bool(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag));
     void CloseLib() {};
 };
 }
