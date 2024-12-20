@@ -786,9 +786,10 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc01, TestSiz
     SecurityCollector::Event event {
         .eventId = 111
     };
+    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     adsm.scSubscribeMap_.insert({111,
         std::make_shared<AcquireDataSubscribeManager::SecurityCollectorSubscriber>(event)});
-    int result = adsm.SubscribeSc(111);
+    int result = adsm.SubscribeSc(111, obj);
     EXPECT_EQ(result, SUCCESS);
 }
 
@@ -805,10 +806,11 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc02, TestSiz
         config.prog = "security_guard";
         return true;
     });
-    int result = adsm.SubscribeSc(111);
-    EXPECT_EQ(result, SUCCESS);
+    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    int result = adsm.SubscribeSc(111, obj);
+    EXPECT_EQ(result, FAILED);
     result = adsm.UnSubscribeSc(111);
-    EXPECT_EQ(result, SUCCESS);
+    EXPECT_EQ(result, FAILED);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc03, TestSize.Level1)
@@ -824,8 +826,9 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc03, TestSiz
         config.prog = "";
         return true;
     });
+    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), Subscribe(_)).WillOnce(Return(FAILED));
-    int result = adsm.SubscribeSc(111);
+    int result = adsm.SubscribeSc(111, obj);
     EXPECT_EQ(result, FAILED);
     result = adsm.UnSubscribeSc(111);
     EXPECT_EQ(result, FAILED);
@@ -844,8 +847,9 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc04, TestSiz
         config.prog = "";
         return true;
     });
+    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), Subscribe(_)).WillOnce(Return(SUCCESS));
-    int result = adsm.SubscribeSc(111);
+    int result = adsm.SubscribeSc(111, obj);
     EXPECT_EQ(result, SUCCESS);
     EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), Unsubscribe(_)).WillOnce(Return(SUCCESS));
     result = adsm.UnSubscribeSc(111);

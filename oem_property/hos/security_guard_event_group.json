@@ -1,7 +1,7 @@
 {
     "eventGroupList" : [
         {
-            "eventGroupName" : "securityEvent",
+            "eventGroupName" : "securityGroup",
             "eventList" : [
                 "1011015001",
                 "1011015014"

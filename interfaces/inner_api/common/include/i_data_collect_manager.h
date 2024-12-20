@@ -64,9 +64,9 @@ public:
         const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &updateInfo) = 0;
     virtual int32_t QuerySecurityEventConfig(std::string &result) = 0;
-    virtual int32_t SetSubscribeMute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
+    virtual int32_t Mute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
         const std::string &sdkFlag) = 0;
-    virtual int32_t SetSubscribeUnMute(const SecurityEventFilter &subscribeMute,
+    virtual int32_t Unmute(const SecurityEventFilter &subscribeMute,
         const sptr<IRemoteObject> &callback, const std::string &sdkFlag) = 0;
 };
 

@@ -1233,7 +1233,7 @@ static int32_t OnNotifyEvent(const Event &event, napi_env env, napi_ref ref, Sub
 
 class SubscriberPtr : public ICollectorSubscriber {
 public:
-    explicit SubscriberPtr(const Event &event) : ICollectorSubscriber(event, -1, false, "securityEvent") {};
+    explicit SubscriberPtr(const Event &event) : ICollectorSubscriber(event, -1, false, "securityGroup") {};
     ~SubscriberPtr() override = default;
 
     int32_t OnNotify(const Event &event) override

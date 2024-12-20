@@ -53,6 +53,9 @@ void SecurityCollectorSubscriberManager::NotifySubscriber(const Event &event)
     std::lock_guard<std::mutex> lock(collectorMutex_);
     LOGD("publish event: eventid:%{public}" PRId64 ", version:%{public}s, extra:%{public}s",
         event.eventId, event.version.c_str(), event.extra.c_str());
+    for (auto iter : event.eventSubscribes) {
+        LOGD("publish event: subscribe:%{public}s", iter.c_str());
+    }
     const auto it = eventToSubscribers_.find(event.eventId);
     if (it == eventToSubscribers_.end()) {
         return;

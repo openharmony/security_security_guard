@@ -396,18 +396,23 @@ HWTEST_F(InnerApiCollectorTest, SecurityCollectorManagerCallbackStubTest001, tes
     MessageParcel reply;
     MessageOption option;
     uint32_t code = 0;
-    uint32_t uint32 = 0;
+    int64_t eventId = 0;
     std::string string = "test";
+    std::vector<std::string> vec ={{"1111111111"}, "222222222"};
     int ret = stub.OnRemoteRequest(code, datas, reply, option);
     EXPECT_TRUE(ret == NO_PERMISSION);
     datas.WriteInterfaceToken(ISecurityCollectorManagerCallback::GetDescriptor());
     ret = stub.OnRemoteRequest(code, datas, reply, option);
     EXPECT_FALSE(ret == SUCCESS);
     datas.WriteInterfaceToken(ISecurityCollectorManagerCallback::GetDescriptor());
-    datas.WriteUint32(uint32);
+    datas.WriteInt64(eventId);
     datas.WriteString(string);
     datas.WriteString(string);
     datas.WriteString(string);
+    datas.WriteUint32(static_cast<uint32_t>(vec.size()));
+    for (auto iter : vec) {
+        datas.WriteString(iter);
+    }
     ret = stub.OnRemoteRequest(SecurityCollectorManagerCallbackStub::CMD_COLLECTOR_NOTIFY, datas, reply, option);
     EXPECT_TRUE(ret == SUCCESS);
 }

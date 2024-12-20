@@ -46,10 +46,10 @@ int32_t SecurityCollectorManagerStub::OnRemoteRequest(uint32_t code, MessageParc
                 return HandleSecurityEventQueryCmd(data, reply);
             }
             case CMD_SECURITY_EVENT_MUTE: {
-                return HandleSetSubscribeMute(data, reply);
+                return HandleMute(data, reply);
             }
             case CMD_SECURITY_EVENT_UNMUTE: {
-                return HandleSetSubscribeUnMute(data, reply);
+                return HandleUnmute(data, reply);
             }
             default: {
                 break;
@@ -195,7 +195,7 @@ int32_t SecurityCollectorManagerStub::HandleSecurityEventQueryCmd(MessageParcel 
         LOGE("QuerySecurityEvent failed, ret=%{public}d", ret);
         return ret;
     }
-    if (!reply.WriteUint32(events.size())) {
+    if (!reply.WriteUint32(static_cast<uint32_t>(events.size()))) {
         LOGE("failed to WriteInt32 for parcelable vector size");
         return WRITE_ERR;
     }
@@ -209,7 +209,7 @@ int32_t SecurityCollectorManagerStub::HandleSecurityEventQueryCmd(MessageParcel 
     return SUCCESS;
 }
 
-int32_t SecurityCollectorManagerStub::HandleSetSubscribeMute(MessageParcel &data, MessageParcel &reply)
+int32_t SecurityCollectorManagerStub::HandleMute(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("%{public}s", __func__);
     uint32_t expected = sizeof(uint64_t);
@@ -229,12 +229,12 @@ int32_t SecurityCollectorManagerStub::HandleSetSubscribeMute(MessageParcel &data
     if (!data.ReadString(flag)) {
         LOGE("failed to get SubscribeMute flag");
     }
-    int32_t ret = SetSubscribeMute(*info, flag);
+    int32_t ret = Mute(*info, flag);
     reply.WriteInt32(ret);
     return ret;
 }
 
-int32_t SecurityCollectorManagerStub::HandleSetSubscribeUnMute(MessageParcel &data, MessageParcel &reply)
+int32_t SecurityCollectorManagerStub::HandleUnmute(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("%{public}s", __func__);
     uint32_t expected = sizeof(uint64_t);
@@ -255,7 +255,7 @@ int32_t SecurityCollectorManagerStub::HandleSetSubscribeUnMute(MessageParcel &da
     if (!data.ReadString(flag)) {
         LOGE("failed to get SubscribeUnMute flag");
     }
-    int32_t ret = SetSubscribeUnMute(*info, flag);
+    int32_t ret = Unmute(*info, flag);
     reply.WriteInt32(ret);
     return ret;
 }

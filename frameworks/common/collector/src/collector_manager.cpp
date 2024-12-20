@@ -182,10 +182,10 @@ int32_t CollectorManager::CollectorStop(const SecurityCollector::SecurityCollect
     return SUCCESS;
 }
 
-int32_t CollectorManager::SetSubscribeMute(const SecurityCollectorEventFilter &subscribeMute,
+int32_t CollectorManager::Mute(const SecurityCollectorEventFilter &subscribeMute,
     const std::string &callbackFlag)
 {
-    LOGI("enter CollectorManager SetSubscribeMute");
+    LOGI("enter CollectorManager Mute");
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
     auto proxy = iface_cast<ISecurityCollectorManager>(object);
     if (proxy == nullptr) {
@@ -193,19 +193,19 @@ int32_t CollectorManager::SetSubscribeMute(const SecurityCollectorEventFilter &s
         return NULL_OBJECT;
     }
 
-    int32_t ret = proxy->SetSubscribeMute(subscribeMute, callbackFlag);
+    int32_t ret = proxy->Mute(subscribeMute, callbackFlag);
     if (ret != SUCCESS) {
-        LOGI("SetSubscribeMute failed, ret=%{public}d", ret);
+        LOGI("Mute failed, ret=%{public}d", ret);
         return ret;
     }
-    LOGI("SetSubscribeMute result, ret=%{public}d", ret);
+    LOGI("Mute result, ret=%{public}d", ret);
     return SUCCESS;
 }
 
-int32_t CollectorManager::SetSubscribeUnMute(const SecurityCollectorEventFilter &subscribeMute,
+int32_t CollectorManager::Unmute(const SecurityCollectorEventFilter &subscribeMute,
     const std::string &callbackFlag)
 {
-    LOGI("enter CollectorManager SetSubscribeUnMute");
+    LOGI("enter CollectorManager Unmute");
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
     auto proxy = iface_cast<ISecurityCollectorManager>(object);
     if (proxy == nullptr) {
@@ -213,12 +213,12 @@ int32_t CollectorManager::SetSubscribeUnMute(const SecurityCollectorEventFilter 
         return NULL_OBJECT;
     }
 
-    int32_t ret = proxy->SetSubscribeUnMute(subscribeMute, callbackFlag);
+    int32_t ret = proxy->Unmute(subscribeMute, callbackFlag);
     if (ret != SUCCESS) {
-        LOGI("SetSubscribeUnMute failed, ret=%{public}d", ret);
+        LOGI("Unmute failed, ret=%{public}d", ret);
         return ret;
     }
-    LOGI("SetSubscribeUnMute result, ret=%{public}d", ret);
+    LOGI("Unmute result, ret=%{public}d", ret);
     return SUCCESS;
 }
 }

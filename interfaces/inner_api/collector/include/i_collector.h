@@ -29,8 +29,8 @@ public:
     virtual int Unsubscribe(int64_t eventId) {return 0;};
     virtual int Query(const SecurityEventRuler &ruler, std::vector<SecurityEvent> &events) {return 0;};
     virtual int IsStartWithSub() {return 0;};
-    virtual int SetMute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag) {return -1;};
-    virtual int SetUnMute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag) {return -1;};
+    virtual int Mute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag) {return -1;};
+    virtual int Unmute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag) {return -1;};
 };
 } // namespace OHOS::Security::SecurityCollector
 #endif // SECURITY_COLLECTOR_NOTIFIER_H

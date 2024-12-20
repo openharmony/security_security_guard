@@ -69,8 +69,8 @@ namespace {
         {"UnSubscribe", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
         {"ConfigUpdate", {MANAGE_CONFIG_PERMISSION}},
         {"QuerySecurityEventConfig", {MANAGE_CONFIG_PERMISSION}},
-        {"SetSubscribeMute", {QUERY_SECURITY_EVENT_PERMISSION}},
-        {"SetSubscribeUnMute", {QUERY_SECURITY_EVENT_PERMISSION}},
+        {"Mute", {QUERY_SECURITY_EVENT_PERMISSION}},
+        {"Unmute", {QUERY_SECURITY_EVENT_PERMISSION}},
     };
     std::unordered_set<std::string> g_configCacheFilesSet;
     constexpr uint32_t FINISH = 0;
@@ -188,7 +188,7 @@ int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::strin
         .content = content
     };
     auto task = [event] () mutable {
-        int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, event);
+        int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, event, {});
         if (code != SUCCESS) {
             SGLOGE("insert event error, %{public}d", code);
         }
@@ -319,17 +319,10 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
         BigData::ReportSgSubscribeEvent(event);
         return ret;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (deathRecipient_ == nullptr) {
-        deathRecipient_ = new (std::nothrow) SubscriberDeathRecipient(this);
-        if (deathRecipient_ == nullptr) {
-            SGLOGE("no memory");
-            event.ret = NULL_OBJECT;
-            BigData::ReportSgSubscribeEvent(event);
-            return NULL_OBJECT;
-        }
+    ret = SetDeathCallBack(event, callback);
+    if (ret != SUCCESS) {
+        return ret;
     }
-    callback->AddDeathRecipient(deathRecipient_);
     ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, callback);
     event.ret = ret;
     SGLOGI("DataCollectManagerService, InsertSubscribeRecord eventId=%{public}" PRId64, event.eventId);
@@ -704,10 +697,10 @@ int32_t DataCollectManagerService::QuerySecurityEventConfig(std::string &result)
     return QueryEventConfig(result);
 }
 
-int32_t DataCollectManagerService::SetSubscribeMute(const SecurityEventFilter &subscribeMute,
+int32_t DataCollectManagerService::Mute(const SecurityEventFilter &subscribeMute,
     const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
 {
-    SGLOGI("enter DataCollectManagerService SetSubscribeMute.");
+    SGLOGI("enter DataCollectManagerService Mute.");
     SgSubscribeEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
@@ -723,6 +716,10 @@ int32_t DataCollectManagerService::SetSubscribeMute(const SecurityEventFilter &s
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSetMuteEvent(event);
+        return ret;
+    }
+    ret = SetDeathCallBack(event, callback);
+    if (ret != SUCCESS) {
         return ret;
     }
     ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMutue(subscribeMute, callback, sdkFlag);
@@ -730,10 +727,11 @@ int32_t DataCollectManagerService::SetSubscribeMute(const SecurityEventFilter &s
     BigData::ReportSetMuteEvent(event);
     return ret;
 }
-int32_t DataCollectManagerService::SetSubscribeUnMute(const SecurityEventFilter &subscribeMute,
+
+int32_t DataCollectManagerService::Unmute(const SecurityEventFilter &subscribeMute,
     const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
 {
-    SGLOGI("enter DataCollectManagerService SetSubscribeUnMute.");
+    SGLOGI("enter DataCollectManagerService Unmute.");
     SgSubscribeEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
@@ -751,9 +749,28 @@ int32_t DataCollectManagerService::SetSubscribeUnMute(const SecurityEventFilter 
         BigData::ReportSetUnMuteEvent(event);
         return ret;
     }
+    ret = SetDeathCallBack(event, callback);
+    if (ret != SUCCESS) {
+        return ret;
+    }
     ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMutue(subscribeMute, callback, sdkFlag);
     event.ret = ret;
     BigData::ReportSetUnMuteEvent(event);
     return ret;
+}
+
+int32_t DataCollectManagerService::SetDeathCallBack(SgSubscribeEvent event, const sptr<IRemoteObject> &callback)
+{
+    if (deathRecipient_ == nullptr) {
+        deathRecipient_ = new (std::nothrow) SubscriberDeathRecipient(this);
+        if (deathRecipient_ == nullptr) {
+            SGLOGE("no memory");
+            event.ret = NULL_OBJECT;
+            BigData::ReportSgSubscribeEvent(event);
+            return NULL_OBJECT;
+        }
+    }
+    callback->AddDeathRecipient(deathRecipient_);
+    return SUCCESS;
 }
 }
