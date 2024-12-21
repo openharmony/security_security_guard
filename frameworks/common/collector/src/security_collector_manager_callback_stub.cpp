@@ -44,7 +44,7 @@ int32_t SecurityCollectorManagerCallbackStub::OnRemoteRequest(uint32_t code, Mes
         for (uint32_t i = 0; i < size; i++) {
             event.eventSubscribes.insert(data.ReadString());
         }
-        OnNotify(event);;
+        OnNotify(event);
         return SUCCESS;
     }
 

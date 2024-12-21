@@ -422,7 +422,6 @@ void AcquireDataSubscribeManager::CollectorListenner::OnNotify(const SecurityCol
 }
 int32_t AcquireDataSubscribeManager::SecurityCollectorSubscriber::OnNotify(const SecurityCollector::Event &event)
 {
-
     AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
     return 0;
 }
