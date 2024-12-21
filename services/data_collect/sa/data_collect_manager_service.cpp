@@ -77,6 +77,8 @@ namespace {
     constexpr uint32_t FINISH = 0;
     constexpr uint32_t CONTINUE = 1;
     constexpr size_t MAX_DISTRIBUTE_LENS = 100;
+    constexpr uint64_t CLEAR_TIME = 3600000000;
+    constexpr uint32_t FFRT_MAX_NUM = 256;
 #ifndef SECURITY_GUARD_ENABLE_EXT
     const std::string TRUST_LIST_FILE_PATH = "/system/etc/config_update_trust_list.json";
 #else
@@ -168,6 +170,37 @@ void DataCollectManagerService::DumpEventInfo(int fd, int64_t eventId)
     dprintf(fd, "report version : %s\n", secEvent.version.c_str());
 }
 
+bool DataCollectManagerService::IsDiscardEventInThisHour(int64_t eventId)
+{
+    std::lock_guard<std::mutex> lock(eventsMutex_);
+    {
+        if (reportedEventsMap_.size() == 0) {
+            auto clearTask = [&] () mutable {
+                std::lock_guard<std::mutex> lock(eventsMutex_);
+                reportedEventsMap_.clear();
+                SGLOGI("clear reportedEventsMap_");
+            };
+            ffrt::submit(clearTask, {}, {}, ffrt::task_attr().delay(CLEAR_TIME));
+        }
+        if (reportedEventsMap_.count(eventId) != 0) {
+            EventCfg config;
+            bool success = ConfigDataManager::GetInstance().GetEventConfig(eventId, config);
+            if (!success) {
+                SGLOGE("not found event, id=%{public}" PRId64, eventId);
+                return true;
+            }
+            if (reportedEventsMap_[eventId].load() >= config.storageRomNums) {
+                SGLOGD("event is reported too much in this hour, eventid is %{public}" PRId64, eventId);
+                return true;
+            }
+            reportedEventsMap_[eventId]++;
+        } else {
+            reportedEventsMap_[eventId] = 1;
+        }
+    }
+    return false;
+}
+
 int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
     std::string &content, bool isSync)
 {
@@ -188,12 +221,24 @@ int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::strin
         .date = time,
         .content = content
     };
-    auto task = [event] () mutable {
+    auto task = [&, event] () mutable {
+        taskCount_++;
         int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, event, {});
         if (code != SUCCESS) {
             SGLOGE("insert event error, %{public}d", code);
         }
+        SGLOGD("ffrt task num is %{public}u", taskCount_.load());
+        taskCount_--;
     };
+    if (taskCount_.load() > FFRT_MAX_NUM) {
+        discardedCount_++;
+        SGLOGD("too much event reported, ffrt task num is %{public}u, eventid is %{public}" PRId64,
+            discardedCount_.load(), eventId);
+        return SUCCESS;
+    }
+    if (IsDiscardEventInThisHour(eventId)) {
+        return SUCCESS;
+    }
     ffrt::submit(task);
     return SUCCESS;
 }
