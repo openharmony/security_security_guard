@@ -57,7 +57,7 @@ public:
     virtual int32_t Unsubscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
-        const sptr<IRemoteObject> &callback) = 0;
+        const sptr<IRemoteObject> &callback, const std::string &eventGroup) = 0;
     virtual int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,

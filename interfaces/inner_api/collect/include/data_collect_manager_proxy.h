@@ -37,7 +37,7 @@ public:
     int32_t Unsubscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) override;
     int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
-        const sptr<IRemoteObject> &callback) override;
+        const sptr<IRemoteObject> &callback, const std::string &eventGroup) override;
     int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) override;
     int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,

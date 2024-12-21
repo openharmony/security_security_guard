@@ -29,6 +29,7 @@
 
 namespace {
     constexpr uint32_t MAX_RESUB_COUNTS = 3;
+    const std::string SECURITY_GROUP = "securityGroup";
 }
 namespace OHOS::Security::SecurityGuard {
 DataCollectManager& DataCollectManager::GetInstance()
@@ -55,8 +56,15 @@ DataCollectManager::DataCollectManager() : callback_(new (std::nothrow) AcquireD
         sdkFlag_ = std::to_string(hash);
     }
 }
+
 int32_t DataCollectManager::QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
-                                               std::shared_ptr<SecurityEventQueryCallback> callback)
+    std::shared_ptr<SecurityEventQueryCallback> callback)
+{
+    return QuerySecurityEvent(rulers, callback, SECURITY_GROUP);
+}
+
+int32_t DataCollectManager::QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
+    std::shared_ptr<SecurityEventQueryCallback> callback, const std::string &eventGroup)
 {
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
@@ -77,7 +85,7 @@ int32_t DataCollectManager::QuerySecurityEvent(std::vector<SecurityCollector::Se
         return -1;
     }
 
-    int32_t ret = proxy->QuerySecurityEvent(rulers, obj);
+    int32_t ret = proxy->QuerySecurityEvent(rulers, obj, eventGroup);
     if (ret != 0) {
         SGLOGE("QuerySecurityEvent error, ret=%{public}d", ret);
         return ret;
