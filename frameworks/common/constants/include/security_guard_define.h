@@ -91,7 +91,6 @@ using RequestCondition = struct {
     std::string endTime;
 };
 
-using RequestRiskDataCallback = std::function<int32_t(std::string &, std::string &, uint32_t, const std::string &)>;
 using ResultCallback = std::function<int32_t (const std::string &devId, uint32_t modelId, const std::string &result)>;
 
 const size_t MAX_QUERY_EVENT_SIZE = 1000;

@@ -33,6 +33,16 @@ int32_t SecurityCollectorManagerCallbackProxy::OnNotify(const Event &event)
     data.WriteString(event.content);
     data.WriteString(event.extra);
 
+    if (!data.WriteUint32(event.eventSubscribes.size())) {
+        LOGE("failed to write eventSubscribes size");
+        return WRITE_ERR;
+    }
+    for (auto iter : event.eventSubscribes) {
+        if (!data.WriteString(iter)) {
+            LOGE("failed to write eventSubscribes");
+            return WRITE_ERR;
+        }
+    }
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         LOGE("remote is nullptr, code = %{public}u", static_cast<uint32_t>(CMD_COLLECTOR_NOTIFY));

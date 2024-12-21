@@ -21,7 +21,7 @@
 
 #define private public
 #define protected public
-#include "acquire_data_manager.h"
+#include "data_collect_manager.h"
 #include "acquire_data_manager_callback_service.h"
 #include "acquire_data_manager_callback_stub.h"
 #include "data_collect_manager_callback_service.h"
@@ -67,7 +67,7 @@ class MockAcquireDataManagerCallbackStub : public AcquireDataManagerCallbackStub
 public:
     explicit MockAcquireDataManagerCallbackStub() = default;
     ~MockAcquireDataManagerCallbackStub() override = default;
-    int32_t OnNotify(const Security::SecurityCollector::Event &event) override { return 0; };
+    int32_t OnNotify(const std::vector<Security::SecurityCollector::Event> &events) override { return 0; };
 };
 
 class MockRiskAnalysisManagerCallbackStub : public RiskAnalysisManagerCallbackStub {
@@ -119,9 +119,9 @@ void AcquireDataManagerFuzzTest(const uint8_t* data, size_t size)
     std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
     Security::SecurityCollector::Event event{eventId, string, string, string};
     auto subscriber = std::make_shared<MockCollectorSubscriber>(event);
-    AcquireDataManager::GetInstance().Subscribe(subscriber);
-    AcquireDataManager::GetInstance().Unsubscribe(subscriber);
-    AcquireDataManager::GetInstance().HandleDecipient();
+    DataCollectManager::GetInstance().Subscribe(subscriber);
+    DataCollectManager::GetInstance().Unsubscribe(subscriber);
+    DataCollectManager::GetInstance().HandleDecipient();
 }
 
 void AcquireDataManagerCallbackServiceFuzzTest(const uint8_t* data, size_t size)
@@ -134,9 +134,8 @@ void AcquireDataManagerCallbackServiceFuzzTest(const uint8_t* data, size_t size)
     offset += sizeof(int64_t);
     std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
     Security::SecurityCollector::Event event{eventId, string, string, string};
-    auto subscriber = std::make_shared<MockCollectorSubscriber>(event);
-    AcquireDataManagerCallbackService service{subscriber};
-    service.OnNotify(event);
+    AcquireDataManagerCallbackService service;
+    service.OnNotify({event});
 }
 
 void AcquireDataManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)
@@ -310,7 +309,7 @@ void DataCollectManagerProxySubscribeFuzzTest(const uint8_t* data, size_t size)
     SecurityCollectorSubscribeInfo subscribeInfo{};
     DataCollectManagerProxy proxy{callback};
     proxy.Subscribe(subscribeInfo, objSub);
-    proxy.Unsubscribe(objSub);
+    proxy.Unsubscribe(subscribeInfo, objSub);
 }
 
 void DataCollectManagerProxyQuerySecurityEventFuzzTest(const uint8_t* data, size_t size)

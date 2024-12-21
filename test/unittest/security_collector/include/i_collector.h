@@ -25,10 +25,12 @@ class ICollector {
 public:
     virtual int Start(std::shared_ptr<ICollectorFwk> api) = 0;
     virtual int Stop() = 0;
-    virtual int Subscribe(int64_t eventId);
-    virtual int Unsubscribe(int64_t eventId);
-    virtual int Query(const SecurityEventRuler &ruler, std::vector<SecurityEvent> &events);
-    virtual int IsStartWithSub();
+    virtual int Subscribe(int64_t eventId) {return 0;};
+    virtual int Unsubscribe(int64_t eventId) {return 0;};
+    virtual int Query(const SecurityEventRuler &ruler, std::vector<SecurityEvent> &events) {return 0;};
+    virtual int IsStartWithSub() {return 0;};
+    virtual int Mute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag) {return 0;};
+    virtual int Unmute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag) {return 0;};
 };
 } // namespace OHOS::Security::SecurityCollector
 #endif // SECURITY_COLLECTOR_NOTIFIER_H

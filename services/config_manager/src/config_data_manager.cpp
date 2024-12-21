@@ -49,6 +49,33 @@ void ConfigDataManager::InsertEventToTableMap(int64_t eventId, std::string table
     eventToTableMap_[eventId] = table;
 }
 
+void ConfigDataManager::InsertEventGroupMap(const std::unordered_map<std::string, EventGroupCfg> &eventGroupMap)
+{
+    std::lock_guard<std::mutex> lock(eventGroupMutex_);
+    eventGroupMap_ = eventGroupMap;
+}
+
+bool ConfigDataManager::GetEventGroupConfig(const std::string &groupName, EventGroupCfg &config)
+{
+    std::lock_guard<std::mutex> lock(eventGroupMutex_);
+    auto it = eventGroupMap_.find(groupName);
+    if (it != eventGroupMap_.end()) {
+        config = it->second;
+        return true;
+    }
+    return false;
+}
+
+bool ConfigDataManager::GetIsBatchUpload(const std::string &groupName)
+{
+    std::lock_guard<std::mutex> lock(eventGroupMutex_);
+    auto it = eventGroupMap_.find(groupName);
+    if (it != eventGroupMap_.end()) {
+        return it->second.isBatchUpload;
+    }
+    return false;
+}
+
 void ConfigDataManager::ResetModelMap()
 {
     std::lock_guard<std::mutex> lock(modelMutex_);

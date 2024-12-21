@@ -21,7 +21,6 @@
 #include "security_guard_log.h"
 #define private public
 #define protected public
-#include "acquire_data_manager.h"
 #include "acquire_data_manager_callback_service.h"
 #include "acquire_data_manager_callback_stub.h"
 #include "data_collect_manager_callback_service.h"
@@ -70,7 +69,7 @@ class MockAcquireDataManagerCallbackStub : public AcquireDataManagerCallbackStub
 public:
     explicit MockAcquireDataManagerCallbackStub() = default;
     ~MockAcquireDataManagerCallbackStub() override = default;
-    int32_t OnNotify(const Security::SecurityCollector::Event &event) override { return 0; };
+    int32_t OnNotify(const std::vector<Security::SecurityCollector::Event> &events) override { return 0; };
 };
 
 class MockRiskAnalysisManagerCallbackStub : public RiskAnalysisManagerCallbackStub {
@@ -150,14 +149,20 @@ HWTEST_F(InnerApiCollectorTest, AcquireDataManagerTest001, testing::ext::TestSiz
 {
     Security::SecurityCollector::Event event;
     auto subscriber = std::make_shared<MockCollectorSubscriber>(event);
-    int ret = AcquireDataManager::GetInstance().Subscribe(subscriber);
+    int ret = DataCollectManager::GetInstance().Subscribe(subscriber);
     EXPECT_FALSE(ret == SUCCESS);
-    ret = AcquireDataManager::GetInstance().Unsubscribe(subscriber);
+    ret = DataCollectManager::GetInstance().Unsubscribe(subscriber);
     EXPECT_TRUE(ret == BAD_PARAM);
-    AcquireDataManager::GetInstance().HandleDecipient();
+    DataCollectManager::GetInstance().HandleDecipient();
     
-    AcquireDataManagerCallbackService service{subscriber};
-    ret = service.OnNotify(event);
+    AcquireDataManagerCallbackService service;
+    ret = service.OnNotify({event});
+    EXPECT_TRUE(ret == FAILED);
+
+    service.RegistCallBack(
+        [] (const Security::SecurityCollector::Event &event) {}
+    );
+    ret = service.OnNotify({event});
     EXPECT_TRUE(ret == SUCCESS);
 }
 
@@ -325,7 +330,7 @@ HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest003, testing::ext::Te
     DataCollectManagerProxy proxy{callback};
     int ret = proxy.Subscribe(subscribeInfo, objSub);
     EXPECT_EQ(ret, NO_PERMISSION);
-    ret = proxy.Unsubscribe(objSub);
+    ret = proxy.Unsubscribe(subscribeInfo, objSub);
     EXPECT_EQ(ret, NO_PERMISSION);
 }
  
@@ -391,18 +396,23 @@ HWTEST_F(InnerApiCollectorTest, SecurityCollectorManagerCallbackStubTest001, tes
     MessageParcel reply;
     MessageOption option;
     uint32_t code = 0;
-    uint32_t uint32 = 0;
+    int64_t eventId = 0;
     std::string string = "test";
+    std::vector<std::string> vec ={{"1111111111"}, "222222222"};
     int ret = stub.OnRemoteRequest(code, datas, reply, option);
     EXPECT_TRUE(ret == NO_PERMISSION);
     datas.WriteInterfaceToken(ISecurityCollectorManagerCallback::GetDescriptor());
     ret = stub.OnRemoteRequest(code, datas, reply, option);
     EXPECT_FALSE(ret == SUCCESS);
     datas.WriteInterfaceToken(ISecurityCollectorManagerCallback::GetDescriptor());
-    datas.WriteUint32(uint32);
+    datas.WriteInt64(eventId);
     datas.WriteString(string);
     datas.WriteString(string);
     datas.WriteString(string);
+    datas.WriteUint32(static_cast<uint32_t>(vec.size()));
+    for (auto iter : vec) {
+        datas.WriteString(iter);
+    }
     ret = stub.OnRemoteRequest(SecurityCollectorManagerCallbackStub::CMD_COLLECTOR_NOTIFY, datas, reply, option);
     EXPECT_TRUE(ret == SUCCESS);
 }
@@ -474,6 +484,7 @@ HWTEST_F(InnerApiCollectorTest, SecurityCollectorSubscribeInfoTest001, testing::
     parcel.WriteInt64(int64);
     parcel.WriteBool(true);
     parcel.WriteInt64(int64);
+    parcel.WriteString(string);
     parcel.WriteString(string);
     parcel.WriteString(string);
     parcel.WriteString(string);

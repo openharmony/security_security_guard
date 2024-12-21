@@ -30,7 +30,8 @@ class BaseDatabaseManager {
 public:
     virtual void Init() = 0;
     virtual int32_t SetAuditState(bool enable) = 0;
-    virtual int InsertEvent(uint32_t source, SecEvent& event) = 0;
+    virtual int InsertEvent(uint32_t source, const SecEvent& event,
+        const std::set<std::string> &eventSubscribes = {}) = 0;
     virtual int QueryAllEvent(std::string table, std::vector<SecEvent> &events) = 0;
     virtual int QueryRecentEventByEventId(int64_t eventId, SecEvent &event) = 0;
     virtual int QueryRecentEventByEventId(std::string table, const std::vector<int64_t> &eventId,
@@ -61,7 +62,8 @@ public:
 
     MOCK_METHOD0(Init, void());
     MOCK_METHOD1(SetAuditState, int32_t(bool enable));
-    MOCK_METHOD2(InsertEvent, int(uint32_t source, SecEvent& event));
+    MOCK_METHOD3(InsertEvent, int(uint32_t source, const SecEvent& event,
+        const std::set<std::string> &eventSubscribes));
     MOCK_METHOD2(QueryAllEvent, int(std::string table, std::vector<SecEvent> &events));
     MOCK_METHOD2(QueryRecentEventByEventId, int(int64_t eventId, SecEvent &event));
     MOCK_METHOD3(QueryRecentEventByEventId, int(std::string table, const std::vector<int64_t> &eventId,

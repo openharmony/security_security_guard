@@ -63,6 +63,14 @@ group("security_collector_service_build_module") {
   }
 }
 
+group("security_collector_manager_build_module") {
+  if (is_standard_system) {
+    deps = [
+      "${sg_root_dir}/services/collector_manager:security_collector_manager",
+    ]
+  }
+}
+
 group("security_guard_unit_test") {
   testonly = true
   if (is_standard_system) {
@@ -86,7 +94,6 @@ group("security_guard_build_module_test") {
     deps += [
       "${sg_root_dir}/frameworks/common/classify/test:unittest",
       "${sg_root_dir}/frameworks/common/collect/test:unittest",
-      "${sg_root_dir}/frameworks/common/obtaindata/test:unittest",
     ]
   }
 }
