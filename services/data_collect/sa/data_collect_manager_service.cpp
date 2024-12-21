@@ -358,7 +358,7 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     if (subscribeInfo.GetEventGroup() == "") {
         ret = IsApiHasPermission("Subscribe");
     } else {
-        ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(), subscribeInfo.GetEvent().eventId);
+        ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(), {1, subscribeInfo.GetEvent().eventId});
     }
     if (ret != SUCCESS) {
         event.ret = ret;
@@ -386,7 +386,7 @@ int32_t DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
     if (subscribeInfo.GetEventGroup() == "") {
         ret = IsApiHasPermission("Subscribe");
     } else {
-        ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(), subscribeInfo.GetEvent().eventId);
+        ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(), {1, subscribeInfo.GetEvent().eventId});
     }
     if (ret != SUCCESS) {
         event.ret = ret;
@@ -442,10 +442,23 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
 }
 
 int32_t DataCollectManagerService::QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
-    const sptr<IRemoteObject> &callback)
+    const sptr<IRemoteObject> &callback, const std::string &eventGroup)
 {
     SGLOGI("enter DataCollectManagerService QuerySecurityEvent");
-    int32_t ret = IsApiHasPermission("QuerySecurityEvent");
+    int32_t ret = 0;
+    if (eventGroup == "") {
+        ret = IsApiHasPermission("QuerySecurityEvent");
+    } else {
+        if (rulers.empty()) {
+            SGLOGI("rulers is empty");
+            return NULL_OBJECT;
+        }
+        std::vector<int64_t> eventIds;
+        for (SecurityCollector::SecurityEventRuler ruler : rulers) {
+            eventIds.push_back(ruler.GetEventId());
+        }
+        ret = IsEventGroupHasPermission(eventGroup, eventIds);
+    }
     if (ret != SUCCESS) {
         return ret;
     }
@@ -558,16 +571,19 @@ int32_t DataCollectManagerService::IsApiHasPermission(const std::string &api)
     return NO_PERMISSION;
 }
 
-int32_t DataCollectManagerService::IsEventGroupHasPermission(const std::string &eventGroup, int64_t eventId)
+int32_t DataCollectManagerService::IsEventGroupHasPermission(const std::string &eventGroup,
+    std::vector<int64_t> eventIds)
 {
     EventGroupCfg config {};
     if (!ConfigDataManager::GetInstance().GetEventGroupConfig(eventGroup, config)) {
         SGLOGE("get event group config fail group = %{public}s", eventGroup.c_str());
         return BAD_PARAM;
     }
-    if (config.eventList.count(eventId) == 0) {
-        SGLOGE("eventid not in eventid list");
-        return BAD_PARAM;
+    for (int16_t eventId : eventIds) {
+        if (config.eventList.count(eventId) == 0) {
+            SGLOGE("eventid not in eventid list");
+            return BAD_PARAM;
+        }
     }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     if (std::any_of(config.permissionList.cbegin(), config.permissionList.cend(),
@@ -759,7 +775,7 @@ int32_t DataCollectManagerService::Mute(const SecurityEventFilter &subscribeMute
         return BAD_PARAM;
     }
     int32_t ret = IsEventGroupHasPermission(subscribeMute.GetMuteFilter().eventGroup,
-        subscribeMute.GetMuteFilter().eventId);
+        {1, subscribeMute.GetMuteFilter().eventId});
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSetMuteEvent(event);
@@ -790,7 +806,7 @@ int32_t DataCollectManagerService::Unmute(const SecurityEventFilter &subscribeMu
         return BAD_PARAM;
     }
     int32_t ret = IsEventGroupHasPermission(subscribeMute.GetMuteFilter().eventGroup,
-        subscribeMute.GetMuteFilter().eventId);
+        {1, subscribeMute.GetMuteFilter().eventId});
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSetUnMuteEvent(event);

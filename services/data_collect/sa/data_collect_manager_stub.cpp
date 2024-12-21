@@ -172,7 +172,7 @@ int32_t DataCollectManagerStub::HandleSecurityEventQueryCmd(MessageParcel &data,
         SGLOGE("actual length error, value=%{public}u", actual);
         return BAD_PARAM;
     }
-
+    std::string eventGroup = data.ReadString();
     uint32_t size = 0;
     if (!data.ReadUint32(size)) {
         SGLOGE("failed to get the event size");
@@ -200,7 +200,7 @@ int32_t DataCollectManagerStub::HandleSecurityEventQueryCmd(MessageParcel &data,
         return BAD_PARAM;
     }
 
-    int32_t ret = QuerySecurityEvent(rulers, callback);
+    int32_t ret = QuerySecurityEvent(rulers, callback, eventGroup);
     reply.WriteInt32(ret);
     return ret;
 }
