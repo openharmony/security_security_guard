@@ -65,7 +65,7 @@
         "//base/security/security_guard/oem_property:security_audit_cfg",
         "//base/security/security_guard/oem_property:security_guard_cfg",
         "//base/security/security_guard/oem_property:config_update_trust_list_cfg",
-        "//base/security/security_guard/oem_property:config_update_trust_list_cfg",
+        "//base/security/security_guard/oem_property:security_guard_event_group_cfg",
         "//base/security/security_guard/oem_property:security_guard_model_cfg",
         "//base/security/security_guard/oem_property:security_guard_event_cfg",
         "//base/security/security_guard:sg_classify_service_build_module",
@@ -74,10 +74,10 @@
         "//base/security/security_guard/sa_profile:security_collector_sa_profile_standard",
         "//base/security/security_guard/sa_profile:security_collector.init",
         "//base/security/security_guard:security_collector_service_build_module",
+        "//base/security/security_guard:security_collector_manager_build_module",
         "//base/security/security_guard/frameworks/common/classify:libsg_classify_sdk",
         "//base/security/security_guard/frameworks/common/collect:libsg_collect_sdk",
-        "//base/security/security_guard/frameworks/common/collector:libsg_collector_sdk",
-        "//base/security/security_guard/frameworks/common/data_collect_manager:libsg_data_collect_manager_sdk"
+        "//base/security/security_guard/frameworks/common/collector:libsg_collector_sdk"
       ],
       "inner_kits": [
         {
@@ -98,7 +98,7 @@
               "sg_collect_client.h",
               "event_info.h",
               "sg_obtaindata_client.h",
-              "acquire_data_manager.h"
+              "data_collect_manager.h"
             ],
             "header_base": "//base/security/security_guard/interfaces/inner_api/collect/include"
           }
@@ -114,15 +114,6 @@
               "event_define.h"
             ],
             "header_base": "//base/security/security_guard/interfaces/inner_api/collector/include"
-          }
-        },
-        {
-          "name": "//base/security/security_guard/frameworks/common/data_collect_manager:libsg_data_collect_manager_sdk",
-          "header": {
-            "header_files": [
-              "data_collect_manager.h"
-            ],
-            "header_base": "//base/security/security_guard/interfaces/inner_api/data_collect_manager/include"
           }
         }
       ],

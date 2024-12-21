@@ -38,6 +38,8 @@ private:
     int32_t HandleStopCmd(MessageParcel &data, MessageParcel &reply);
     int32_t HandleConfigUpdateCmd(MessageParcel &data, MessageParcel &reply);
     int32_t HandleSecurityEventConfigQueryCmd(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleEventMuteCmd(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleEventUnMuteCmd(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace OHOS::Security::SecurityGuard
 

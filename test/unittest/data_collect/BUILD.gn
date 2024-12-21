@@ -36,16 +36,18 @@ ohos_unittest("data_collect_test") {
     "${sg_root_dir}/frameworks/common/database/include",
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/frameworks/common/utils/include",
-    "${sg_root_dir}/services/security_collector/include",
+    "${sg_root_dir}/services/collector_manager/include",
     "${sg_root_dir}/interfaces/inner_api/collector/include",
     "${sg_root_dir}/interfaces/inner_api/common/include",
     "${sg_root_dir}/interfaces/inner_api/collect/include",
   ]
 
   sources = [
-    "${sg_root_dir}/services/security_collector/src/collector_cfg_marshalling.cpp",
-    "${sg_root_dir}/services/security_collector/src/data_collection.cpp",
-    "${sg_root_dir}/services/security_collector/src/lib_loader.cpp",
+    "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
+    "${sg_root_dir}/services/collector_manager/src/collector_cfg_marshalling.cpp",
+    "${sg_root_dir}/services/collector_manager/src/data_collection.cpp",
+    "${sg_root_dir}/services/collector_manager/src/lib_loader.cpp",
   ]
 
   deps = [
@@ -96,20 +98,21 @@ ohos_unittest("SecurityGuardDataCollectTest") {
     "${sg_root_dir}/test/unittest/mock/preferences",
     "${sg_root_dir}/test/unittest/mock/rdb",
     "${sg_root_dir}/services/security_collector/include",
+    "${sg_root_dir}/services/collector_manager/include",
     "${sg_root_dir}/interfaces/inner_api/collector/include",
     "${sg_root_dir}/interfaces/inner_api/classify/include",
   ]
 
   sources = [
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
+    "${sg_root_dir}/services/collector_manager/src/collector_cfg_marshalling.cpp",
+    "${sg_root_dir}/services/collector_manager/src/data_collection.cpp",
+    "${sg_root_dir}/services/collector_manager/src/lib_loader.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
     "${sg_root_dir}/services/data_collect/store/src/rdb_event_store_callback.cpp",
     "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
-    "${sg_root_dir}/services/security_collector/src/collector_cfg_marshalling.cpp",
-    "${sg_root_dir}/services/security_collector/src/data_collection.cpp",
-    "${sg_root_dir}/services/security_collector/src/lib_loader.cpp",
     "src/security_guard_data_collect_test.cpp",
   ]
 
@@ -187,6 +190,7 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "${sg_root_dir}/services/bigdata/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/interfaces/inner_api/common/include",
+    "${sg_root_dir}/interfaces/inner_api/collect/include",
     "${sg_root_dir}/frameworks/common/json/include",
     "${sg_root_dir}/frameworks/common/task_handler/include",
     "${sg_root_dir}/frameworks/common/database/include",
@@ -203,6 +207,7 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "${sg_root_dir}/test/unittest/mock/preferences_wrapper",
     "${sg_root_dir}/test/unittest/mock/rdb",
     "${sg_root_dir}/services/security_collector/include",
+    "${sg_root_dir}/services/collector_manager/include",
     "${sg_root_dir}/interfaces/inner_api/common/include",
     "${sg_root_dir}/services/config_manager/include",
     "${sg_root_dir}/interfaces/inner_api/classify/include",
@@ -215,8 +220,12 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
   }
 
   sources = [
+    "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
+    "${sg_root_dir}/services/collector_manager/src/collector_cfg_marshalling.cpp",
+    "${sg_root_dir}/services/collector_manager/src/data_collection.cpp",
+    "${sg_root_dir}/services/collector_manager/src/lib_loader.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_subscribe_manager.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_callback_proxy.cpp",
@@ -227,14 +236,11 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "${sg_root_dir}/services/risk_classify/model_manager/src/db_operate.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager_impl.cpp",
-    "${sg_root_dir}/services/security_collector/src/collector_cfg_marshalling.cpp",
-    "${sg_root_dir}/services/security_collector/src/data_collection.cpp",
-    "${sg_root_dir}/services/security_collector/src/lib_loader.cpp",
     "sa/security_guard_data_collect_sa_test.cpp",
   ]
 
   deps = [
-    "${sg_root_dir}/frameworks/common/data_collect_manager:libsg_data_collect_manager_sdk",
+    "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
   ]

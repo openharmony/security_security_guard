@@ -29,7 +29,7 @@ public:
     static DatabaseManager &GetInstance();
     void Init();
     int32_t SetAuditState(bool enable);
-    int InsertEvent(uint32_t source, SecEvent& event);
+    int InsertEvent(uint32_t source, const SecEvent& event, const std::set<std::string> &eventSubscribes = {});
     int QueryAllEvent(std::string table, std::vector<SecEvent> &events);
     int QueryRecentEventByEventId(int64_t eventId, SecEvent &event);
     int QueryRecentEventByEventId(std::string table, const std::vector<int64_t> &eventId, std::vector<SecEvent> &event);
@@ -53,7 +53,7 @@ private:
     std::unordered_map<int64_t, std::set<std::shared_ptr<IDbListener>>> listenerMap_;
     std::string deviceId_;
     void FillUserIdAndDeviceId(SecEvent& event);
-    void DbChanged(int32_t optType, const SecEvent &event);
+    void DbChanged(int32_t optType, const SecEvent &event, const std::set<std::string> &eventSubscribes = {});
     int32_t OpenAudit();
     int32_t CloseAudit();
 };

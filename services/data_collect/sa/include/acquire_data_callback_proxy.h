@@ -29,8 +29,7 @@ public:
         : IRemoteProxy<IAcquireDataCallback>(impl) {}
     ~AcquireDataCallbackProxy() override = default;
 
-    int32_t OnNotify(const SecurityCollector::Event &event) override;
-
+    int32_t OnNotify(const std::vector<SecurityCollector::Event> &events) override;
 private:
     static inline BrokerDelegator<AcquireDataCallbackProxy> delegator_;
 };

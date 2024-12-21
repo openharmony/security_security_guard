@@ -52,3 +52,11 @@ ohos_prebuilt_etc("config_update_trust_list_cfg") {
   subsystem_name = "security"
   part_name = "security_guard"
 }
+
+ohos_prebuilt_etc("security_guard_event_group_cfg") {
+  source = "hos/security_guard_event_group.json"
+  module_install_dir = ""
+
+  subsystem_name = "security"
+  part_name = "security_guard"
+}

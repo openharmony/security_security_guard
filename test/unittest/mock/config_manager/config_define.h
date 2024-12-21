@@ -23,9 +23,11 @@ namespace {
 #ifndef SECURITY_GUARD_ENABLE_EXT
     const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event.json";
     const std::string &SECURITY_GUARD_MODEL_CFG_FILE = "security_guard_model.cfg";
+    const std::string &SECURITY_GUARD_EVENT_GROUP_CFG_FILE = "security_guard_event_group.json";
 #else
     const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event_ext.json";
     const std::string &SECURITY_GUARD_MODEL_CFG_FILE = "security_guard_model_ext.cfg";
+    const std::string &SECURITY_GUARD_EVENT_GROUP_CFG_FILE = "security_guard_event_group_ext.json";
 #endif
 }
 
@@ -37,7 +39,8 @@ using LoadMode = enum {
 
 using PathIndex = enum {
     EVENT_CFG_INDEX,
-    MODEL_CFG_INDEX
+    MODEL_CFG_INDEX,
+    EVENT_GROUP_INDEX,
 };
 
 const std::vector<std::string> CONFIG_CACHE_FILES = {
@@ -52,7 +55,8 @@ const std::vector<std::string> CONFIG_UPTATE_FILES = {
 
 const std::vector<std::string> CONFIG_PRESET_FILES = {
     "/system/etc/" + SECURITY_GUARD_EVENT_CFG_FILE,
-    "/system/etc/" + SECURITY_GUARD_MODEL_CFG_FILE
+    "/system/etc/" + SECURITY_GUARD_MODEL_CFG_FILE,
+    "/system/etc/" + SECURITY_GUARD_EVENT_GROUP_CFG_FILE,
 };
 
 const std::string CONFIG_ROOT_PATH = "/data/service/el1/public/security_guard/test/";

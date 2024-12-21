@@ -17,7 +17,7 @@
 #define SECURITY_GUARD_SG_OBTAINDATA_CLIENT_H
 
 #include "security_guard_api.h"
-#include "security_guard_define.h"
+#include "event_info.h"
 
 #ifdef __cplusplus
 extern "C" {

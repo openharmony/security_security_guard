@@ -35,8 +35,9 @@
 
 using namespace OHOS::Security::SecurityGuard;
 using namespace OHOS::Security::SecurityCollector;
-constexpr std::int32_t ARGS_SIZE_ONE = 1;
-constexpr std::int32_t ARGS_SIZE_THREE = 3;
+constexpr std::size_t ARGS_SIZE_ONE = 1;
+constexpr std::size_t ARGS_SIZE_THREE = 3;
+constexpr std::size_t ARGS_SIZE_TWO = 2;
 constexpr int PARAMZERO = 0;
 constexpr int PARAMONE = 1;
 constexpr char NAPI_EVENT_EVENT_ID_ATTR[] = "eventId";
@@ -320,7 +321,7 @@ static napi_value NapiReportSecurityInfo(napi_env env, napi_callback_info info)
     }
 
     auto eventInfo = std::make_shared<EventInfo>(context.eventId, context.version, context.content);
-    int32_t code = SecurityGuardSdkAdaptor::ReportSecurityInfo(eventInfo);
+    int32_t code = SecurityGuardSdkAdaptor::InnerReportSecurityInfo(eventInfo);
     if (code != SUCCESS) {
         SGLOGE("report eventInfo error, code=%{public}d", code);
         napi_throw(env, GenerateBusinessError(env, code));
@@ -372,17 +373,18 @@ static void RequestSecurityModelResultExecute(napi_env env, void *data)
     auto *context = static_cast<RequestSecurityModelResultContext *>(data);
     auto promise = std::make_shared<std::promise<SecurityModel>>();
     auto future = promise->get_future();
-    auto func = [promise] (const std::string &devId, uint32_t modelId, const std::string &result) mutable -> int32_t {
+    auto func = [promise] (const OHOS::Security::SecurityGuard::SecurityModelResult &result) mutable -> int32_t {
         SecurityModel model = {
-            .devId = devId,
-            .modelId = modelId,
-            .result = result
+            .devId = result.devId,
+            .modelId = result.modelId,
+            .result = result.result
         };
         promise->set_value(model);
         return SUCCESS;
     };
     context->ret =
-        SecurityGuardSdkAdaptor::RequestSecurityModelResult(context->deviceId, context->modelId, context->param, func);
+        SecurityGuardSdkAdaptor::InnerRequestSecurityModelResult(context->deviceId, context->modelId,
+            context->param, func);
     if (context->ret != SUCCESS) {
         SGLOGE("RequestSecurityModelResultSync error, ret=%{public}d", context->ret);
         return;
@@ -1061,7 +1063,7 @@ static bool IsSubscribeInMap(napi_env env, SubscribeCBInfo *info)
     return false;
 }
 
-static napi_value ParseUnsubscriberAuditEventInfo(const napi_env &env, napi_value napi)
+static napi_value ParseUnsubscriberAuditEventInfo(const napi_env &env, napi_value napi, UnsubscribeCBInfo *asyncContext)
 {
     napi_valuetype type = napi_undefined;
     NAPI_CALL_BASE(env, napi_typeof(env, napi, &type), nullptr);
@@ -1078,22 +1080,22 @@ static napi_value ParseUnsubscriberAuditEventInfo(const napi_env &env, napi_valu
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM, errMsg));
         return nullptr;
     }
+    asyncContext->events.eventId = eventId;
     return NapiCreateInt64(env, ConvertToJsErrCode(SUCCESS));
 }
 
 static bool ParseParaToUnsubscriber(const napi_env &env, napi_callback_info cbInfo, UnsubscribeCBInfo *asyncContext,
-    napi_value *thisVar)
+    napi_value *thisVar, size_t &argc)
 {
-    size_t argc = ARGS_SIZE_THREE;
     napi_value argv[ARGS_SIZE_THREE] = {nullptr};
     napi_get_cb_info(env, cbInfo, &argc, argv, thisVar, NULL);
-    if (argc != ARGS_SIZE_THREE) {
-        SGLOGE("Parameter error. The parameters number must be three");
-        std::string errMsg = "Parameter error. The parameters number must be three";
+    if (argc != ARGS_SIZE_THREE && argc != ARGS_SIZE_TWO) {
+        SGLOGE("Parameter error. The parameters number must be three or two");
+        std::string errMsg = "Parameter error. The parameters number must be three or two";
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM, errMsg));
         return false;
     }
-    if (!GetCallbackProperty(env, argv[argc - 1], asyncContext->callbackRef, 1)) {
+    if (argc == ARGS_SIZE_THREE && !GetCallbackProperty(env, argv[argc - 1], asyncContext->callbackRef, 1)) {
         SGLOGE("Get callbackRef failed");
         std::string errMsg = "Parameter error. The type of arg " + std::to_string(argc) + " must be function";
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM, errMsg));
@@ -1101,16 +1103,18 @@ static bool ParseParaToUnsubscriber(const napi_env &env, napi_callback_info cbIn
     }
     std::string type;
     if (!GetStringProperty(env, argv[PARAMZERO], type)) {
+        SGLOGE("Get type failed");
         std::string errMsg = "Parameter error. The type of arg 1 must be string";
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM, errMsg));
         return false;
     }
     if (type != "securityEventOccur") {
-        std::string errMsg = "Parameter error. arg 1 must be auditEventOccur";
+        SGLOGE("type err");
+        std::string errMsg = "Parameter error. arg 1 must be securityEventOccur";
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM, errMsg));
         return false;
     }
-    if (ParseUnsubscriberAuditEventInfo(env, argv[PARAMONE]) == nullptr) {
+    if (ParseUnsubscriberAuditEventInfo(env, argv[PARAMONE], asyncContext) == nullptr) {
         return false;
     }
     return true;
@@ -1229,7 +1233,7 @@ static int32_t OnNotifyEvent(const Event &event, napi_env env, napi_ref ref, Sub
 
 class SubscriberPtr : public ICollectorSubscriber {
 public:
-    explicit SubscriberPtr(const Event &event) : ICollectorSubscriber(event) {};
+    explicit SubscriberPtr(const Event &event) : ICollectorSubscriber(event, -1, false, "securityGroup") {};
     ~SubscriberPtr() override = default;
 
     int32_t OnNotify(const Event &event) override
@@ -1264,6 +1268,7 @@ static napi_value Subscribe(napi_env env, napi_callback_info cbInfo)
     info->subscriber->SetEnv(env);
     info->subscriber->SetCallbackRef(info->callbackRef);
     if (IsSubscribeInMap(env, info)) {
+        SGLOGE("Current callback ref is existed");
         delete info;
         return WrapVoidToJS(env);
     }
@@ -1277,6 +1282,33 @@ static napi_value Subscribe(napi_env env, napi_callback_info cbInfo)
         g_subscribers[env].emplace_back(info);
     }
     return WrapVoidToJS(env);
+}
+
+static void AllUnsubscribeSync(napi_env env, UnsubscribeCBInfo *unsubscribeCBInfo)
+{
+    std::lock_guard<std::mutex> lock(g_subscribeMutex);
+    auto subscribe = g_subscribers.find(env);
+    if (subscribe == g_subscribers.end()) {
+        return;
+    }
+    auto i = subscribe->second.begin();
+    while (i != subscribe->second.end()) {
+        if ((*i)->events.eventId != unsubscribeCBInfo->events.eventId) {
+            i++;
+            continue;
+        }
+        int errCode = SecurityGuardSdkAdaptor::Unsubscribe((*i)->subscriber);
+        if (errCode != 0) {
+            std::string errMsg = "unsubscrube failed";
+            napi_throw(env, GenerateBusinessError(env, errCode, errMsg));
+            return;
+        }
+        delete (*i);
+        i = subscribe->second.erase(i);
+    }
+    if (subscribe->second.empty()) {
+        g_subscribers.erase(subscribe->first);
+    }
 }
 
 static void UnsubscribeSync(napi_env env, UnsubscribeCBInfo *unsubscribeCBInfo)
@@ -1322,14 +1354,17 @@ static napi_value Unsubscribe(napi_env env, napi_callback_info cbInfo)
     unsubscribeCBInfo->throwErr = true;
 
     napi_value thisVar = nullptr;
-
-    if (!ParseParaToUnsubscriber(env, cbInfo, unsubscribeCBInfo, &thisVar)) {
+    size_t argc = ARGS_SIZE_THREE;
+    if (!ParseParaToUnsubscriber(env, cbInfo, unsubscribeCBInfo, &thisVar, argc)) {
         delete unsubscribeCBInfo;
         SGLOGE("Parse unsubscribe failed");
         return nullptr;
     }
-
-    UnsubscribeSync(env, unsubscribeCBInfo);
+    if (argc == ARGS_SIZE_THREE) {
+        UnsubscribeSync(env, unsubscribeCBInfo);
+    } else {
+        AllUnsubscribeSync(env, unsubscribeCBInfo);
+    }
     SGLOGI("UnsubscribeSync success");
     delete unsubscribeCBInfo;
     return WrapVoidToJS(env);

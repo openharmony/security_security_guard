@@ -21,7 +21,7 @@ DbOperate::DbOperate(std::string table) : table_(table) {}
 
 int DbOperate::InsertEvent(SecEvent& event)
 {
-    return DatabaseManager::GetInstance().InsertEvent(MODEL_SOURCE, event);
+    return DatabaseManager::GetInstance().InsertEvent(MODEL_SOURCE, event, {});
 }
 
 int DbOperate::QueryAllEvent(std::vector<SecEvent> &events)

@@ -18,7 +18,8 @@
 
 #include <cstdint>
 #include <string>
-
+#include <vector>
+#include <set>
 namespace OHOS::Security::SecurityCollector {
 enum EventId : int64_t {
     PASTEBOARD_EVENTID = 1011015000,
@@ -42,6 +43,22 @@ struct Event {
     std::string content;
     std::string extra;
     std::string timestamp;
+    std::set<std::string> eventSubscribes;
+};
+
+using SecurityCollectorEventMuteType = enum {
+    EVENT_TYPE_EQUAL = 0,
+    EVENT_SUB_TYPE_EQUAL = 1,
+    PID_EQUAL = 2,
+    FILE_PATH_EQUAL = 3,
+    FILE_PATH_PREFIX = 4,
+};
+
+using SecurityCollectorEventMuteFilter = struct {
+    int64_t eventId;
+    SecurityCollectorEventMuteType type;
+    std::vector<std::string> mutes;
+    bool isSetMute;
 };
 } // namespace OHOS::Security::SecurityCollector
 #endif // SECURITY_COLLECTOR_EVENT_INFO_H

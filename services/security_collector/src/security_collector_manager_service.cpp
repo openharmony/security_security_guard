@@ -37,7 +37,8 @@ namespace OHOS::Security::SecurityCollector {
 namespace {
     constexpr char PERMISSION[] = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
     constexpr char REPORT_PERMISSION[] = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
-    constexpr char NOTIFY_APP_NAME[] = "security_guard";
+    constexpr char COLLECT_EVENT_PERMISSION[] = "ohos.permission.COLLECT_SECURITY_EVENT";
+    constexpr char QUERY_EVENT_PERMISSION[] = "ohos.permission.QUERY_SECURITY_EVENT";
     constexpr const char* CALLER_PID = "CALLER_PID";
     constexpr const char* EVENT_VERSION = "EVENT_VERSION";
     constexpr const char* SC_EVENT_ID = "EVENT_ID";
@@ -109,31 +110,19 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
     LOGI("in subscribe, subscribinfo: duration:%{public}" PRId64 ", isNotify:%{public}d, eventid:%{public}" PRId64 ","
         "version:%{public}s, extra:%{public}s", subscribeInfo.GetDuration(), (int)subscribeInfo.IsNotify(),
         event.eventId, event.version.c_str(), event.extra.c_str());
-    int32_t ret = HasPermission(REPORT_PERMISSION);
+    int32_t ret = HasPermission(QUERY_EVENT_PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;
     }
-    std::string appName = (subscribeInfo.IsNotify() ? NOTIFY_APP_NAME : GetAppName());
-    if (appName.empty()) {
-        return BAD_PARAM;
-    }
-    if (appName != NOTIFY_APP_NAME && !SetDeathRecipient(callback)) {
+    if (!SetDeathRecipient(callback)) {
         return NULL_OBJECT;
     }
     auto eventHandler = [this] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {
-        if (appName == NOTIFY_APP_NAME) {
-            LOGI("eventid:%{public}" PRId64 " callback default", event.eventId);
-            auto reportEvent = [event] () {
-                auto info = std::make_shared<SecurityGuard::EventInfo>(event.eventId, event.version, event.content);
-                (void)SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(info);
-            };
-            reportEvent();
-            return;
-        }
         ExecuteOnNotifyByTask(remote, event);
     };
-    auto subscriber = std::make_shared<SecurityCollectorSubscriber>(appName, subscribeInfo, callback, eventHandler);
+    auto subscriber = std::make_shared<SecurityCollectorSubscriber>(NOTIFY_APP_NAME,
+        subscribeInfo, callback, eventHandler);
     ScSubscribeEvent subEvent;
     subEvent.pid = IPCSkeleton::GetCallingPid();
     subEvent.version = event.version;
@@ -155,7 +144,7 @@ int32_t SecurityCollectorManagerService::Subscribe(const SecurityCollectorSubscr
 int32_t SecurityCollectorManagerService::Unsubscribe(const sptr<IRemoteObject> &callback)
 {
     LOGI("In unsubscribe");
-    int32_t ret = HasPermission(PERMISSION);
+    int32_t ret = HasPermission(QUERY_EVENT_PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;
@@ -177,7 +166,7 @@ int32_t SecurityCollectorManagerService::CollectorStart(const SecurityCollectorS
     const sptr<IRemoteObject> &callback)
 {
     Event event = subscribeInfo.GetEvent();
-    int32_t ret = HasPermission(REPORT_PERMISSION);
+    int32_t ret = HasPermission(COLLECT_EVENT_PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;
@@ -198,6 +187,12 @@ int32_t SecurityCollectorManagerService::CollectorStart(const SecurityCollectorS
         return BAD_PARAM;
     }
     auto eventHandler = [this] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {
+        LOGD("eventid:%{public}" PRId64 " callback default", event.eventId);
+        auto reportEvent = [event] () {
+            auto info = std::make_shared<SecurityGuard::EventInfo>(event.eventId, event.version, event.content);
+            SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(info);
+        };
+        reportEvent();
         return;
     };
     auto subscriber = std::make_shared<SecurityCollectorSubscriber>(appName, subscribeInfo, nullptr, eventHandler);
@@ -222,7 +217,7 @@ int32_t SecurityCollectorManagerService::CollectorStop(const SecurityCollectorSu
     const sptr<IRemoteObject> &callback)
 {
     Event event = subscribeInfo.GetEvent();
-    int32_t ret = HasPermission(REPORT_PERMISSION);
+    int32_t ret = HasPermission(COLLECT_EVENT_PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;
@@ -393,6 +388,38 @@ int32_t SecurityCollectorManagerService::HasPermission(const std::string &permis
         return NO_PERMISSION;
     }
 
+    return SUCCESS;
+}
+
+int32_t SecurityCollectorManagerService::Mute(const SecurityCollectorEventFilter &subscribeMute,
+    const std::string &callbackFlag)
+{
+    LOGI("In SecurityCollectorManagerService Mute");
+    int32_t ret = HasPermission(QUERY_EVENT_PERMISSION);
+    if (ret != SUCCESS) {
+        LOGE("caller no permission");
+        return ret;
+    }
+    if (!DataCollection::GetInstance().Mute(subscribeMute.GetMuteFilter(), callbackFlag)) {
+        LOGE("fail to set mute");
+        return FAILED;
+    }
+    return SUCCESS;
+}
+
+int32_t SecurityCollectorManagerService::Unmute(const SecurityCollectorEventFilter &subscribeMute,
+    const std::string &callbackFlag)
+{
+    LOGI("In SecurityCollectorManagerService Unmute");
+    int32_t ret = HasPermission(QUERY_EVENT_PERMISSION);
+    if (ret != SUCCESS) {
+        LOGE("caller no permission");
+        return ret;
+    }
+    if (!DataCollection::GetInstance().Unmute(subscribeMute.GetMuteFilter(), callbackFlag)) {
+        LOGE("fail to set unmute");
+        return FAILED;
+    }
     return SUCCESS;
 }
 }

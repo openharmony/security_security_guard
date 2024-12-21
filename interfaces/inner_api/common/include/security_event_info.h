@@ -18,7 +18,7 @@
 
 #include <string>
 #include <vector>
-
+#include <set>
 namespace OHOS::Security::SecurityGuard {
 using EventCfg = struct {
     int64_t eventId;
@@ -36,6 +36,12 @@ using EventCfg = struct {
     std::string prog;
 };
 
+using EventGroupCfg = struct {
+    std::string eventGroupName;
+    std::set<int64_t> eventList;
+    std::set<std::string> permissionList;
+    bool isBatchUpload;
+};
 }  // namespace OHOS::Security::SecurityGuard
 
 #endif  // SECURITY_EVENT_CONFIG_INFO_H
