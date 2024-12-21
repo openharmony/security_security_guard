@@ -208,4 +208,80 @@ int32_t SecurityCollectorManagerProxy::QuerySecurityEvent(const std::vector<Secu
     }
     return SUCCESS;
 }
+
+int32_t SecurityCollectorManagerProxy::Mute(const SecurityCollectorEventFilter &subscribeMute,
+    const std::string &callbackFlag)
+{
+    LOGI("enter SecurityCollectorManagerProxy Mute");
+    MessageParcel data;
+    MessageParcel reply;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("WriteInterfaceToken error");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteParcelable(&subscribeMute)) {
+        LOGE("failed to write parcelable for subscribeMute");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteString(callbackFlag)) {
+        LOGE("failed to write parcelable for callbackFlag");
+        return WRITE_ERR;
+    }
+
+    MessageOption option = { MessageOption::TF_SYNC };
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_SECURITY_EVENT_MUTE, data, reply, option);
+    if (ret != ERR_NONE) {
+        LOGE("ret=%{public}d", ret);
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    LOGD("reply=%{public}d", ret);
+    return ret;
+}
+
+int32_t SecurityCollectorManagerProxy::Unmute(const SecurityCollectorEventFilter &subscribeMute,
+    const std::string &callbackFlag)
+{
+    LOGI("enter SecurityCollectorManagerProxy Unmute");
+    MessageParcel data;
+    MessageParcel reply;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("WriteInterfaceToken error");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteParcelable(&subscribeMute)) {
+        LOGE("failed to write parcelable for subscribeMute");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteString(callbackFlag)) {
+        LOGE("failed to write parcelable for callbackFlag");
+        return WRITE_ERR;
+    }
+
+    MessageOption option = { MessageOption::TF_SYNC };
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        LOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_SECURITY_EVENT_UNMUTE, data, reply, option);
+    if (ret != ERR_NONE) {
+        LOGE("ret=%{public}d", ret);
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    LOGD("reply=%{public}d", ret);
+    return ret;
+}
 }

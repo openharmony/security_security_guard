@@ -46,11 +46,13 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/frameworks/common/database/include",
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/frameworks/common/utils/include",
-    "${sg_root_dir}/services/security_collector/include",
+    "${sg_root_dir}/services/collector_manager/include",
     "${sg_root_dir}/services/risk_classify/model_manager/include",
   ]
 
   sources = [
+    "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_collector_event_filter.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
@@ -64,9 +66,6 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
     "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
-    "${sg_root_dir}/services/security_collector/src/collector_cfg_marshalling.cpp",
-    "${sg_root_dir}/services/security_collector/src/data_collection.cpp",
-    "${sg_root_dir}/services/security_collector/src/lib_loader.cpp",
   ]
 
   sanitize = {
@@ -80,9 +79,9 @@ ohos_shared_library("sg_collect_service") {
   branch_protector_ret = "pac_ret"
 
   deps = [
-    "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
     "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
+    "${sg_root_dir}/services/collector_manager:security_collector_manager",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/data_collect:sg_collect_service_database",
     "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",

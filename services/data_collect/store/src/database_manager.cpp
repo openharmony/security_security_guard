@@ -38,7 +38,8 @@ void DatabaseManager::Init()
     SGLOGI("risk event rdb init result is %{public}d", ret);
 }
 
-int DatabaseManager::InsertEvent(uint32_t source, SecEvent& event)
+int DatabaseManager::InsertEvent(uint32_t source, const SecEvent& event,
+    const std::set<std::string> &eventSubscribes)
 {
     EventCfg config;
     bool success = ConfigDataManager::GetInstance().GetEventConfig(event.eventId, config);
@@ -52,12 +53,12 @@ int DatabaseManager::InsertEvent(uint32_t source, SecEvent& event)
         SGLOGD("table=%{public}s, eventId=%{public}" PRId64, table.c_str(), config.eventId);
         if (table == AUDIT_TABLE) {
             SGLOGD("audit event insert");
-            DbChanged(IDbListener::INSERT, event);
+            DbChanged(IDbListener::INSERT, event, eventSubscribes);
             return SUCCESS;
         }
         SGLOGD("risk event insert, eventId=%{public}" PRId64, event.eventId);
         // notify changed
-        DbChanged(IDbListener::INSERT, event);
+        DbChanged(IDbListener::INSERT, event, eventSubscribes);
         std::lock_guard<std::mutex> lock(delMutex_);
         // Check whether the upper limit is reached.
         int64_t count = RiskEventRdbHelper::GetInstance().CountEventByEventId(event.eventId);
@@ -206,6 +207,9 @@ int32_t DatabaseManager::UnSubscribeDb(std::vector<int64_t> eventIds, std::share
     }
     std::lock_guard<std::mutex> lock(mutex_);
     for (int64_t eventId : eventIds) {
+        if (listenerMap_.count(eventId) == 0) {
+            continue;
+        }
         listenerMap_[eventId].erase(listener);
         SGLOGI("size=%{public}zu", listenerMap_[eventId].size());
         if (listenerMap_[eventId].size() == 0) {
@@ -215,7 +219,7 @@ int32_t DatabaseManager::UnSubscribeDb(std::vector<int64_t> eventIds, std::share
     return SUCCESS;
 }
 
-void DatabaseManager::DbChanged(int32_t optType, const SecEvent &event)
+void DatabaseManager::DbChanged(int32_t optType, const SecEvent &event, const std::set<std::string> &eventSubscribes)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::set<std::shared_ptr<IDbListener>> listeners = listenerMap_[event.eventId];
@@ -223,10 +227,10 @@ void DatabaseManager::DbChanged(int32_t optType, const SecEvent &event)
         return;
     }
     SGLOGD("eventId=%{public}" PRId64 ", listener size=%{public}zu", event.eventId, listeners.size());
-    auto task = [listeners, optType, event] () {
+    auto task = [listeners, optType, event, eventSubscribes] () {
         for (auto &listener : listeners) {
             if (listener != nullptr) {
-                listener->OnChange(optType, event);
+                listener->OnChange(optType, event, eventSubscribes);
             }
         }
     };

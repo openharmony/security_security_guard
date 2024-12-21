@@ -55,7 +55,8 @@ namespace {
 class MockDbListener : public IDbListener {
 public:
     ~MockDbListener() override = default;
-    MOCK_METHOD2(OnChange, void(uint32_t optType, const SecEvent &events));
+    MOCK_METHOD3(OnChange, void(uint32_t optType, const SecEvent &events,
+        const std::set<std::string> &eventSubscribes));
 };
 
 void SecurityGuardDatabaseManagerTest::SetUpTestCase()

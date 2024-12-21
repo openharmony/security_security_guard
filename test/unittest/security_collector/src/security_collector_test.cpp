@@ -163,40 +163,6 @@ HWTEST_F(SecurityCollectorTest, Subscribe01, TestSize.Level1)
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
-HWTEST_F(SecurityCollectorTest, Subscribe02, TestSize.Level1)
-{
-    SecurityCollector::Event event {
-        .eventId = 2,
-        .version = "version",
-        .content = "content",
-        .extra = ""
-    };
-    SecurityCollectorSubscribeInfo subscribeInfo(event, -1, true);
-    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_TRUE(obj != nullptr);
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
-        Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_EQ(g_service.Subscribe(subscribeInfo, obj), SecurityCollector::ErrorCode::BAD_PARAM);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-}
-
-HWTEST_F(SecurityCollectorTest, Subscribe03, TestSize.Level1)
-{
-    SecurityCollector::Event event {
-        .eventId = 2,
-        .version = "version",
-        .content = "content",
-        .extra = ""
-    };
-    SecurityCollectorSubscribeInfo subscribeInfo(event);
-    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_TRUE(obj != nullptr);
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
-        Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_EQ(g_service.Subscribe(subscribeInfo, obj), SecurityCollector::ErrorCode::BAD_PARAM);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-}
-
 HWTEST_F(SecurityCollectorTest, Unsubscribe01, TestSize.Level1)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());

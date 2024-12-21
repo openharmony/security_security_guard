@@ -15,6 +15,7 @@
 
 #include "acquire_data_subscribe_manager.h"
 #include <cinttypes>
+#include <functional>
 #include "acquire_data_callback_proxy.h"
 #include "database_manager.h"
 #include "security_guard_define.h"
@@ -26,7 +27,18 @@
 #include "config_data_manager.h"
 #include "collector_manager.h"
 #include "data_collection.h"
+#include "security_event_filter.h"
+#include "data_format.h"
+#include "database_manager.h"
 namespace OHOS::Security::SecurityGuard {
+namespace {
+    constexpr size_t MAX_CACHE_EVENT_SIZE = 64 * 1024;
+    constexpr int64_t MAX_DURATION_TEN_SECOND = 10 * 1000;
+    constexpr int64_t MAX_FILTER_SIZE = 256;
+    std::mutex g_mutex{};
+    std::map<sptr<IRemoteObject>, AcquireDataSubscribeManager::SubscriberInfo> g_subscriberInfoMap{};
+}
+
 AcquireDataSubscribeManager& AcquireDataSubscribeManager::GetInstance()
 {
     static AcquireDataSubscribeManager instance;
@@ -45,62 +57,126 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         return BAD_PARAM;
     }
     int64_t event = subscribeInfo.GetEvent().eventId;
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (eventIdToSubscriberMap_.count(event)) {
-        eventIdToSubscriberMap_[subscribeInfo.GetEvent().eventId].insert(callback);
-        return SUCCESS;
+
+    std::lock_guard<std::mutex> lock(g_mutex);
+    SubscriberInfo subInfo {};
+    if (g_subscriberInfoMap.count(callback) == 0) {
+        subInfo.subscribe.emplace_back(subscribeInfo);
+        subInfo.timer = std::make_shared<CleanupTimer>();
+        subInfo.timer->Start(callback, MAX_DURATION_TEN_SECOND);
+        g_subscriberInfoMap[callback] = subInfo;
+    } else {
+        g_subscriberInfoMap.at(callback).subscribe.emplace_back(subscribeInfo);
     }
+
     int32_t code = DatabaseManager::GetInstance().SubscribeDb({subscribeInfo.GetEvent().eventId}, listener_);
     if (code != SUCCESS) {
         SGLOGE("SubscribeDb error");
         return code;
     }
-    code = SubscribeSc(event);
+    code = SubscribeSc(subscribeInfo.GetEvent().eventId, callback);
     if (code != SUCCESS) {
         SGLOGE("SubscribeSc error");
         return code;
     }
-    eventIdToSubscriberMap_[subscribeInfo.GetEvent().eventId].insert(callback);
-    SGLOGI("insert eventIdToSubscriberMap_ size %{public}zu", eventIdToSubscriberMap_.size());
-    for (auto iter : eventIdToSubscriberMap_) {
-        SGLOGI("insert eventIdToSubscriberMap_.callback size %{public}zu", iter.second.size());
+    SGLOGI("InsertSubscribeRecord subscriberInfoMap_size  %{public}zu", g_subscriberInfoMap.size());
+    for (const auto &i : g_subscriberInfoMap) {
+        SGLOGI("InsertSubscribeRecord subscriberInfoMap_subscribe_size  %{public}zu", i.second.subscribe.size());
     }
     return SUCCESS;
 }
 
-int AcquireDataSubscribeManager::SubscribeSc(int64_t eventId)
+int AcquireDataSubscribeManager::SubscribeScInSg(int64_t eventId, const sptr<IRemoteObject> &callback)
 {
-    if (scSubscribeMap_.count(eventId)) {
+    SecurityCollector::Event event {};
+    event.eventId = eventId;
+    auto collectorListenner = std::make_shared<CollectorListenner>(event);
+    SGLOGI("Scheduling start collector, eventId:%{public}" PRId64, eventId);
+    if (eventToListenner_.count(eventId) != 0) {
         return SUCCESS;
     }
-    EventCfg config;
+    if (!SecurityCollector::DataCollection::GetInstance().StartCollectors({eventId}, collectorListenner)) {
+        SGLOGI("Subscribe SG failed, eventId=%{public}" PRId64, eventId);
+        return FAILED;
+    }
+    eventToListenner_.emplace(eventId, collectorListenner);
+    if (muteCache_.count(eventId) == 0) {
+        return SUCCESS;
+    }
+    for (const auto &iter : muteCache_.at(eventId)) {
+        for (const auto &it : iter.second) {
+            if (it.eventId == eventId && it.isSetMute == true &&
+                !SecurityCollector::DataCollection::GetInstance().Mute(
+                    it, callbackHashMapNotSetMute_[iter.first])) {
+                SGLOGE("Mute SG failed, eventId=%{public}" PRId64, eventId);
+                return FAILED;
+            }
+            callbackHashMap_[iter.first] = callbackHashMapNotSetMute_[iter.first];
+            if (it.eventId == eventId && it.isSetMute == false &&
+                !SecurityCollector::DataCollection::GetInstance().Unmute(
+                    it, callbackHashMapNotSetMute_[iter.first])) {
+                SGLOGE("Unmute SG failed, eventId=%{public}" PRId64, eventId);
+                return FAILED;
+            }
+        }
+    }
+    return SUCCESS;
+}
+
+int AcquireDataSubscribeManager::SubscribeScInSc(int64_t eventId, const sptr<IRemoteObject> &callback)
+{
+    if (scSubscribeMap_.count(eventId) != 0) {
+        return SUCCESS;
+    }
+    SecurityCollector::Event scEvent;
+    scEvent.eventId = eventId;
+    auto subscriber = std::make_shared<AcquireDataSubscribeManager::SecurityCollectorSubscriber>(scEvent);
+    int code = SecurityCollector::CollectorManager::GetInstance().Subscribe(subscriber);
+    if (code != SUCCESS) {
+        SGLOGI("Subscribe SC failed, code=%{public}d", code);
+        return code;
+    }
+    scSubscribeMap_[eventId] = subscriber;
+    if (muteCache_.count(eventId) == 0) {
+        return SUCCESS;
+    }
+    SGLOGI("Subscribe SC muteCache_ size, code=%{public}zu  eventId=%{public}" PRId64,
+        muteCache_.at(eventId).size(), eventId);
+    for (const auto &iter : muteCache_.at(eventId)) {
+        for (auto it : iter.second) {
+            if (it.eventId == eventId && it.isSetMute == true) {
+                return SecurityCollector::CollectorManager::GetInstance().Mute(
+                    it, callbackHashMapNotSetMute_[iter.first]);
+            }
+            callbackHashMap_[iter.first] = callbackHashMapNotSetMute_[iter.first];
+            if (it.eventId == eventId && it.isSetMute == false) {
+                SGLOGI("Unmute SG failed, eventId=%{public}" PRId64, eventId);
+                return SecurityCollector::CollectorManager::GetInstance().Unmute(
+                    it, callbackHashMapNotSetMute_[iter.first]);
+            }
+        }
+    }
+    return SUCCESS;
+}
+
+int AcquireDataSubscribeManager::SubscribeSc(int64_t eventId, const sptr<IRemoteObject> &callback)
+{
+    EventCfg config {};
     bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(eventId, config);
     if (!isSuccess) {
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
-    if (config.dbTable == "risk_event" && config.eventType == static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
-        SecurityCollector::Event scEvent;
-        scEvent.eventId = eventId;
-        auto subscriber = std::make_shared<AcquireDataSubscribeManager::SecurityCollectorSubscriber>(scEvent);
-        // 订阅SG
-        if (config.prog == "security_guard") {
-            if (!SecurityCollector::DataCollection::GetInstance().SecurityGuardSubscribeCollector({eventId})) {
-                SGLOGI("Subscribe SG failed, eventId=%{public}" PRId64, eventId);
-                return FAILED;
-            }
-        } else {
-            // 订阅SC
-            int code = SecurityCollector::CollectorManager::GetInstance().Subscribe(subscriber);
-            if (code != SUCCESS) {
-                SGLOGI("Subscribe SC failed, code=%{public}d", code);
-                return code;
-            }
-        }
-        scSubscribeMap_[scEvent.eventId] = subscriber;
+    if (config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
+        return SUCCESS;
     }
-    SGLOGI("SubscribeSc scSubscribeMap_size  %{public}zu", scSubscribeMap_.size());
-    return SUCCESS;
+    // 订阅SG
+    if (config.prog == "security_guard") {
+        return SubscribeScInSg(eventId, callback);
+    }
+
+    // 订阅SC
+    return SubscribeScInSc(eventId, callback);
 }
 
 int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
@@ -111,100 +187,347 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
-    if (config.dbTable == "risk_event" && config.eventType == static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
-        auto it = scSubscribeMap_.find(eventId);
-        if (it == scSubscribeMap_.end()) {
+    if (config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
+        return SUCCESS;
+    }
+    // 解订阅SG
+    if (config.prog == "security_guard") {
+        if (eventToListenner_.count(eventId) == 0) {
+            SGLOGE("not find evenId in linstener, eventId=%{public}" PRId64, eventId);
             return FAILED;
         }
-        // 解订阅SG
-        if (config.prog == "security_guard") {
-            if (!SecurityCollector::DataCollection::GetInstance().StopCollectors({eventId})) {
-                SGLOGE("UnSubscribe SG failed, eventId=%{public}" PRId64, eventId);
-                return FAILED;
-            }
-        } else {
-            // 解订阅SC
-            int ret = SecurityCollector::CollectorManager::GetInstance().Unsubscribe(it->second);
-            if (ret != SUCCESS) {
-                SGLOGE("UnSubscribe SC failed, ret=%{public}d", ret);
-                return ret;
-            }
+        if (!SecurityCollector::DataCollection::GetInstance().StopCollectors({eventId})) {
+            SGLOGE("UnSubscribe SG failed, eventId=%{public}" PRId64, eventId);
+            return FAILED;
         }
-        it->second = nullptr;
-        scSubscribeMap_.erase(it);
+        eventToListenner_.erase(eventId);
+        return SUCCESS;
     }
+    // 解订阅SC
+    auto it = scSubscribeMap_.find(eventId);
+    if (it == scSubscribeMap_.end()) {
+        SGLOGE("event not subscribe eventId=%{public}" PRId64, eventId);
+        return FAILED;
+    }
+    int ret = SecurityCollector::CollectorManager::GetInstance().Unsubscribe(it->second);
+    if (ret != SUCCESS) {
+        SGLOGE("UnSubscribe SC failed, ret=%{public}d", ret);
+        return ret;
+    }
+    it->second = nullptr;
+    scSubscribeMap_.erase(it);
     SGLOGI("UnSubscribeSc scSubscribeMap_size  %{public}zu", scSubscribeMap_.size());
     return SUCCESS;
 }
 
-int AcquireDataSubscribeManager::RemoveSubscribeRecord(const sptr<IRemoteObject> &callback)
+int AcquireDataSubscribeManager::UnSubscribeScAndDb(int64_t eventId)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    for (auto iter = eventIdToSubscriberMap_.begin(); iter != eventIdToSubscriberMap_.end();) {
-        auto iterSet = iter->second.find(callback);
-        if (iterSet == iter->second.end()) {
-            ++iter;
-            continue;
-        }
-        iter->second.erase(iterSet);
-        if (iter->second.empty()) {
-            int ret = DatabaseManager::GetInstance().UnSubscribeDb({iter->first}, listener_);
-            if (ret != SUCCESS) {
-                SGLOGE("UnSubscribeDb error");
-                return ret;
-            }
-            ret = UnSubscribeSc(iter->first);
-            if (ret != SUCCESS) {
-                SGLOGE("UnSubscribeSc error");
-                return ret;
-            }
-            iter = eventIdToSubscriberMap_.erase(iter);
-            continue;
-        }
-        ++iter;
+    int ret = DatabaseManager::GetInstance().UnSubscribeDb({eventId}, listener_);
+    if (ret != SUCCESS) {
+        SGLOGE("UnSubscribeDb error");
+        return ret;
     }
-    SGLOGI("remove eventIdToSubscriberMap_ size %{public}zu", eventIdToSubscriberMap_.size());
-    for (auto iter : eventIdToSubscriberMap_) {
-        SGLOGI("remove eventIdToSubscriberMap_.callback size %{public}zu", iter.second.size());
+    ret = UnSubscribeSc(eventId);
+    if (ret != SUCCESS) {
+        SGLOGE("UnSubscribeSc error");
+        return ret;
     }
-    return SUCCESS;
+    return ret;
 }
 
-bool AcquireDataSubscribeManager::Publish(const SecEvent &events)
+int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto iter = eventIdToSubscriberMap_.find(events.eventId);
-    if (iter == eventIdToSubscriberMap_.end()) {
-        return true;
+    std::lock_guard<std::mutex> lock(g_mutex);
+    auto iter = g_subscriberInfoMap.find(callback);
+    if (iter == g_subscriberInfoMap.end()) {
+        SGLOGI("not find caller in g_subscriberInfoMap");
+        return SUCCESS;
     }
-    auto listerers = iter->second;
-    for (const auto &listener : listerers) {
-        auto proxy = iface_cast<IAcquireDataCallback>(listener);
-        if (proxy == nullptr) {
-            return false;
+    // first erase current callback subscribed info
+    for (auto it = g_subscriberInfoMap.at(callback).subscribe.begin();
+        it != g_subscriberInfoMap.at(callback).subscribe.end(); it++) {
+        if (it->GetEvent().eventId == eventId) {
+            g_subscriberInfoMap.at(callback).subscribe.erase(it);
+            break;
         }
-        SecurityCollector::Event event {
-            .eventId = events.eventId,
-            .version = events.version,
-            .content = events.content,
-            .timestamp = events.date
-        };
-        auto task = [proxy, event] () {
-            proxy->OnNotify(event);
-        };
-        if (event.eventId == SecurityCollector::FILE_EVENTID ||
-            event.eventId == SecurityCollector::PROCESS_EVENTID ||
-            event.eventId == SecurityCollector::NETWORK_EVENTID) {
-            ffrt::submit(task, {}, {}, ffrt::task_attr().qos(ffrt::qos_background));
-        } else {
-            ffrt::submit(task);
+    }
+    // second erase current callback  when subscribed member is empty
+    if (g_subscriberInfoMap.at(callback).subscribe.empty()) {
+        g_subscriberInfoMap.erase(iter);
+    }
+
+    for (const auto &it : g_subscriberInfoMap) {
+        for (const auto &i : it.second.subscribe) {
+            if (i.GetEvent().eventId == eventId) {
+                return SUCCESS;
+            }
+        }
+    }
+    SGLOGI("RemoveSubscribeRecord subscriberInfoMap__size %{public}zu", g_subscriberInfoMap.size());
+    for (const auto &i : g_subscriberInfoMap) {
+        SGLOGI("RemoveSubscribeRecord subscriberInfoMap_subscribe_size  %{public}zu", i.second.subscribe.size());
+    }
+    return UnSubscribeScAndDb(eventId);
+}
+
+void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback)
+{
+    std::lock_guard<std::mutex> lock(g_mutex);
+    std::set<int64_t> eventIdNeedUnSub {};
+    std::set<int64_t> currentEventId {};
+    for (const auto &i : g_subscriberInfoMap[callback].subscribe) {
+        eventIdNeedUnSub.insert(i.GetEvent().eventId);
+    }
+    g_subscriberInfoMap.erase(callback);
+    for (const auto &i : g_subscriberInfoMap) {
+        for (const auto &iter : i.second.subscribe) {
+            currentEventId.insert(iter.GetEvent().eventId);
+        }
+    }
+    for (const auto &i : eventIdNeedUnSub) {
+        if (currentEventId.count(i) == 0) {
+            (void)UnSubscribeScAndDb(i);
+        }
+    }
+    SGLOGI("RemoveSubscribeRecordOnRemoteDied subscriberInfoMap__size %{public}zu", g_subscriberInfoMap.size());
+    for (const auto &i : g_subscriberInfoMap) {
+        SGLOGI("RemoveSubscribeRecordOnRemoteDied subscriberInfoMap_subscribe_size  %{public}zu",
+            i.second.subscribe.size());
+    }
+    callbackHashMap_.erase(callback);
+    callbackHashMapNotSetMute_.erase(callback);
+    for (auto &iter : muteCache_) {
+        auto it = iter.second.find(callback);
+        if (it != iter.second.end()) {
+            it = iter.second.erase(it);
+            SGLOGI("erase callback muteCache_ %{public}zu", iter.second.size());
+            continue;
+        }
+    }
+}
+
+void AcquireDataSubscribeManager::CleanupTimer::ClearEventCache(const sptr<IRemoteObject> &remote)
+{
+    std::lock_guard<std::mutex> lock(g_mutex);
+    SGLOGD("timer running");
+    if (g_subscriberInfoMap.count(remote) == 0) {
+        SGLOGI("not found callback");
+        return;
+    }
+    std::vector<SecurityCollector::Event> tmp = g_subscriberInfoMap.at(remote).events;
+    if (tmp.empty()) {
+        return;
+    }
+    auto proxy = iface_cast<IAcquireDataCallback>(remote);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return;
+    }
+    auto task = [proxy, tmp] () {
+        proxy->OnNotify(tmp);
+    };
+    ffrt::submit(task);
+    g_subscriberInfoMap.at(remote).events.clear();
+    g_subscriberInfoMap.at(remote).eventsBuffSize = 0;
+}
+
+void AcquireDataSubscribeManager::BatchUpload(sptr<IRemoteObject> obj,
+    const std::vector<SecurityCollector::Event> &events)
+{
+    auto proxy = iface_cast<IAcquireDataCallback>(obj);
+    if (proxy == nullptr) {
+        SGLOGI("proxy is null");
+        return;
+    }
+    auto task = [proxy, events] () {
+        proxy->OnNotify(events);
+    };
+    SGLOGI("upload event to subscribe");
+    ffrt::submit(task);
+}
+
+void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &event)
+{
+    if (!DataFormat::CheckRiskContent(event.content)) {
+        SGLOGE("CheckRiskContent error");
+        return;
+    }
+    SecEvent secEvent {
+        .eventId = event.eventId,
+        .version = event.version,
+        .date = event.timestamp,
+        .content = event.content
+    };
+    auto task = [secEvent, event] () mutable {
+        int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, secEvent, event.eventSubscribes);
+        if (code != SUCCESS) {
+            SGLOGE("insert event error, %{public}d", code);
+        }
+    };
+    ffrt::submit(task);
+}
+
+bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &event)
+{
+    for (auto &it : g_subscriberInfoMap) {
+        for (const auto &i : it.second.subscribe) {
+            if (i.GetEvent().eventId != event.eventId) {
+                continue;
+            }
+            // has set mute, but this event not belong the sub, means the filter of this sub set has work
+            if (callbackHashMap_.count(it.first) != 0 &&
+                event.eventSubscribes.count(callbackHashMap_.at(it.first)) == 0) {
+                continue;
+            }
+            if (!ConfigDataManager::GetInstance().GetIsBatchUpload(i.GetEventGroup())) {
+                BatchUpload(it.first, {event});
+                continue;
+            }
+            SGLOGD("publish eventid=%{public}" PRId64, event.eventId);
+            for (auto iter : event.eventSubscribes) {
+                SGLOGD("publish eventSubscribes =%{public}s", iter.c_str());
+            }
+            it.second.events.emplace_back(event);
+            it.second.eventsBuffSize += sizeof(event);
+            SGLOGD("cache batch upload event to subscribe %{public}zu", it.second.eventsBuffSize);
+            if (it.second.eventsBuffSize >= MAX_CACHE_EVENT_SIZE) {
+                BatchUpload(it.first, it.second.events);
+                SGLOGI("upload events to batch subscribe, size is %{public}zu", it.second.eventsBuffSize);
+                it.second.events.clear();
+                it.second.eventsBuffSize = 0;
+            }
+            break;
         }
     }
     return true;
 }
 
-void AcquireDataSubscribeManager::DbListener::OnChange(uint32_t optType, const SecEvent &events)
+void AcquireDataSubscribeManager::DbListener::OnChange(uint32_t optType, const SecEvent &events,
+    const std::set<std::string> &eventSubscribes)
 {
-    AcquireDataSubscribeManager::GetInstance().Publish(events);
+    std::lock_guard<std::mutex> lock(g_mutex);
+    SecurityCollector::Event event {
+        .eventId = events.eventId,
+        .version = events.version,
+        .content = events.content,
+        .timestamp = events.date,
+        .eventSubscribes = eventSubscribes
+    };
+    AcquireDataSubscribeManager::GetInstance().BatchPublish(event);
+}
+
+void AcquireDataSubscribeManager::CollectorListenner::OnNotify(const SecurityCollector::Event &event)
+{
+    AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
+}
+int32_t AcquireDataSubscribeManager::SecurityCollectorSubscriber::OnNotify(const SecurityCollector::Event &event)
+{
+    AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
+    return 0;
+}
+
+int64_t AcquireDataSubscribeManager::CollectorListenner::GetEventId()
+{
+    return event_.eventId;
+}
+
+int AcquireDataSubscribeManager::InsertSubscribeMutue(const SecurityEventFilter &subscribeMute,
+    const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
+{
+    std::lock_guard<std::mutex> lock(g_mutex);
+    SGLOGI("in AcquireDataSubscribeManager InsertSubscribeMutue");
+    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
+    SecurityGuard::EventMuteFilter sgFilter = subscribeMute.GetMuteFilter();
+    collectorFilter.eventId = sgFilter.eventId;
+    collectorFilter.mutes = sgFilter.mutes;
+    collectorFilter.type = static_cast<SecurityCollector::SecurityCollectorEventMuteType>(sgFilter.type);
+    collectorFilter.isSetMute = true;
+    EventCfg config {};
+    bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(collectorFilter.eventId, config);
+    if (!isSuccess) {
+        SGLOGE("GetEventConfig error");
+        return BAD_PARAM;
+    }
+    if (muteCache_[subscribeMute.GetMuteFilter().eventId][callback].size() >= MAX_FILTER_SIZE) {
+        SGLOGI("current callback eventid size err, eventId=%{public}" PRId64, collectorFilter.eventId);
+        return FAILED;
+    }
+
+    if (config.prog == "security_guard") {
+        if (!SecurityCollector::DataCollection::GetInstance().Mute(collectorFilter, sdkFlag)) {
+            SGLOGI("Mute SG failed, eventId=%{public}" PRId64, collectorFilter.eventId);
+            return FAILED;
+        }
+        if (eventToListenner_.count(sgFilter.eventId) == 0) {
+            SGLOGI("current collector not start eventId=%{public}" PRId64, sgFilter.eventId);
+            muteCache_[subscribeMute.GetMuteFilter().eventId][callback].emplace_back(collectorFilter);
+            callbackHashMapNotSetMute_[callback] = sdkFlag;
+            return SUCCESS;
+        }
+        callbackHashMap_[callback] = sdkFlag;
+        return SUCCESS;
+    }
+    if (scSubscribeMap_.count(sgFilter.eventId) == 0) {
+        SGLOGI("current sc collector not start eventId=%{public}" PRId64, sgFilter.eventId);
+        muteCache_[subscribeMute.GetMuteFilter().eventId][callback].emplace_back(collectorFilter);
+        callbackHashMapNotSetMute_[callback] = sdkFlag;
+        return SUCCESS;
+    }
+    int ret = SecurityCollector::CollectorManager::GetInstance().Mute(collectorFilter, sdkFlag);
+    if (ret != SUCCESS) {
+        SGLOGE("InsertSubscribeMutue failed, ret=%{public}d", ret);
+        return ret;
+    }
+    callbackHashMap_[callback] = sdkFlag;
+    return SUCCESS;
+}
+
+int AcquireDataSubscribeManager::RemoveSubscribeMutue(const SecurityEventFilter &subscribeMute,
+    const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
+{
+    std::lock_guard<std::mutex> lock(g_mutex);
+    SGLOGI("in AcquireDataSubscribeManager RemoveSubscribeMutue");
+    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
+    SecurityGuard::EventMuteFilter sgFilter = subscribeMute.GetMuteFilter();
+    collectorFilter.eventId = sgFilter.eventId;
+    collectorFilter.mutes = sgFilter.mutes;
+    collectorFilter.type = static_cast<SecurityCollector::SecurityCollectorEventMuteType>(sgFilter.type);
+    collectorFilter.isSetMute = false;
+    EventCfg config {};
+    bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(collectorFilter.eventId, config);
+    if (!isSuccess) {
+        SGLOGE("GetEventConfig error");
+        return BAD_PARAM;
+    }
+    if (muteCache_[sgFilter.eventId][callback].size() >= MAX_FILTER_SIZE) {
+        SGLOGI("current callback eventid size err, eventId=%{public}" PRId64, collectorFilter.eventId);
+        return FAILED;
+    }
+
+    if (config.prog == "security_guard") {
+        if (eventToListenner_.count(sgFilter.eventId) == 0) {
+            SGLOGI("current collector not start eventId=%{public}" PRId64, sgFilter.eventId);
+            muteCache_[subscribeMute.GetMuteFilter().eventId][callback].emplace_back(collectorFilter);
+            callbackHashMapNotSetMute_[callback] = sdkFlag;
+            return SUCCESS;
+        }
+        if (SecurityCollector::DataCollection::GetInstance().Unmute(collectorFilter, sdkFlag)) {
+            SGLOGI("Unmute SG failed, eventId=%{public}" PRId64, collectorFilter.eventId);
+            return FAILED;
+        }
+        return SUCCESS;
+    }
+    if (scSubscribeMap_.count(sgFilter.eventId) == 0) {
+        SGLOGI("current sc collector not start eventId=%{public}" PRId64, sgFilter.eventId);
+        muteCache_[subscribeMute.GetMuteFilter().eventId][callback].emplace_back(collectorFilter);
+        callbackHashMapNotSetMute_[callback] = sdkFlag;
+        return SUCCESS;
+    }
+    int ret = SecurityCollector::CollectorManager::GetInstance().Unmute(collectorFilter, sdkFlag);
+    if (ret != SUCCESS) {
+        SGLOGE("RemoveSubscribeMutue failed, ret=%{public}d", ret);
+        return ret;
+    }
+    return SUCCESS;
 }
 }

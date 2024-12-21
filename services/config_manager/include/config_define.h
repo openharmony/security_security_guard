@@ -23,9 +23,11 @@ namespace {
 #ifndef SECURITY_GUARD_ENABLE_EXT
     const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event.json";
     const std::string &SECURITY_GUARD_MODEL_CFG_FILE = "security_guard_model.cfg";
+    const std::string &SECURITY_GUARD_EVENT_GROUP_CFG_FILE = "security_guard_event_group.json";
 #else
     const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event_ext.json";
     const std::string &SECURITY_GUARD_MODEL_CFG_FILE = "security_guard_model_ext.cfg";
+    const std::string &SECURITY_GUARD_EVENT_GROUP_CFG_FILE = "security_guard_event_group_ext.json";
 #endif
 }
 
@@ -39,36 +41,23 @@ using LoadMode = enum {
 using PathIndex = enum {
     EVENT_CFG_INDEX,
     MODEL_CFG_INDEX,
-    SIG_RULE_CFG_INDEX,
-    URL_RULE_CFG_INDEX,
-    LOCAL_APP_CFG_INDEX,
-    GLOBAL_APP_CFG_INDEX,
-    RELATED_EVENT_ANALYSIS_CFG_INDEX
+    EVENT_GROUP_CFG_INDEX,
 };
 
 const std::vector<std::string> CONFIG_CACHE_FILES = {
     "/data/service/el1/public/security_guard/tmp/" + SECURITY_GUARD_EVENT_CFG_FILE,
     "/data/service/el1/public/security_guard/tmp/" + SECURITY_GUARD_MODEL_CFG_FILE,
-    "/data/service/el1/public/security_guard/tmp/signature_rule.json",
-    "/data/service/el1/public/security_guard/tmp/url_rule.json",
-    "/data/service/el1/public/security_guard/tmp/local_app_attribute.json",
-    "/data/service/el1/public/security_guard/tmp/global_app_attribute.json",
-    "/data/service/el1/public/security_guard/tmp/related_event_analysis.json"
 };
 
 const std::vector<std::string> CONFIG_UPTATE_FILES = {
     "/data/service/el1/public/security_guard/" + SECURITY_GUARD_EVENT_CFG_FILE,
     "/data/service/el1/public/security_guard/" + SECURITY_GUARD_MODEL_CFG_FILE,
-    "/data/service/el1/public/security_guard/signature_rule.json",
-    "/data/service/el1/public/security_guard/url_rule.json",
-    "/data/service/el1/public/security_guard/local_app_attr.json",
-    "/data/service/el1/public/security_guard/global_app_attr.json",
-    "/data/service/el1/public/security_guard/related_event_analysis.json"
 };
 
 const std::vector<std::string> CONFIG_PRESET_FILES = {
     "/system/etc/" + SECURITY_GUARD_EVENT_CFG_FILE,
-    "/system/etc/" + SECURITY_GUARD_MODEL_CFG_FILE
+    "/system/etc/" + SECURITY_GUARD_MODEL_CFG_FILE,
+    "/system/etc/" + SECURITY_GUARD_EVENT_GROUP_CFG_FILE,
 };
 
 const std::string CONFIG_ROOT_PATH = "/data/service/el1/public/security_guard/";

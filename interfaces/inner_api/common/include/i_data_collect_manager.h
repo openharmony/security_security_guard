@@ -26,6 +26,7 @@
 #include "security_event.h"
 #include "security_config_update_info.h"
 #include "security_event_config.h"
+#include "security_event_filter.h"
 namespace OHOS::Security::SecurityGuard {
 constexpr int32_t DATA_COLLECT_MANAGER_SA_ID = 3524;
 
@@ -43,6 +44,8 @@ public:
         CMD_SECURITY_COLLECTOR_STOP = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_COLLECTOR_STOP),
         CMD_SECURITY_CONFIG_UPDATE = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_CONFIG_UPDATE),
         CMD_SECURITY_EVENT_CONFIG_QUERY = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_EVENT_CONFIG_QUERY),
+        CMD_SECURITY_EVENT_MUTE = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_EVENT_MUTE),
+        CMD_SECURITY_EVENT_UNMUTE = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_EVENT_UNMUTE),
     };
 
     virtual int32_t RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
@@ -51,7 +54,8 @@ public:
         const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t Subscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) = 0;
-    virtual int32_t Unsubscribe(const sptr<IRemoteObject> &callback) = 0;
+    virtual int32_t Unsubscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
+        const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
         const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
@@ -60,6 +64,10 @@ public:
         const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &updateInfo) = 0;
     virtual int32_t QuerySecurityEventConfig(std::string &result) = 0;
+    virtual int32_t Mute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
+        const std::string &sdkFlag) = 0;
+    virtual int32_t Unmute(const SecurityEventFilter &subscribeMute,
+        const sptr<IRemoteObject> &callback, const std::string &sdkFlag) = 0;
 };
 
 class IDataCollectManagerCallback : public IRemoteBroker {
@@ -82,7 +90,7 @@ public:
         CMD_DATA_SUBSCRIBE_CALLBACK = static_cast<uint32_t>(InterfaceCode::CMD_DATA_SUBSCRIBE_CALLBACK),
     };
 
-    virtual int32_t OnNotify(const SecurityCollector::Event &event) = 0;
+    virtual int32_t OnNotify(const std::vector<SecurityCollector::Event> &events) = 0;
 };
 
 class ISecurityEventQueryCallback : public IRemoteBroker {

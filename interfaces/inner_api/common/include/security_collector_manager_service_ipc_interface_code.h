@@ -25,7 +25,9 @@ enum class SecurityCollectManagerInterfaceCode {
     CMD_COLLECTOR_UNSUBCRIBE = 2,
     CMD_COLLECTOR_START = 3,
     CMD_COLLECTOR_STOP = 4,
-    CMD_SECURITY_EVENT_QUERY = 5
+    CMD_SECURITY_EVENT_QUERY = 5,
+    CMD_SECURITY_EVENT_MUTE = 6,
+    CMD_SECURITY_EVENT_UNMUTE = 7,
 };
 enum class SecurityCollectManagerCallbackInterfaceCode {
     CMD_COLLECTOR_CALLBACK = 10,

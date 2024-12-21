@@ -20,16 +20,10 @@
 
 #include "security_event_ruler.h"
 #include "security_collector_subscribe_info.h"
+#include "security_collector_event_filter.h"
 #include "security_event.h"
 
 namespace OHOS::Security::SecurityCollector {
-class ICollectorSubscriber {
-public:
-    ICollectorSubscriber(const Event &event, int64_t duration = -1, bool isNotify = false) {};
-    virtual ~ICollectorSubscriber() = default;
-    virtual int32_t OnNotify(const Event &event) = 0;
-};
-
 class BaseCollectorManager {
 public:
     virtual ~BaseCollectorManager() = default;
@@ -39,6 +33,10 @@ public:
         std::vector<SecurityEvent> &events) = 0;
     virtual int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber) = 0;
     virtual int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber) = 0;
+    virtual int32_t Mute(const SecurityCollectorEventFilter &subscribeMute,
+        const std::string &callbackFlag) = 0;
+    virtual int32_t Unmute(const SecurityCollectorEventFilter &subscribeMute,
+        const std::string &callbackFlag) = 0;
 };
 
 class CollectorManager : public BaseCollectorManager {
@@ -56,6 +54,10 @@ public:
         std::vector<SecurityEvent> &events));
     MOCK_METHOD1(CollectorStart, int32_t(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber));
     MOCK_METHOD1(CollectorStop, int32_t(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber));
+    MOCK_METHOD2(Mute, int32_t(const SecurityCollectorEventFilter &subscribeMute,
+        const std::string &callbackFlag));
+    MOCK_METHOD2(Unmute, int32_t(const SecurityCollectorEventFilter &subscribeMute,
+        const std::string &callbackFlag));
 };
 } // OHOS::Security::SecurityCollector
 
