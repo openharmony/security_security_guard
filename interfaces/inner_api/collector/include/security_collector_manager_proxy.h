@@ -23,7 +23,7 @@
 #include "nocopyable.h"
 
 #include "i_security_collector_manager.h"
-
+#include "security_collector_event_filter.h"
 namespace OHOS::Security::SecurityCollector {
 class SecurityCollectorManagerProxy : public IRemoteProxy<ISecurityCollectorManager>, public NoCopyable {
 public:
@@ -39,7 +39,10 @@ public:
         const sptr<IRemoteObject> &callback) override;
     int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
         std::vector<SecurityEvent> &events) override;
-
+    int32_t Mute(const SecurityCollectorEventFilter &subscribeMute,
+        const std::string &callbackFlag) override;
+    int32_t Unmute(const SecurityCollectorEventFilter &subscribeMute,
+        const std::string &callbackFlag) override;
 private:
     static inline BrokerDelegator<SecurityCollectorManagerProxy> delegator_;
 };

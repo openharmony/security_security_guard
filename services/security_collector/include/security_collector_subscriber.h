@@ -21,6 +21,7 @@
 #include "security_collector_subscribe_info.h"
 
 namespace OHOS::Security::SecurityCollector {
+constexpr char NOTIFY_APP_NAME[] = "security_guard";
 class SecurityCollectorSubscriber {
 public:
     using EventHandler = std::function<void(const std::string &appName,

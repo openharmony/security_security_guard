@@ -28,7 +28,7 @@ class DatabaseManager {
 public:
     static DatabaseManager &GetInstance();
     void Init();
-    int InsertEvent(uint32_t source, SecEvent& event);
+    int InsertEvent(uint32_t source, const SecEvent& event, const std::set<std::string> &eventSubscribes = {});
     int QueryAllEvent(std::string table, std::vector<SecEvent> &events);
     int QueryRecentEventByEventId(int64_t eventId, SecEvent &event);
     int QueryRecentEventByEventId(std::string table, const std::vector<int64_t> &eventId, std::vector<SecEvent> &event);
@@ -51,7 +51,7 @@ private:
     std::mutex delMutex_;
     std::unordered_map<int64_t, std::set<std::shared_ptr<IDbListener>>> listenerMap_;
     std::string deviceId_;
-    void DbChanged(int32_t optType, const SecEvent &event);
+    void DbChanged(int32_t optType, const SecEvent &event, const std::set<std::string> &eventSubscribes = {});
 };
 } // namespace OHOS::Security::SecurityGuard
 #endif // SECURITY_GUARD_DATABASE_MANAGER_H

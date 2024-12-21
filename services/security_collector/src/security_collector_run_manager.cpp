@@ -18,8 +18,6 @@
 #include "security_collector_define.h"
 #include "security_collector_log.h"
 #include "data_collection.h"
-#include "event_info.h"
-#include "sg_collect_client.h"
 
 namespace OHOS::Security::SecurityCollector {
 SecurityCollectorRunManager::SecurityCollectorRunManager()
@@ -34,11 +32,22 @@ std::string SecurityCollectorRunManager::CollectorListenner::GetExtraInfo()
     return {};
 }
 
-void SecurityCollectorRunManager::CollectorListenner::OnNotify(const Event &event)
+void SecurityCollectorRunManager::NotifySubscriber(const Event &event)
 {
     LOGI("eventid:%{public}" PRId64 " report by collector, store to db", event.eventId);
-    auto info = std::make_shared<SecurityGuard::EventInfo>(event.eventId, event.version, event.content);
-    (void)SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(info);
+    std::lock_guard<std::mutex> lock(collectorRunMutex_);
+    const auto it = collectorRunManager_.find(event.eventId);
+    if (it == collectorRunManager_.end()) {
+        return;
+    }
+    if (it->second != nullptr) {
+        it->second->OnChange(event);
+    }
+}
+
+void SecurityCollectorRunManager::CollectorListenner::OnNotify(const Event &event)
+{
+    SecurityCollectorRunManager::GetInstance().NotifySubscriber(event);
 }
 
 bool SecurityCollectorRunManager::StartCollector(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber)

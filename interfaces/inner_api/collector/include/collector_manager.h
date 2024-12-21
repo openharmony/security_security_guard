@@ -23,7 +23,7 @@
 #include "i_collector_subscriber.h"
 #include "security_event_ruler.h"
 #include "security_event.h"
-
+#include "security_collector_event_filter.h"
 namespace OHOS::Security::SecurityCollector {
 class CollectorManager : public Singleton<CollectorManager> {
 public:
@@ -39,6 +39,8 @@ public:
         std::vector<SecurityEvent> &events);
     int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber);
     int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber);
+    int32_t Mute(const SecurityCollectorEventFilter &subscribeMute, const std::string &callbackFlag);
+    int32_t Unmute(const SecurityCollectorEventFilter &subscribeMute, const std::string &callbackFlag);
 private:
     void HandleDecipient();
     std::mutex mutex_{};

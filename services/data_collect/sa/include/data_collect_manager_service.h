@@ -42,7 +42,8 @@ public:
     int32_t RequestRiskData(std::string &devId, std::string &eventList, const sptr<IRemoteObject> &callback) override;
     int32_t Subscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) override;
-    int32_t Unsubscribe(const sptr<IRemoteObject> &callback) override;
+    int32_t Unsubscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
+        const sptr<IRemoteObject> &callback) override;
     int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
         const sptr<IRemoteObject> &callback) override;
     int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
@@ -51,6 +52,10 @@ public:
         const sptr<IRemoteObject> &callback) override;
     int32_t ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &info) override;
     int32_t QuerySecurityEventConfig(std::string &result) override;
+    int32_t Mute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
+        const std::string &sdkFlag) override;
+    int32_t Unmute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
+        const std::string &sdkFlag) override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
 
@@ -69,11 +74,12 @@ private:
         std::shared_ptr<std::promise<int32_t>> promise);
     static bool QueryEventByRuler(sptr<ISecurityEventQueryCallback> proxy,
         SecurityCollector::SecurityEventRuler ruler);
-    bool GetSecurityEventConfig(std::vector<int64_t>& eventIdList);
     static int32_t QueryEventConfig(std::string &result);
     bool WriteRemoteFileToLocal(const SecurityGuard::SecurityConfigUpdateInfo &info, const std::string &realPath);
     int32_t IsApiHasPermission(const std::string &api);
+    int32_t IsEventGroupHasPermission(const std::string &eventGroup, int64_t eventId);
     bool ParseTrustListFile(const std::string &trustListFile);
+    int32_t SetDeathCallBack(SgSubscribeEvent event, const sptr<IRemoteObject> &callback);
     std::mutex mutex_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
 };

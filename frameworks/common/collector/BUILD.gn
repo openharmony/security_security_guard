@@ -49,9 +49,7 @@ ohos_shared_library("libsg_collector_sdk") {
   sources = [
     "src/collector_manager.cpp",
     "src/collector_service_loader.cpp",
-    "src/i_collector.cpp",
-    "src/i_collector_fwk.cpp",
-    "src/i_collector_subscriber.cpp",
+    "src/security_collector_event_filter.cpp",
     "src/security_collector_manager_callback_service.cpp",
     "src/security_collector_manager_callback_stub.cpp",
     "src/security_collector_manager_proxy.cpp",

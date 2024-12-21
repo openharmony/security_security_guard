@@ -26,7 +26,6 @@
 #include "acquire_data_subscribe_manager.h"
 #include "acquire_data_callback_proxy.h"
 #include "data_collect_manager_callback_proxy.h"
-#include "data_collect_manager_callback_proxy.h"
 #include "data_collect_manager_service.h"
 #include "data_collect_manager_stub.h"
 #include "security_event_query_callback_proxy.h"
@@ -64,13 +63,12 @@ bool AcquireDataSubscribeManagerFuzzTest(const uint8_t* data, size_t size)
     offset += sizeof(int64_t);
     std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
     Security::SecurityCollector::Event event{eventId, string, string, string};
-    SecEvent events{eventId, string};
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
     AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
-    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(obj);
-    AcquireDataSubscribeManager::GetInstance().Publish(events);
-    AcquireDataSubscribeManager::GetInstance().SubscribeSc(eventId);
+    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
+    AcquireDataSubscribeManager::GetInstance().BatchPublish(event);
+    AcquireDataSubscribeManager::GetInstance().SubscribeSc(eventId, obj);
     AcquireDataSubscribeManager::GetInstance().UnSubscribeSc(eventId);
     return true;
 }
@@ -87,7 +85,7 @@ bool AcquireDataCallbackProxyFuzzTest(const uint8_t* data, size_t size)
     Security::SecurityCollector::Event event{eventId, string, string, string};
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     AcquireDataCallbackProxy proxy{obj};
-    proxy.OnNotify(event);
+    proxy.OnNotify({event});
     return true;
 }
 

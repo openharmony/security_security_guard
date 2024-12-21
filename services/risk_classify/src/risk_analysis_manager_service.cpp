@@ -25,6 +25,7 @@
 #include "database_manager.h"
 #include "errors.h"
 #include "model_manager.h"
+#include "event_group_config.h"
 #include "risk_analysis_define.h"
 #include "risk_analysis_manager_callback_proxy.h"
 #include "security_guard_define.h"
@@ -68,7 +69,10 @@ void RiskAnalysisManagerService::OnStart()
     if (!success) {
         SGLOGE("init model config error");
     }
-
+    success = ConfigManager::InitConfig<EventGroupConfig>();
+    if (!success) {
+        SGLOGE("init event group error");
+    }
     auto task = [] {
         ModelManager::GetInstance().Init();
     };

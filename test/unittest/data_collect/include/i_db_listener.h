@@ -17,7 +17,7 @@
 #define SECURITY_GUARD_I_DB_LISTENER_H
 
 #include "i_model_info.h"
-
+#include <set>
 namespace OHOS::Security::SecurityGuard {
 class IDbListener {
 public:
@@ -26,7 +26,8 @@ public:
         DELETE
     };
     virtual ~IDbListener() = default;
-    virtual void OnChange(uint32_t optType, const SecEvent &events) = 0;
+    virtual void OnChange(uint32_t optType, const SecEvent &events,
+        const std::set<std::string> &eventSubscribes = {}) = 0;
 };
 } // namespace OHOS::Security::SecurityGuard
 
