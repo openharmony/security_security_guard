@@ -97,7 +97,7 @@ private:
     };
     class CollectorListenner : public SecurityCollector::ICollectorFwk {
     public:
-        CollectorListenner(const SecurityCollector::Event &event) : event_(event) {}
+        explicit CollectorListenner(const SecurityCollector::Event &event) : event_(event) {}
         int64_t GetEventId() override;
         void OnNotify(const SecurityCollector::Event &event) override;
     private:

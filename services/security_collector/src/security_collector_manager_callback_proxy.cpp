@@ -38,7 +38,7 @@ int32_t SecurityCollectorManagerCallbackProxy::OnNotify(const Event &event)
         return WRITE_ERR;
     }
     for (auto iter : event.eventSubscribes) {
-        if(!data.WriteString(iter)) {
+        if (!data.WriteString(iter)) {
             LOGE("failed to write eventSubscribes");
             return WRITE_ERR;
         }
