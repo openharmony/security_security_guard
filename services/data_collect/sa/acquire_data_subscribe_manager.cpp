@@ -109,14 +109,12 @@ int AcquireDataSubscribeManager::SubscribeScInSg(int64_t eventId, const sptr<IRe
                 !SecurityCollector::DataCollection::GetInstance().Mute(
                     it, callbackHashMapNotSetMute_[iter.first])) {
                 SGLOGE("Mute SG failed, eventId=%{public}" PRId64, eventId);
-                return FAILED;
             }
             callbackHashMap_[iter.first] = callbackHashMapNotSetMute_[iter.first];
             if (it.eventId == eventId && it.isSetMute == false &&
                 !SecurityCollector::DataCollection::GetInstance().Unmute(
                     it, callbackHashMapNotSetMute_[iter.first])) {
                 SGLOGE("Unmute SG failed, eventId=%{public}" PRId64, eventId);
-                return FAILED;
             }
         }
     }
@@ -145,16 +143,18 @@ int AcquireDataSubscribeManager::SubscribeScInSc(int64_t eventId, const sptr<IRe
     for (const auto &iter : muteCache_.at(eventId)) {
         for (auto it : iter.second) {
             if (it.eventId == eventId && it.isSetMute == true) {
-                return SecurityCollector::CollectorManager::GetInstance().Mute(
+                code = SecurityCollector::CollectorManager::GetInstance().Mute(
                     it, callbackHashMapNotSetMute_[iter.first]);
             }
             callbackHashMap_[iter.first] = callbackHashMapNotSetMute_[iter.first];
             if (it.eventId == eventId && it.isSetMute == false) {
-                SGLOGI("Unmute SG failed, eventId=%{public}" PRId64, eventId);
-                return SecurityCollector::CollectorManager::GetInstance().Unmute(
+                code = SecurityCollector::CollectorManager::GetInstance().Unmute(
                     it, callbackHashMapNotSetMute_[iter.first]);
             }
         }
+    }
+    if (code != SUCCESS) {
+        SGLOGE("mute or unmute has some err code=%{public}d", code);
     }
     return SUCCESS;
 }
