@@ -358,7 +358,8 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     if (subscribeInfo.GetEventGroup() == "") {
         ret = IsApiHasPermission("Subscribe");
     } else {
-        ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(), {1, subscribeInfo.GetEvent().eventId});
+        ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(),
+            std::vector<int64_t>{subscribeInfo.GetEvent().eventId});
     }
     if (ret != SUCCESS) {
         event.ret = ret;
@@ -386,7 +387,8 @@ int32_t DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
     if (subscribeInfo.GetEventGroup() == "") {
         ret = IsApiHasPermission("Subscribe");
     } else {
-        ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(), {1, subscribeInfo.GetEvent().eventId});
+        ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(),
+            std::vector<int64_t>{subscribeInfo.GetEvent().eventId});
     }
     if (ret != SUCCESS) {
         event.ret = ret;
@@ -453,7 +455,7 @@ int32_t DataCollectManagerService::QuerySecurityEvent(std::vector<SecurityCollec
             SGLOGI("rulers is empty");
             return NULL_OBJECT;
         }
-        ret = IsEventGroupHasPermission(eventGroup, {});
+        ret = IsEventGroupHasPermission(eventGroup, std::vector<int64_t>{});
     }
     if (ret != SUCCESS) {
         return ret;
@@ -583,7 +585,7 @@ int32_t DataCollectManagerService::IsEventGroupHasPermission(const std::string &
         SGLOGE("get event group config fail group = %{public}s", eventGroup.c_str());
         return BAD_PARAM;
     }
-    for (int16_t eventId : eventIds) {
+    for (int64_t eventId : eventIds) {
         if (config.eventList.count(eventId) == 0) {
             SGLOGE("eventid not in eventid list");
             return BAD_PARAM;
@@ -779,7 +781,7 @@ int32_t DataCollectManagerService::Mute(const SecurityEventFilter &subscribeMute
         return BAD_PARAM;
     }
     int32_t ret = IsEventGroupHasPermission(subscribeMute.GetMuteFilter().eventGroup,
-        {1, subscribeMute.GetMuteFilter().eventId});
+        std::vector<int64_t>{subscribeMute.GetMuteFilter().eventId});
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSetMuteEvent(event);
@@ -810,7 +812,7 @@ int32_t DataCollectManagerService::Unmute(const SecurityEventFilter &subscribeMu
         return BAD_PARAM;
     }
     int32_t ret = IsEventGroupHasPermission(subscribeMute.GetMuteFilter().eventGroup,
-        {1, subscribeMute.GetMuteFilter().eventId});
+        std::vector<int64_t>{subscribeMute.GetMuteFilter().eventId});
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSetUnMuteEvent(event);
