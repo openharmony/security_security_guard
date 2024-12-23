@@ -453,11 +453,7 @@ int32_t DataCollectManagerService::QuerySecurityEvent(std::vector<SecurityCollec
             SGLOGI("rulers is empty");
             return NULL_OBJECT;
         }
-        std::vector<int64_t> eventIds;
-        for (SecurityCollector::SecurityEventRuler ruler : rulers) {
-            eventIds.push_back(ruler.GetEventId());
-        }
-        ret = IsEventGroupHasPermission(eventGroup, eventIds);
+        ret = IsEventGroupHasPermission(eventGroup, {});
     }
     if (ret != SUCCESS) {
         return ret;
@@ -467,10 +463,19 @@ int32_t DataCollectManagerService::QuerySecurityEvent(std::vector<SecurityCollec
         SGLOGI("proxy is null");
         return NULL_OBJECT;
     }
-
-    auto task = [proxy, rulers] {
+    auto task = [proxy, rulers, eventGroup] {
         std::string errEventIds;
+        EventGroupCfg config {};
+        if (!ConfigDataManager::GetInstance().GetEventGroupConfig(eventGroup, config)) {
+            SGLOGE("get event group config fail group = %{public}s", eventGroup.c_str());
+            return;
+        }
         for (auto &ruler : rulers) {
+            if (config.eventList.count(ruler.GetEventId()) == 0) {
+                SGLOGE("eventid not in eventid list");
+                errEventIds.append(std::to_string(ruler.GetEventId()) + " ");
+                continue;
+            }
             if (!QueryEventByRuler(proxy, ruler)) {
                 errEventIds.append(std::to_string(ruler.GetEventId()) + " ");
             }
@@ -483,7 +488,6 @@ int32_t DataCollectManagerService::QuerySecurityEvent(std::vector<SecurityCollec
         }
         proxy->OnComplete();
     };
-
     ffrt::submit(task);
     return SUCCESS;
 }
