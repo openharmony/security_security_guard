@@ -40,7 +40,9 @@ public:
     int32_t Mute(const std::shared_ptr<EventMuteFilter> &subscribeMute);
     int32_t Unmute(const std::shared_ptr<EventMuteFilter> &subscribeMute);
     int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
-                            std::shared_ptr<SecurityEventQueryCallback> callback);
+        std::shared_ptr<SecurityEventQueryCallback> callback);
+    int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
+        std::shared_ptr<SecurityEventQueryCallback> callback, const std::string &eventGroup);
     int32_t QuerySecurityEventConfig(std::string &result);
     int32_t StartCollector(const SecurityCollector::Event &event, int64_t duration);
     int32_t StopCollector(const SecurityCollector::Event &event);

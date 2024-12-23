@@ -45,7 +45,7 @@ public:
     int32_t Unsubscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) override;
     int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
-        const sptr<IRemoteObject> &callback) override;
+        const sptr<IRemoteObject> &callback, const std::string &eventGroup) override;
     int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &callback) override;
     int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
@@ -77,7 +77,7 @@ private:
     static int32_t QueryEventConfig(std::string &result);
     bool WriteRemoteFileToLocal(const SecurityGuard::SecurityConfigUpdateInfo &info, const std::string &realPath);
     int32_t IsApiHasPermission(const std::string &api);
-    int32_t IsEventGroupHasPermission(const std::string &eventGroup, int64_t eventId);
+    int32_t IsEventGroupHasPermission(const std::string &eventGroup, std::vector<int64_t> eventIds);
     bool ParseTrustListFile(const std::string &trustListFile);
     int32_t SetDeathCallBack(SgSubscribeEvent event, const sptr<IRemoteObject> &callback);
     std::mutex mutex_{};

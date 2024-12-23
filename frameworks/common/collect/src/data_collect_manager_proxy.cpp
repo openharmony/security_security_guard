@@ -159,7 +159,7 @@ int32_t DataCollectManagerProxy::Unsubscribe(const SecurityCollector::SecurityCo
 }
 
 int32_t DataCollectManagerProxy::QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
-    const sptr<IRemoteObject> &callback)
+    const sptr<IRemoteObject> &callback, const std::string &eventGroup)
 {
     SGLOGI("enter DataCollectManagerProxy QuerySecurityEvent");
     MessageParcel data;
@@ -167,6 +167,11 @@ int32_t DataCollectManagerProxy::QuerySecurityEvent(std::vector<SecurityCollecto
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         SGLOGE("WriteInterfaceToken error");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteString(eventGroup)) {
+        SGLOGE("failed to write string for eventGroup");
         return WRITE_ERR;
     }
 
