@@ -414,7 +414,7 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
     bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(ruler.GetEventId(), config);
     if (!isSuccess) {
         SGLOGE("GetEventConfig error, eventId is 0x%{public}" PRIx64, ruler.GetEventId());
-        return true;
+        return false;
     }
     std::vector<SecurityCollector::SecurityEvent> replyEvents;
     std::vector<int64_t> eventIds{ruler.GetEventId()};
