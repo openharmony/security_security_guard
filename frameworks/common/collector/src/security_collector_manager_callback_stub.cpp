@@ -17,7 +17,9 @@
 
 #include "security_collector_define.h"
 #include "security_collector_log.h"
-
+namespace {
+    constexpr size_t MAX_SUB_SIZE = 10000;
+}
 namespace OHOS::Security::SecurityCollector {
 int32_t SecurityCollectorManagerCallbackStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
@@ -41,6 +43,10 @@ int32_t SecurityCollectorManagerCallbackStub::OnRemoteRequest(uint32_t code, Mes
         event.content = data.ReadString();
         event.extra = data.ReadString();
         uint32_t size = data.ReadUint32();
+        if (size > MAX_SUB_SIZE) {
+            LOGE("the subs size error");
+            return BAD_PARAM;
+        }
         for (uint32_t i = 0; i < size; i++) {
             event.eventSubscribes.insert(data.ReadString());
         }
