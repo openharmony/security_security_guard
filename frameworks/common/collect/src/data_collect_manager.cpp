@@ -58,23 +58,27 @@ DataCollectManager::DataCollectManager() : callback_(new (std::nothrow) AcquireD
 int32_t DataCollectManager::QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
                                                std::shared_ptr<SecurityEventQueryCallback> callback)
 {
+    if (callback == nullptr) {
+        SGLOGE("callback is null");
+        return NULL_OBJECT;
+    }
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         SGLOGE("GetSystemAbilityManager error");
-        return -1;
+        return FAILED;
     }
 
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
     auto proxy = iface_cast<IDataCollectManager>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
-        return -1;
+        return NULL_OBJECT;
     }
 
     auto obj = new (std::nothrow) SecurityEventQueryCallbackService(callback);
     if (obj == nullptr) {
         SGLOGE("obj is null");
-        return -1;
+        return NULL_OBJECT;
     }
 
     int32_t ret = proxy->QuerySecurityEvent(rulers, obj);
