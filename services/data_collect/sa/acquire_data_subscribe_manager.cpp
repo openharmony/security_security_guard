@@ -35,6 +35,7 @@ namespace {
     constexpr size_t MAX_CACHE_EVENT_SIZE = 64 * 1024;
     constexpr int64_t MAX_DURATION_TEN_SECOND = 10 * 1000;
     constexpr int64_t MAX_FILTER_SIZE = 256;
+    constexpr size_t MAX_SUBS_SIZE = 10;
     std::mutex g_mutex{};
     std::map<sptr<IRemoteObject>, AcquireDataSubscribeManager::SubscriberInfo> g_subscriberInfoMap{};
 }
@@ -56,10 +57,13 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
-    int64_t event = subscribeInfo.GetEvent().eventId;
 
     std::lock_guard<std::mutex> lock(g_mutex);
     SubscriberInfo subInfo {};
+    if (g_subscriberInfoMap.size() >= MAX_SUBS_SIZE) {
+        SGLOGE("has been max subscriber size");
+        return BAD_PARAM;
+    }
     if (g_subscriberInfoMap.count(callback) == 0) {
         subInfo.subscribe.emplace_back(subscribeInfo);
         subInfo.timer = std::make_shared<CleanupTimer>();

@@ -35,7 +35,6 @@
 
 namespace OHOS::Security::SecurityCollector {
 namespace {
-    constexpr char PERMISSION[] = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
     constexpr char REPORT_PERMISSION[] = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
     constexpr char COLLECT_EVENT_PERMISSION[] = "ohos.permission.COLLECT_SECURITY_EVENT";
     constexpr char QUERY_EVENT_PERMISSION[] = "ohos.permission.QUERY_SECURITY_EVENT";
