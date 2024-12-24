@@ -355,7 +355,12 @@ bool DataCollection::Mute(const SecurityCollectorEventMuteFilter &filter, const 
     }
     std::lock_guard<std::mutex> lock(mutex_);
     auto loader = eventIdToLoaderMap_.at(filter.eventId);
-    if (loader.CallGetCollector()->Mute(filter, sdkFlag) != 0) {
+    ICollector* collector = loader.CallGetCollector();
+    if (collector == nullptr) {
+        LOGE("CallGetCollector error");
+        return false;
+    }
+    if (collector->Mute(filter, sdkFlag) != 0) {
         LOGE("fail to set mute to collector, eventId is 0x%{public}" PRIx64, filter.eventId);
         return false;
     }
@@ -370,7 +375,12 @@ bool DataCollection::Unmute(const SecurityCollectorEventMuteFilter &filter, cons
     }
     std::lock_guard<std::mutex> lock(mutex_);
     auto loader = eventIdToLoaderMap_.at(filter.eventId);
-    if (loader.CallGetCollector()->Unmute(filter, sdkFlag) != 0) {
+    ICollector* collector = loader.CallGetCollector();
+    if (collector == nullptr) {
+        LOGE("CallGetCollector error");
+        return false;
+    }
+    if (collector->Unmute(filter, sdkFlag) != 0) {
         LOGE("fail to set unmute to collector, eventId is 0x%{public}" PRIx64, filter.eventId);
         return false;
     }
