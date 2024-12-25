@@ -17,7 +17,8 @@
 #define SECURITY_GUARD_DATA_COLLECT_KIT_TEST
 
 #include <gtest/gtest.h>
-
+#include "security_guard_api.h"
+#include "security_guard_define.h"
 namespace OHOS::Security::SecurityGuardTest {
 class DataCollectKitTest : public testing::Test {
 public:
@@ -28,7 +29,8 @@ public:
     void SetUp() override;
 
     void TearDown() override;
-
+    static void RequestSecurityEventInfoCallBackFunc(const DeviceIdentify *devId, const char *eventBuffList,
+        uint32_t status);
 private:
     static bool isEnforcing_;
 };
