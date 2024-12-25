@@ -322,11 +322,11 @@ void DataCollectManagerProxyQuerySecurityEventFuzzTest(const uint8_t* data, size
         return 0;
     };
     sptr<DataCollectManagerCallbackService> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
-    std::string string(reinterpret_cast<const char*>(data), size);
+    std::string eventGroup(reinterpret_cast<const char*>(data), size);
     sptr<IRemoteObject> objQuery(new (std::nothrow) SecurityEventQueryCallbackService(nullptr));
     std::vector<SecurityEventRuler> rulers{};
     DataCollectManagerProxy proxy{callback};
-    proxy.QuerySecurityEvent(rulers, objQuery);
+    proxy.QuerySecurityEvent(rulers, objQuery, eventGroup);
 }
 
 void DataCollectManagerProxyCollectorStartStopFuzzTest(const uint8_t* data, size_t size)

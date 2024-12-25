@@ -38,7 +38,7 @@ public:
     bool StopCollectors(const std::vector<int64_t>& eventIds);
     ErrorCode GetCollectorType(int64_t eventId, int32_t& collectorType);
     int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
-    std::vector<SecurityEvent> &events);
+        std::vector<SecurityEvent> &events);
     bool SecurityGuardSubscribeCollector(const std::vector<int64_t>& eventIds);
     void CloseLib();
     bool Mute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag);
