@@ -345,7 +345,7 @@ HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest004, testing::ext::Te
     sptr<IRemoteObject> objQuery(new (std::nothrow) SecurityEventQueryCallbackService(nullptr));
     std::vector<SecurityEventRuler> rulers{};
     DataCollectManagerProxy proxy{callback};
-    int ret = proxy.QuerySecurityEvent(rulers, objQuery);
+    int ret = proxy.QuerySecurityEvent(rulers, objQuery, "securityGroup");
     EXPECT_EQ(ret, NO_PERMISSION);
 }
  
