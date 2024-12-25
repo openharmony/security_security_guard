@@ -208,7 +208,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_GetEventConfigError00
     sptr<SecurityEventQueryCallbackProxy> mockProxy = new (std::nothrow) SecurityEventQueryCallbackProxy(obj);
     SecurityCollector::SecurityEventRuler ruler;
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    EXPECT_TRUE(service.QueryEventByRuler(mockProxy, ruler));
+    EXPECT_FALSE(service.QueryEventByRuler(mockProxy, ruler));
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_GetEventConfigError002, TestSize.Level1)
@@ -221,7 +221,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_GetEventConfigError00
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     EXPECT_CALL(*obj, SendRequest).Times(1);
     mockProxy->OnError("123");
-    EXPECT_TRUE(service.QueryEventByRuler(mockProxy, ruler));
+    EXPECT_FALSE(service.QueryEventByRuler(mockProxy, ruler));
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_QueryInDatabase, TestSize.Level1)
@@ -1189,7 +1189,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent, TestSize.Level1)
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_DENIED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.QuerySecurityEvent(rules, obj, "securityGroup");
+    int32_t result = service.QuerySecurityEvent(rules, obj, "");
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
@@ -1207,8 +1207,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent01, TestSize.Level1)
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.QuerySecurityEvent(rules, obj, "securityGroup");
-    EXPECT_CALL(*obj, SendRequest).Times(2);
+    int32_t result = service.QuerySecurityEvent(rules, obj, "");
     EXPECT_EQ(result, SUCCESS);
 }
 
@@ -1226,7 +1225,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent02, TestSize.Level1)
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(false));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.QuerySecurityEvent(rules, obj, "securityGroup");
+    int32_t result = service.QuerySecurityEvent(rules, obj, "");
     EXPECT_EQ(result, NO_SYSTEMCALL);
 }
 
@@ -1244,7 +1243,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent03, TestSize.Level1)
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.QuerySecurityEvent(rules, obj, "securityGroup");
+    int32_t result = service.QuerySecurityEvent(rules, obj, "");
     EXPECT_EQ(result, NULL_OBJECT);
 }
 

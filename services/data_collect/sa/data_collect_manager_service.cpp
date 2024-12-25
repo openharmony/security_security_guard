@@ -451,10 +451,6 @@ int32_t DataCollectManagerService::QuerySecurityEvent(std::vector<SecurityCollec
     if (eventGroup == "") {
         ret = IsApiHasPermission("QuerySecurityEvent");
     } else {
-        if (rulers.empty()) {
-            SGLOGI("rulers is empty");
-            return NULL_OBJECT;
-        }
         ret = IsEventGroupHasPermission(eventGroup, std::vector<int64_t>{});
     }
     if (ret != SUCCESS) {

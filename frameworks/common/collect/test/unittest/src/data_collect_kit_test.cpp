@@ -256,7 +256,6 @@ HWTEST_F(DataCollectKitTest, Subscribe002, TestSize.Level1)
     SecurityGuard::DataCollectManager::GetInstance().subscribers_.clear();
     ret = SecurityGuard::DataCollectManager::GetInstance().Subscribe(g_sub);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
-
 }
 
 /**
@@ -285,7 +284,6 @@ HWTEST_F(DataCollectKitTest, Unsubscribe002, TestSize.Level1)
     ret = SecurityGuard::DataCollectManager::GetInstance().Unsubscribe(g_sub);
     EXPECT_EQ(ret, SecurityGuard::SUCCESS);
     EXPECT_EQ(SecurityGuard::DataCollectManager::GetInstance().subscribers_.count(g_sub), 0);
-
 }
 /**
  * @tc.name: RequestSecurityEventInfoAsync001
@@ -455,7 +453,7 @@ HWTEST_F(DataCollectKitTest, UnMute001, TestSize.Level1)
 
 HWTEST_F(DataCollectKitTest, StartCollector001, TestSize.Level1)
 {
-     SecurityCollector::Event event {};
+    SecurityCollector::Event event {};
     int64_t duration = 0;
     int ret = SecurityGuard::DataCollectManager::GetInstance().StartCollector(event, duration);
     EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
@@ -463,7 +461,7 @@ HWTEST_F(DataCollectKitTest, StartCollector001, TestSize.Level1)
 
 HWTEST_F(DataCollectKitTest, StopCollector001, TestSize.Level1)
 {
-     SecurityCollector::Event event {};
+    SecurityCollector::Event event {};
     int ret = SecurityGuard::DataCollectManager::GetInstance().StopCollector(event);
     EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
