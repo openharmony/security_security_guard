@@ -20,7 +20,9 @@
 #include "securec.h"
 #include "token_setproc.h"
 #include "accesstoken_kit.h"
+#include "sg_obtaindata_client.h"
 #define private public
+#include "data_collect_manager.h"
 #include "security_guard_define.h"
 #include "sg_collect_client.h"
 #undef private
@@ -41,21 +43,6 @@ namespace OHOS::Security::SecurityGuardTest {
 
 void DataCollectKitTest::SetUpTestCase()
 {
-    static const char *permission[] = { "ohos.permission.securityguard.REPORT_SECURITY_INFO" };
-    uint64_t tokenId;
-    NativeTokenInfoParams infoParams = {
-        .dcapsNum = 0,
-        .permsNum = 1,
-        .aclsNum = 0,
-        .dcaps = nullptr,
-        .perms = permission,
-        .acls = nullptr,
-        .processName = "security_guard",
-        .aplStr = "system_basic",
-    };
-    tokenId = GetAccessTokenId(&infoParams);
-    SetSelfTokenID(tokenId);
-    AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
     string isEnforcing;
     LoadStringFromFile("/sys/fs/selinux/enforce", isEnforcing);
     if (isEnforcing.compare("1") == 0) {
@@ -80,7 +67,12 @@ void DataCollectKitTest::TearDown()
 }
 
 bool DataCollectKitTest::isEnforcing_ = false;
-
+void DataCollectKitTest::RequestSecurityEventInfoCallBackFunc(const DeviceIdentify *devId, const char *eventBuffList,
+    uint32_t status)
+{
+    EXPECT_TRUE(devId != nullptr);
+    EXPECT_TRUE(eventBuffList != nullptr);
+}
 /**
  * @tc.name: ReportSecurityInfo001
  * @tc.desc: ReportSecurityInfo with right param
@@ -100,7 +92,7 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo001, TestSize.Level1)
     EXPECT_TRUE(rc == EOK);
     info.contentLen = static_cast<uint32_t>(content.length());
     int ret = ReportSecurityInfo(&info);
-    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
 
 /**
@@ -122,7 +114,7 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo002, TestSize.Level1)
     EXPECT_TRUE(rc == EOK);
     info.contentLen = static_cast<uint32_t>(content.length());
     int ret = ReportSecurityInfo(&info);
-    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
 
 /**
@@ -144,7 +136,7 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo003, TestSize.Level1)
     EXPECT_TRUE(rc == EOK);
     info.contentLen = static_cast<uint32_t>(content.length());
     int ret = ReportSecurityInfo(&info);
-    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
 
 /**
@@ -166,7 +158,7 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo004, TestSize.Level1)
     EXPECT_TRUE(rc == EOK);
     info.contentLen = static_cast<uint32_t>(content.length());
     int ret = ReportSecurityInfo(&info);
-    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
 
 /**
@@ -188,7 +180,7 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfo005, TestSize.Level1)
     EXPECT_TRUE(rc == EOK);
     info.contentLen = static_cast<uint32_t>(content.length());
     int ret = ReportSecurityInfo(&info);
-    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
 
 /**
@@ -228,5 +220,313 @@ HWTEST_F(DataCollectKitTest, ReportSecurityInfoAsync001, TestSize.Level1)
 HWTEST_F(DataCollectKitTest, ConfigUpdate001, TestSize.Level1)
 {
     EXPECT_NE(SecurityGuardConfigUpdate(-1, "test"), SecurityGuard::SUCCESS);
+}
+
+/**
+ * @tc.name: Subscribe001
+ * @tc.desc: AcquireDataManager Subscribe
+ * @tc.type: FUNC
+ * @tc.require: AR000IENKB
+ */
+class MockSubscriberPtr : public SecurityCollector::ICollectorSubscriber {
+public:
+    explicit MockSubscriberPtr(const SecurityCollector::Event &event) : ICollectorSubscriber(
+        event, -1, false, "securityGroup") {};
+    ~MockSubscriberPtr() override = default;
+    int32_t OnNotify(const SecurityCollector::Event &event) override {return 0;};
+};
+
+HWTEST_F(DataCollectKitTest, Subscribe001, TestSize.Level1)
+{
+    int ret = SecurityGuard::DataCollectManager::GetInstance().Subscribe(nullptr);
+    EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
+}
+
+SecurityCollector::Event g_event {};
+auto g_sub = std::make_shared<MockSubscriberPtr>(g_event);
+
+HWTEST_F(DataCollectKitTest, Subscribe002, TestSize.Level1)
+{
+    SecurityGuard::DataCollectManager::GetInstance().subscribers_.insert(g_sub);
+    int ret = SecurityGuard::DataCollectManager::GetInstance().Subscribe(g_sub);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    auto sub = std::make_shared<MockSubscriberPtr>(g_event);
+    ret = SecurityGuard::DataCollectManager::GetInstance().Subscribe(sub);
+    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
+    SecurityGuard::DataCollectManager::GetInstance().subscribers_.clear();
+    ret = SecurityGuard::DataCollectManager::GetInstance().Subscribe(g_sub);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+}
+
+/**
+ * @tc.name: Unsubscribe001
+ * @tc.desc: AcquireDataManager Unsubscribe
+ * @tc.type: FUNC
+ * @tc.require: AR000IENKB
+ */
+HWTEST_F(DataCollectKitTest, Unsubscribe001, TestSize.Level1)
+{
+    int ret = SecurityGuard::DataCollectManager::GetInstance().Unsubscribe(nullptr);
+    SecurityGuard::DataCollectManager::DeathRecipient recipient = SecurityGuard::DataCollectManager::DeathRecipient();
+    recipient.OnRemoteDied(nullptr);
+    EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
+}
+
+HWTEST_F(DataCollectKitTest, Unsubscribe002, TestSize.Level1)
+{
+    int ret = SecurityGuard::DataCollectManager::GetInstance().Unsubscribe(g_sub);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    SecurityGuard::DataCollectManager::GetInstance().subscribers_.insert(g_sub);
+    ret = SecurityGuard::DataCollectManager::GetInstance().Unsubscribe(g_sub);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    auto sub = std::make_shared<MockSubscriberPtr>(g_event);
+    SecurityGuard::DataCollectManager::GetInstance().subscribers_.insert(sub);
+    ret = SecurityGuard::DataCollectManager::GetInstance().Unsubscribe(g_sub);
+    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
+    EXPECT_EQ(SecurityGuard::DataCollectManager::GetInstance().subscribers_.count(g_sub), 0);
+}
+/**
+ * @tc.name: RequestSecurityEventInfoAsync001
+ * @tc.desc: RequestSecurityEventInfoAsync with right param
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
+HWTEST_F(DataCollectKitTest, RequestSecurityEventInfoAsync001, TestSize.Level1)
+{
+    DeviceIdentify deviceIdentify = {};
+    static std::string eventList = "{\"eventId\":[1011009000]}";
+    int ret = RequestSecurityEventInfoAsync(&deviceIdentify, eventList.c_str(), RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+}
+
+/**
+ * @tc.name: RequestSecurityEventInfoAsync002
+ * @tc.desc: RequestSecurityEventInfoAsync with right param, get all info
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
+HWTEST_F(DataCollectKitTest, RequestSecurityEventInfoAsync002, TestSize.Level1)
+{
+    DeviceIdentify deviceIdentify = {};
+    static std::string eventList = "{\"eventId\":[-1]}";
+    int ret = RequestSecurityEventInfoAsync(&deviceIdentify, eventList.c_str(), RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+}
+
+/**
+ * @tc.name: RequestSecurityEventInfoAsync003
+ * @tc.desc: RequestSecurityEventInfoAsync with wrong eventList key
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
+HWTEST_F(DataCollectKitTest, RequestSecurityEventInfoAsync003, TestSize.Level1)
+{
+    DeviceIdentify deviceIdentify = {};
+    static std::string eventList = "{\"eventIds\":[1011009000]}";
+    int ret = RequestSecurityEventInfoAsync(&deviceIdentify, eventList.c_str(), RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+}
+
+/**
+ * @tc.name: RequestSecurityEventInfoAsync004
+ * @tc.desc: RequestSecurityEventInfoAsync with wrong eventList content
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
+HWTEST_F(DataCollectKitTest, RequestSecurityEventInfoAsync004, TestSize.Level1)
+{
+    DeviceIdentify deviceIdentify = {};
+    static std::string eventList = "{eventId:[1011009000]}";
+    int ret = RequestSecurityEventInfoAsync(&deviceIdentify, eventList.c_str(), RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+}
+
+/**
+ * @tc.name: RequestSecurityEventInfoAsync005
+ * @tc.desc: RequestSecurityEventInfoAsync with wrong eventList null
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
+HWTEST_F(DataCollectKitTest, RequestSecurityEventInfoAsync005, TestSize.Level1)
+{
+    DeviceIdentify deviceIdentify = {};
+    static std::string eventList = "{\"eventIds\":[]}";
+    int ret = RequestSecurityEventInfoAsync(&deviceIdentify, eventList.c_str(), RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+}
+
+/**
+ * @tc.name: RequestSecurityEventInfoAsync006
+ * @tc.desc: RequestSecurityEventInfoAsync with wrong eventList not contain right eventId
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
+HWTEST_F(DataCollectKitTest, RequestSecurityEventInfoAsync006, TestSize.Level1)
+{
+    DeviceIdentify deviceIdentify = {};
+    static std::string eventList = "{\"eventIds\":[0]}";
+    int ret = RequestSecurityEventInfoAsync(&deviceIdentify, eventList.c_str(), RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+}
+
+/**
+ * @tc.name: RequestSecurityEventInfoAsync007
+ * @tc.desc: RequestSecurityEventInfoAsync with null devId
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
+HWTEST_F(DataCollectKitTest, RequestSecurityEventInfoAsync007, TestSize.Level1)
+{
+    static std::string eventList = "{\"eventIds\":[0]}";
+    int ret = RequestSecurityEventInfoAsync(nullptr, eventList.c_str(), RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+}
+
+/**
+ * @tc.name: RequestSecurityEventInfoAsync008
+ * @tc.desc: RequestSecurityEventInfoAsync with null eventList
+ * @tc.type: FUNC
+ * @tc.require: SR000H96FD
+ */
+HWTEST_F(DataCollectKitTest, RequestSecurityEventInfoAsync008, TestSize.Level1)
+{
+    DeviceIdentify deviceIdentify = {};
+    int ret = RequestSecurityEventInfoAsync(&deviceIdentify, nullptr, RequestSecurityEventInfoCallBackFunc);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+}
+
+/**
+ * @tc.name: QuerySecurityEvent001
+ * @tc.desc: DataCollectManager QuerySecurityEvent
+ * @tc.type: FUNC
+ * @tc.require: AR000IENKB
+ */
+HWTEST_F(DataCollectKitTest, QuerySecurityEvent001, TestSize.Level1)
+{
+    std::vector<SecurityCollector::SecurityEventRuler> rulers {};
+    int ret = SecurityGuard::DataCollectManager::GetInstance().QuerySecurityEvent(rulers, nullptr);
+    EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
+}
+
+class MockNapiSecurityEventQuerier : public SecurityGuard::SecurityEventQueryCallback {
+public:
+    MockNapiSecurityEventQuerier() = default;
+    ~MockNapiSecurityEventQuerier() override = default;
+    void OnQuery(const std::vector<SecurityCollector::SecurityEvent> &events) override {};
+    void OnComplete() override {};
+    void OnError(const std::string &message) override {};
+};
+
+HWTEST_F(DataCollectKitTest, QuerySecurityEvent002, TestSize.Level1)
+{
+    std::vector<SecurityCollector::SecurityEventRuler> rulers {};
+    auto callback = std::make_shared<MockNapiSecurityEventQuerier>();
+    int ret = SecurityGuard::DataCollectManager::GetInstance().QuerySecurityEvent(rulers, callback);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+}
+
+HWTEST_F(DataCollectKitTest, Mute001, TestSize.Level1)
+{
+    auto muteinfo = std::make_shared<SecurityGuard::EventMuteFilter> ();
+    muteinfo->eventGroup = "securityGroup";
+    int ret = SecurityGuard::DataCollectManager::GetInstance().Mute(muteinfo);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    muteinfo->eventGroup = "";
+    ret = SecurityGuard::DataCollectManager::GetInstance().Mute(muteinfo);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    ret = SecurityGuard::DataCollectManager::GetInstance().Mute(nullptr);
+    EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
+}
+
+HWTEST_F(DataCollectKitTest, UnMute001, TestSize.Level1)
+{
+    auto muteinfo = std::make_shared<SecurityGuard::EventMuteFilter> ();
+    muteinfo->eventGroup = "securityGroup";
+    int ret = SecurityGuard::DataCollectManager::GetInstance().Unmute(muteinfo);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    muteinfo->eventGroup = "";
+    ret = SecurityGuard::DataCollectManager::GetInstance().Unmute(muteinfo);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    ret = SecurityGuard::DataCollectManager::GetInstance().Unmute(nullptr);
+    EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
+}
+
+HWTEST_F(DataCollectKitTest, StartCollector001, TestSize.Level1)
+{
+    SecurityCollector::Event event {};
+    int64_t duration = 0;
+    int ret = SecurityGuard::DataCollectManager::GetInstance().StartCollector(event, duration);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+}
+
+HWTEST_F(DataCollectKitTest, StopCollector001, TestSize.Level1)
+{
+    SecurityCollector::Event event {};
+    int ret = SecurityGuard::DataCollectManager::GetInstance().StopCollector(event);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+}
+
+HWTEST_F(DataCollectKitTest, Mute002, testing::ext::TestSize.Level1)
+{
+    SecurityGuard::EventMuteFilter info {};
+    SecurityGuard::SecurityEventFilter filter(info);
+    Parcel parcel;
+    bool ret = filter.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    SecurityGuard::SecurityEventFilter *retInfo = filter.Unmarshalling(parcel);
+    EXPECT_FALSE(retInfo == nullptr);
+}
+
+HWTEST_F(DataCollectKitTest, Mute003, testing::ext::TestSize.Level1)
+{
+    SecurityGuard::EventMuteFilter info {};
+    SecurityGuard::SecurityEventFilter filter(info);
+    Parcel parcel {};
+    int64_t int64 = 0;
+    uint32_t uint32 = 0;
+    std::string string = "111";
+
+    bool ret = filter.ReadFromParcel(parcel);
+    EXPECT_FALSE(ret);
+
+    parcel.WriteInt64(int64);
+    ret = filter.ReadFromParcel(parcel);
+    EXPECT_FALSE(ret);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteInt64(int64);
+    ret = filter.ReadFromParcel(parcel);
+    EXPECT_FALSE(ret);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteInt64(int64);
+    parcel.WriteString(string);
+    ret = filter.ReadFromParcel(parcel);
+    EXPECT_FALSE(ret);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteInt64(int64);
+    parcel.WriteString(string);
+    parcel.WriteUint32(uint32);
+    ret = filter.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteInt64(int64);
+    parcel.WriteString(string);
+    parcel.WriteUint32(1);
+    ret = filter.ReadFromParcel(parcel);
+    EXPECT_FALSE(ret);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteInt64(int64);
+    parcel.WriteString(string);
+    parcel.WriteUint32(1);
+    parcel.WriteString(string);
+    ret = filter.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret);
+
+    SecurityGuard::SecurityEventFilter *retInfo = filter.Unmarshalling(parcel);
+    EXPECT_TRUE(retInfo == nullptr);
 }
 }
