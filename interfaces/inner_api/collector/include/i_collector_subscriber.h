@@ -24,13 +24,10 @@ namespace OHOS::Security::SecurityCollector {
 class ICollectorSubscriber {
 public:
     ICollectorSubscriber(const Event &event, int64_t duration = -1, bool isNotify = false,
-        const std::string &eventGroup = "")
-        {
-            subscribeInfo_ = SecurityCollectorSubscribeInfo(event, duration, isNotify, eventGroup);
-        };
+        const std::string &eventGroup = "");
     virtual ~ICollectorSubscriber() = default;
     virtual int32_t OnNotify(const Event &event) = 0;
-    SecurityCollectorSubscribeInfo GetSubscribeInfo() {return subscribeInfo_;};
+    SecurityCollectorSubscribeInfo GetSubscribeInfo();
 
 private:
     SecurityCollectorSubscribeInfo subscribeInfo_;
