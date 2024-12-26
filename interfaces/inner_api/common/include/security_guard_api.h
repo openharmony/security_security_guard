@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-#define CONTENT_MAX_LEN 900
+#define CONTENT_MAX_LEN 1500
 #define DEVICE_ID_MAX_LEN 64
 #define RESULT_MAX_LEN 20
 
