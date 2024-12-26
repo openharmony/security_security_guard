@@ -26,7 +26,7 @@
 
 constexpr int CONDITIONS_MAX_LEN = 100;
 constexpr int VERSION_MAX_LEN = 50;
-constexpr int CONTENT_MAX_LEN = 900;
+constexpr int CONTENT_MAX_LEN = 1500;
 constexpr int EXTRA_MAX_LEN = 2000;
 constexpr int DEVICE_ID_MAX_LEN = 64;
 constexpr int FILE_NAME_MAX_LEN = 64;
