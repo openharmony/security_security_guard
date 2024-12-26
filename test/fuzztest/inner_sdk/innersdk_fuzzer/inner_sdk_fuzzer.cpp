@@ -119,11 +119,39 @@ void AcquireDataManagerFuzzTest(const uint8_t* data, size_t size)
     std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
     Security::SecurityCollector::Event event{eventId, string, string, string};
     auto subscriber = std::make_shared<MockCollectorSubscriber>(event);
+    sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     DataCollectManager::GetInstance().Subscribe(subscriber);
     DataCollectManager::GetInstance().Unsubscribe(subscriber);
     DataCollectManager::GetInstance().HandleDecipient();
+    DataCollectManager::GetInstance().StartCollector(event, eventId);
+    DataCollectManager::GetInstance().StopCollector(event);
+    DataCollectManager::DeathRecipient rec {};
+    rec.OnRemoteDied(obj);
+    DataCollectManager::GetInstance().QuerySecurityEventConfig(string);
 }
 
+void DataCollectManagerFuzzTest(const uint8_t* data, size_t size)
+{
+    if (data == nullptr || size < sizeof(int64_t)) {
+        return;
+    }
+    size_t offset = 0;
+    int64_t eventId = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
+    auto mute = std::make_shared<Security::SecurityGuard::EventMuteFilter>();
+    mute->eventId = eventId;
+    mute->type = static_cast<Security::SecurityGuard::EventMuteType>(eventId);
+    mute->eventGroup = string;
+    mute->mutes.emplace_back(string);
+    DataCollectManager::GetInstance().Mute(mute);
+    DataCollectManager::GetInstance().Unmute(mute);
+    auto func = [] (std::string &devId, std::string &riskData, uint32_t status,
+        const std::string &errMsg)-> int32_t {
+        return SUCCESS;
+    };
+    DataCollectManager::GetInstance().RequestSecurityEventInfo(string, string, func);
+}
 void AcquireDataManagerCallbackServiceFuzzTest(const uint8_t* data, size_t size)
 {
     if (data == nullptr || size < sizeof(int64_t)) {
@@ -232,6 +260,14 @@ void CollectorManagerFuzzTest(const uint8_t* data, size_t size)
     manager.Subscribe(subscriber);
     manager.Unsubscribe(nullptr);
     manager.Unsubscribe(subscriber);
+    SecurityCollectorEventMuteFilter filter {};
+    filter.eventId = eventId;
+    filter.type = static_cast<SecurityCollectorEventMuteType>(eventId);
+    filter.isSetMute = static_cast<bool>(eventId);
+    filter.mutes.emplace_back(string);
+    SecurityCollectorEventFilter subscribeMute(filter);
+    CollectorManager::GetInstance().Mute(subscribeMute, string);
+    CollectorManager::GetInstance().Unmute(subscribeMute, string);
 }
 
 void DataCollectManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)
@@ -533,5 +569,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::SecurityCollectorSubscribeInfoFuzzTest(data, size);
     OHOS::SecurityEventFuzzTest(data, size);
     OHOS::SecurityEventRulerFuzzTest(data, size);
+    OHOS::DataCollectManagerFuzzTest(data, size);
     return 0;
 }
