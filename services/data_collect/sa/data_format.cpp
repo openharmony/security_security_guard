@@ -24,7 +24,7 @@
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
-    constexpr size_t MAX_CONTENT_SIZE = 900;
+    constexpr size_t MAX_CONTENT_SIZE = 1500;
 }
 
 bool DataFormat::CheckRiskContent(std::string content)
