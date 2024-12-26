@@ -1502,4 +1502,16 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ParseTrustListFile001, TestSize.Level1)
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     EXPECT_FALSE(service.ParseTrustListFile(""));
 }
+
+HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    SecurityCollector::Event event {};
+    event.eventId = 0;
+    auto collectorListenner = std::make_shared<AcquireDataSubscribeManager::CollectorListenner>(event);
+    AcquireDataSubscribeManager::GetInstance().eventToListenner_.emplace(event.eventId, collectorListenner);
+    int ret = AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(0, obj);
+    EXPECT_EQ(ret, SUCCESS);
+    AcquireDataSubscribeManager::GetInstance().eventToListenner_.clear();
+}
 }

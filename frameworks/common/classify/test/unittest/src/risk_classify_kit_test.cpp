@@ -120,6 +120,14 @@ HWTEST_F(RiskClassifyKitTest, RequestSecurityModelResultSync003, TestSize.Level1
     (void) memset_s(&result, sizeof(SecurityModelResult), 0, sizeof(SecurityModelResult));
     int ret = RequestSecurityModelResultSync(nullptr, modelId, &result);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    SecurityGuard::SecurityModelResult tmp {};
+    std::string devStr;
+    devStr.resize(DEVICE_ID_MAX_LEN + 1, '0');
+    ret = SecurityGuard::RequestSecurityModelResultSync(devStr, 0, "", tmp);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    auto cppCallBack = [](const SecurityGuard::SecurityModelResult &tmp) {};
+    ret = SecurityGuard::RequestSecurityModelResultAsync(devStr, 0, "", cppCallBack);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
 }
 
 /**
