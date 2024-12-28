@@ -1778,7 +1778,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Unmute, TestSize.Level1)
     subscribeMute.filter_.eventGroup = "securityGroup";
     result = service.Unmute(subscribeMute, obj, "111");
     EXPECT_EQ(result, BAD_PARAM);
-
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeMute, TestSize.Level1)

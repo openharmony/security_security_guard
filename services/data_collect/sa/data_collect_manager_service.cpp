@@ -787,7 +787,7 @@ int32_t DataCollectManagerService::Mute(const SecurityEventFilter &subscribeMute
     if (ret != SUCCESS) {
         return ret;
     }
-    ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMutue(subscribeMute, callback, sdkFlag);
+    ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, callback, sdkFlag);
     event.ret = ret;
     BigData::ReportSetMuteEvent(event);
     return ret;
@@ -818,7 +818,7 @@ int32_t DataCollectManagerService::Unmute(const SecurityEventFilter &subscribeMu
     if (ret != SUCCESS) {
         return ret;
     }
-    ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMutue(subscribeMute, callback, sdkFlag);
+    ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, callback, sdkFlag);
     event.ret = ret;
     BigData::ReportSetUnMuteEvent(event);
     return ret;
