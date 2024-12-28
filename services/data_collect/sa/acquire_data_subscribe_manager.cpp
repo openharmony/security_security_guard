@@ -435,11 +435,11 @@ int64_t AcquireDataSubscribeManager::CollectorListenner::GetEventId()
     return event_.eventId;
 }
 
-int AcquireDataSubscribeManager::InsertSubscribeMutue(const SecurityEventFilter &subscribeMute,
+int AcquireDataSubscribeManager::InsertSubscribeMute(const SecurityEventFilter &subscribeMute,
     const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
-    SGLOGI("in AcquireDataSubscribeManager InsertSubscribeMutue");
+    SGLOGI("in AcquireDataSubscribeManager InsertSubscribeMute");
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
     SecurityGuard::EventMuteFilter sgFilter = subscribeMute.GetMuteFilter();
     collectorFilter.eventId = sgFilter.eventId;
@@ -458,15 +458,15 @@ int AcquireDataSubscribeManager::InsertSubscribeMutue(const SecurityEventFilter 
     }
 
     if (config.prog == "security_guard") {
-        if (!SecurityCollector::DataCollection::GetInstance().Mute(collectorFilter, sdkFlag)) {
-            SGLOGI("Mute SG failed, eventId=%{public}" PRId64, collectorFilter.eventId);
-            return FAILED;
-        }
         if (eventToListenner_.count(sgFilter.eventId) == 0) {
             SGLOGI("current collector not start eventId=%{public}" PRId64, sgFilter.eventId);
             muteCache_[subscribeMute.GetMuteFilter().eventId][callback].emplace_back(collectorFilter);
             callbackHashMapNotSetMute_[callback] = sdkFlag;
             return SUCCESS;
+        }
+        if (!SecurityCollector::DataCollection::GetInstance().Mute(collectorFilter, sdkFlag)) {
+            SGLOGI("Mute SG failed, eventId=%{public}" PRId64, collectorFilter.eventId);
+            return FAILED;
         }
         callbackHashMap_[callback] = sdkFlag;
         return SUCCESS;
@@ -479,18 +479,18 @@ int AcquireDataSubscribeManager::InsertSubscribeMutue(const SecurityEventFilter 
     }
     int ret = SecurityCollector::CollectorManager::GetInstance().Mute(collectorFilter, sdkFlag);
     if (ret != SUCCESS) {
-        SGLOGE("InsertSubscribeMutue failed, ret=%{public}d", ret);
+        SGLOGE("InsertSubscribeMute failed, ret=%{public}d", ret);
         return ret;
     }
     callbackHashMap_[callback] = sdkFlag;
     return SUCCESS;
 }
 
-int AcquireDataSubscribeManager::RemoveSubscribeMutue(const SecurityEventFilter &subscribeMute,
+int AcquireDataSubscribeManager::RemoveSubscribeMute(const SecurityEventFilter &subscribeMute,
     const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
-    SGLOGI("in AcquireDataSubscribeManager RemoveSubscribeMutue");
+    SGLOGI("in AcquireDataSubscribeManager RemoveSubscribeMute");
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
     SecurityGuard::EventMuteFilter sgFilter = subscribeMute.GetMuteFilter();
     collectorFilter.eventId = sgFilter.eventId;
@@ -515,7 +515,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeMutue(const SecurityEventFilter 
             callbackHashMapNotSetMute_[callback] = sdkFlag;
             return SUCCESS;
         }
-        if (SecurityCollector::DataCollection::GetInstance().Unmute(collectorFilter, sdkFlag)) {
+        if (!SecurityCollector::DataCollection::GetInstance().Unmute(collectorFilter, sdkFlag)) {
             SGLOGI("Unmute SG failed, eventId=%{public}" PRId64, collectorFilter.eventId);
             return FAILED;
         }
@@ -529,7 +529,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeMutue(const SecurityEventFilter 
     }
     int ret = SecurityCollector::CollectorManager::GetInstance().Unmute(collectorFilter, sdkFlag);
     if (ret != SUCCESS) {
-        SGLOGE("RemoveSubscribeMutue failed, ret=%{public}d", ret);
+        SGLOGE("RemoveSubscribeMute failed, ret=%{public}d", ret);
         return ret;
     }
     return SUCCESS;
