@@ -36,9 +36,9 @@ public:
     int RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback);
     bool BatchPublish(const SecurityCollector::Event &event);
     void RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback);
-    int InsertSubscribeMutue(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
+    int InsertSubscribeMute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
         const std::string &sdkFlag);
-    int RemoveSubscribeMutue(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
+    int RemoveSubscribeMute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
         const std::string &sdkFlag);
     class CleanupTimer {
     public:
