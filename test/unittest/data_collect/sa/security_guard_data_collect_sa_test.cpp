@@ -1813,9 +1813,9 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeMute, TestSize.Level1)
         AcquireDataSubscribeManager::GetInstance().muteCache_[111][obj].emplace_back(collectorFilter);
     }
     result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj, "1111");
-    EXPECT_EQ(result, FAILED);
+    EXPECT_EQ(result, BAD_PARAM);
     result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj, "1111");
-    EXPECT_EQ(result, FAILED);
+    EXPECT_EQ(result, BAD_PARAM);
     AcquireDataSubscribeManager::GetInstance().eventToListenner_.clear();
     AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
 }
@@ -1883,9 +1883,9 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RemoveSubscribeMute, TestSize.Level1)
         AcquireDataSubscribeManager::GetInstance().muteCache_[111][obj].emplace_back(collectorFilter);
     }
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, "1111");
-    EXPECT_EQ(result, FAILED);
+    EXPECT_EQ(result, BAD_PARAM);
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, "1111");
-    EXPECT_EQ(result, FAILED);
+    EXPECT_EQ(result, BAD_PARAM);
     AcquireDataSubscribeManager::GetInstance().eventToListenner_.clear();
     AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
 }
