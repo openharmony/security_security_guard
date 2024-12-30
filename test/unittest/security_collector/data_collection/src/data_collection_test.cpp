@@ -17,6 +17,7 @@
 #define private public
 #include "data_collection.h"
 #include "security_event_ruler.h"
+#include "collector_cfg_marshalling.h"
 #undef private
 using namespace testing;
 using namespace testing::ext;
@@ -303,4 +304,33 @@ HWTEST_F(DataCollectionTest, LoadCollectorWithNonApi01, testing::ext::TestSize.L
     EXPECT_EQ(DataCollection::GetInstance().LoadCollector(path, ruler, events), FAILED);
 }
 
+HWTEST_F(DataCollectionTest, Mute, testing::ext::TestSize.Level1)
+{
+    MockMyClass myOb;
+    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
+    collectorFilter.eventId = 1;
+    collectorFilter.mutes.emplace_back("1111");
+    collectorFilter.type = SecurityCollector::EVENT_SUB_TYPE_EQUAL;
+    collectorFilter.isSetMute = false;
+    myOb.eventIdToLoaderMap_.emplace(1, LibLoader("testPath"));
+    EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false)).WillOnce(Return(true));
+    EXPECT_FALSE(myOb.Mute(collectorFilter, "1111"));
+    EXPECT_FALSE(myOb.Mute(collectorFilter, "1111"));
+}
+
+HWTEST_F(DataCollectionTest, Unmute, testing::ext::TestSize.Level1)
+{
+    MockMyClass myOb;
+    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
+    collectorFilter.eventId = 1;
+    collectorFilter.mutes.emplace_back("1111");
+    collectorFilter.type = SecurityCollector::EVENT_SUB_TYPE_EQUAL;
+    collectorFilter.isSetMute = false;
+    ModuleCfgSt st {};
+    nlohmann::json json = st;
+    myOb.eventIdToLoaderMap_.emplace(1, LibLoader("testPath"));
+    EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false)).WillOnce(Return(true));
+    EXPECT_FALSE(myOb.Unmute(collectorFilter, "1111"));
+    EXPECT_FALSE(myOb.Unmute(collectorFilter, "1111"));
+}
 }
