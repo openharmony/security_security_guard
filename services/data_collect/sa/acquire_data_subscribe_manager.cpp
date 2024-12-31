@@ -454,7 +454,7 @@ int AcquireDataSubscribeManager::InsertSubscribeMute(const SecurityEventFilter &
     }
     if (muteCache_[subscribeMute.GetMuteFilter().eventId][callback].size() >= MAX_FILTER_SIZE) {
         SGLOGI("current callback eventid size err, eventId=%{public}" PRId64, collectorFilter.eventId);
-        return FAILED;
+        return BAD_PARAM;
     }
 
     if (config.prog == "security_guard") {
@@ -505,7 +505,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeMute(const SecurityEventFilter &
     }
     if (muteCache_[sgFilter.eventId][callback].size() >= MAX_FILTER_SIZE) {
         SGLOGI("current callback eventid size err, eventId=%{public}" PRId64, collectorFilter.eventId);
-        return FAILED;
+        return BAD_PARAM;
     }
 
     if (config.prog == "security_guard") {

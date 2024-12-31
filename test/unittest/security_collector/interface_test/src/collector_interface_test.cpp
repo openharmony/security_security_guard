@@ -86,6 +86,7 @@ HWTEST_F(CollectorInterfaceTest, GetExtraInfo001, testing::ext::TestSize.Level1)
         SecurityCollector::SecurityCollectorRunManager::CollectorListenner(subscriber);
     std::string result = listener.GetExtraInfo();
     EXPECT_EQ(result, extra);
+    EXPECT_EQ(listener.GetEventId(), 0);
     SecurityCollector::CollectorFwkTestImpl impl =
         SecurityCollector::CollectorFwkTestImpl(subscriber);
     result = impl.GetExtraInfo();
@@ -238,5 +239,27 @@ HWTEST_F(CollectorInterfaceTest, CollectorStop001, testing::ext::TestSize.Level1
             new (std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
     int ret = manager.CollectorStop(subscriber);
     EXPECT_EQ(ret, SecurityCollector::BAD_PARAM);
+}
+
+HWTEST_F(CollectorInterfaceTest, Mute, testing::ext::TestSize.Level1)
+{
+    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
+    collectorFilter.eventId = 1;
+    collectorFilter.mutes = {{"111"}};
+    collectorFilter.type = SecurityCollector::EVENT_SUB_TYPE_EQUAL;
+    collectorFilter.isSetMute = false;
+    int32_t ret = SecurityCollector::CollectorManager::GetInstance().Mute(collectorFilter, "1111");
+    EXPECT_EQ(ret, SecurityCollector::NO_PERMISSION);
+}
+
+HWTEST_F(CollectorInterfaceTest, Unmute, testing::ext::TestSize.Level1)
+{
+    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
+    collectorFilter.eventId = 1;
+    collectorFilter.mutes = {{"111"}};
+    collectorFilter.type = SecurityCollector::EVENT_SUB_TYPE_EQUAL;
+    collectorFilter.isSetMute = false;
+    int32_t ret = SecurityCollector::CollectorManager::GetInstance().Unmute(collectorFilter, "1111");
+    EXPECT_EQ(ret, SecurityCollector::NO_PERMISSION);
 }
 }
