@@ -40,6 +40,12 @@ public:
     std::string GetExtraInfo() override { return "";};
 };
 
+class TestCollector : public SecurityCollector::ICollector {
+public:
+    int Start(std::shared_ptr<ICollectorFwk> api) override {return 0;};
+    int Stop()  override {return 0;};
+};
+
 class MockMyClass : public DataCollection {
 public:
     MOCK_METHOD3(LoadCollector, ErrorCode(int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api));
@@ -333,4 +339,19 @@ HWTEST_F(DataCollectionTest, Unmute, testing::ext::TestSize.Level1)
     EXPECT_FALSE(myOb.Unmute(collectorFilter, "1111"));
     EXPECT_FALSE(myOb.Unmute(collectorFilter, "1111"));
 }
+
+HWTEST_F(DataCollectionTest, ICollector01, testing::ext::TestSize.Level1)
+{
+    TestCollector collector;
+    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
+    std::vector<SecurityEvent> eventIds {};
+    SecurityEventRuler ruler;
+    EXPECT_EQ(collector.IsStartWithSub(), 0);
+    EXPECT_EQ(collector.Mute(collectorFilter, "111"), -1);
+    EXPECT_EQ(collector.Unmute(collectorFilter, "111"), -1);
+    EXPECT_EQ(collector.Query(ruler, eventIds), 0);
+    EXPECT_EQ(collector.Subscribe(0), 0);
+    EXPECT_EQ(collector.Unsubscribe(0), 0);
+}
+
 }
