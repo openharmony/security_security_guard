@@ -131,6 +131,12 @@ void SecurityCollectorManagerServiceFuzzTest(const uint8_t* data, size_t size)
     SecurityCollectorManagerService::ReportScUnsubscribeEvent(scuEvent);
     SecurityCollectorManagerService::GetAppName();
     SecurityCollectorManagerService::HasPermission(string);
+    SecurityCollectorEventMuteFilter fil {};
+    fil.eventId = eventId;
+    fil.mutes.emplace_back(string);
+    SecurityCollectorEventFilter filter(fil);
+    service.Mute(filter, string);
+    service.Unmute(filter, string);
     service.CleanSubscriber(obj);
     service.ExecuteOnNotifyByTask(obj, event);
 }
