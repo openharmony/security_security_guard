@@ -30,6 +30,7 @@
 #include "security_collector_run_manager.h"
 #include "security_collector_subscriber_manager.h"
 #include "security_collector_subscriber.h"
+#include "event_define.h"
 #undef private
 #undef protected
 
@@ -178,6 +179,47 @@ void SecurityCollectorSubscriberManagerFuzzTest(const uint8_t* data, size_t size
     SecurityCollectorSubscriberManager::CollectorListenner listener{subscriber};
     listener.GetExtraInfo();
     listener.OnNotify(event);
+}
+
+class TestCollector : public ICollector {
+public:
+    int Start(std::shared_ptr<ICollectorFwk> api) override {return 0;};
+    int Stop()  override {return 0;};
+};
+
+
+void SecurityCollectorICollectorFuzzTest(const uint8_t* data, size_t size)
+{
+    if (data == nullptr || size < sizeof(int64_t)) {
+        return;
+    }
+    size_t offset = 0;
+    int64_t eventId = *(reinterpret_cast<const int64_t *>(data));
+    offset += sizeof(int64_t);
+    std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
+    TestCollector collector;
+    SecurityCollectorEventMuteFilter collectorFilter {};
+    collectorFilter.eventId = eventId;
+    collectorFilter.mutes.emplace_back(string);
+    SecurityEvent event {};
+    event.eventId_ = eventId;
+    event.content_ = string;
+    event.version_ = string;
+    event.timestamp_ = string;
+
+    std::vector<SecurityEvent> eventIds {};
+    eventIds.emplace_back(event);
+    SecurityEventRuler ruler;
+    ruler.eventId_ = eventId;
+    ruler.beginTime_ = string;
+    ruler.endTime_ = string;
+    ruler.param_ = string;
+    collector.IsStartWithSub();
+    collector.Mute(collectorFilter, string);
+    collector.Unmute(collectorFilter, string);
+    collector.Query(ruler, eventIds);
+    collector.Subscribe(eventId);
+    collector.Unsubscribe(eventId);
 }
 }  // namespace OHOS
 
