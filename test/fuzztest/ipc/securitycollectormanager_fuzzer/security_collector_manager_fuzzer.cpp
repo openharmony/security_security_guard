@@ -191,6 +191,45 @@ void OnRemoteSecurityEventQuery(const uint8_t* data, size_t size, MessageParcel*
     g_service.OnRemoteRequest(SecurityCollectorManagerStub::CMD_SECURITY_EVENT_QUERY, *datas, *reply, *option);
 }
 
+void OnRemoteMute(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option)
+{
+    if (data == nullptr || size < sizeof(uint32_t) + sizeof(int64_t)) {
+        return;
+    }
+    size_t offset = 0;
+    offset += sizeof(uint32_t);
+    int64_t eventId = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    std::string string(reinterpret_cast<const char *>(data + offset), size - offset);
+    SecurityCollectorEventMuteFilter info {};
+    info.eventId = eventId;
+    info.mutes.emplace_back(string);
+    SecurityCollectorEventFilter filter(info);
+    datas->WriteParcelable(&filter);
+    datas->WriteString(string);
+    g_service.OnRemoteRequest(SecurityCollectorManagerStub::CMD_SECURITY_EVENT_MUTE, *datas, *reply, *option);
+}
+
+void OnRemoteUnmute(const uint8_t* data, size_t size, MessageParcel* datas,
+    MessageParcel* reply, MessageOption* option)
+{
+    if (data == nullptr || size < sizeof(uint32_t) + sizeof(int64_t)) {
+        return;
+    }
+    size_t offset = 0;
+    offset += sizeof(uint32_t);
+    int64_t eventId = *(reinterpret_cast<const int64_t *>(data + offset));
+    offset += sizeof(int64_t);
+    std::string string(reinterpret_cast<const char *>(data + offset), size - offset);
+    SecurityCollectorEventMuteFilter info {};
+    info.eventId = eventId;
+    info.mutes.emplace_back(string);
+    SecurityCollectorEventFilter filter(info);
+    datas->WriteParcelable(&filter);
+    datas->WriteString(string);
+    g_service.OnRemoteRequest(SecurityCollectorManagerStub::CMD_SECURITY_EVENT_UNMUTE, *datas, *reply, *option);
+}
 }  // namespace OHOS::Security::SecurityCollector
 
 /* Fuzzer entry point */

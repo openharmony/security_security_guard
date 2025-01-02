@@ -122,11 +122,8 @@ void AcquireDataManagerFuzzTest(const uint8_t* data, size_t size)
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     DataCollectManager::GetInstance().Subscribe(subscriber);
     DataCollectManager::GetInstance().Unsubscribe(subscriber);
-    DataCollectManager::GetInstance().HandleDecipient();
     DataCollectManager::GetInstance().StartCollector(event, eventId);
     DataCollectManager::GetInstance().StopCollector(event);
-    DataCollectManager::DeathRecipient rec {};
-    rec.OnRemoteDied(obj);
     DataCollectManager::GetInstance().QuerySecurityEventConfig(string);
 }
 

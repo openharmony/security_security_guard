@@ -40,35 +40,7 @@ ohos_fuzztest("InnerSdkFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
 
-  sources = [
-    "${sg_root_dir}/frameworks/common/classify/src/risk_analysis_manager_callback_service.cpp",
-    "${sg_root_dir}/frameworks/common/classify/src/risk_analysis_manager_callback_stub.cpp",
-    "${sg_root_dir}/frameworks/common/classify/src/risk_analysis_manager_proxy.cpp",
-    "${sg_root_dir}/frameworks/common/classify/src/sg_classify_client.cpp",
-    "${sg_root_dir}/frameworks/common/collect/src/acquire_data_manager_callback_service.cpp",
-    "${sg_root_dir}/frameworks/common/collect/src/acquire_data_manager_callback_stub.cpp",
-    "${sg_root_dir}/frameworks/common/collect/src/data_collect_manager.cpp",
-    "${sg_root_dir}/frameworks/common/collect/src/data_collect_manager_callback_service.cpp",
-    "${sg_root_dir}/frameworks/common/collect/src/data_collect_manager_callback_stub.cpp",
-    "${sg_root_dir}/frameworks/common/collect/src/data_collect_manager_proxy.cpp",
-    "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
-    "${sg_root_dir}/frameworks/common/collect/src/security_event_query_callback_service.cpp",
-    "${sg_root_dir}/frameworks/common/collect/src/security_event_query_callback_stub.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/collector_manager.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/collector_service_loader.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/i_collector.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/i_collector_fwk.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/i_collector_subscriber.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/security_collector_event_filter.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/security_collector_manager_callback_service.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/security_collector_manager_callback_stub.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/security_collector_manager_proxy.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/security_event.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/security_event_ruler.cpp",
-    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
-    "inner_sdk_fuzzer.cpp",
-  ]
+  sources = [ "inner_sdk_fuzzer.cpp" ]
 
   deps = []
 
@@ -77,5 +49,8 @@ ohos_fuzztest("InnerSdkFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "security_guard:libsg_classify_sdk",
+    "security_guard:libsg_collect_sdk",
+    "security_guard:libsg_collector_sdk",
   ]
 }
