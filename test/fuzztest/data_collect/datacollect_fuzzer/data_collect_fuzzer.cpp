@@ -62,14 +62,24 @@ bool AcquireDataSubscribeManagerFuzzTest(const uint8_t* data, size_t size)
     int64_t eventId = *(reinterpret_cast<const int64_t *>(data + offset));
     offset += sizeof(int64_t);
     std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
-    Security::SecurityCollector::Event event{eventId, string, string, string};
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    Security::SecurityCollector::Event event{eventId, string, string, string};
     Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
     AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
     AcquireDataSubscribeManager::GetInstance().BatchPublish(event);
     AcquireDataSubscribeManager::GetInstance().SubscribeSc(eventId, obj);
     AcquireDataSubscribeManager::GetInstance().UnSubscribeSc(eventId);
+    AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(eventId, obj);
+    AcquireDataSubscribeManager::GetInstance().SubscribeScInSc(eventId, obj);
+    SecurityEventFilter subscribeMute {};
+    subscribeMute.filter_.eventId = eventId;
+    subscribeMute.filter_.eventGroup = string;
+    subscribeMute.filter_.mutes.emplace_back(string);
+    AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj, string);
+    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, string);
+    AcquireDataSubscribeManager::GetInstance().BatchUpload(obj, std::vector<Security::SecurityCollector::Event>{event});
+    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecordOnRemoteDied(obj);
     return true;
 }
 
