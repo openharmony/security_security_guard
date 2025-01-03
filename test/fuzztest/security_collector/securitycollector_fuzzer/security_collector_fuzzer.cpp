@@ -16,7 +16,7 @@
 #include "security_collector_fuzzer.h"
 
 #include <string>
-
+#include <fuzzer/FuzzedDataProvider.h>
 #include "securec.h"
 
 #define private public
@@ -35,7 +35,9 @@
 #undef protected
 
 using namespace OHOS::Security::SecurityCollector;
-
+namespace {
+    constexpr int MAX_STRING_SIZE = 1024;
+}
 namespace OHOS {
 class MockRemoteObject final : public IRemoteObject {
 public:
@@ -131,14 +133,22 @@ void SecurityCollectorManagerServiceFuzzTest(const uint8_t* data, size_t size)
     SecurityCollectorManagerService::ReportScUnsubscribeEvent(scuEvent);
     SecurityCollectorManagerService::GetAppName();
     SecurityCollectorManagerService::HasPermission(string);
-    SecurityCollectorEventMuteFilter fil {};
-    fil.eventId = eventId;
-    fil.mutes.emplace_back(string);
-    SecurityCollectorEventFilter filter(fil);
-    service.Mute(filter, string);
-    service.Unmute(filter, string);
     service.CleanSubscriber(obj);
     service.ExecuteOnNotifyByTask(obj, event);
+}
+
+void SecurityCollectorManagerServiceNewFuzzTest(const uint8_t* data, size_t size)
+{
+    SecurityCollectorManagerService service(SECURITY_COLLECTOR_MANAGER_SA_ID, false);
+    FuzzedDataProvider fdp(data, size);
+    SecurityCollectorEventMuteFilter fil {};
+    fil.eventId = fdp.ConsumeIntegral<int64_t>();
+    fil.mutes.emplace_back(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    fil.isSetMute = fdp.ConsumeBool();
+    fil.type = static_cast<SecurityCollectorEventMuteType>(fdp.ConsumeIntegral<int64_t>());
+    SecurityCollectorEventFilter filter(fil);
+    service.Mute(filter, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    service.Unmute(filter, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
 }
 
 void SecurityCollectorRunManagerFuzzTest(const uint8_t* data, size_t size)
@@ -199,33 +209,30 @@ void SecurityCollectorICollectorFuzzTest(const uint8_t* data, size_t size)
     if (data == nullptr || size < sizeof(int64_t)) {
         return;
     }
-    size_t offset = 0;
-    int64_t eventId = *(reinterpret_cast<const int64_t *>(data));
-    offset += sizeof(int64_t);
-    std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
+    FuzzedDataProvider fdp(data, size);
     TestCollector collector;
     SecurityCollectorEventMuteFilter collectorFilter {};
-    collectorFilter.eventId = eventId;
-    collectorFilter.mutes.emplace_back(string);
+    collectorFilter.eventId = fdp.ConsumeIntegral<int64_t>();
+    collectorFilter.mutes.emplace_back(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     SecurityEvent event {};
-    event.eventId_ = eventId;
-    event.content_ = string;
-    event.version_ = string;
-    event.timestamp_ = string;
+    event.eventId_ = fdp.ConsumeIntegral<int64_t>();
+    event.content_ = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    event.version_ = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    event.timestamp_ = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
 
     std::vector<SecurityEvent> eventIds {};
     eventIds.emplace_back(event);
     SecurityEventRuler ruler;
-    ruler.eventId_ = eventId;
-    ruler.beginTime_ = string;
-    ruler.endTime_ = string;
-    ruler.param_ = string;
+    ruler.eventId_ = fdp.ConsumeIntegral<int64_t>();
+    ruler.beginTime_ = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    ruler.endTime_ = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    ruler.param_ = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     collector.IsStartWithSub();
-    collector.Mute(collectorFilter, string);
-    collector.Unmute(collectorFilter, string);
+    collector.Mute(collectorFilter, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    collector.Unmute(collectorFilter, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     collector.Query(ruler, eventIds);
-    collector.Subscribe(eventId);
-    collector.Unsubscribe(eventId);
+    collector.Subscribe(fdp.ConsumeIntegral<int64_t>());
+    collector.Unsubscribe(fdp.ConsumeIntegral<int64_t>());
 }
 }  // namespace OHOS
 
