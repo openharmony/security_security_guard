@@ -16,7 +16,7 @@
 #include "inner_sdk_fuzzer.h"
 
 #include <string>
-
+#include <fuzzer/FuzzedDataProvider.h>
 #include "securec.h"
 
 #define private public
@@ -43,7 +43,9 @@
 
 using namespace OHOS::Security::SecurityGuard;
 using namespace OHOS::Security::SecurityCollector;
-
+namespace {
+    constexpr int MAX_STRING_SIZE = 1024;
+}
 namespace OHOS {
 class MockCollectorSubscriber : public ICollectorSubscriber {
 public:
@@ -132,22 +134,21 @@ void DataCollectManagerFuzzTest(const uint8_t* data, size_t size)
     if (data == nullptr || size < sizeof(int64_t)) {
         return;
     }
-    size_t offset = 0;
-    int64_t eventId = *(reinterpret_cast<const int64_t *>(data + offset));
-    offset += sizeof(int64_t);
-    std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
+    FuzzedDataProvider fdp(data, size);
     auto mute = std::make_shared<Security::SecurityGuard::EventMuteFilter>();
-    mute->eventId = eventId;
-    mute->type = static_cast<Security::SecurityGuard::EventMuteType>(eventId);
-    mute->eventGroup = string;
-    mute->mutes.emplace_back(string);
+    mute->eventId = fdp.ConsumeIntegral<int64_t>();
+    mute->type = static_cast<Security::SecurityGuard::EventMuteType>(fdp.ConsumeIntegral<int64_t>());
+    mute->eventGroup = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    mute->mutes.emplace_back(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     DataCollectManager::GetInstance().Mute(mute);
     DataCollectManager::GetInstance().Unmute(mute);
     auto func = [] (std::string &devId, std::string &riskData, uint32_t status,
         const std::string &errMsg)-> int32_t {
         return SUCCESS;
     };
-    DataCollectManager::GetInstance().RequestSecurityEventInfo(string, string, func);
+    std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    std::string string1 = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    DataCollectManager::GetInstance().RequestSecurityEventInfo(string, string1, func);
 }
 void AcquireDataManagerCallbackServiceFuzzTest(const uint8_t* data, size_t size)
 {
@@ -234,11 +235,10 @@ void CollectorManagerFuzzTest(const uint8_t* data, size_t size)
     if (data == nullptr || size < sizeof(int64_t)) {
         return;
     }
-    size_t offset = 0;
-    int64_t eventId = *(reinterpret_cast<const int64_t *>(data));
-    offset += sizeof(int64_t);
-    std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
-    Security::SecurityCollector::Event event{eventId, string, string, string};
+    FuzzedDataProvider fdp(data, size);
+    Security::SecurityCollector::Event event{fdp.ConsumeIntegral<int64_t>(),
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE)};
     auto subscriber = std::make_shared<MockCollectorSubscriber>(event);
     std::vector<SecurityEventRuler> rulers{};
     std::vector<SecurityEvent> events{};
@@ -258,13 +258,13 @@ void CollectorManagerFuzzTest(const uint8_t* data, size_t size)
     manager.Unsubscribe(nullptr);
     manager.Unsubscribe(subscriber);
     SecurityCollectorEventMuteFilter filter {};
-    filter.eventId = eventId;
-    filter.type = static_cast<SecurityCollectorEventMuteType>(eventId);
-    filter.isSetMute = static_cast<bool>(eventId);
-    filter.mutes.emplace_back(string);
+    filter.eventId = fdp.ConsumeIntegral<int64_t>();
+    filter.type = static_cast<SecurityCollectorEventMuteType>(fdp.ConsumeIntegral<int64_t>());
+    filter.isSetMute = static_cast<bool>(fdp.ConsumeBool());
+    filter.mutes.emplace_back(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     SecurityCollectorEventFilter subscribeMute(filter);
-    CollectorManager::GetInstance().Mute(subscribeMute, string);
-    CollectorManager::GetInstance().Unmute(subscribeMute, string);
+    CollectorManager::GetInstance().Mute(subscribeMute, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    CollectorManager::GetInstance().Unmute(subscribeMute, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
 }
 
 void DataCollectManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)
