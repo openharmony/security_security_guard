@@ -1136,98 +1136,75 @@ static napi_value GenerateEvent(napi_env env, const NapiSecurityEvent &event)
     return ret;
 }
 
-static bool InitUvWorkCallbackEnv(CommonAsyncContext *data, napi_handle_scope *scope)
+static bool InitUvWorkCallbackEnv(SubscriberOAWorker *subscriberOAWorkerData, napi_handle_scope *scope)
 {
-    if (data == nullptr) {
-        SGLOGE("data is nullptr");
+    if (subscriberOAWorkerData == nullptr) {
+        SGLOGE("subscriberOAWorkerData is nullptr");
         return false;
     }
-    napi_open_handle_scope(data->env, scope);
+    napi_open_handle_scope(subscriberOAWorkerData->env, scope);
     if (scope == nullptr) {
         SGLOGE("fail to open scope");
-        delete data;
-        data = nullptr;
         return false;
     }
     return true;
 }
 
-static void UvQueueWorkOnSecEventsChanged(uv_work_t *work, int status)
+static void SendEventOnSecEventsChanged(SubscriberOAWorker *subscriberOAWorkerData)
 {
-    SGLOGI("UvQueueWorkOnSecEventsChanged");
-    if (work == nullptr) {
-        SGLOGE("work is nullptr");
+    if (subscriberOAWorkerData == nullptr) {
+        SGLOGE("subscriberOAWorkerData is nullptr");
         return;
     }
-    napi_handle_scope scope = nullptr;
-    if (!InitUvWorkCallbackEnv(reinterpret_cast<CommonAsyncContext *>(work->data), &scope)) {
-        return;
-    }
-    std::unique_ptr<SubscriberOAWorker> subscriberOAWorkerData(reinterpret_cast<SubscriberOAWorker *>(work->data));
-    bool isFound = false;
-    {
-        std::lock_guard<std::mutex> lock(g_subscribeMutex);
-        SubscriberPtr *subscriber = subscriberOAWorkerData->subscriber;
-        for (auto subscriberInstance : g_subscribers) {
-            isFound = std::any_of(subscriberInstance.second.begin(), subscriberInstance.second.end(),
-                [subscriber](const SubscribeCBInfo *item) {
-                    return item->subscriber.get() == subscriber;
-                });
-            if (isFound) {
-                SGLOGI("subscriber has been found.");
-                break;
+    auto task = [subscriberOAWorkerData]() {
+        napi_handle_scope scope = nullptr;
+        if (!InitUvWorkCallbackEnv(subscriberOAWorkerData, &scope)) {
+            return;
+        }
+        bool isFound = false;
+        {
+            std::lock_guard<std::mutex> lock(g_subscribeMutex);
+            SubscriberPtr *subscriber = subscriberOAWorkerData->subscriber;
+            for (auto subscriberInstance : g_subscribers) {
+                isFound = std::any_of(subscriberInstance.second.begin(), subscriberInstance.second.end(),
+                    [subscriber](const SubscribeCBInfo *item) {
+                        return item->subscriber.get() == subscriber;
+                    });
+                if (isFound) {
+                    SGLOGI("subscriber has been found.");
+                    break;
+                }
             }
         }
-    }
-    if (isFound) {
-        napi_value result[ARGS_SIZE_ONE] = {nullptr};
-        result[PARAMZERO] = GenerateEvent(subscriberOAWorkerData->env, subscriberOAWorkerData->event);
-        napi_value undefined = nullptr;
-        napi_get_undefined(subscriberOAWorkerData->env, &undefined);
-        napi_value callback = nullptr;
-        napi_get_reference_value(subscriberOAWorkerData->env, subscriberOAWorkerData->ref, &callback);
-        napi_value resultOut = nullptr;
-        napi_status ok = napi_call_function(subscriberOAWorkerData->env, undefined, callback, ARGS_SIZE_ONE,
-            &result[0], &resultOut);
-        SGLOGI("isOk=%{public}d", ok);
-    }
-    napi_close_handle_scope(subscriberOAWorkerData->env, scope);
+        if (isFound) {
+            napi_value result[ARGS_SIZE_ONE] = {nullptr};
+            result[PARAMZERO] = GenerateEvent(subscriberOAWorkerData->env, subscriberOAWorkerData->event);
+            napi_value undefined = nullptr;
+            napi_get_undefined(subscriberOAWorkerData->env, &undefined);
+            napi_value callback = nullptr;
+            napi_get_reference_value(subscriberOAWorkerData->env, subscriberOAWorkerData->ref, &callback);
+            napi_value resultOut = nullptr;
+            napi_status ok = napi_call_function(subscriberOAWorkerData->env, undefined, callback, ARGS_SIZE_ONE,
+                &result[0], &resultOut);
+            SGLOGI("isOk=%{public}d", ok);
+        }
+        napi_close_handle_scope(subscriberOAWorkerData->env, scope);
+    };
+    napi_send_event(subscriberOAWorkerData->env, task, napi_eprio_high);
 }
 
 static int32_t OnNotifyEvent(const Event &event, napi_env env, napi_ref ref, SubscriberPtr *subscriber)
 {
     SGLOGI("OnNotify");
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env, &loop);
-    if (loop == nullptr) {
-        SGLOGE("loop instance is nullptr");
-        return -1;
-    }
-    uv_work_t *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        SGLOGE("insufficient memory for work!");
-        return -1;
-    }
-
-    SubscriberOAWorker *subscriberOAWorker = new (std::nothrow) SubscriberOAWorker();
-
-    if (subscriberOAWorker == nullptr) {
-        SGLOGE("insufficient memory for SubscriberAccountsWorker!");
-        delete work;
-        return -1;
-    }
-
-    subscriberOAWorker->event.eventId = event.eventId;
-    subscriberOAWorker->event.version = event.version;
-    subscriberOAWorker->event.content = event.content;
-    subscriberOAWorker->event.timestamp = event.timestamp;
-    subscriberOAWorker->env = env;
-    subscriberOAWorker->ref = ref;
-    subscriberOAWorker->subscriber = subscriber;
-    work->data = reinterpret_cast<void *>(subscriberOAWorker);
-    uv_queue_work_with_qos(loop, work, [](uv_work_t *work) {
-        SGLOGD("UvQueueWorkOnSecEventsChanged...");
-    }, UvQueueWorkOnSecEventsChanged, uv_qos_default);
+    auto subscriberOAWorkerData = std::make_unique<SubscriberOAWorker>();
+    subscriberOAWorkerData->event.eventId = event.eventId;
+    subscriberOAWorkerData->event.version = event.version;
+    subscriberOAWorkerData->event.content = event.content;
+    subscriberOAWorkerData->event.timestamp = event.timestamp;
+    subscriberOAWorkerData->env = env;
+    subscriberOAWorkerData->ref = ref;
+    subscriberOAWorkerData->subscriber = subscriber;
+    SendEventOnSecEventsChanged(subscriberOAWorkerData.get());
     return 0;
 }
 
