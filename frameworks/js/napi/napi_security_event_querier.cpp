@@ -68,74 +68,29 @@ napi_value NapiSecurityEventQuerier::NapiCreateInt64(const napi_env env, int64_t
     return result;
 }
 
-void NapiSecurityEventQuerier::DestoryWork(uv_work_t *work)
-{
-    if (work == nullptr) {
-        return;
-    }
-    if (work->data != nullptr) {
-        delete (reinterpret_cast<QuerySecurityEventContext *>(work->data));
-    }
-    delete work;
-}
-
-static void OnExecute(uv_work_t *work)
-{
-    SGLOGD("begin executr work error");
-}
-
 void NapiSecurityEventQuerier::RunCallback(QuerySecurityEventContext *context, CALLBACK_FUNC callback,
     RELEASE_FUNC release)
 {
-    uv_loop_t* loop = nullptr;
-    napi_get_uv_event_loop(context->env, &loop);
-    if (loop == nullptr) {
-        SGLOGE("failed to get uv_loop.");
+    if (context == nullptr) {
+        SGLOGE("context is nullptr");
         return;
     }
-
-    QuerySecurityEventContext *tmpContext = new (std::nothrow) QuerySecurityEventContext(context);
-    if (tmpContext == nullptr) {
-        SGLOGE("tmpContext new failed, no memory left.");
-        return;
-    }
-    tmpContext->callback = callback;
-    tmpContext->release = release;
-    uv_work_t* work = new (std::nothrow) uv_work_t();
-    if (work == nullptr) {
-        SGLOGE("uv_work new failed, no memory left.");
-        delete tmpContext;
-        return;
-    }
-    work->data = reinterpret_cast<void *>(tmpContext);
-    uv_queue_work_with_qos(loop, work, OnExecute,
-        [] (uv_work_t *work, int status) {
-            SGLOGD("Begin uv work.");
-            if (work == nullptr || work->data == nullptr) {
-                DestoryWork(work);
-                return;
-            }
-            QuerySecurityEventContext *context = reinterpret_cast<QuerySecurityEventContext*>(work->data);
-            if (context == nullptr || context->env == nullptr) {
-                DestoryWork(work);
-                return;
-            }
-            napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(context->env, &scope);
-            if (scope == nullptr) {
-                DestoryWork(work);
-                return;
-            }
-            if (context->callback != nullptr) {
-                SGLOGD("Begin execute callback.");
-                context->callback(context->env, context->ref, context->threadId, context->events);
-            }
-            napi_close_handle_scope(context->env, scope);
-            if (context->release != nullptr) {
-                context->release(context->threadId);
-            }
-            DestoryWork(work);
-        }, uv_qos_default);
+    auto task = [context, callback, release]() {
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(context->env, &scope);
+        if (scope == nullptr) {
+            return;
+        }
+        if (callback != nullptr) {
+            SGLOGD("Begin execute callback.");
+            callback(context->env, context->ref, context->threadId, context->events);
+        }
+        napi_close_handle_scope(context->env, scope);
+        if (release != nullptr) {
+            release(context->threadId);
+        }
+    };
+    napi_send_event(context->env, task, napi_eprio_high);
 }
 
 void NapiSecurityEventQuerier::OnQuery(const std::vector<SecurityCollector::SecurityEvent> &events)
