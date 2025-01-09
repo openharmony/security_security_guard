@@ -75,22 +75,23 @@ void NapiSecurityEventQuerier::RunCallback(QuerySecurityEventContext *context, C
         SGLOGE("context is nullptr");
         return;
     }
-    auto task = [context, callback, release]() {
+    auto tmpContext = std::make_shared<QuerySecurityEventContext>(context);
+    auto task = [tmpContext, callback, release]() {
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(context->env, &scope);
+        napi_open_handle_scope(tmpContext->env, &scope);
         if (scope == nullptr) {
             return;
         }
         if (callback != nullptr) {
             SGLOGD("Begin execute callback.");
-            callback(context->env, context->ref, context->threadId, context->events);
+            callback(tmpContext->env, tmpContext->ref, tmpContext->threadId, tmpContext->events);
         }
-        napi_close_handle_scope(context->env, scope);
+        napi_close_handle_scope(tmpContext->env, scope);
         if (release != nullptr) {
-            release(context->threadId);
+            release(tmpContext->threadId);
         }
     };
-    napi_send_event(context->env, task, napi_eprio_high);
+    napi_send_event(tmpContext->env, task, napi_eprio_high);
 }
 
 void NapiSecurityEventQuerier::OnQuery(const std::vector<SecurityCollector::SecurityEvent> &events)
