@@ -70,13 +70,13 @@ void BigData::ReportSetMuteEvent(const SgSubscribeEvent &event)
 {
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "SG_EVENT_SET_MUTE",
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid,
-        CALL_TIME, event.time, UNSUB_RET, event.ret);
+        CALL_TIME, event.time, RET, event.ret);
 }
 
 void BigData::ReportSetUnMuteEvent(const SgSubscribeEvent &event)
 {
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "SG_EVENT_SET_UNMUTE",
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid,
-        CALL_TIME, event.time, UNSUB_RET, event.ret);
+        CALL_TIME, event.time, RET, event.ret);
 }
 }
