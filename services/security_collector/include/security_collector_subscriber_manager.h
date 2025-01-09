@@ -20,7 +20,6 @@
 #include <set>
 #include <mutex>
 #include <memory>
-#include "singleton.h"
 #include "timer.h"
 
 #include "i_collector_fwk.h"
@@ -29,14 +28,16 @@
 
 namespace OHOS::Security::SecurityCollector {
 
-class SecurityCollectorSubscriberManager : public Singleton<SecurityCollectorSubscriberManager> {
+class SecurityCollectorSubscriberManager {
 public:
+    static SecurityCollectorSubscriberManager &GetInstance();
     using UnsubscribeHandler = std::function<void (const sptr<IRemoteObject> &remote)>;
-    SecurityCollectorSubscriberManager();
     bool SubscribeCollector(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber);
     bool UnsubscribeCollector(const sptr<IRemoteObject> &remote);
     void SetUnsubscribeHandler(UnsubscribeHandler handler) { unsubscribeHandler_ = handler; }
 private:
+    SecurityCollectorSubscriberManager() = default;
+    ~SecurityCollectorSubscriberManager() = default;
     auto FindSecurityCollectorSubscribers(const sptr<IRemoteObject> &remote);
     std::set<int64_t> FindEventIds(const sptr<IRemoteObject> &remote);
     int32_t GetAppSubscribeCount(const std::string &appName);
@@ -89,6 +90,7 @@ private:
     std::map<int64_t, std::set<std::shared_ptr<SecurityCollectorSubscriber>>> eventToSubscribers_{};
     std::map<sptr<IRemoteObject>, std::shared_ptr<CleanupTimer>> timers_{};
     std::map<int64_t, std::shared_ptr<ICollectorFwk>> eventToListenner_;
+    std::shared_ptr<ICollectorFwk> collectorListenner_{};
 };
 }
 #endif // SECURITY_GUARD_SECURITY_COLLECTOR_SUBSCRIBLER_MANAGER_H
