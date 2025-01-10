@@ -23,8 +23,11 @@ namespace OHOS::Security::SecurityCollector {
 namespace {
     constexpr int32_t MAX_APP_SUBSCRIBE_COUNT = 100;
 }
-SecurityCollectorSubscriberManager::SecurityCollectorSubscriberManager()
+
+SecurityCollectorSubscriberManager &SecurityCollectorSubscriberManager::GetInstance()
 {
+    static SecurityCollectorSubscriberManager instance;
+    return instance;
 }
 
 std::string SecurityCollectorSubscriberManager::CollectorListenner::GetExtraInfo()
@@ -142,16 +145,13 @@ bool SecurityCollectorSubscriberManager::SubscribeCollector(
         LOGE("Already subscribed eventId:%{public}" PRId64, eventId);
         return false;
     }
-    if (eventToListenner_.count(eventId) == 0) {
-        auto collectorListenner = std::make_shared<SecurityCollectorSubscriberManager::CollectorListenner>(subscriber);
-        LOGI("Scheduling start collector, eventId:%{public}" PRId64, eventId);
-        if (!DataCollection::GetInstance().StartCollectors(std::vector<int64_t>{eventId}, collectorListenner)) {
-            LOGE("failed to start collectors");
-            return false;
-        }
-        eventToListenner_.emplace(eventId, collectorListenner);
-    } else {
-        LOGI("Scheduling do not start collecctor, eventId:%{public}" PRId64, eventId);
+    if (collectorListenner_ == nullptr) {
+        collectorListenner_ = std::make_shared<SecurityCollectorSubscriberManager::CollectorListenner>(nullptr);
+    }
+    LOGI("Scheduling start collector, eventId:%{public}" PRId64, eventId);
+    if (!DataCollection::GetInstance().StartCollectors(std::vector<int64_t>{eventId}, collectorListenner_)) {
+        LOGE("failed to start collectors");
+        return false;
     }
     eventToSubscribers_[eventId].emplace(subscriber);
     LOGI("eventId:%{public} " PRId64 ", callbackCount:%{public}zu", eventId, eventToSubscribers_[eventId].size());
@@ -188,7 +188,6 @@ bool SecurityCollectorSubscriberManager::UnsubscribeCollector(const sptr<IRemote
                     LOGE("failed to stop collectors");
                 }
                 eventToSubscribers_.erase(eventId);
-                eventToListenner_.erase(eventId);
             }
         }
     }
