@@ -154,8 +154,10 @@ void DataCollectManagerService::DumpEventInfo(int fd, int64_t eventId)
 }
 
 int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
-    std::string &content)
+    std::string &content, bool isSync)
 {
+    SGLOGD("enter DataCollectManagerService RequestDataSubmit");
+    SGLOGD("isSync: %{public}s", isSync ? "true" : "false");
     int32_t ret = IsApiHasPermission("RequestDataSubmit");
     if (ret != SUCCESS) {
         return ret;

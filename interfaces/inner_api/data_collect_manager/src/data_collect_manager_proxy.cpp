@@ -25,7 +25,7 @@ DataCollectManagerProxy::DataCollectManagerProxy(const sptr<IRemoteObject> &impl
 }
 
 int32_t DataCollectManagerProxy::RequestDataSubmit(int64_t eventId, std::string &version,
-    std::string &time, std::string &content)
+    std::string &time, std::string &content, bool isSync)
 {
     SGLOGD("eventId=%{public}" PRId64 ", version=%{public}s", eventId, version.c_str());
     MessageParcel data;
@@ -39,7 +39,7 @@ int32_t DataCollectManagerProxy::RequestDataSubmit(int64_t eventId, std::string 
     data.WriteString(time);
     data.WriteString(content);
 
-    MessageOption option = { MessageOption::TF_SYNC };
+    MessageOption option = { isSync ? MessageOption::TF_SYNC : MessageOption::TF_ASYNC };
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         SGLOGE("Remote error");
@@ -50,8 +50,10 @@ int32_t DataCollectManagerProxy::RequestDataSubmit(int64_t eventId, std::string 
         SGLOGE("ret=%{public}d", ret);
         return ret;
     }
-    ret = reply.ReadInt32();
-    SGLOGD("reply=%{public}d", ret);
+    if (isSync) {
+        ret = reply.ReadInt32();
+        SGLOGD("reply=%{public}d", ret);
+    }
     return ret;
 }
 
