@@ -892,9 +892,9 @@ static napi_value NapiQuerySecurityEvent(napi_env env, napi_callback_info info)
     auto querier = std::make_shared<NapiSecurityEventQuerier>(context, [] (const napi_env env, const napi_ref ref) {
             napi_value querier = nullptr;
             napi_get_reference_value(env, ref, &querier);
+            std::unique_lock<std::mutex> lock(g_queryMutex);
             auto iter = CompareAndReturnCacheItem<NapiSecurityEventQuerier>(env, querier, queriers);
             if (iter != queriers.end()) {
-                std::unique_lock<std::mutex> lock(g_queryMutex);
                 queriers.erase(iter->first);
                 NapiRequestDataManager::GetInstance().DelDataCallback(env);
             }
