@@ -94,7 +94,7 @@ class MockDataCollectManagerCallbackStub : public DataCollectManagerCallbackStub
 public:
     MockDataCollectManagerCallbackStub() = default;
     ~MockDataCollectManagerCallbackStub() override = default;
- 
+
     int32_t ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status,
         const std::string& errMsg = "") override { return 0; };
 };
@@ -203,7 +203,7 @@ void RiskAnalysisManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)
     datas.WriteString(string);
     datas.WriteString(string);
     stub.OnRemoteRequest(code, datas, reply, option);
-    
+
     ResultCallback callback;
     RiskAnalysisManagerCallbackService service(callback);
     service.ResponseSecurityModelResult(string, code, string);
@@ -292,7 +292,7 @@ void DataCollectManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)
     service.callback_ = TestRequestRiskDataCallback;
     service.ResponseRiskData(string, string, uint32, string);
 }
- 
+
 void DataCollectManagerProxyRequestDataSubmitFuzzTest(const uint8_t* data, size_t size)
 {
     if (data == nullptr || size < sizeof(int64_t)) {
