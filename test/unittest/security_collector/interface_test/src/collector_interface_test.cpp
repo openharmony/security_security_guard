@@ -194,18 +194,6 @@ HWTEST_F(CollectorInterfaceTest, Unsubscribe003, testing::ext::TestSize.Level1)
     int ret = manager.Subscribe(subscriber);
     EXPECT_EQ(ret, SecurityCollector::BAD_PARAM);
 }
-/**
- * @tc.name: OnRemoteDied001
- * @tc.desc: CollectorManager DeathRecipient OnRemoteDied
- * @tc.type: FUNC
- * @tc.require: AR000IENKB
- */
-HWTEST_F(CollectorInterfaceTest, OnRemoteDied001, testing::ext::TestSize.Level1)
-{
-    SecurityCollector::CollectorManager::DeathRecipient recipient =
-        SecurityCollector::CollectorManager::DeathRecipient();
-    recipient.OnRemoteDied(nullptr);
-}
 
 /**
  * @tc.name: CollectorStart001
@@ -215,11 +203,14 @@ HWTEST_F(CollectorInterfaceTest, OnRemoteDied001, testing::ext::TestSize.Level1)
  */
 HWTEST_F(CollectorInterfaceTest, CollectorStart001, testing::ext::TestSize.Level1)
 {
+    SecurityCollector::CollectorManager::DeathRecipient recipient =
+        SecurityCollector::CollectorManager::DeathRecipient();
+    recipient.OnRemoteDied(nullptr);
     SecurityCollector::CollectorManager manager {};
     SecurityCollector::Event event {};
-    SecurityCollector::SecurityCollectorSubscribeInfo subscriber (event, -1, false);
+    SecurityCollector::SecurityCollectorSubscribeInfo subscriber(event, -1, false);
     sptr<SecurityCollector::SecurityCollectorManagerCallbackService> callback =
-            new (std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
+        new (std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
     int ret = manager.CollectorStart(subscriber);
     EXPECT_EQ(ret, SecurityCollector::BAD_PARAM);
 }
@@ -234,7 +225,7 @@ HWTEST_F(CollectorInterfaceTest, CollectorStop001, testing::ext::TestSize.Level1
 {
     SecurityCollector::CollectorManager manager {};
     SecurityCollector::Event event {};
-    SecurityCollector::SecurityCollectorSubscribeInfo subscriber (event, -1, false);
+    SecurityCollector::SecurityCollectorSubscribeInfo subscriber(event, -1, false);
     sptr<SecurityCollector::SecurityCollectorManagerCallbackService> callback =
             new (std::nothrow) SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
     int ret = manager.CollectorStop(subscriber);

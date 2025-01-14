@@ -438,7 +438,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithInvalidInt, TestSize.Leve
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_SUBCRIBE, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithInvalidCmd, TestSize.Level1)
 {
     MessageParcel data;
@@ -450,7 +450,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithInvalidCmd, TestSize.Leve
     int32_t result = g_service.OnRemoteRequest(100, data, reply, option);
     EXPECT_EQ(result, 305);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithInvalidToken, TestSize.Level1)
 {
     MessageParcel data;
@@ -462,7 +462,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithInvalidToken, TestSize.Le
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_SUBCRIBE, data, reply, option);
     EXPECT_EQ(result, 305);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd00, TestSize.Level1)
 {
     MessageParcel data;
@@ -476,7 +476,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd00, TestSize.Level1)
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_SUBCRIBE, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd01, TestSize.Level1)
 {
     MessageParcel data;
@@ -492,7 +492,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd01, TestSize.Level1)
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_SUBCRIBE, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd02, TestSize.Level1)
 {
     MessageParcel data;
@@ -508,7 +508,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd02, TestSize.Level1)
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_SUBCRIBE, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd03, TestSize.Level1)
 {
     MessageParcel data;
@@ -520,7 +520,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd03, TestSize.Level1)
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_UNSUBCRIBE, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd04, TestSize.Level1)
 {
     MessageParcel data;
@@ -534,7 +534,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd04, TestSize.Level1)
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_UNSUBCRIBE, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd05, TestSize.Level1)
 {
     MessageParcel data;
@@ -550,7 +550,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd05, TestSize.Level1)
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_UNSUBCRIBE, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::SUCCESS);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd06, TestSize.Level1)
 {
     MessageParcel data;
@@ -563,7 +563,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd06, TestSize.Level1)
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_START, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd07, TestSize.Level1)
 {
     MessageParcel data;
@@ -579,7 +579,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd07, TestSize.Level1)
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_START, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd08, TestSize.Level1)
 {
     MessageParcel data;
@@ -595,7 +595,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd08, TestSize.Level1)
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_START, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd09, TestSize.Level1)
 {
     MessageParcel data;
@@ -607,7 +607,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd09, TestSize.Level1)
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_STOP, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd10, TestSize.Level1)
 {
     MessageParcel data;
@@ -623,7 +623,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd10, TestSize.Level1)
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_STOP, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd11, TestSize.Level1)
 {
     MessageParcel data;
@@ -639,19 +639,27 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd11, TestSize.Level1)
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_STOP, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd12, TestSize.Level1)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+    int fd = 1;
+    std::vector<std::u16string> args;
+    g_service.Dump(fd, args);
+    int32_t systemAbilityId = 0;
+    const std::string& deviceId = "test";
+    g_service.OnStop();
+    g_service.OnAddSystemAbility(systemAbilityId, deviceId);
+    g_service.OnRemoveSystemAbility(systemAbilityId, deviceId);
 
     data.WriteInterfaceToken(ISecurityCollectorManager::GetDescriptor());
     int32_t result =
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_SECURITY_EVENT_QUERY, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd13, TestSize.Level1)
 {
     MessageParcel data;
@@ -665,9 +673,16 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd13, TestSize.Level1)
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_SECURITY_EVENT_QUERY, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
- 
+
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd14, TestSize.Level1)
 {
+    wptr<SecurityCollectorManagerService> service1
+        = new SecurityCollectorManagerService(1, false);
+    SecurityCollectorManagerService::SubscriberDeathRecipient testRecipient(service1);
+    wptr<MockRemoteObject> remote1 = new MockRemoteObject();
+    testRecipient.OnRemoteDied(remote1);
+    testRecipient.OnRemoteDied(nullptr);
+
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -679,28 +694,6 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd14, TestSize.Level1)
     int32_t result =
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_SECURITY_EVENT_QUERY, data, reply, option);
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
-}
-
-HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd15, TestSize.Level1)
-{
-    wptr<SecurityCollectorManagerService> service1
-        = new SecurityCollectorManagerService(1, false);
-    SecurityCollectorManagerService::SubscriberDeathRecipient testRecipient(service1);
-    wptr<MockRemoteObject> remote1 = new MockRemoteObject();
-    testRecipient.OnRemoteDied(remote1);
-    testRecipient.OnRemoteDied(nullptr);
-}
-
-HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd16, TestSize.Level1)
-{
-    int fd = 1;
-    std::vector<std::u16string> args;
-    g_service.Dump(fd, args);
-    int32_t systemAbilityId = 0;
-    const std::string& deviceId = "test";
-    g_service.OnStop();
-    g_service.OnAddSystemAbility(systemAbilityId, deviceId);
-    g_service.OnRemoveSystemAbility(systemAbilityId, deviceId);
 }
 
 HWTEST_F(SecurityCollectorTest, TestLoaderLib002, TestSize.Level1)
