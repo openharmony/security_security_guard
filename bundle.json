@@ -20,7 +20,8 @@
     ],
     "features": [
       "security_guard_enable",
-      "security_guard_enable_ext"
+      "security_guard_enable_ext",
+      "security_guard_trim_model_analysis"
     ],
     "adapted_system_type": [
       "standard"

@@ -48,7 +48,9 @@ constexpr int NAPI_START_COLLECTOR_ARGS_CNT = 2;
 constexpr int NAPI_STOP_COLLECTOR_ARGS_CNT = 1;
 constexpr int NAPI_REPORT_EVENT_INFO_ARGS_CNT = 1;
 constexpr int NAPI_UPDATE_POLICY_FILE_ARGS_CNT = 1;
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 constexpr int NAPI_GET_MODEL_RESULT_ARGS_CNT = 1;
+#endif
 constexpr int NAPI_QUERY_SECURITY_EVENT_ARGS_CNT = 2;
 
 constexpr int TIME_MAX_LEN = 15;
@@ -128,7 +130,7 @@ static napi_value NapiCreateInt32(const napi_env env, int32_t value)
     }
     return result;
 }
-
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 static napi_value NapiCreateUint32(const napi_env env, uint32_t value)
 {
     napi_value result = nullptr;
@@ -139,7 +141,7 @@ static napi_value NapiCreateUint32(const napi_env env, uint32_t value)
     }
     return result;
 }
-
+#endif
 static napi_value GenerateBusinessError(napi_env env, int32_t code)
 {
     napi_value result;
@@ -364,7 +366,7 @@ static napi_value GetConditionsTime(napi_env env, napi_value object, const std::
     }
     return NapiCreateInt32(env, SUCCESS);
 }
-
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 static void RequestSecurityModelResultExecute(napi_env env, void *data)
 {
     if (data == nullptr) {
@@ -469,7 +471,7 @@ static napi_value ParseModelId(napi_env env, const std::string &modelNameStr, ui
     }
     return NapiCreateInt32(env, SUCCESS);
 }
-
+#endif
 static std::string ParseOptionalString(napi_env env, napi_value object, const std::string &key, uint32_t maxLen)
 {
     bool hasProperty = false;
@@ -493,7 +495,7 @@ static std::string ParseOptionalString(napi_env env, napi_value object, const st
     }
     return std::string{str.data()};
 }
-
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 static bool ParseModelRule(const napi_env &env, napi_value napiValue, ModelRule &modelRule)
 {
     napi_valuetype type = napi_undefined;
@@ -516,9 +518,11 @@ static bool ParseModelRule(const napi_env &env, napi_value napiValue, ModelRule 
     modelRule.param = ParseOptionalString(env, napiValue, "param", PARAM_MAX_LEN);
     return true;
 }
+#endif
 
 static napi_value NapiGetModelResult(napi_env env, napi_callback_info info)
 {
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
     size_t argc = NAPI_GET_MODEL_RESULT_ARGS_CNT;
     napi_value argv[NAPI_GET_MODEL_RESULT_ARGS_CNT] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
@@ -549,6 +553,9 @@ static napi_value NapiGetModelResult(napi_env env, napi_callback_info info)
         RequestSecurityModelResultComplete, static_cast<void *>(context), &context->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, context->asyncWork));
     return promise;
+#else
+    return NapiCreateInt32(env, SUCCESS);
+#endif
 }
 
 static napi_value ParsePolicyFileInfo(napi_env env, napi_value object, NapiSecurityPolicyFileInfo *context)

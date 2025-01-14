@@ -27,7 +27,10 @@ ohos_shared_library("securityguard_napi") {
     "security_guard_napi.cpp",
     "security_guard_sdk_adaptor.cpp",
   ]
-
+  defines = []
+  if (security_guard_trim_model_analysis) {
+    defines += [ "SECURITY_GUARD_TRIM_MODEL_ANALYSIS" ]
+  }
   sanitize = {
     integer_overflow = true
     ubsan = true
