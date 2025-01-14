@@ -27,10 +27,12 @@
 #include "data_collect_manager_callback_service.h"
 #include "data_collect_manager_callback_stub.h"
 #include "data_collect_manager_proxy.h"
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 #include "risk_analysis_manager_callback_service.h"
 #include "risk_analysis_manager_callback_stub.h"
 #include "risk_analysis_manager_callback.h"
 #include "risk_analysis_manager_proxy.h"
+#endif
 #include "collector_manager.h"
 #include "security_collector_manager_callback_stub.h"
 #include "security_collector_manager_proxy.h"
@@ -72,6 +74,7 @@ public:
     int32_t OnNotify(const std::vector<Security::SecurityCollector::Event> &events) override { return 0; };
 };
 
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 class MockRiskAnalysisManagerCallbackStub : public RiskAnalysisManagerCallbackStub {
 public:
     MockRiskAnalysisManagerCallbackStub() = default;
@@ -81,7 +84,7 @@ public:
         return 0;
     };
 };
-
+#endif
 class MockSecurityCollectorManagerCallbackStub : public SecurityCollectorManagerCallbackStub {
 public:
     MockSecurityCollectorManagerCallbackStub() = default;
@@ -144,7 +147,7 @@ void DataCollectManagerFuzzTest(const uint8_t* data, size_t size)
     DataCollectManager::GetInstance().Unmute(mute);
     auto func = [] (std::string &devId, std::string &riskData, uint32_t status,
         const std::string &errMsg)-> int32_t {
-        return SUCCESS;
+        return 0;
     };
     std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     std::string string1 = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
@@ -184,7 +187,7 @@ void AcquireDataManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)
     datas.WriteString(string);
     stub.OnRemoteRequest(AcquireDataManagerCallbackStub::CMD_DATA_SUBSCRIBE_CALLBACK, datas, reply, option);
 }
-
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 void RiskAnalysisManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)
 {
     if (data == nullptr || size < sizeof(uint32_t)) {
@@ -229,7 +232,7 @@ void RiskAnalysisManagerProxyFuzzTest(const uint8_t* data, size_t size)
     proxy.RequestSecurityModelResult(string, uint32, string, callback);
     proxy.SetModelState(uint32, true);
 }
-
+#endif
 void CollectorManagerFuzzTest(const uint8_t* data, size_t size)
 {
     if (data == nullptr || size < sizeof(int64_t)) {
@@ -551,8 +554,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::AcquireDataManagerFuzzTest(data, size);
     OHOS::AcquireDataManagerCallbackServiceFuzzTest(data, size);
     OHOS::AcquireDataManagerCallbackStubFuzzTest(data, size);
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
     OHOS::RiskAnalysisManagerCallbackStubFuzzTest(data, size);
     OHOS::RiskAnalysisManagerProxyFuzzTest(data, size);
+#endif
     OHOS::CollectorManagerFuzzTest(data, size);
     OHOS::DataCollectManagerCallbackStubFuzzTest(data, size);
     OHOS::DataCollectManagerProxyRequestDataSubmitFuzzTest(data, size);

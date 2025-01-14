@@ -40,5 +40,8 @@ ohos_unittest("libsg_classify_sdk_test") {
 
 group("unittest") {
   testonly = true
-  deps = [ ":libsg_classify_sdk_test" ]
+  deps = []
+  if (!security_guard_trim_model_analysis) {
+    deps += [ ":libsg_classify_sdk_test" ]
+  }
 }

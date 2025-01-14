@@ -17,7 +17,10 @@ import("//build/test.gni")
 
 group("sg_classify_service_build_module") {
   if (is_standard_system) {
-    deps = [ "${sg_root_dir}/services/risk_classify:sg_classify_service" ]
+    deps = []
+    if (!security_guard_trim_model_analysis) {
+      deps += [ "${sg_root_dir}/services/risk_classify:sg_classify_service" ]
+    }
   }
 }
 
@@ -35,7 +38,6 @@ group("security_guard_fuzz_test") {
   deps = []
   if (is_standard_system) {
     deps += [
-      "${sg_root_dir}/test/fuzztest/classify:fuzztest",
       "${sg_root_dir}/test/fuzztest/collect:fuzztest",
       "${sg_root_dir}/test/fuzztest/config_manager:fuzztest",
       "${sg_root_dir}/test/fuzztest/data_collect:fuzztest",
@@ -44,6 +46,9 @@ group("security_guard_fuzz_test") {
       "${sg_root_dir}/test/fuzztest/obtaindata:fuzztest",
       "${sg_root_dir}/test/fuzztest/security_collector:fuzztest",
     ]
+    if (!security_guard_trim_model_analysis) {
+      deps += [ "${sg_root_dir}/test/fuzztest/classify:fuzztest" ]
+    }
   }
 }
 
