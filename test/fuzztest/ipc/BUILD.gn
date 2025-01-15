@@ -10,12 +10,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import("//base/security/security_guard/security_guard.gni")
 group("fuzztest") {
   testonly = true
   deps = [
     "datacollectmanager_fuzzer:DataCollectManagerFuzzTest",
-    "riskanalysismanager_fuzzer:RiskAnalysisManagerFuzzTest",
     "securitycollectormanager_fuzzer:SecurityCollectorManagerFuzzTest",
   ]
+  if (!security_guard_trim_model_analysis) {
+    deps += [ "riskanalysismanager_fuzzer:RiskAnalysisManagerFuzzTest" ]
+  }
 }

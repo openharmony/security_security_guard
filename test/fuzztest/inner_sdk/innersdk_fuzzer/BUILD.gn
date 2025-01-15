@@ -39,7 +39,10 @@ ohos_fuzztest("InnerSdkFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-
+  defines = []
+  if (security_guard_trim_model_analysis) {
+    defines += [ "SECURITY_GUARD_TRIM_MODEL_ANALYSIS" ]
+  }
   sources = [ "inner_sdk_fuzzer.cpp" ]
 
   deps = []

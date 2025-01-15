@@ -16,4 +16,5 @@ fuzz_test_output_path = "security_guard/security_guard"
 declare_args() {
   security_guard_enable = true
   security_guard_enable_ext = false
+  security_guard_trim_model_analysis = false
 }

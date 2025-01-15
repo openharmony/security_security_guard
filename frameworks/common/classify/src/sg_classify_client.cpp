@@ -15,17 +15,19 @@
 
 #include "sg_classify_client.h"
 
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 #include <future>
-
 #include "iremote_broker.h"
 #include "iservice_registry.h"
 #include "securec.h"
-
 #include "risk_analysis_manager_callback_service.h"
 #include "risk_analysis_manager_proxy.h"
+#endif
+
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 namespace {
     constexpr int32_t TIMEOUT_REPLY = 500;
 }
@@ -60,11 +62,12 @@ static int32_t RequestSecurityModelResult(const std::string &devId, uint32_t mod
     SGLOGI("RequestSecurityModelResult result, ret=%{public}d", ret);
     return ret;
 }
-
+#endif
 namespace OHOS::Security::SecurityGuard {
 int32_t RequestSecurityModelResultSync(const std::string &devId, uint32_t modelId,
     const std::string &param, SecurityModelResult &result)
 {
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
     if (devId.length() >= DEVICE_ID_MAX_LEN) {
         return BAD_PARAM;
     }
@@ -95,11 +98,15 @@ int32_t RequestSecurityModelResultSync(const std::string &devId, uint32_t modelI
     }
     result = future.get();
     return SUCCESS;
+#else
+    return 0;
+#endif
 }
 
 int32_t RequestSecurityModelResultAsync(const std::string &devId, uint32_t modelId,
     const std::string &param, SecurityGuardRiskCallback callback)
 {
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
     if (devId.length() >= DEVICE_ID_MAX_LEN) {
         return BAD_PARAM;
     }
@@ -111,13 +118,16 @@ int32_t RequestSecurityModelResultAsync(const std::string &devId, uint32_t model
     };
 
     return RequestSecurityModelResult(devId, modelId, param, func);
+#else
+    return 0;
+#endif
 }
 }
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 static int32_t FillingRequestResult(const OHOS::Security::SecurityGuard::SecurityModelResult &cppResult,
     ::SecurityModelResult *result)
 {
@@ -148,9 +158,10 @@ static std::string CovertDevId(const DeviceIdentify *devId)
     std::copy(&devId->identity[0], &devId->identity[DEVICE_ID_MAX_LEN - 1], id.begin());
     return std::string{id.data()};
 }
-
+#endif
 int32_t RequestSecurityModelResultSync(const DeviceIdentify *devId, uint32_t modelId, ::SecurityModelResult *result)
 {
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
     if (devId == nullptr || result == nullptr || devId->length >= DEVICE_ID_MAX_LEN) {
         return BAD_PARAM;
     }
@@ -158,11 +169,15 @@ int32_t RequestSecurityModelResultSync(const DeviceIdentify *devId, uint32_t mod
     int32_t ret = OHOS::Security::SecurityGuard::RequestSecurityModelResultSync(CovertDevId(devId), modelId, "", tmp);
     FillingRequestResult(tmp, result);
     return ret;
+#else
+    return 0;
+#endif
 }
 
 int32_t RequestSecurityModelResultAsync(const DeviceIdentify *devId, uint32_t modelId,
     ::SecurityGuardRiskCallback callback)
 {
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
     if (devId == nullptr || devId->length >= DEVICE_ID_MAX_LEN) {
         return BAD_PARAM;
     }
@@ -172,6 +187,9 @@ int32_t RequestSecurityModelResultAsync(const DeviceIdentify *devId, uint32_t mo
         callback(&result);
     };
     return OHOS::Security::SecurityGuard::RequestSecurityModelResultAsync(CovertDevId(devId), modelId, "", cppCallBack);
+#else
+    return 0;
+#endif
 }
 
 #ifdef __cplusplus
