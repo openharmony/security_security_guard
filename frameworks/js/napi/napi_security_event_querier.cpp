@@ -32,6 +32,7 @@ NapiSecurityEventQuerier::~NapiSecurityEventQuerier()
             napi_delete_reference(callbackContext_->env, callbackContext_->ref);
         }
         delete callbackContext_;
+        callbackContext_ = nullptr;
     }
 };
 
