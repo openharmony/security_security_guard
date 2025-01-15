@@ -133,6 +133,7 @@ HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInit001, TestSize.Level1
     ModelManager::GetInstance().Init();
     ModelManager::GetInstance().Init();
     ModelManager::GetInstance().Init();
+    EXPECT_TRUE(ModelManager::GetInstance().InitModel(0) != SUCCESS);
 }
 
 HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInitModel001, TestSize.Level1)
@@ -143,7 +144,7 @@ HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInitModel001, TestSize.L
     std::unique_ptr<ModelAttrs> attr = std::make_unique<ModelAttrs>();
     attr->SetModelApi(model);
     ModelManager::GetInstance().modelIdApiMap_[8888] = std::move(attr);
-    ModelManager::GetInstance().InitModel(8888);
+    EXPECT_TRUE(ModelManager::GetInstance().InitModel(8888) != SUCCESS);
 }
 
 HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInitModel002, TestSize.Level1)
@@ -187,5 +188,6 @@ HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInitModel002, TestSize.L
     ModelManager::GetInstance().GetResult(9999, "");
     ModelManager::GetInstance().SubscribeResult(9999, nullptr);
     ModelManager::GetInstance().Release(9999);
+    EXPECT_TRUE(ModelManager::GetInstance().InitModel(9999) != SUCCESS);
 }
 }
