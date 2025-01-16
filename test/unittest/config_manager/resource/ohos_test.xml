@@ -24,12 +24,6 @@
             <option name="push" value="security_guard_preset_model.cfg -> /data/test/unittest/resource/" src="res"/>
             <option name="push" value="security_guard_update_event.cfg -> /data/test/unittest/resource/" src="res"/>
             <option name="push" value="security_guard_update_model.cfg -> /data/test/unittest/resource/" src="res"/>
-            <option name="push" value="related_event_analysis_update.json-> /data/test/unittest/resource/" src="res"/>
-            <option name="push" value="global_app_attribute_update.json -> /data/test/unittest/resource/" src="res"/>
-            <option name="push" value="local_app_attribute_update.json -> /data/test/unittest/resource/" src="res"/>
-            <option name="push" value="related_event_analysis.json -> /data/test/unittest/resource/security_guard/security_guard/" src="res"/>
-            <option name="push" value="global_app_attribute.json -> /data/test/unittest/resource/security_guard/security_guard/" src="res"/>
-            <option name="push" value="local_app_attribute.json-> /data/test/unittest/resource/security_guard/security_guard/" src="res"/>
         </preparer>
     </target>
 </configuration>

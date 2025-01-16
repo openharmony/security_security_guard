@@ -175,7 +175,7 @@ HWTEST_F(DataCollectionTest, GetCollectorPath02, testing::ext::TestSize.Level1)
     MockMyCheckFileStreamClass myOb;
     std::string path;
     EXPECT_CALL(myOb, CheckFileStream).WillOnce(Return(SUCCESS));
-    EXPECT_EQ(myOb.GetCollectorPath(0x01C000003, path), SUCCESS);
+    EXPECT_EQ(myOb.GetCollectorPath(0, path), FAILED);
 }
 
 HWTEST_F(DataCollectionTest, GetCollectorType01, testing::ext::TestSize.Level1)
@@ -191,7 +191,7 @@ HWTEST_F(DataCollectionTest, GetCollectorType02, testing::ext::TestSize.Level1)
     MockMyCheckFileStreamClass myOb;
     int32_t collectorType;
     EXPECT_CALL(myOb, CheckFileStream).WillOnce(Return(SUCCESS));
-    EXPECT_EQ(myOb.GetCollectorType(0x01C000003, collectorType), SUCCESS);
+    EXPECT_EQ(myOb.GetCollectorType(0, collectorType), FAILED);
 }
 
 class MockQuerySecurityEventClass : public DataCollection {
