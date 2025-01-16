@@ -53,21 +53,23 @@ public:
 
 void DataCollectionFuzzTest(const uint8_t* data, size_t size)
 {
-    if (data == nullptr || size < sizeof(int64_t)) {
+    if (data == nullptr || size < sizeof(int64_t) + sizeof(int32_t)) {
         return;
     }
     size_t offset = 0;
     int64_t eventId = *(reinterpret_cast<const int64_t *>(data));
     offset += sizeof(int64_t);
+    int32_t collectorType = *(reinterpret_cast<const int32_t *>(data + offset));
+    offset += sizeof(int32_t);
     std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
     SecurityCollectorSubscribeInfo subseciberInfo{};
     auto subscriber = std::make_shared<SecurityCollectorSubscriber>(string, subseciberInfo, nullptr,
         [] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {});
     auto collectorListenner = std::make_shared<SecurityCollectorRunManager::CollectorListenner>(subscriber);
     std::vector<int64_t> eventIds{eventId};
-    int32_t collectorType = static_cast<int32_t>(size);
-    SecurityEventRuler ruler{};
-    std::vector<SecurityEventRuler> rulers{ruler};
+    SecurityEventRuler ruler{eventId};
+    std::vector<SecurityEventRuler> rulers;
+    rulers.emplace_back(ruler);
     std::vector<SecurityEvent> events{};
     std::ifstream stream{string};
     DataCollection::GetInstance().StartCollectors(eventIds, collectorListenner);
@@ -117,8 +119,9 @@ void SecurityCollectorManagerServiceFuzzTest(const uint8_t* data, size_t size)
     SecurityCollectorManagerService service(SECURITY_COLLECTOR_MANAGER_SA_ID, false);
     Security::SecurityCollector::Event event{eventId, string, string, string};
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    SecurityEventRuler ruler{};
-    std::vector<SecurityEventRuler> rulers{ruler};
+    SecurityEventRuler ruler(eventId);
+    std::vector<SecurityEventRuler> rulers;
+    rulers.emplace_back(ruler);
     SecurityCollectorSubscribeInfo subscribeInfo{event};
     ScSubscribeEvent scEvent{};
     ScUnsubscribeEvent scuEvent{};
