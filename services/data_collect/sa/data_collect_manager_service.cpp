@@ -699,11 +699,6 @@ int32_t DataCollectManagerService::ConfigUpdate(const SecurityGuard::SecurityCon
     if (g_configCacheFilesSet.empty() || !g_configCacheFilesSet.count(info.GetFileName())) {
         return BAD_PARAM;
     }
-    const uint32_t modelId = 3001000008;
-    if (info.GetFileName() == "related_event_analysis.json" &&
-        !FileExists("/data/service/el1/public/security_guard/related_event_analysis.json")) {
-        ModelManager::GetInstance().InitModel(modelId);
-    }
     const std::string &realPath = CONFIG_ROOT_PATH + "tmp/" + info.GetFileName();
     SGLOGI("config file is %{public}s, fd is %{public}d", realPath.c_str(), info.GetFd());
     std::string tmpPath = realPath + ".t";

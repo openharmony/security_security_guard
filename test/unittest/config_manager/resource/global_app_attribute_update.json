@@ -1,9 +1,0 @@
-{
-    "version":"001",
-    "apps":[
-        {"name":"com.xingin.xhs_hos1","fingerprint":"3A4C3D681DCEB5C16A0ECD2FD69DDC4725B4B506D9BB57915240CD3D99AB8416","attribute":[]},
-        {"name":"com.xingin.xhs_hos","fingerprint":"3A4C3D681DCEB5C16A0ECD2FD69DDC4725B4B506D9BB57915240CD3D99AB8417","attribute":[]},
-        {"name":"com.amap.hmapp","fingerprint":"B7BF22154784D858D450864F326C40F512672EBFDE6AE6DF2AF5EC6CAF1D5589","attribute":[]},
-        {"name":"com.happyelements.OhosAnimal","fingerprint":"ED2D188FACD5EB93248B287366324F6A12DF3A7B8D464C89FDD88FF1588C6596","attribute":[]}
-    ]
-}
