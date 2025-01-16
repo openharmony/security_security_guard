@@ -51,10 +51,6 @@ void ModelManager::Init()
             continue;
         }
     }
-    const uint32_t modelId = 3001000008;
-    if (FileExists("/data/service/el1/public/security_guard/related_event_analysis.json")) {
-        (void) InitModel(modelId);
-    }
 }
 
 int32_t ModelManager::InitModel(uint32_t modelId)
