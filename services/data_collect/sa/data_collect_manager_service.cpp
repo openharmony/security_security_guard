@@ -49,6 +49,9 @@
 #include "config_subscriber.h"
 #include "model_manager.h"
 #include "config_define.h"
+#ifdef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
+#include "event_group_config.h"
+#endif
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
@@ -105,6 +108,12 @@ void DataCollectManagerService::OnStart()
     if (!success) {
         SGLOGE("init event config error");
     }
+#ifdef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
+    success = ConfigManager::InitConfig<EventGroupConfig>();
+    if (!success) {
+        SGLOGE("init event group config error");
+    }
+#endif
     std::vector<int64_t> eventIds = ConfigDataManager::GetInstance().GetAllEventIds();
     std::vector<int64_t> onStartEventList;
     for (int64_t eventId : eventIds) {
