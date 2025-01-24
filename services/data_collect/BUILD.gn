@@ -140,5 +140,6 @@ ohos_shared_library("sg_collect_service_database") {
   external_deps = [
     "hilog:libhilog",
     "relational_store:native_rdb",
+    "c_utils:utils",
   ]
 }
