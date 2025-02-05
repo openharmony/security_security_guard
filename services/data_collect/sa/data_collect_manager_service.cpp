@@ -269,7 +269,7 @@ int32_t DataCollectManagerService::RequestRiskData(std::string &devId, std::stri
             return NO_SYSTEMCALL;
         }
     }
-    ObatinDataEvent event;
+    ObtainDataEvent event;
     auto pid = IPCSkeleton::GetCallingPid();
     event.pid = pid;
     event.time = SecurityGuardUtils::GetDate();
@@ -284,8 +284,8 @@ int32_t DataCollectManagerService::RequestRiskData(std::string &devId, std::stri
     } else {
         event.size = future.get();
     }
-    SGLOGI("ReportObatinDataEvent");
-    BigData::ReportObatinDataEvent(event);
+    SGLOGI("ReportObtainDataEvent");
+    BigData::ReportObtainDataEvent(event);
     return SUCCESS;
 }
 
