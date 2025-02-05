@@ -22,7 +22,7 @@ namespace OHOS::Security::SecurityGuard {
 class BigData {
 public:
     BigData() = delete;
-    static void ReportObatinDataEvent(const ObatinDataEvent &event);
+    static void ReportObtainDataEvent(const ObtainDataEvent &event);
     static void ReportClassifyEvent(const ClassifyEvent &event);
 };
 } // namespace OHOS::Security::SecurityGuard

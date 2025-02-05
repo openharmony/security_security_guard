@@ -31,7 +31,7 @@ namespace {
     constexpr const char* RET = "RET";
 }
 
-void BigData::ReportObatinDataEvent(const ObatinDataEvent &event)
+void BigData::ReportObtainDataEvent(const ObtainDataEvent &event)
 {
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "OBTAIN_DATA",
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid,
