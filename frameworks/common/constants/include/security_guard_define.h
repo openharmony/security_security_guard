@@ -48,7 +48,7 @@ using SecurityModel = struct {
     std::string result;
 };
 
-using ObatinDataEvent = struct {
+using ObtainDataEvent = struct {
     int32_t pid;
     std::string time;
     int32_t size;
