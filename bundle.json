@@ -21,6 +21,11 @@
     "features": [
       "security_guard_enable",
       "security_guard_enable_ext",
+      "security_guard_event_cfg_source",
+      "security_guard_model_cfg_source",
+      "security_guard_event_group_cfg_source",
+      "security_guard_config_update_trust_list_source",
+      "security_guard_collector_cfg_source",
       "security_guard_trim_model_analysis"
     ],
     "adapted_system_type": [
