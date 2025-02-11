@@ -17,4 +17,10 @@ declare_args() {
   security_guard_enable = true
   security_guard_enable_ext = false
   security_guard_trim_model_analysis = false
+  security_guard_event_cfg_source = "security_guard_event.json"
+  security_guard_model_cfg_source = "security_guard_model.cfg"
+  security_guard_event_group_cfg_source = "security_guard_event_group.json"
+  security_guard_config_update_trust_list_source =
+      "config_update_trust_list.json"
+  security_guard_collector_cfg_source = "security_audit.cfg"
 }
