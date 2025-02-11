@@ -62,12 +62,7 @@ namespace OHOS {
 }
 
 namespace OHOS::Security::SecurityGuardTest {
-
-#ifndef SECURITY_GUARD_ENABLE_EXT
-    const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event.json";
-#else
-    const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event_ext.json";
-#endif
+const std::string &SECURITY_GUARD_EVENT_CFG_FILE = SECURITY_GUARD_EVENT_CFG_SOURCE;
 
 void SecurityGuardDataCollectSaTest::SetUpTestCase()
 {
