@@ -82,11 +82,8 @@ namespace {
     constexpr size_t MAX_DISTRIBUTE_LENS = 100;
     constexpr uint64_t CLEAR_TIME = 3600000000;
     constexpr uint32_t FFRT_MAX_NUM = 256;
-#ifndef SECURITY_GUARD_ENABLE_EXT
-    const std::string TRUST_LIST_FILE_PATH = "/system/etc/config_update_trust_list.json";
-#else
-    const std::string TRUST_LIST_FILE_PATH = "/system/etc/config_update_trust_list_ext.json";
-#endif
+    std::string TRUST_LIST_FILE_PATH_PRE = "/system/etc/";
+    const std::string TRUST_LIST_FILE_PATH = TRUST_LIST_FILE_PATH_PRE + SECURITY_GUARD_COLLECTOR_CFG_SOURCE;
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DataCollectManagerService, DATA_COLLECT_MANAGER_SA_ID, true);
@@ -680,18 +677,18 @@ bool DataCollectManagerService::ParseTrustListFile(const std::string &trustListF
         SGLOGE("json is discarded");
         return false;
     }
-    
+
     if (!jsonObj.contains("trust_list_config") || !jsonObj["trust_list_config"].is_array()) {
         return false;
     }
- 
+
     for (const auto &ele : jsonObj["trust_list_config"]) {
         if (!ele.contains("name")) {
             return false;
         }
         g_configCacheFilesSet.emplace(ele["name"]);
     }
- 
+
     return true;
 }
 
@@ -722,7 +719,7 @@ int32_t DataCollectManagerService::ConfigUpdate(const SecurityGuard::SecurityCon
         return FAILED;
     }
     (void)unlink(tmpPath.c_str());
- 
+
     if (!ConfigSubscriber::UpdateConfig(realPath)) {
         SGLOGE("update config fail");
         return FAILED;
