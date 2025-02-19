@@ -20,13 +20,8 @@
 #include <vector>
 
 namespace {
-#ifndef SECURITY_GUARD_ENABLE_EXT
-    const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event.json";
-    const std::string &SECURITY_GUARD_MODEL_CFG_FILE = "security_guard_model.cfg";
-#else
-    const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event_ext.json";
-    const std::string &SECURITY_GUARD_MODEL_CFG_FILE = "security_guard_model_ext.cfg";
-#endif
+    const std::string &SECURITY_GUARD_EVENT_CFG_FILE = SECURITY_GUARD_EVENT_CFG_SOURCE;
+    const std::string &SECURITY_GUARD_MODEL_CFG_FILE = SECURITY_GUARD_MODEL_CFG_SOURCE;
 }
 
 namespace OHOS::Security::SecurityGuard {

@@ -23,11 +23,8 @@
 
 namespace OHOS::Security::SecurityCollector {
 namespace {
-#ifndef SECURITY_GUARD_ENABLE_EXT
-    const char* SA_CONFIG_PATH = "/system/etc/security_audit.cfg";
-#else
-    const char* SA_CONFIG_PATH = "/system/etc/security_audit_ext.cfg";
-#endif
+    std::string configPathPre = "/system/etc/";
+    const std::string &SA_CONFIG_PATH = configPathPre + SECURITY_GUARD_COLLECTOR_CFG_SOURCE;
 }
 
 DataCollection &DataCollection::GetInstance()
@@ -242,7 +239,7 @@ ErrorCode DataCollection::GetCollectorType(int64_t eventId, int32_t& collectorTy
         stream.close();
         return ret;
     }
-    
+
     nlohmann::json json = nlohmann::json::parse(stream, nullptr, false);
     stream.close();
 
