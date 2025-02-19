@@ -51,9 +51,14 @@ ohos_fuzztest("DataCollectFuzzTest") {
   ]
 
   defines = []
-  if (security_guard_enable_ext) {
-    defines += [ "SECURITY_GUARD_ENABLE_EXT" ]
-  }
+  defines += [
+    "SECURITY_GUARD_EVENT_CFG_SOURCE = \"${security_guard_event_cfg_source}\"",
+    "SECURITY_GUARD_MODEL_CFG_SOURCE = \"${security_guard_model_cfg_source}\"",
+    "SECURITY_GUARD_EVENT_GROUP_CFG_SOURCE = \"${security_guard_event_group_cfg_source}\"",
+    "SECURITY_GUARD_CONFIG_UPDATE_TRUST_LIST_SOURCE = \"${security_guard_config_update_trust_list_source}\"",
+    "SECURITY_GUARD_COLLECTOR_CFG_SOURCE = \"${security_guard_collector_cfg_source}\"",
+  ]
+
   sources = [
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_event_filter.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",

@@ -29,7 +29,7 @@
 #include "data_collection.h"
 #include "security_event_filter.h"
 #include "data_format.h"
-#include "database_manager.h"
+
 namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr size_t MAX_CACHE_EVENT_SIZE = 64 * 1024;

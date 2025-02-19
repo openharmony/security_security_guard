@@ -62,12 +62,7 @@ namespace OHOS {
 }
 
 namespace OHOS::Security::SecurityGuardTest {
-
-#ifndef SECURITY_GUARD_ENABLE_EXT
-    const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event.json";
-#else
-    const std::string &SECURITY_GUARD_EVENT_CFG_FILE = "security_guard_event_ext.json";
-#endif
+const std::string &SECURITY_GUARD_EVENT_CFG_FILE = SECURITY_GUARD_EVENT_CFG_SOURCE;
 
 void SecurityGuardDataCollectSaTest::SetUpTestCase()
 {
@@ -379,18 +374,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_ValidConditions
     EXPECT_EQ(0, promise->get_future().get());
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, OnAddSystemAbility_RiskAnalysisManagerSaId, TestSize.Level1)
-{
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    service.OnAddSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID, "deviceId");
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, OnAddSystemAbility_DfxSysHiviewAbilityId, TestSize.Level1)
-{
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    service.OnAddSystemAbility(DFX_SYS_HIVIEW_ABILITY_ID, "deviceId");
-}
-
 HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_NoPermission, TestSize.Level1)
 {
     int64_t eventId = 1;
@@ -401,6 +384,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_NoPermission, TestSiz
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillRepeatedly(
         Return(AccessToken::PermissionState::PERMISSION_DENIED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    service.OnAddSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID, "deviceId");
     int32_t result = service.RequestDataSubmit(eventId, version, time, content);
     EXPECT_EQ(result, NO_PERMISSION);
 }
