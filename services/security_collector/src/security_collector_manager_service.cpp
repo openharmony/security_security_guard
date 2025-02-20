@@ -35,7 +35,6 @@
 
 namespace OHOS::Security::SecurityCollector {
 namespace {
-    constexpr char REPORT_PERMISSION[] = "ohos.permission.securityguard.REPORT_SECURITY_INFO";
     constexpr char COLLECT_EVENT_PERMISSION[] = "ohos.permission.COLLECT_SECURITY_EVENT";
     constexpr char QUERY_EVENT_PERMISSION[] = "ohos.permission.QUERY_SECURITY_EVENT";
     constexpr const char* CALLER_PID = "CALLER_PID";
@@ -338,7 +337,7 @@ int32_t SecurityCollectorManagerService::QuerySecurityEvent(const std::vector<Se
     g_refCount.fetch_add(1);
     LOGI("begin QuerySecurityEvent");
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REPORT_PERMISSION);
+    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, QUERY_EVENT_PERMISSION);
     if (code != AccessToken::PermissionState::PERMISSION_GRANTED) {
         LOGE("caller no permission");
         g_refCount.fetch_sub(1);
