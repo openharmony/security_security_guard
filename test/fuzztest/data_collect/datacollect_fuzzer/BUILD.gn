@@ -73,6 +73,7 @@ ohos_fuzztest("DataCollectFuzzTest") {
     "${sg_root_dir}/services/data_collect/sa/security_event_query_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/rdb_event_store_callback.cpp",
     "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
     "data_collect_fuzzer.cpp",
@@ -103,5 +104,6 @@ ohos_fuzztest("DataCollectFuzzTest") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "zlib:libz",
   ]
 }
