@@ -16,6 +16,7 @@
 #include "database_manager.h"
 #include <cinttypes>
 #include "config_data_manager.h"
+#include "file_system_store_helper.h"
 #include "risk_event_rdb_helper.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
@@ -55,6 +56,11 @@ int DatabaseManager::InsertEvent(uint32_t source, const SecEvent& event,
             SGLOGD("audit event insert");
             DbChanged(IDbListener::INSERT, event, eventSubscribes);
             return SUCCESS;
+        }
+        if (table == FILE_SYSTEM) {
+            SGLOGD("insert event to file system");
+            DbChanged(IDbListener::INSERT, event, eventSubscribes);
+            return FileSystemStoreHelper::GetInstance().InsertEvent(event);
         }
         SGLOGD("risk event insert, eventId=%{public}" PRId64, event.eventId);
         // notify changed

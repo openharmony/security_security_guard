@@ -59,7 +59,8 @@
         "time_service",
         "appverify",
         "ffrt",
-        "bundle_framework"
+        "bundle_framework",
+        "zlib"
       ],
       "third_party": [
       ]

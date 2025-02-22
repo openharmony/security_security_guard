@@ -22,8 +22,6 @@
 #include "nlohmann/json.hpp"
 
 namespace OHOS::Security::SecurityGuard {
-constexpr const char *AUDIT_TABLE = "audit_event";
-constexpr const char *RISK_TABLE = "risk_event";
 
 void from_json(const nlohmann::json &jsonObj, Field &field) {};
 void from_json(const nlohmann::json &jsonObj, Rule &rule) {};

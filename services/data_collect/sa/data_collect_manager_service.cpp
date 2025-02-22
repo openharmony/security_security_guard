@@ -46,6 +46,7 @@
 #include "ffrt.h"
 #include "config_manager.h"
 #include "risk_event_rdb_helper.h"
+#include "file_system_store_helper.h"
 #include "config_subscriber.h"
 #include "model_manager.h"
 #include "config_define.h"
@@ -432,6 +433,8 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
             return false;
         }
         proxy->OnQuery(replyEvents);
+    } else if (config.dbTable == FILE_SYSTEM) {
+        (void) FileSystemStoreHelper::GetInstance().QuerySecurityEvent(ruler, proxy);
     } else {
         std::vector<SecEvent> events;
         if (ruler.GetBeginTime().empty() && ruler.GetEndTime().empty()) {
