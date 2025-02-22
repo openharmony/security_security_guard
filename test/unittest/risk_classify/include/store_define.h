@@ -29,13 +29,33 @@ constexpr const char *EVENT_ID = "event_id";
 constexpr const char *VERSION = "version";
 constexpr const char *DATE = "date";
 constexpr const char *CONTENT = "content";
+constexpr const char *TIMESTAMP = "timestamp";
 constexpr const char *EVENT_TYPE = "event_type";
 constexpr const char *DATA_SENSITIVITY_LEVEL = "data_sensitivity_level";
 constexpr const char *OWNER = "owner";
 constexpr const char *AUDIT_TABLE = "audit_event";
+constexpr const char *FILE_SYSTEM = "file_system";
 constexpr const char *RISK_TABLE = "risk_event";
+constexpr const char *APP_INFO_TABLE = "app_info";
+
+constexpr const char *APP_NAME = "app_name";
+constexpr const char *APP_FINGERPRINT = "app_fingerprint";
+constexpr const char *APP_ATTRIBUTES = "app_attributes";
+constexpr const char *IS_GLOBAL_APP = "is_global_app";
+constexpr size_t SINGLE_FILE_SIZE = 1024 * 1024 * 8;
+constexpr size_t BUF_LEN = 2048;
+constexpr int32_t MAX_ON_QUERY_SIZE = 100;
+constexpr int32_t MAX_QUERY_EVENTS_SIZE = 100000;
+constexpr int32_t MAX_STORE_FILE_COUNT = 128;
 
 const std::string FOLDER_PATH = "/data/service/el1/public/database/security_guard_service/";
+const std::string STORE_FILE_FOLDER_PATH = "/data/service/el1/public/database/security_guard_service/file_store/";
+const std::string STORE_FILE_NAME = "sgevent.gz";
+const std::string STORE_FILE_NAME_PREFIX = "sgevent_";
+const std::string STORE_FILE_NAME_SUFFIX = ".gz";
+const std::string STORE_FILE_EVENT_FIRST_DELIMITER = "|";
+const std::string STORE_FILE_EVENT_SECOND_DELIMITER = "||";
+const std::string MIN_START_TIME = "19700101000000";
 
 using SecEventTableInfo = struct {
     int32_t rowCount;
