@@ -65,6 +65,7 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/services/data_collect/sa/security_event_query_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
   ]
 
@@ -100,6 +101,7 @@ ohos_shared_library("sg_collect_service") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "zlib:libz",
   ]
 }
 
