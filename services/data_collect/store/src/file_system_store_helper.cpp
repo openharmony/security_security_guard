@@ -166,7 +166,6 @@ int32_t FileSystemStoreHelper::InsertEvent(const SecEvent& event)
         }
     }
     // 如果当前文件大小超过限制，创建新文件
-    SGLOGD("CurrentEventFile size:%{public}u", GetFileSize(currentEventFile));
     if (GetFileSize(currentEventFile) >= SINGLE_FILE_SIZE) {
         std::string endTime = SecurityGuardUtils::GetDate();
         RenameStoreFile(currentEventFile, eventStartTime, endTime);
@@ -265,7 +264,6 @@ void FileSystemStoreHelper::QuerySecurityEventCallBack(sptr<ISecurityEventQueryC
     std::vector<SecurityCollector::SecurityEvent> events)
 {
     int32_t step = MAX_ON_QUERY_SIZE;
-    SGLOGI("Found onquery events size:%{public}u", events.size());
     if (events.size() > 0 && events.size() <= step) {
         proxy->OnQuery(events);
     } else if (events.size() > step) {
