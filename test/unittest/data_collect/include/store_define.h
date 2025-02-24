@@ -45,8 +45,8 @@ constexpr const char *IS_GLOBAL_APP = "is_global_app";
 constexpr size_t SINGLE_FILE_SIZE = 1024 * 1024 * 8;
 constexpr size_t BUF_LEN = 2048;
 constexpr int32_t MAX_ON_QUERY_SIZE = 100;
-constexpr int32_t MAX_QUERY_EVENTS_SIZE = 100000;
-constexpr int32_t MAX_STORE_FILE_COUNT = 128;
+constexpr size_t MAX_QUERY_EVENTS_SIZE = 100000;
+constexpr size_t MAX_STORE_FILE_COUNT = 128;
 
 const std::string FOLDER_PATH = "/data/service/el1/public/database/security_guard_service/";
 const std::string STORE_FILE_FOLDER_PATH = "/data/service/el1/public/database/security_guard_service/file_store/";

@@ -264,9 +264,9 @@ void FileSystemStoreHelper::QuerySecurityEventCallBack(sptr<ISecurityEventQueryC
     std::vector<SecurityCollector::SecurityEvent> events)
 {
     int32_t step = MAX_ON_QUERY_SIZE;
-    if (events.size() > 0 && events.size() <= step) {
+    if (events.size() > 0 && events.size() <= static_cast<size_t>(MAX_ON_QUERY_SIZE)) {
         proxy->OnQuery(events);
-    } else if (events.size() > step) {
+    } else if (events.size() > static_cast<size_t>(MAX_ON_QUERY_SIZE)) {
         std::vector<SecurityCollector::SecurityEvent>::iterator curPtr = events.begin();
         std::vector<SecurityCollector::SecurityEvent>::iterator endPtr = events.end();
         std::vector<SecurityCollector::SecurityEvent>::iterator end;
