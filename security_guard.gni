@@ -23,4 +23,6 @@ declare_args() {
   security_guard_config_update_trust_list_source =
       "config_update_trust_list.json"
   security_guard_collector_cfg_source = "security_audit.cfg"
+  security_guard_sa_profile_path = "security_guard.cfg"
+  security_guard_security_collector_sa_profile_path = "security_collector.cfg"
 }
