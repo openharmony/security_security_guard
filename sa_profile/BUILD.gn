@@ -32,7 +32,7 @@ ohos_sa_profile("sg_sa_profile_standard") {
 }
 
 ohos_prebuilt_etc("security_guard.init") {
-  source = "security_guard.cfg"
+  source = security_guard_sa_profile_path
   relative_install_dir = "init"
   subsystem_name = "security"
   part_name = "security_guard"
@@ -44,7 +44,7 @@ ohos_sa_profile("security_collector_sa_profile_standard") {
 }
 
 ohos_prebuilt_etc("security_collector.init") {
-  source = "security_collector.cfg"
+  source = security_guard_security_collector_sa_profile_path
   relative_install_dir = "init"
   subsystem_name = "security"
   part_name = "security_guard"
