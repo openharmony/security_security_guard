@@ -21,6 +21,7 @@ ohos_fuzztest("RequestSecurityModelResultSyncFuzzTest") {
 
   include_dirs = [
     "${sg_root_dir}/interfaces/inner_api/classify/include",
+    "${sg_root_dir}/frameworks/common/classify/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/services/risk_classify/include",
