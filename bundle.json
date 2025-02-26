@@ -92,37 +92,31 @@
         {
           "name": "//base/security/security_guard/frameworks/common/classify:libsg_classify_sdk",
           "header": {
-            "header_files": [
-              "sg_classify_client.h",
-              "i_model.h",
-              "i_model_info.h"
-            ],
-            "header_base": "//base/security/security_guard/interfaces/inner_api/classify/include"
+            "header_files": [],
+            "header_base": [
+              "//base/security/security_guard/interfaces/inner_api/classify/include",
+              "//base/security/security_guard/interfaces/inner_api/common/include"
+            ]
           }
         },
         {
           "name": "//base/security/security_guard/frameworks/common/collect:libsg_collect_sdk",
           "header": {
-            "header_files": [
-              "sg_collect_client.h",
-              "event_info.h",
-              "sg_obtaindata_client.h",
-              "data_collect_manager.h"
-            ],
-            "header_base": "//base/security/security_guard/interfaces/inner_api/collect/include"
+            "header_files": [],
+            "header_base": [
+              "//base/security/security_guard/interfaces/inner_api/collect/include",
+              "//base/security/security_guard/interfaces/inner_api/common/include"
+            ]
           }
         },
         {
           "name": "//base/security/security_guard/frameworks/common/collector:libsg_collector_sdk",
           "header": {
-            "header_files": [
-              "collector_manager.h",
-              "i_collector_fwk.h",
-              "i_collector_subscriber.h",
-              "i_collector.h",
-              "event_define.h"
-            ],
-            "header_base": "//base/security/security_guard/interfaces/inner_api/collector/include"
+            "header_files": [],
+            "header_base": [
+              "//base/security/security_guard/interfaces/inner_api/collector/include",
+              "//base/security/security_guard/interfaces/inner_api/common/include"
+            ]
           }
         }
       ],

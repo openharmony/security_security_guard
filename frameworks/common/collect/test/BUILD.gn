@@ -25,11 +25,10 @@ ohos_unittest("libsg_collect_sdk_test") {
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/interfaces/inner_api/collect/include",
+    "${sg_root_dir}/frameworks/common/collect/include",
     "${sg_root_dir}/interfaces/inner_api/common/include",
     "${sg_root_dir}/interfaces/inner_api/collector/include",
-    "${sg_root_dir}/interfaces/inner_api/obtaindata/include",
-    "${sg_root_dir}/interfaces/inner_api/acquire/include",
-    "${sg_root_dir}/interfaces/inner_api/data_collect_manager/include",
+    "${sg_root_dir}/frameworks/common/collector/include",
   ]
 
   sources = [ "unittest/src/data_collect_kit_test.cpp" ]
