@@ -39,6 +39,7 @@
 #include "model_config.h"
 #include "rdb_helper.h"
 #include "security_guard_log.h"
+#include "event_group_config.h"
 #undef private
 #undef protected
 
@@ -739,4 +740,67 @@ HWTEST_F(SecurityGuardConfigManagerTest, TestUnmarshal001, testing::ext::TestSiz
     EXPECT_FALSE(JsonCfg::Unmarshal(testVecIntS, jsonOb, "isexist"));
 }
 
+HWTEST_F(SecurityGuardConfigManagerTest, TestEventGroupConfig001, TestSize.Level1)
+{
+    EventGroupConfig config;
+    bool success = config.Load(INIT_MODE);
+    EXPECT_TRUE(success);
+    config.Parse();
+    EXPECT_FALSE(config.Load(UPDATE_MODE));
+    EXPECT_TRUE(config.Update());
+}
+
+HWTEST_F(SecurityGuardConfigManagerTest, TestEventGroupConfigFail001, TestSize.Level1)
+{
+    EventGroupConfig config;
+    nlohmann::json jsonObj;
+    nlohmann::json jsonGroupInfo;
+    EXPECT_FALSE(config.ParseEventGroupConfig(jsonObj));
+    jsonObj["eventGroupList"] = "test";
+    EXPECT_FALSE(config.ParseEventGroupConfig(jsonObj));
+    jsonObj.clear();
+    jsonGroupInfo["test"] = "";
+    jsonObj["eventGroupList"] = {jsonGroupInfo, jsonGroupInfo};
+    EXPECT_FALSE(config.ParseEventGroupConfig(jsonObj));
+    jsonGroupInfo.clear();
+    jsonObj.clear();
+    jsonGroupInfo["eventGroupName"] = "";
+    jsonObj["eventGroupList"] = {jsonGroupInfo, jsonGroupInfo};
+    EXPECT_FALSE(config.ParseEventGroupConfig(jsonObj));
+    jsonGroupInfo.clear();
+    jsonObj.clear();
+    jsonGroupInfo["eventGroupName"] = "Sec";
+    jsonObj["eventGroupList"] = {jsonGroupInfo, jsonGroupInfo};
+    EXPECT_FALSE(config.ParseEventGroupConfig(jsonObj));
+    jsonGroupInfo.clear();
+    jsonObj.clear();
+    jsonGroupInfo["eventGroupName"] = "Sec";
+    jsonGroupInfo["eventList"] = {"", "1111111111111111111111111111111111111111111111111111111"};
+    jsonObj["eventGroupList"] = {jsonGroupInfo, jsonGroupInfo};
+    EXPECT_FALSE(config.ParseEventGroupConfig(jsonObj));
+    jsonGroupInfo.clear();
+    jsonObj.clear();
+    jsonGroupInfo["eventGroupName"] = "Sec";
+    jsonGroupInfo["eventList"] = {"123", "11111"};
+    jsonGroupInfo["permission"] = {"test", "test1"};
+    jsonObj["eventGroupList"] = {jsonGroupInfo, jsonGroupInfo};
+    EXPECT_FALSE(config.ParseEventGroupConfig(jsonObj));
+}
+
+HWTEST_F(SecurityGuardConfigManagerTest, GetEventGroupConfig001, TestSize.Level1)
+{
+    EventGroupCfg config {};
+    EXPECT_FALSE(ConfigDataManager::GetInstance().GetEventGroupConfig("testttt", config));
+    ConfigDataManager::GetInstance().eventGroupMap_.insert({"testttt", config});
+    EXPECT_TRUE(ConfigDataManager::GetInstance().GetEventGroupConfig("testttt", config));
+}
+
+HWTEST_F(SecurityGuardConfigManagerTest, GetIsBatchUpload001, TestSize.Level1)
+{
+    EXPECT_FALSE(ConfigDataManager::GetInstance().GetIsBatchUpload("test11"));
+    EventGroupCfg config {};
+    config.isBatchUpload = true;
+    ConfigDataManager::GetInstance().eventGroupMap_.insert({"test11", config});
+    EXPECT_TRUE(ConfigDataManager::GetInstance().GetIsBatchUpload("test11"));
+}
 }

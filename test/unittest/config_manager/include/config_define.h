@@ -28,24 +28,25 @@ using LoadMode = enum {
 using PathIndex = enum {
     EVENT_CFG_INDEX,
     MODEL_CFG_INDEX,
-    SIG_RULE_CFG_INDEX,
-    URL_RULE_CFG_INDEX,
-    RELATED_EVENT_ANALYSIS_CFG_INDEX
+    EVENT_GROUP_CFG_INDEX
 };
 
 const std::vector<std::string> CONFIG_CACHE_FILES = {
     "/data/test/unittest/resource/security_guard/security_guard/security_guard_cache_event.cfg",
     "/data/test/unittest/resource/security_guard/security_guard/security_guard_cache_model.cfg",
+    "/data/test/unittest/resource/security_guard/security_guard/security_guard_cache_event_group.cfg",
 };
 
 const std::vector<std::string> CONFIG_UPTATE_FILES = {
     "/data/test/unittest/resource/security_guard_update_event.cfg",
     "/data/test/unittest/resource/security_guard_update_model.cfg",
+    "/data/test/unittest/resource/security_guard_update_event_group.cfg",
 };
 
 const std::vector<std::string> CONFIG_PRESET_FILES = {
     "/data/test/unittest/resource/security_guard_preset_event.cfg",
-    "/data/test/unittest/resource/security_guard_preset_model.cfg"
+    "/data/test/unittest/resource/security_guard_preset_model.cfg",
+    "/data/test/unittest/resource/security_guard_preset_event_group.cfg",
 };
 
 const std::string CONFIG_ROOT_PATH = "/data/test/unittest/resource/";
