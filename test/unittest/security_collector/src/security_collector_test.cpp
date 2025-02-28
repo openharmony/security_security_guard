@@ -696,6 +696,68 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd14, TestSize.Level1)
     EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
 }
 
+HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd15, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(ISecurityCollectorManager::GetDescriptor());
+    int32_t result =
+        g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_SECURITY_EVENT_MUTE, data, reply, option);
+    EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
+}
+
+HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd16, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+        Return(AccessToken::PermissionState::PERMISSION_DENIED));
+    SecurityCollectorEventMuteFilter fil {};
+    fil.eventId = 1;
+    fil.isSetMute = true;
+    SecurityCollectorEventFilter filter(fil);
+    std::string flag = "test";
+    data.WriteInterfaceToken(ISecurityCollectorManager::GetDescriptor());
+    data.WriteParcelable(&filter);
+    data.WriteString(flag);
+    int32_t result =
+        g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_SECURITY_EVENT_MUTE, data, reply, option);
+    EXPECT_EQ(result, SecurityCollector::ErrorCode::NO_PERMISSION);
+}
+
+HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd17, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(ISecurityCollectorManager::GetDescriptor());
+    int32_t result =
+        g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_SECURITY_EVENT_UNMUTE, data, reply, option);
+    EXPECT_EQ(result, SecurityCollector::ErrorCode::BAD_PARAM);
+}
+
+HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd18, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+        Return(AccessToken::PermissionState::PERMISSION_DENIED));
+    SecurityCollectorEventMuteFilter fil {};
+    fil.eventId = 1;
+    fil.isSetMute = true;
+    SecurityCollectorEventFilter filter(fil);
+    std::string flag = "test";
+    data.WriteInterfaceToken(ISecurityCollectorManager::GetDescriptor());
+    data.WriteParcelable(&filter);
+    data.WriteString(flag);
+    int32_t result =
+        g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_SECURITY_EVENT_UNMUTE, data, reply, option);
+    EXPECT_EQ(result, SecurityCollector::ErrorCode::NO_PERMISSION);
+}
+
 HWTEST_F(SecurityCollectorTest, TestLoaderLib002, TestSize.Level1)
 {
     LibLoader loader("");

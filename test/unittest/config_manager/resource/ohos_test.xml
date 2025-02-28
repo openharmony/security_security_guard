@@ -24,6 +24,9 @@
             <option name="push" value="security_guard_preset_model.cfg -> /data/test/unittest/resource/" src="res"/>
             <option name="push" value="security_guard_update_event.cfg -> /data/test/unittest/resource/" src="res"/>
             <option name="push" value="security_guard_update_model.cfg -> /data/test/unittest/resource/" src="res"/>
+            <option name="push" value="security_guard_cache_event_group.cfg -> /data/test/unittest/resource/" src="res"/>
+            <option name="push" value="security_guard_preset_event_group.cfg -> /data/test/unittest/resource/" src="res"/>
+            <option name="push" value="security_guard_update_event_group.cfg -> /data/test/unittest/resource/" src="res"/>
         </preparer>
     </target>
 </configuration>
