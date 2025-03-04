@@ -56,8 +56,7 @@ public:
 HWTEST_F(DataCollectionTest, Instance01, testing::ext::TestSize.Level1)
 {
     int32_t type = 0;
-    DataCollection::GetInstance().GetCollectorType(0, type);
-    EXPECT_EQ(type, 0);
+    EXPECT_TRUE(DataCollection::GetInstance().GetCollectorType(0, type) != SUCCESS);
 }
 
 HWTEST_F(DataCollectionTest, Instance02, testing::ext::TestSize.Level1)
