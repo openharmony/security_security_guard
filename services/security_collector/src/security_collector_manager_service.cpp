@@ -221,7 +221,7 @@ int32_t SecurityCollectorManagerService::CollectorStop(const SecurityCollectorSu
     Event event = subscribeInfo.GetEvent();
     int32_t ret = HasPermission(COLLECT_EVENT_PERMISSION);
     if (g_refCount.load() == 0) {
-        LOGE("Unsubscriber event failed, subscriber count is 0");
+        LOGE("Collector stop failed, subscriber count is 0");
         return FAILED;
     }
     if (ret != SUCCESS) {
