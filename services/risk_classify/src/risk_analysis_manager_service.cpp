@@ -144,7 +144,7 @@ int32_t RiskAnalysisManagerService::RequestSecurityModelResult(const std::string
         return NULL_OBJECT;
     }
     proxy->ResponseSecurityModelResult(devId, modelId, result);
-    SGLOGI("get analysis result=%{public}s", result.c_str());
+    SGLOGI("get analysis result=%{private}s", result.c_str());
     return ret;
 }
 
@@ -159,7 +159,7 @@ void RiskAnalysisManagerService::PushRiskAnalysisTask(uint32_t modelId, std::str
             return;
         }
         std::string result = ModelManager::GetInstance().GetResult(modelId, param);
-        SGLOGI("result is %{public}s", result.c_str());
+        SGLOGI("result is %{private}s", result.c_str());
         promise->set_value(result);
     };
     ffrt::submit(task);

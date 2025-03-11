@@ -27,7 +27,7 @@ RiskAnalysisManagerCallbackService::RiskAnalysisManagerCallbackService(ResultCal
 int32_t RiskAnalysisManagerCallbackService::ResponseSecurityModelResult(const std::string &devId,
     uint32_t modelId, std::string &result)
 {
-    SGLOGI("modelId=%{public}u, result=%{public}s", modelId, result.c_str());
+    SGLOGI("modelId=%{public}u, result=%{private}s", modelId, result.c_str());
     if (callback_ != nullptr) {
         callback_(devId, modelId, result);
     }

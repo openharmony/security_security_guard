@@ -346,7 +346,7 @@ void AcquireDataSubscribeManager::BatchUpload(sptr<IRemoteObject> obj,
     auto task = [proxy, events] () {
         proxy->OnNotify(events);
     };
-    SGLOGI("upload event to subscribe");
+    SGLOGD("upload event to subscribe");
     ffrt::submit(task);
 }
 
