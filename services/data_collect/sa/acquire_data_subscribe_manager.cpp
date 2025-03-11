@@ -99,7 +99,7 @@ int AcquireDataSubscribeManager::SubscribeScInSg(int64_t eventId, const sptr<IRe
     if (eventToListenner_.count(eventId) != 0) {
         return SUCCESS;
     }
-    if (!SecurityCollector::DataCollection::GetInstance().StartCollectors({eventId}, collectorListenner)) {
+    if (!SecurityCollector::DataCollection::GetInstance().SubscribeCollectors({eventId}, collectorListenner)) {
         SGLOGI("Subscribe SG failed, eventId=%{public}" PRId64, eventId);
         return FAILED;
     }
@@ -200,7 +200,7 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
             SGLOGE("not find evenId in linstener, eventId=%{public}" PRId64, eventId);
             return FAILED;
         }
-        if (!SecurityCollector::DataCollection::GetInstance().StopCollectors({eventId})) {
+        if (!SecurityCollector::DataCollection::GetInstance().UnsubscribeCollectors({eventId})) {
             SGLOGE("UnSubscribe SG failed, eventId=%{public}" PRId64, eventId);
             return FAILED;
         }
