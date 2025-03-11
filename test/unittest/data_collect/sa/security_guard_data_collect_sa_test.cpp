@@ -797,7 +797,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc02, TestSiz
         config.prog = "security_guard";
         return true;
     });
-    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), StartCollectors).WillOnce(
+    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), SubscribeCollectors).WillOnce(
         Return(false));
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     int result = adsm.SubscribeSc(111, obj);
@@ -883,13 +883,13 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc06, TestSiz
         config.prog = "security_guard";
         return true;
     });
-    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), StartCollectors).WillOnce(
+    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), SubscribeCollectors).WillOnce(
         Return(false));
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     int result = adsm.SubscribeSc(111, obj);
     EXPECT_EQ(result, FAILED);
 
-    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), StopCollectors).WillOnce(
+    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), UnsubscribeCollectors).WillOnce(
         Return(false));
     auto collectorListenner = std::make_shared<AcquireDataSubscribeManager::CollectorListenner>(event);
     adsm.eventToListenner_.emplace(event.eventId, collectorListenner);
@@ -1631,7 +1631,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg, TestSize.Level1)
 HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg01, TestSize.Level1)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), StartCollectors).WillOnce(
+    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), SubscribeCollectors).WillOnce(
         Return(true));
     EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), Mute).WillOnce(
         Return(SUCCESS));
@@ -1648,7 +1648,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg01, TestSize.Level1)
 HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg02, TestSize.Level1)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), StartCollectors).WillOnce(
+    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), SubscribeCollectors).WillOnce(
         Return(true));
     EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), Unmute).WillOnce(
         Return(FAILED));
