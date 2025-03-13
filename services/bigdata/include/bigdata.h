@@ -29,6 +29,7 @@ public:
     static void ReportConfigUpdateEvent(const ConfigUpdateEvent &event);
     static void ReportSetMuteEvent(const SgSubscribeEvent &event);
     static void ReportSetUnMuteEvent(const SgSubscribeEvent &event);
+    static void ReportFileSystemStoreEvent(const FileSystemStoreErrMesg &mesg);
 };
 } // namespace OHOS::Security::SecurityGuard
 
