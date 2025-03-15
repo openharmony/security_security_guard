@@ -29,6 +29,9 @@ namespace {
     constexpr const char* UNSUB_RET = "UNSUB_RET";
     constexpr const char* CONFIG_PATH = "CONFIG_PATH";
     constexpr const char* RET = "RET";
+    constexpr const char* FILE_OPERATION = "FILE_OPERATION";
+    constexpr const char* FILE_PATH = "FILE_PATH";
+    constexpr const char* ERR_MSG = "ERR_MSG";
 }
 
 void BigData::ReportObtainDataEvent(const ObtainDataEvent &event)
@@ -78,5 +81,12 @@ void BigData::ReportSetUnMuteEvent(const SgSubscribeEvent &event)
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "SG_EVENT_SET_UNMUTE",
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, CALLER_PID, event.pid,
         CALL_TIME, event.time, EVENT_ID, event.eventId, RET, event.ret);
+}
+
+void BigData::ReportFileSystemStoreEvent(const FileSystemStoreErrMesg &mesg)
+{
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "SG_FILE_SYSTEM_STORE",
+        OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, FILE_OPERATION, mesg.operation,
+        FILE_PATH, mesg.filepath, ERR_MSG, mesg.mesg);
 }
 }
