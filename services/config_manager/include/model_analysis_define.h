@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -53,6 +53,7 @@ namespace OHOS::Security::SecurityGuard {
     constexpr const char* EVENT_CFG_EVENT_TYPE_KEY = "eventType";
     constexpr const char* EVENT_CFG_COLLECT_ON_START_KEY = "collectOnStart";
     constexpr const char* EVENT_CFG_DATA_SENSITIVITY_LEVEL_KEY = "dataSensitivityLevel";
+    constexpr const char* EVENT_CFG_DISCARD_EVENT_WHITELIST_KEY = "discardEventWhiteList";
     constexpr const char* EVENT_CFG_STORAGE_RAM_NUM_KEY = "storageRamNums";
     constexpr const char* EVENT_CFG_STORAGE_ROM_NUM_KEY = "storageRomNums";
     constexpr const char* EVENT_CFG_STORAGE_TIME_KEY = "storageTime";
