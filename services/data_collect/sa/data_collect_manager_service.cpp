@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -83,6 +83,7 @@ namespace {
     constexpr size_t MAX_DISTRIBUTE_LENS = 100;
     constexpr uint64_t CLEAR_TIME = 3600000000;
     constexpr uint32_t FFRT_MAX_NUM = 256;
+    constexpr uint32_t DISCARD_EVENT_WHITELIST = 1;
     std::string TRUST_LIST_FILE_PATH_PRE = "/system/etc/";
     const std::string TRUST_LIST_FILE_PATH = TRUST_LIST_FILE_PATH_PRE + SECURITY_GUARD_CONFIG_UPDATE_TRUST_LIST_SOURCE;
 }
@@ -195,6 +196,10 @@ bool DataCollectManagerService::IsDiscardEventInThisHour(int64_t eventId)
             if (!success) {
                 SGLOGE("not found event, id=%{public}" PRId64, eventId);
                 return true;
+            }
+            if (config.discardEventWhiteList == DISCARD_EVENT_WHITELIST) {
+                SGLOGD("event in whitelist, id=%{public}" PRId64, eventId);
+                return false;
             }
             if (reportedEventsMap_[eventId].load() >= config.storageRomNums) {
                 SGLOGD("event is reported too much in this hour, eventid is %{public}" PRId64, eventId);
@@ -743,6 +748,7 @@ int32_t DataCollectManagerService::QueryEventConfig(std::string &result)
         jObject["eventType"] = event.eventType;
         jObject["collectOnStart"] = event.collectOnStart;
         jObject["dataSensitivityLevel"] = event.dataSensitivityLevel;
+        jObject["discardEventWhiteList"] = event.discardEventWhiteList;
         jObject["storageRamNums"] = event.storageRamNums;
         jObject["storageRomNums"] = event.storageRomNums;
         jObject["storageTime"] = event.storageTime;
