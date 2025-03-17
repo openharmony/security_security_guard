@@ -25,7 +25,7 @@ class ICollector {
 public:
     virtual int Start(std::shared_ptr<ICollectorFwk> api) = 0;
     virtual int Stop() = 0;
-    virtual int Subscribe(int64_t eventId);
+    virtual int Subscribe(std::shared_ptr<ICollectorFwk> api, int64_t eventId);
     virtual int Unsubscribe(int64_t eventId);
     virtual int Query(const SecurityEventRuler &ruler, std::vector<SecurityEvent> &events);
     virtual int IsStartWithSub();
