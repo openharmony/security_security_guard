@@ -75,7 +75,8 @@ void DataCollectionFuzzTest(const uint8_t* data, size_t size)
     DataCollection::GetInstance().StopCollectors(eventIds);
     DataCollection::GetInstance().GetCollectorType(eventId, collectorType);
     DataCollection::GetInstance().QuerySecurityEvent(rulers, events);
-    DataCollection::GetInstance().LoadCollector(eventId, string, collectorListenner);
+    DataCollection::GetInstance().LoadCollector(eventId, string, collectorListenner, true);
+    DataCollection::GetInstance().LoadCollector(eventId, string, collectorListenner, false);
     DataCollection::GetInstance().LoadCollector(string, ruler, events);
     DataCollection::GetInstance().GetCollectorPath(eventId, string);
     DataCollection::GetInstance().CheckFileStream(stream);
@@ -233,7 +234,6 @@ void SecurityCollectorICollectorFuzzTest(const uint8_t* data, size_t size)
     collector.Mute(collectorFilter, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     collector.Unmute(collectorFilter, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     collector.Query(ruler, eventIds);
-    collector.Subscribe(fdp.ConsumeIntegral<int64_t>());
     collector.Unsubscribe(fdp.ConsumeIntegral<int64_t>());
 }
 }  // namespace OHOS
