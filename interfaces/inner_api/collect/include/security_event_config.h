@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,114 +33,111 @@ public:
         return config_;
     };
 
-    bool Marshalling(Parcel &parcel) const override
+    bool WriteInt64ToParcel(Parcel &parcel, int64_t value) const
     {
-        if (!parcel.WriteInt64(config_.eventId)) {
-            return false;
-        }
-        if (!parcel.WriteString(config_.eventName)) {
-            return false;
-        }
-        if (!parcel.WriteUint32(config_.version)) {
-            return false;
-        }
-        if (!parcel.WriteUint32(config_.eventType)) {
-            return false;
-        }
-        if (!parcel.WriteUint32(config_.collectOnStart)) {
-            return false;
-        }
-        if (!parcel.WriteUint32(config_.dataSensitivityLevel)) {
-            return false;
-        }
-        if (!parcel.WriteUint32(config_.storageRamNums)) {
-            return false;
-        }
-        if (!parcel.WriteInt32(config_.storageRomNums)) {
-            return false;
-        }
+        return parcel.WriteInt64(value);
+    }
 
-        if (!parcel.WriteUint32(config_.storageTime)) {
+    bool WriteUint32ToParcel(Parcel &parcel, uint32_t value) const
+    {
+        return parcel.WriteUint32(value);
+    }
+
+    bool WriteInt32ToParcel(Parcel &parcel, int32_t value) const
+    {
+        return parcel.WriteInt32(value);
+    }
+
+    bool WriteStringToParcel(Parcel &parcel, const std::string &value) const
+    {
+        return parcel.WriteString(value);
+    }
+
+    bool WriteStringArrayToParcel(Parcel &parcel, const std::vector<std::string> &array) const
+    {
+        uint32_t size = array.size();
+        if (!WriteUint32ToParcel(parcel, size)) {
             return false;
         }
-
-        uint32_t ownerSize = config_.owner.size();
-        if (!parcel.WriteUint32(ownerSize)) {
-            return false;
-        }
-
-        for (uint32_t index = 0; index < ownerSize; index++) {
-            if (!parcel.WriteString(config_.owner[index])) {
+        for (const auto &str : array) {
+            if (!WriteStringToParcel(parcel, str)) {
                 return false;
             }
         }
-        if (!parcel.WriteUint32(config_.source)) {
-            return false;
-        }
+        return true;
+    }
 
-        if (!parcel.WriteString(config_.dbTable)) {
+    bool ReadInt64FromParcel(Parcel &parcel, int64_t &value) const
+    {
+        return parcel.ReadInt64(value);
+    }
+
+    bool ReadUint32FromParcel(Parcel &parcel, uint32_t &value) const
+    {
+        return parcel.ReadUint32(value);
+    }
+
+    bool ReadInt32FromParcel(Parcel &parcel, int32_t &value) const
+    {
+        return parcel.ReadInt32(value);
+    }
+
+    bool ReadStringFromParcel(Parcel &parcel, std::string &value) const
+    {
+        return parcel.ReadString(value);
+    }
+
+    bool ReadStringArrayFromParcel(Parcel &parcel, std::vector<std::string> &array) const
+    {
+        uint32_t size = 0;
+        if (!ReadUint32FromParcel(parcel, size)) {
             return false;
         }
-        if (!parcel.WriteString(config_.prog)) {
-            return false;
+        for (uint32_t i = 0; i < size; i++) {
+            std::string str;
+            if (!ReadStringFromParcel(parcel, str)) {
+                return false;
+            }
+            array.push_back(str);
         }
         return true;
-    };
+    }
+
+    bool Marshalling(Parcel &parcel) const override
+    {
+        return WriteInt64ToParcel(parcel, config_.eventId) &&
+            WriteStringToParcel(parcel, config_.eventName) &&
+            WriteUint32ToParcel(parcel, config_.version) &&
+            WriteUint32ToParcel(parcel, config_.eventType) &&
+            WriteUint32ToParcel(parcel, config_.collectOnStart) &&
+            WriteUint32ToParcel(parcel, config_.dataSensitivityLevel) &&
+            WriteUint32ToParcel(parcel, config_.discardEventWhiteList) &&
+            WriteUint32ToParcel(parcel, config_.storageRamNums) &&
+            WriteInt32ToParcel(parcel, config_.storageRomNums) &&
+            WriteUint32ToParcel(parcel, config_.storageTime) &&
+            WriteStringArrayToParcel(parcel, config_.owner) &&
+            WriteUint32ToParcel(parcel, config_.source) &&
+            WriteStringToParcel(parcel, config_.dbTable) &&
+            WriteStringToParcel(parcel, config_.prog);
+    }
 
     bool ReadFromParcel(Parcel &parcel)
     {
-        if (!parcel.ReadInt64(config_.eventId)) {
-            return false;
-        }
-        if (!parcel.ReadString(config_.eventName)) {
-            return false;
-        }
-        if (!parcel.ReadUint32(config_.version)) {
-            return false;
-        }
-        if (!parcel.ReadUint32(config_.eventType)) {
-            return false;
-        }
-        if (!parcel.ReadUint32(config_.collectOnStart)) {
-            return false;
-        }
-        if (!parcel.ReadUint32(config_.dataSensitivityLevel)) {
-            return false;
-        }
-        if (!parcel.ReadUint32(config_.storageRamNums)) {
-            return false;
-        }
-        if (!parcel.ReadUint32(config_.storageRomNums)) {
-            return false;
-        }
-
-        if (!parcel.ReadInt32(config_.storageTime)) {
-            return false;
-        }
-
-        uint32_t ownerSize = 0;
-        if (!parcel.ReadUint32(ownerSize)) {
-            return false;
-        }
-
-        for (uint32_t index = 0; index < ownerSize; index++) {
-            if (!parcel.ReadString(config_.owner[index])) {
-                return false;
-            }
-        }
-
-        if (!parcel.ReadUint32(config_.source)) {
-            return false;
-        }
-
-        if (!parcel.ReadString(config_.dbTable)) {
-            return false;
-        }
-        if (!parcel.ReadString(config_.prog)) {
-            return false;
-        }
-        return true;
-    };
+        return ReadInt64FromParcel(parcel, config_.eventId) &&
+            ReadStringFromParcel(parcel, config_.eventName) &&
+            ReadUint32FromParcel(parcel, config_.version) &&
+            ReadUint32FromParcel(parcel, config_.eventType) &&
+            ReadUint32FromParcel(parcel, config_.collectOnStart) &&
+            ReadUint32FromParcel(parcel, config_.dataSensitivityLevel) &&
+            ReadUint32FromParcel(parcel, config_.discardEventWhiteList) &&
+            ReadUint32FromParcel(parcel, config_.storageRamNums) &&
+            ReadUint32FromParcel(parcel, config_.storageRomNums) &&
+            ReadInt32FromParcel(parcel, config_.storageTime) &&
+            ReadStringArrayFromParcel(parcel, config_.owner) &&
+            ReadUint32FromParcel(parcel, config_.source) &&
+            ReadStringFromParcel(parcel, config_.dbTable) &&
+            ReadStringFromParcel(parcel, config_.prog);
+    }
 
     static SecurityEventConfig *Unmarshalling(Parcel &parcel)
     {

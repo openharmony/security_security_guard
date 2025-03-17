@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -164,6 +164,7 @@ void to_json(json &jsonObj, const EventCfg &eventCfg)
         { EVENT_CFG_VERSION_KEY, eventCfg.version },
         { EVENT_CFG_EVENT_TYPE_KEY, eventCfg.eventType },
         { EVENT_CFG_DATA_SENSITIVITY_LEVEL_KEY, eventCfg.dataSensitivityLevel },
+        { EVENT_CFG_DISCARD_EVENT_WHITELIST_KEY, eventCfg.discardEventWhiteList },
         { EVENT_CFG_STORAGE_RAM_NUM_KEY, eventCfg.storageRamNums },
         { EVENT_CFG_STORAGE_ROM_NUM_KEY, eventCfg.storageRomNums },
         { EVENT_CFG_STORAGE_TIME_KEY, eventCfg.storageTime },
@@ -188,6 +189,7 @@ void from_json(const json &jsonObj, EventCfg &eventCfg)
     JsonCfg::Unmarshal(eventCfg.eventType, jsonObj, EVENT_CFG_EVENT_TYPE_KEY);
     JsonCfg::Unmarshal(eventCfg.collectOnStart, jsonObj, EVENT_CFG_COLLECT_ON_START_KEY);
     JsonCfg::Unmarshal(eventCfg.dataSensitivityLevel, jsonObj, EVENT_CFG_DATA_SENSITIVITY_LEVEL_KEY);
+    JsonCfg::Unmarshal(eventCfg.discardEventWhiteList, jsonObj, EVENT_CFG_DISCARD_EVENT_WHITELIST_KEY);
     JsonCfg::Unmarshal(eventCfg.storageRamNums, jsonObj, EVENT_CFG_STORAGE_RAM_NUM_KEY);
     JsonCfg::Unmarshal(eventCfg.storageRomNums, jsonObj, EVENT_CFG_STORAGE_ROM_NUM_KEY);
     JsonCfg::Unmarshal(eventCfg.storageTime, jsonObj, EVENT_CFG_STORAGE_TIME_KEY);
