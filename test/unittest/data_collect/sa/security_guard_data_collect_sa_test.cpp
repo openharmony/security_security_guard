@@ -83,7 +83,7 @@ void SecurityGuardDataCollectSaTest::TearDown()
 {
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithInvalidFd, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithInvalidFd, TestSize.Level0)
 {
     int fd = -1;
     std::vector<std::u16string> args;
@@ -92,7 +92,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithInvalidFd, TestSize.Level1)
     EXPECT_EQ(service.Dump(fd, args), BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithInvalidArgs, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithInvalidArgs, TestSize.Level0)
 {
     int fd = 1;
     std::vector<std::u16string> args;
@@ -100,7 +100,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithInvalidArgs, TestSize.Level
     EXPECT_EQ(service.Dump(fd, args), ERR_OK);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithHelpCommand, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithHelpCommand, TestSize.Level0)
 {
     int fd = 1;
     std::vector<std::u16string> args = { u"-h" };
@@ -108,7 +108,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithHelpCommand, TestSize.Level
     EXPECT_EQ(service.Dump(fd, args), ERR_OK);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithOtherCommand, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithOtherCommand, TestSize.Level0)
 {
     int fd = 1;
     std::vector<std::u16string> args = { u"-s" };
@@ -116,7 +116,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithOtherCommand, TestSize.Leve
     EXPECT_EQ(service.Dump(fd, args), ERR_OK);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithInvalidEventId01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithInvalidEventId01, TestSize.Level0)
 {
     int fd = 1;
     std::vector<std::u16string> args = { u"-i", u"invalid" };
@@ -124,7 +124,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithInvalidEventId01, TestSize.
     EXPECT_EQ(service.Dump(fd, args), BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithInvalidEventId02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithInvalidEventId02, TestSize.Level0)
 {
     int fd = 1;
     std::vector<std::u16string> args = { u"-i" };
@@ -132,7 +132,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithInvalidEventId02, TestSize.
     EXPECT_EQ(service.Dump(fd, args), BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithValidEventId, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithValidEventId, TestSize.Level0)
 {
     int fd = 1;
     std::vector<std::u16string> args = { u"-i", u"12345" };
@@ -142,7 +142,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestDumpWithValidEventId, TestSize.Leve
     EXPECT_EQ(service.Dump(fd, args), ERR_OK);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, DumpEventInfo_Success, TestSize.Level1) {
+HWTEST_F(SecurityGuardDataCollectSaTest, DumpEventInfo_Success, TestSize.Level0) {
     SecEvent secEvent;
     secEvent.eventId = 1;
     secEvent.date = "2022-01-01";
@@ -154,14 +154,14 @@ HWTEST_F(SecurityGuardDataCollectSaTest, DumpEventInfo_Success, TestSize.Level1)
     service.DumpEventInfo(1, 1);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, DumpEventInfo_QueryError, TestSize.Level1) {
+HWTEST_F(SecurityGuardDataCollectSaTest, DumpEventInfo_QueryError, TestSize.Level0) {
     EXPECT_CALL(DatabaseManager::GetInstance(), QueryRecentEventByEventId(1, _))
         .WillOnce(Return(FAILED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     service.DumpEventInfo(1, 1);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, GetSecEventsFromConditions_NoTimeCondition, TestSize.Level1) {
+HWTEST_F(SecurityGuardDataCollectSaTest, GetSecEventsFromConditions_NoTimeCondition, TestSize.Level0) {
     RequestCondition condition{};
     EXPECT_CALL(DatabaseManager::GetInstance(), QueryEventByEventId(_, _, _))
         .WillRepeatedly([] (std::string table, std::vector<int64_t> &eventIds,
@@ -176,7 +176,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, GetSecEventsFromConditions_NoTimeCondit
     EXPECT_EQ(events[0].eventId, 1);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, GetSecEventsFromConditions_WithTimeCondition, TestSize.Level1) {
+HWTEST_F(SecurityGuardDataCollectSaTest, GetSecEventsFromConditions_WithTimeCondition, TestSize.Level0) {
     RequestCondition condition;
     condition.riskEvent = {};
     condition.auditEvent = {};
@@ -196,7 +196,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, GetSecEventsFromConditions_WithTimeCond
     EXPECT_EQ(events[0].eventId, 1);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_GetEventConfigError001, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_GetEventConfigError001, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_TRUE(obj != nullptr);
@@ -207,7 +207,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_GetEventConfigError00
     EXPECT_FALSE(service.QueryEventByRuler(mockProxy, ruler));
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_GetEventConfigError002, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_GetEventConfigError002, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_TRUE(obj != nullptr);
@@ -220,7 +220,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_GetEventConfigError00
     EXPECT_FALSE(service.QueryEventByRuler(mockProxy, ruler));
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_QueryInDatabase, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_QueryInDatabase, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_TRUE(obj != nullptr);
@@ -242,7 +242,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_QueryInDatabase, Test
     EXPECT_TRUE(service.QueryEventByRuler(mockProxy, ruler));
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_QueryInCollector, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_QueryInCollector, TestSize.Level0)
 {
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillOnce([] (int64_t eventId, EventCfg &config) {
         config.eventType = 1;
@@ -263,7 +263,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_QueryInCollector, Tes
     EXPECT_TRUE(service.QueryEventByRuler(mockProxy, ruler));
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_NotSupportType, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_NotSupportType, TestSize.Level0)
 {
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly([] (
         int64_t eventId, EventCfg &config) {
@@ -280,7 +280,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_NotSupportType, TestS
     EXPECT_TRUE(service.QueryEventByRuler(mockProxy, ruler));
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_BeginTimeEmpty, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_BeginTimeEmpty, TestSize.Level0)
 {
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly([] (
         int64_t eventId, EventCfg &config) {
@@ -297,7 +297,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_BeginTimeEmpty, TestS
     EXPECT_TRUE(service.QueryEventByRuler(mockProxy, ruler));
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_NullProxy, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_NullProxy, TestSize.Level0)
 {
     std::shared_ptr<std::promise<int32_t>> promise = std::make_shared<std::promise<int32_t>>();
     EXPECT_TRUE(promise != nullptr);
@@ -307,7 +307,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_NullProxy, Test
     EXPECT_EQ(0, promise->get_future().get());
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_EmptyConditions, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_EmptyConditions, TestSize.Level0)
 {
     std::shared_ptr<std::promise<int32_t>> promise = std::make_shared<std::promise<int32_t>>();
     EXPECT_TRUE(promise != nullptr);
@@ -328,7 +328,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_EmptyConditions
     EXPECT_EQ(0, promise->get_future().get());
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_ValidConditions01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_ValidConditions01, TestSize.Level0)
 {
     std::shared_ptr<std::promise<int32_t>> promise = std::make_shared<std::promise<int32_t>>();
     EXPECT_TRUE(promise != nullptr);
@@ -351,7 +351,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_ValidConditions
     EXPECT_EQ(1, promise->get_future().get());
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_ValidConditions02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_ValidConditions02, TestSize.Level0)
 {
     std::shared_ptr<std::promise<int32_t>> promise = std::make_shared<std::promise<int32_t>>();
     EXPECT_TRUE(promise != nullptr);
@@ -374,7 +374,19 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_ValidConditions
     EXPECT_EQ(0, promise->get_future().get());
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_NoPermission, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, OnAddSystemAbility_RiskAnalysisManagerSaId, TestSize.Level0)
+{
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    service.OnAddSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID, "deviceId");
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, OnAddSystemAbility_DfxSysHiviewAbilityId, TestSize.Level0)
+{
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    service.OnAddSystemAbility(DFX_SYS_HIVIEW_ABILITY_ID, "deviceId");
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_NoPermission, TestSize.Level0)
 {
     int64_t eventId = 1;
     std::string version = "1.0";
@@ -389,7 +401,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_NoPermission, TestSiz
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_BadParam, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_BadParam, TestSize.Level0)
 {
     int64_t eventId = 1;
     std::string version = "1.0";
@@ -408,7 +420,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_BadParam, TestSize.Le
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success01, TestSize.Level0)
 {
     int64_t eventId = 1;
     std::string version = "1.0";
@@ -428,7 +440,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success01, TestSize.L
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success02, TestSize.Level0)
 {
     int64_t eventId = 1;
     std::string version = "1.0";
@@ -448,27 +460,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success02, TestSize.L
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success03, TestSize.Level1)
-{
-    int64_t eventId = 1;
-    std::string version = "1.0";
-    std::string time = "2022-01-01";
-    std::string content = "content";
-
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
-        .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
-        .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
-    EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
-        .WillOnce(Return(true));
-    EXPECT_CALL(*(DataFormat::GetInterface()), CheckRiskContent).WillOnce(Return(true));
-    EXPECT_CALL(DatabaseManager::GetInstance(), InsertEvent).WillRepeatedly(Return(SUCCESS));
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.RequestDataSubmit(eventId, version, time, content, false);
-    EXPECT_EQ(result, SUCCESS);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, RequestRiskData01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, RequestRiskData01, TestSize.Level0)
 {
     std::string devId = "devId";
     std::string eventList = "eventList";
@@ -481,7 +473,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestRiskData01, TestSize.Level1)
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, RequestRiskData02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, RequestRiskData02, TestSize.Level0)
 {
     std::string devId = "devId";
     std::string eventList = "eventList";
@@ -499,7 +491,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestRiskData02, TestSize.Level1)
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, RequestRiskData03, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, RequestRiskData03, TestSize.Level0)
 {
     std::string devId = "devId";
     std::string eventList = "eventList";
@@ -516,7 +508,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestRiskData03, TestSize.Level1)
     EXPECT_EQ(result, NO_SYSTEMCALL);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Subscribe01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, Subscribe01, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -528,7 +520,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Subscribe01, TestSize.Level1)
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Unsubscribe01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, Unsubscribe01, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> mockObj(new (std::nothrow) MockRemoteObject());
@@ -540,7 +532,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Unsubscribe01, TestSize.Level1)
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Subscribe02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, Subscribe02, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -556,7 +548,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Subscribe02, TestSize.Level1)
     EXPECT_EQ(result, NO_SYSTEMCALL);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Unsubscribe02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, Unsubscribe02, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> mockObj(new (std::nothrow) MockRemoteObject());
@@ -572,7 +564,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Unsubscribe02, TestSize.Level1)
     EXPECT_EQ(result, NO_SYSTEMCALL);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Subscribe03, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, Subscribe03, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -598,7 +590,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Subscribe03, TestSize.Level1)
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Success, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Success, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -611,7 +603,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Success, TestSize
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Fail01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Fail01, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -632,7 +624,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Fail01, TestSize.
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Publish_WithSubscribers, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, Publish_WithSubscribers, TestSize.Level0)
 {
     SecurityCollector::Event event {
         .eventId = 1,
@@ -642,7 +634,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_WithSubscribers, TestSize.Level
     EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event));
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NullProxy, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NullProxy, TestSize.Level0)
 {
     SecurityCollector::Event event2 {
         .eventId = 2,
@@ -664,7 +656,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NullProxy, TestSize.Level1)
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NotNullProxy, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NotNullProxy, TestSize.Level0)
 {
     SecurityCollector::Event event2 {
         .eventId = SecurityCollector::FILE_EVENTID,
@@ -692,7 +684,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NotNullProxy, TestSize.Level1)
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId01, TestSize.Level0)
 {
     SecurityCollector::Event event2 {
         .eventId = 1,
@@ -719,7 +711,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId01, TestSize.Le
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId02, TestSize.Level0)
 {
     SecurityCollector::Event event2 {
         .eventId = SecurityCollector::PROCESS_EVENTID,
@@ -745,7 +737,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId02, TestSize.Le
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId03, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId03, TestSize.Level0)
 {
     SecurityCollector::Event event2 {
         .eventId = SecurityCollector::NETWORK_EVENTID,
@@ -771,7 +763,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_DifferentEventId03, TestSize.Le
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc01, TestSize.Level0)
 {
     AcquireDataSubscribeManager adsm {};
     SecurityCollector::Event event {
@@ -784,7 +776,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc01, TestSiz
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc02, TestSize.Level0)
 {
     AcquireDataSubscribeManager adsm {};
     SecurityCollector::Event event {
@@ -806,7 +798,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc02, TestSiz
     EXPECT_EQ(result, FAILED);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc03, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc03, TestSize.Level0)
 {
     AcquireDataSubscribeManager adsm {};
     SecurityCollector::Event event {
@@ -827,7 +819,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc03, TestSiz
     EXPECT_EQ(result, FAILED);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc04, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc04, TestSize.Level0)
 {
     AcquireDataSubscribeManager adsm {};
     SecurityCollector::Event event {
@@ -855,7 +847,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc04, TestSiz
     EXPECT_EQ(result, FAILED);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc05, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc05, TestSize.Level0)
 {
     AcquireDataSubscribeManager adsm {};
     SecurityCollector::Event event {
@@ -870,7 +862,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc05, TestSiz
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc06, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc06, TestSize.Level0)
 {
     AcquireDataSubscribeManager adsm {};
     SecurityCollector::Event event {
@@ -897,7 +889,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc06, TestSiz
     EXPECT_EQ(result, FAILED);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrUnsubscribeSc01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrUnsubscribeSc01, TestSize.Level0)
 {
     AcquireDataSubscribeManager adsm {};
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillOnce([] (int64_t eventId, EventCfg &config) {
@@ -910,7 +902,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrUnsubscribeSc01, TestS
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd01, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -923,7 +915,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd01
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd02, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -936,7 +928,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd02
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd03, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd03, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -949,7 +941,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd03
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd04, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd04, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -962,7 +954,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd04
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd05, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd05, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -976,7 +968,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd05
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd06, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd06, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -989,7 +981,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd06
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd07, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd07, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1002,7 +994,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd07
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd08, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd08, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1024,7 +1016,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd08
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd09, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd09, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1042,7 +1034,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd09
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd10, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd10, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1056,7 +1048,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd10
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd11, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd11, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1072,7 +1064,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd11
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd12, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd12, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1086,7 +1078,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd12
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd13, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd13, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1103,7 +1095,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd13
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd14, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd14, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1117,7 +1109,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd14
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd15, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd15, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1131,7 +1123,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd15
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd16, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd16, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1146,7 +1138,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd16
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd17, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd17, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1163,7 +1155,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd17
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd19, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd19, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1180,7 +1172,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd19
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd20, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd20, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1194,7 +1186,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd20
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithInvalidCmd, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithInvalidCmd, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1208,7 +1200,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithInvalidCmd, Test
     EXPECT_EQ(result, 305);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithInvalidToken, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithInvalidToken, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1220,7 +1212,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithInvalidToken, Te
     EXPECT_EQ(result, 305);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent, TestSize.Level0)
 {
     SecurityCollector::SecurityEventRuler rule(11111);
     std::vector<SecurityCollector::SecurityEventRuler> rules {};
@@ -1234,7 +1226,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent, TestSize.Level1)
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent01, TestSize.Level0)
 {
     SecurityCollector::SecurityEventRuler rule(11111);
     std::vector<SecurityCollector::SecurityEventRuler> rules {};
@@ -1252,7 +1244,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent01, TestSize.Level1)
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent02, TestSize.Level0)
 {
     SecurityCollector::SecurityEventRuler rule(11111);
     std::vector<SecurityCollector::SecurityEventRuler> rules {};
@@ -1270,7 +1262,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent02, TestSize.Level1)
     EXPECT_EQ(result, NO_SYSTEMCALL);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent03, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent03, TestSize.Level0)
 {
     SecurityCollector::SecurityEventRuler rule(11111);
     std::vector<SecurityCollector::SecurityEventRuler> rules {};
@@ -1288,7 +1280,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent03, TestSize.Level1)
     EXPECT_EQ(result, NULL_OBJECT);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent04, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent04, TestSize.Level0)
 {
     SecurityCollector::SecurityEventRuler rule(11111);
     std::vector<SecurityCollector::SecurityEventRuler> rules {};
@@ -1306,7 +1298,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent04, TestSize.Level1)
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent05, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent05, TestSize.Level0)
 {
     SecurityCollector::SecurityEventRuler rule(11111);
     std::vector<SecurityCollector::SecurityEventRuler> rules {};
@@ -1318,7 +1310,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent05, TestSize.Level1)
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent07, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent07, TestSize.Level0)
 {
     SecurityCollector::SecurityEventRuler rule(11111);
     std::vector<SecurityCollector::SecurityEventRuler> rules {};
@@ -1347,7 +1339,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent07, TestSize.Level1)
     EXPECT_EQ(result, NO_SYSTEMCALL);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart01, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -1359,7 +1351,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart01, TestSize.Level1)
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart02, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -1375,7 +1367,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart02, TestSize.Level1)
     EXPECT_EQ(result, NO_SYSTEMCALL);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart03, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart03, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -1392,7 +1384,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart03, TestSize.Level1)
     EXPECT_EQ(result, FAILED);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart04, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart04, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -1409,7 +1401,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart04, TestSize.Level1)
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop01, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -1421,7 +1413,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop01, TestSize.Level1)
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop02, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -1437,7 +1429,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop02, TestSize.Level1)
     EXPECT_EQ(result, NO_SYSTEMCALL);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop03, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop03, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -1454,7 +1446,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop03, TestSize.Level1)
     EXPECT_EQ(result, FAILED);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop04, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop04, TestSize.Level0)
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -1471,7 +1463,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop04, TestSize.Level1)
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, IsApiHasPermission01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, IsApiHasPermission01, TestSize.Level0)
 {
     const std::string api = "testString";
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -1479,7 +1471,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, IsApiHasPermission01, TestSize.Level1)
     EXPECT_EQ(result, FAILED);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate01, TestSize.Level0)
 {
     SecurityGuard::SecurityConfigUpdateInfo  subscribeInfo{};
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
@@ -1489,7 +1481,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate01, TestSize.Level1)
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate02, TestSize.Level0)
 {
     SecurityGuard::SecurityConfigUpdateInfo subscribeInfo{};
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
@@ -1503,7 +1495,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate02, TestSize.Level1)
     EXPECT_EQ(result, NO_SYSTEMCALL);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate03, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate03, TestSize.Level0)
 {
     SecurityGuard::SecurityConfigUpdateInfo subscribeInfo{};
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
@@ -1517,7 +1509,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate03, TestSize.Level1)
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate04, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate04, TestSize.Level0)
 {
     SecurityGuard::SecurityConfigUpdateInfo subscribeInfo(-1,
         SECURITY_GUARD_EVENT_CFG_FILE);
@@ -1534,7 +1526,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate04, TestSize.Level1)
     EXPECT_EQ(result, FAILED);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, WriteRemoteFileToLocal01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, WriteRemoteFileToLocal01, TestSize.Level0)
 {
     std::ofstream out("/data/test/unittest/resource/test.json");
     std::string errtmp = R"({
@@ -1552,7 +1544,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, WriteRemoteFileToLocal01, TestSize.Leve
     EXPECT_EQ(result, FAILED);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, WriteRemoteFileToLocal02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, WriteRemoteFileToLocal02, TestSize.Level0)
 {
     std::ofstream out("/data/test/unittest/resource/test.json");
     std::string errtmp = R"({
@@ -1569,7 +1561,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, WriteRemoteFileToLocal02, TestSize.Leve
     EXPECT_EQ(result, FAILED);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventConfig001, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventConfig001, TestSize.Level0)
 {
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     std::string queryInfo;
@@ -1579,7 +1571,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventConfig001, TestSize.Level1)
     EXPECT_EQ(ret, NO_PERMISSION);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventConfig002, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventConfig002, TestSize.Level0)
 {
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     std::string queryInfo;
@@ -1595,7 +1587,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventConfig002, TestSize.Level1)
     EXPECT_EQ(ret, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventConfig003, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventConfig003, TestSize.Level0)
 {
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     EventCfg cfg {};
@@ -1607,13 +1599,13 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventConfig003, TestSize.Level1)
     EXPECT_EQ(ret, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, ParseTrustListFile001, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, ParseTrustListFile001, TestSize.Level0)
 {
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     EXPECT_FALSE(service.ParseTrustListFile(""));
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     SecurityCollector::Event event {};
@@ -1628,7 +1620,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg, TestSize.Level1)
     AcquireDataSubscribeManager::GetInstance().eventToListenner_.clear();
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg01, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), SubscribeCollectors).WillOnce(
@@ -1645,7 +1637,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg01, TestSize.Level1)
     AcquireDataSubscribeManager::GetInstance().eventToListenner_.clear();
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg02, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), SubscribeCollectors).WillOnce(
@@ -1661,7 +1653,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg02, TestSize.Level1)
     AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     SecurityCollector::Event event {};
@@ -1673,7 +1665,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc, TestSize.Level1)
     AcquireDataSubscribeManager::GetInstance().scSubscribeMap_.clear();
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc01, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), Subscribe).WillOnce(
@@ -1690,7 +1682,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc01, TestSize.Level1)
     AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc02, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc02, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), Subscribe).WillOnce(
@@ -1707,7 +1699,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc02, TestSize.Level1)
     AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, UnSubscribeScAndDb, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, UnSubscribeScAndDb, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb(_, _))
@@ -1716,7 +1708,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, UnSubscribeScAndDb, TestSize.Level1)
     EXPECT_EQ(ret, FAILED);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, UnSubscribeScAndDb01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, UnSubscribeScAndDb01, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb(_, _)).WillOnce(Return(SUCCESS));
@@ -1725,7 +1717,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, UnSubscribeScAndDb01, TestSize.Level1)
     EXPECT_EQ(ret, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, IsEventGroupHasPermission, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, IsEventGroupHasPermission, TestSize.Level0)
 {
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(
         [] (const std::string &groupName, EventGroupCfg &config) {
@@ -1738,7 +1730,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, IsEventGroupHasPermission, TestSize.Lev
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Mute, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, Mute, TestSize.Level0)
 {
     SecurityEventFilter subscribeMute {};
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -1751,7 +1743,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Mute, TestSize.Level1)
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Unmute, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, Unmute, TestSize.Level0)
 {
     SecurityEventFilter subscribeMute {};
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -1764,7 +1756,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Unmute, TestSize.Level1)
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeMute, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeMute, TestSize.Level0)
 {
     SecurityEventFilter subscribeMute {};
     subscribeMute.filter_.eventId = 111;
@@ -1804,7 +1796,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeMute, TestSize.Level1)
     AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeMute01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeMute01, TestSize.Level0)
 {
     SecurityEventFilter subscribeMute {};
     subscribeMute.filter_.eventId = 111;
@@ -1834,7 +1826,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeMute01, TestSize.Level1)
     AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, RemoveSubscribeMute, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, RemoveSubscribeMute, TestSize.Level0)
 {
     SecurityEventFilter subscribeMute {};
     subscribeMute.filter_.eventId = 111;
@@ -1874,7 +1866,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RemoveSubscribeMute, TestSize.Level1)
     AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, RemoveSubscribeMute01, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectSaTest, RemoveSubscribeMute01, TestSize.Level0)
 {
     SecurityEventFilter subscribeMute {};
     subscribeMute.filter_.eventId = 111;
