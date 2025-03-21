@@ -39,6 +39,13 @@ int DbOperate::QueryRecentEventByEventId(const std::vector<int64_t> &eventId, st
     return DatabaseManager::GetInstance().QueryRecentEventByEventId(table_, eventId, event);
 }
 
+int DbOperate::QueryEventByEventIdAndDate(std::vector<int64_t> &eventIds,
+    std::vector<SecEvent> &events, std::string beginTime, std::string endTime)
+{
+    return DatabaseManager::GetInstance().QueryEventByEventIdAndDate(table_, eventIds,
+        events, beginTime, endTime);
+}
+
 int DbOperate::QueryEventByEventId(int64_t eventId, std::vector<SecEvent> &events)
 {
     return DatabaseManager::GetInstance().QueryEventByEventId(eventId, events);
