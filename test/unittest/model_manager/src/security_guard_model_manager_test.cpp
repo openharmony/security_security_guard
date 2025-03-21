@@ -81,7 +81,8 @@ public:
     MOCK_METHOD2(QueryRecentEventByEventId, int(const std::vector<int64_t> &, std::vector<SecEvent> &));
     MOCK_METHOD2(QueryEventByEventId, int(int64_t, std::vector<SecEvent> &));
     MOCK_METHOD2(QueryEventByEventId, int(std::vector<int64_t> &, std::vector<SecEvent> &));
-    MOCK_METHOD4(QueryEventByEventIdAndDate, int(std::vector<int64_t> &, std::vector<SecEvent> &, std::string, std::string));
+    MOCK_METHOD4(QueryEventByEventIdAndDate, int(std::vector<int64_t> &,
+        std::vector<SecEvent> &, std::string, std::string));
     MOCK_METHOD2(QueryEventByEventType, int(int32_t, std::vector<SecEvent> &));
     MOCK_METHOD2(QueryEventByLevel, int(int32_t, std::vector<SecEvent> &));
     MOCK_METHOD2(QueryEventByOwner, int(std::string, std::vector<SecEvent> &));
