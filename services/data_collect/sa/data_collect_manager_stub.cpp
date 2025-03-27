@@ -318,6 +318,10 @@ int32_t DataCollectManagerStub::HandleEventMuteCmd(MessageParcel &data, MessageP
         return BAD_PARAM;
     }
     auto callback = data.ReadRemoteObject();
+    if (callback == nullptr) {
+        SGLOGE("callback is nullptr");
+        return BAD_PARAM;
+    }
     int32_t ret = Mute(*info, callback, sdkFlag);
     reply.WriteInt32(ret);
     return ret;
@@ -345,6 +349,10 @@ int32_t DataCollectManagerStub::HandleEventUnMuteCmd(MessageParcel &data, Messag
         return BAD_PARAM;
     }
     auto callback = data.ReadRemoteObject();
+    if (callback == nullptr) {
+        SGLOGE("callback is nullptr");
+        return BAD_PARAM;
+    }
     int32_t ret = Unmute(*info, callback, sdkFlag);
     reply.WriteInt32(ret);
     return ret;
