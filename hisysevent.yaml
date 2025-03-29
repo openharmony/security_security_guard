@@ -74,5 +74,5 @@ SG_EVENT_SET_UNMUTE:
 SG_FILE_SYSTEM_STORE:
   __BASE: {type: STATISTIC, level: CRITICAL, desc: security guard file system store error}
   FILE_OPERATION: {type: STRING, desc: file operation}
-  FILE_PATH: {type: STRING, desc: file path}
+  FILE_NAME: {type: STRING, desc: file path}
   ERR_MSG: {type: STRING, desc: error message}
