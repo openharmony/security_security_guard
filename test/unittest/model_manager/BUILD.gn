@@ -17,7 +17,7 @@ import("//build/test.gni")
 ohos_unittest("SecurityGuardModelManagerTest") {
   install_enable = true
   part_name = "security_guard"
-  subsystem_name = "security"
+  subsystem_name = "securityguardcloudgovernance"
   module_out_path = part_name + "/" + part_name
 
   #resource_config_file = "resource/ohos_test.xml"
