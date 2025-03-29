@@ -93,7 +93,7 @@ using RequestCondition = struct {
 
 using FileSystemStoreErrMesg = struct {
     std::string operation;
-    std::string filepath;
+    std::string fileName;
     std::string mesg;
 };
 

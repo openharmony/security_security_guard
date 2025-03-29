@@ -84,6 +84,9 @@ std::string FileSystemStoreHelper::GetShortFileName(const std::string& filename)
         return "";
     }
     size_t startPos = filename.find(STORE_FILE_NAME_PREFIX);
+    if (startPos == std::string::npos) {
+        return "";
+    }
     return filename.substr(startPos, filename.size() - startPos);
 }
 
@@ -91,8 +94,9 @@ void FileSystemStoreHelper::WriteEventToGzFile(const std::string& filepath, cons
 {
     gzFile file = gzopen(filepath.c_str(), "ab");
     if (!file) {
-        char *mesg = strerror(errno);
-        SGLOGE("Failed to open file::%{public}s, error msg:%{public}s", GetShortFileName(filepath).c_str(), mesg);
+        std::string mesg = strerror(errno);
+        SGLOGE("Failed to open file::%{public}s, error msg:%{public}s",
+            GetShortFileName(filepath).c_str(), mesg.c_str());
         BigData::ReportFileSystemStoreEvent({"write", GetShortFileName(filepath), mesg});
         return;
     }
@@ -106,8 +110,9 @@ void FileSystemStoreHelper::RenameStoreFile(const std::string& oldFilepath, cons
     std::string newFilepath = STORE_FILE_FOLDER_PATH + STORE_FILE_NAME_PREFIX + startTime + "_" + endTime +
         STORE_FILE_NAME_SUFFIX;
     if (rename(oldFilepath.c_str(), newFilepath.c_str()) != 0) {
-        char *mesg = strerror(errno);
-        SGLOGE("Failed to rename file:%{public}s, error msg:%{public}s", GetShortFileName(oldFilepath).c_str(), mesg);
+        std::string mesg = strerror(errno);
+        SGLOGE("Failed to rename file:%{public}s, error msg:%{public}s",
+            GetShortFileName(oldFilepath).c_str(), mesg.c_str());
         BigData::ReportFileSystemStoreEvent({"rename", GetShortFileName(oldFilepath), mesg});
     }
 }
@@ -144,8 +149,9 @@ void FileSystemStoreHelper::DeleteOldestStoreFile()
     std::sort(storeFiles.begin(), storeFiles.end());
     std::string oldestFile = STORE_FILE_FOLDER_PATH + storeFiles[0];
     if (remove(oldestFile.c_str())) {
-        char *mesg = strerror(errno);
-        SGLOGE("Failed to delete file:%{public}s, error msg:%{public}s", GetShortFileName(oldestFile).c_str(), mesg);
+        std::string mesg = strerror(errno);
+        SGLOGE("Failed to delete file:%{public}s, error msg:%{public}s",
+            GetShortFileName(oldestFile).c_str(), mesg.c_str());
         BigData::ReportFileSystemStoreEvent({"delete", GetShortFileName(oldestFile), mesg});
     } else {
         SGLOGI("Deleted oldest log file:%{public}s", GetShortFileName(oldestFile).c_str());
@@ -205,10 +211,13 @@ std::string FileSystemStoreHelper::GetTimestampFromFileName(const std::string& f
     }
     size_t startPos = filename.find(STORE_FILE_NAME_PREFIX) + STORE_FILE_NAME_PREFIX.length();
     size_t endPos = filename.find(STORE_FILE_NAME_SUFFIX);
+    if (startPos == std::string::npos || endPos == std::string::npos) {
+        return "";
+    }
     return filename.substr(startPos, endPos - startPos);
 }
 
-std::string FileSystemStoreHelper::GetEndTImeFromFileName(const std::string& fileTime)
+std::string FileSystemStoreHelper::GetEndTimeFromFileName(const std::string& fileTime)
 {
     size_t startPos = fileTime.find("_");
     if (startPos == std::string::npos) {
@@ -235,6 +244,9 @@ SecurityCollector::SecurityEvent FileSystemStoreHelper::IsWantDate(const std::st
 {
     size_t firstPos = fileEvent.find(STORE_FILE_EVENT_FIRST_DELIMITER);
     size_t secondPos = fileEvent.find(STORE_FILE_EVENT_SECOND_DELIMITER);
+    if (firstPos == std::string::npos || secondPos == std::string::npos) {
+        return {};
+    }
     std::string fileEventid = fileEvent.substr(0, firstPos);
     if (fileEventid != std::to_string(eventid)) {
         return {};
@@ -264,9 +276,9 @@ int32_t FileSystemStoreHelper::GetQueryStoreFileList(std::vector<std::string>& s
     while ((ent = readdir(dir)) != nullptr) {
         std::string filename(ent->d_name);
         if (IsGzFile(filename)) {
-            std::string timestamp = GetTimestampFromFileName(filename);
-            std::string fileEndTime = GetEndTImeFromFileName(timestamp);
-            if (fileEndTime < startTime || timestamp > endTime) {
+            std::string fileBeginTime = GetTimestampFromFileName(filename);
+            std::string fileEndTime = GetEndTimeFromFileName(fileBeginTime);
+            if (fileBeginTime == "" || fileEndTime < startTime || fileBeginTime > endTime) {
                 continue;
             }
             SGLOGD("QuerySecurityEvent add file:%{public}s", GetShortFileName(filename).c_str());
@@ -323,9 +335,9 @@ int32_t FileSystemStoreHelper::QuerySecurityEvent(const SecurityCollector::Secur
         SGLOGD("Found store file:%{public}s", GetShortFileName(filepath).c_str());
         gzFile file = gzopen(filepath.c_str(), "rb");
         if (!file) {
-            char *mesg = strerror(errno);
+            std::string mesg = strerror(errno);
             SGLOGE("Failed to open store file:%{public}s, error msg:%{public}s",
-                GetShortFileName(filepath).c_str(), mesg);
+                GetShortFileName(filepath).c_str(), mesg.c_str());
             BigData::ReportFileSystemStoreEvent({"open", GetShortFileName(filepath), mesg});
             continue;
         }
