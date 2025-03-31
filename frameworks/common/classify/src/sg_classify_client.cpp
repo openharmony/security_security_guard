@@ -123,7 +123,7 @@ int32_t RequestSecurityModelResultAsync(const std::string &devId, uint32_t model
 #endif
 }
 
-int32_t StartSecurityModel(uint32_t modelId)
+int32_t StartSecurityModel(uint32_t modelId, const std::string &param)
 {
 #ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -139,7 +139,7 @@ int32_t StartSecurityModel(uint32_t modelId)
         return NULL_OBJECT;
     }
 
-    int32_t ret = proxy->StartSecurityModel(modelId);
+    int32_t ret = proxy->StartSecurityModel(modelId, param);
     SGLOGI("StartSecurityModel result, ret=%{public}d", ret);
     return ret;
 #else

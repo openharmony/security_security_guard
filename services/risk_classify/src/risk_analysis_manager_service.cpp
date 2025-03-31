@@ -171,14 +171,14 @@ int32_t RiskAnalysisManagerService::SetModelState(uint32_t modelId, bool enable)
     return SUCCESS;
 }
 
-int32_t RiskAnalysisManagerService::StartSecurityModel(uint32_t modelId)
+int32_t RiskAnalysisManagerService::StartSecurityModel(uint32_t modelId, const std::string &param)
 {
     SGLOGI("enter RiskAnalysisManagerService StartSecurityModel");
     int32_t ret = IsApiHasPermission("StartSecurityModel");
     if (ret != SUCCESS) {
         return ret;
     }
-    return ModelManager::GetInstance().InitModel(modelId);
+    return ModelManager::GetInstance().StartSecurityModel(modelId, param);
 }
 
 void RiskAnalysisManagerService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
