@@ -82,7 +82,7 @@ int32_t RiskAnalysisManagerProxy::SetModelState(uint32_t modelId, bool enable)
     return reply.ReadInt32();
 }
 
-int32_t RiskAnalysisManagerProxy::StartSecurityModel(uint32_t modelId)
+int32_t RiskAnalysisManagerProxy::StartSecurityModel(uint32_t modelId, const std::string &param)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -92,7 +92,7 @@ int32_t RiskAnalysisManagerProxy::StartSecurityModel(uint32_t modelId)
         return WRITE_ERR;
     }
     data.WriteUint32(modelId);
-
+    data.WriteString(param);
     MessageOption option = { MessageOption::TF_SYNC };
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
