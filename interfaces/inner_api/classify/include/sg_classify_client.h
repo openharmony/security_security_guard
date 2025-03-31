@@ -35,7 +35,7 @@ int32_t RequestSecurityModelResultSync(const std::string &devId, uint32_t modelI
 
 int32_t RequestSecurityModelResultAsync(const std::string &devId, uint32_t modelId,
     const std::string &param, SecurityGuardRiskCallback callback);
-int32_t StartSecurityModel(uint32_t modelId);
+int32_t StartSecurityModel(uint32_t modelId, const std::string &param);
 }
 
 #endif

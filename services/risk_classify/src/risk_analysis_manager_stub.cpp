@@ -98,7 +98,8 @@ int32_t RiskAnalysisManagerStub::HandleStartModel(MessageParcel &data, MessagePa
     }
 
     uint32_t modelId = data.ReadUint32();
-    int32_t ret = StartSecurityModel(modelId);
+    std::string param = data.ReadString();
+    int32_t ret = StartSecurityModel(modelId, param);
     reply.WriteInt32(ret);
     return ret;
 }

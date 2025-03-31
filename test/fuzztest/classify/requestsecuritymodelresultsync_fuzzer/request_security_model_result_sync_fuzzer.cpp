@@ -16,7 +16,7 @@
 #include "request_security_model_result_sync_fuzzer.h"
 
 #include <string>
-
+#include <fuzzer/FuzzedDataProvider.h>
 #include "securec.h"
 
 #include "sg_classify_client.h"
@@ -25,7 +25,9 @@
 
 extern "C" int32_t RequestSecurityModelResultSync(const DeviceIdentify *devId, uint32_t modelId,
     SecurityModelResult *result);
-
+namespace {
+    constexpr int MAX_STRING_SIZE = 1024;
+}
 namespace OHOS {
 bool RequestSecurityModelResultAsyncFuzzTest(const uint8_t* data, size_t size)
 {
@@ -41,8 +43,12 @@ bool RequestSecurityModelResultAsyncFuzzTest(const uint8_t* data, size_t size)
 
 bool StartSecurityModelFuzzTest(const uint8_t* data, size_t size)
 {
-    uint32_t modelId = rand() % (size + 1);
-    OHOS::Security::SecurityGuard::StartSecurityModel(modelId);
+    if (data == nullptr || size < sizeof(int64_t)) {
+        return true;
+    }
+    FuzzedDataProvider fdp(data, size);
+    OHOS::Security::SecurityGuard::StartSecurityModel(fdp.ConsumeIntegral<uint32_t>(),
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     return true;
 }
 }  // namespace OHOS
