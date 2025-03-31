@@ -40,7 +40,7 @@ public:
     virtual int32_t RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
         const std::string &param, const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t SetModelState(uint32_t modelId, bool enable) = 0;
-    virtual int32_t StartSecurityModel(uint32_t modelId) = 0;
+    virtual int32_t StartSecurityModel(uint32_t modelId, const std::string &param) = 0;
 };
 
 class IRiskAnalysisManagerCallback : public IRemoteBroker {

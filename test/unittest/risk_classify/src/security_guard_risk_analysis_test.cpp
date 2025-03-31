@@ -160,7 +160,7 @@ HWTEST_F(SecurityGuardRiskAnalysisTest, HandleStartModel_002, TestSize.Level1)
     reply = new MessageParcel();
     data->WriteUint32(2);
     int32_t ret = riskAnalysisManagerService.HandleStartModel(*data, *reply);
-    ASSERT_EQ(ret, SUCCESS);
+    ASSERT_EQ(ret, NO_PERMISSION);
     delete data;
     delete reply;
 }
