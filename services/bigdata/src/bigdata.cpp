@@ -85,7 +85,7 @@ void BigData::ReportSetUnMuteEvent(const SgSubscribeEvent &event)
 
 void BigData::ReportFileSystemStoreEvent(const FileSystemStoreErrMesg &mesg)
 {
-    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "SG_FILE_SYSTEM_STORE",
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::SECURITY_GUARD, "SG_FILE_STORE_ERROE",
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, FILE_OPERATION, mesg.operation,
         FILE_NAME, mesg.fileName, ERR_MSG, mesg.mesg);
 }
