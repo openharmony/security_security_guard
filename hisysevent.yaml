@@ -71,7 +71,7 @@ SG_EVENT_SET_UNMUTE:
   EVENT_ID: {type: INT64, desc: event id}
   RET: {type: INT32, desc: set event unmute result}
 
-SG_FILE_SYSTEM_STORE:
+SG_FILE_STORE_ERROE:
   __BASE: {type: STATISTIC, level: CRITICAL, desc: security guard file system store error}
   FILE_OPERATION: {type: STRING, desc: file operation}
   FILE_NAME: {type: STRING, desc: file path}
