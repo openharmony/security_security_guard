@@ -32,7 +32,7 @@ public:
     int32_t RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
         const std::string &param, const sptr<IRemoteObject> &callback) override;
     int32_t SetModelState(uint32_t modelId, bool enable) override;
-
+    int32_t StartSecurityModel(uint32_t modelId) override;
 private:
     static inline BrokerDelegator<RiskAnalysisManagerProxy> delegator_;
 };

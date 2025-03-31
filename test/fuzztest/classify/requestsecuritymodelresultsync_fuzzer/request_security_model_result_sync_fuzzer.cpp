@@ -38,6 +38,13 @@ bool RequestSecurityModelResultAsyncFuzzTest(const uint8_t* data, size_t size)
     RequestSecurityModelResultSync(&deviceIdentify, modelId, &result);
     return true;
 }
+
+bool StartSecurityModelFuzzTest(const uint8_t* data, size_t size)
+{
+    uint32_t modelId = rand() % (size + 1);
+    OHOS::Security::SecurityGuard::StartSecurityModel(modelId);
+    return true;
+}
 }  // namespace OHOS
 
 /* Fuzzer entry point */
@@ -45,5 +52,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on date */
     OHOS::RequestSecurityModelResultAsyncFuzzTest(data, size);
+    OHOS::StartSecurityModelFuzzTest(data, size);
     return 0;
 }
