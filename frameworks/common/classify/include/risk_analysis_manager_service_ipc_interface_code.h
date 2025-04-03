@@ -23,6 +23,7 @@ namespace OHOS::Security::SecurityGuard {
 enum class RiskAnalysisManagerInterfaceCode {
     CMD_GET_SECURITY_MODEL_RESULT = 2,
     CMD_SET_MODEL_STATE = 3,
+    CMD_START_MODEL = 4,
 };
 
 enum class RiskAnalysisManagerCallbackInterfaceCode {

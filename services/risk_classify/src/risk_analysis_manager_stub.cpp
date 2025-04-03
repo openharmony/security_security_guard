@@ -38,6 +38,9 @@ int32_t RiskAnalysisManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &d
             case CMD_SET_MODEL_STATE: {
                 return HandleSetModelState(data, reply);
             }
+            case CMD_START_MODEL: {
+                return HandleStartModel(data, reply);
+            }
             default:
                 return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
         }
@@ -81,6 +84,22 @@ int32_t RiskAnalysisManagerStub::HandleSetModelState(MessageParcel &data, Messag
     uint32_t modelId = data.ReadUint32();
     bool enable = data.ReadBool();
     int32_t ret = SetModelState(modelId, enable);
+    reply.WriteInt32(ret);
+    return ret;
+}
+
+int32_t RiskAnalysisManagerStub::HandleStartModel(MessageParcel &data, MessageParcel &reply)
+{
+    uint32_t expected = sizeof(uint32_t) + sizeof(bool);
+    uint32_t actual = data.GetReadableBytes();
+    if (actual <= expected) {
+        SGLOGE("actual length error, value=%{public}u", actual);
+        return BAD_PARAM;
+    }
+
+    uint32_t modelId = data.ReadUint32();
+    std::string param = data.ReadString();
+    int32_t ret = StartSecurityModel(modelId, param);
     reply.WriteInt32(ret);
     return ret;
 }

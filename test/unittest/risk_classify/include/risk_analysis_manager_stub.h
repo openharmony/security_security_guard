@@ -36,6 +36,7 @@ private:
     int32_t HandleSetModelState(MessageParcel &data, MessageParcel &reply);
     void PushRiskAnalysisTask(uint32_t modelId, std::shared_ptr<std::promise<std::string>> &promise,
         ClassifyEvent &eventInfo);
+    int32_t HandleStartModel(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace OHOS::Security::SecurityGuard
 

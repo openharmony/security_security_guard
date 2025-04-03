@@ -34,6 +34,7 @@ public:
 private:
     int32_t HandleGetSecurityModelResult(MessageParcel &data, MessageParcel &reply);
     int32_t HandleSetModelState(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleStartModel(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace OHOS::Security::SecurityGuard
 

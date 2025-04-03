@@ -166,4 +166,21 @@ void ModelManager::Release(uint32_t modelId)
     iter->second->GetModelApi()->Release();
     modelIdApiMap_.erase(iter);
 }
+
+int32_t ModelManager::StartSecurityModel(uint32_t modelId, const std::string &param)
+{
+    int32_t ret = InitModel(modelId);
+    if (ret != SUCCESS) {
+        return ret;
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto iter = modelIdApiMap_.find(modelId);
+    if (iter == modelIdApiMap_.end() || iter->second == nullptr || iter->second->GetModelApi() == nullptr) {
+        SGLOGI("the model has not been initialized, modelId=%{public}u", modelId);
+        return FAILED;
+    }
+
+    return iter->second->GetModelApi()->StartSecurityModel(modelId, param);
+}
 } // namespace OHOS::Security::SecurityGuard

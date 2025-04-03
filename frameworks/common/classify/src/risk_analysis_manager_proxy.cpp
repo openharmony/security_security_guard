@@ -81,4 +81,29 @@ int32_t RiskAnalysisManagerProxy::SetModelState(uint32_t modelId, bool enable)
     }
     return reply.ReadInt32();
 }
+
+int32_t RiskAnalysisManagerProxy::StartSecurityModel(uint32_t modelId, const std::string &param)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        SGLOGE("WriteInterfaceToken error");
+        return WRITE_ERR;
+    }
+    data.WriteUint32(modelId);
+    data.WriteString(param);
+    MessageOption option = { MessageOption::TF_SYNC };
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SGLOGE("Remote error");
+        return NULL_OBJECT;
+    }
+    int ret = remote->SendRequest(CMD_START_MODEL, data, reply, option);
+    if (ret != ERR_NONE) {
+        SGLOGE("ret=%{public}d", ret);
+        return ret;
+    }
+    return reply.ReadInt32();
+}
 }

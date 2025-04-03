@@ -122,6 +122,30 @@ int32_t RequestSecurityModelResultAsync(const std::string &devId, uint32_t model
     return 0;
 #endif
 }
+
+int32_t StartSecurityModel(uint32_t modelId, const std::string &param)
+{
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return NULL_OBJECT;
+    }
+
+    auto object = registry->GetSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID);
+    auto proxy = iface_cast<RiskAnalysisManagerProxy>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+
+    int32_t ret = proxy->StartSecurityModel(modelId, param);
+    SGLOGI("StartSecurityModel result, ret=%{public}d", ret);
+    return ret;
+#else
+    return 0;
+#endif
+}
 }
 
 #ifdef __cplusplus
