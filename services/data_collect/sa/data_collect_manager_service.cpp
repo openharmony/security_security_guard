@@ -836,6 +836,7 @@ int32_t DataCollectManagerService::Unmute(const SecurityEventFilter &subscribeMu
 
 int32_t DataCollectManagerService::SetDeathCallBack(SgSubscribeEvent event, const sptr<IRemoteObject> &callback)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (deathRecipient_ == nullptr) {
         deathRecipient_ = new (std::nothrow) SubscriberDeathRecipient(this);
         if (deathRecipient_ == nullptr) {

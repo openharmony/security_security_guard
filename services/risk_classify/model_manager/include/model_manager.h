@@ -35,6 +35,7 @@ public:
     std::string GetResult(uint32_t modelId, const std::string &param);
     int32_t SubscribeResult(uint32_t modelId, std::shared_ptr<IModelResultListener> listener);
     void Release(uint32_t modelId);
+    int32_t StartSecurityModel(uint32_t modelId, const std::string &param);
 
 private:
     std::mutex mutex_;

@@ -140,6 +140,31 @@ HWTEST_F(SecurityGuardRiskAnalysisTest, HandleSetModelState_002, TestSize.Level1
     delete reply;
 }
 
+HWTEST_F(SecurityGuardRiskAnalysisTest, HandleStartModel_001, TestSize.Level1)
+{
+    MessageParcel *data;
+    MessageParcel *reply;
+    data = new MessageParcel();
+    reply = new MessageParcel();
+    int32_t ret = riskAnalysisManagerService.HandleStartModel(*data, *reply);
+    ASSERT_EQ(ret, BAD_PARAM);
+    delete data;
+    delete reply;
+}
+
+HWTEST_F(SecurityGuardRiskAnalysisTest, HandleStartModel_002, TestSize.Level1)
+{
+    MessageParcel *data;
+    MessageParcel *reply;
+    data = new MessageParcel();
+    reply = new MessageParcel();
+    data->WriteUint32(2);
+    int32_t ret = riskAnalysisManagerService.HandleStartModel(*data, *reply);
+    ASSERT_EQ(ret, NO_PERMISSION);
+    delete data;
+    delete reply;
+}
+
 HWTEST_F(SecurityGuardRiskAnalysisTest, HandleGetSecurityModelResult_001, TestSize.Level1)
 {
     MessageParcel data;
