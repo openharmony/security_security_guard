@@ -59,18 +59,9 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
     }
 
     std::lock_guard<std::mutex> lock(g_mutex);
-    SubscriberInfo subInfo {};
     if (g_subscriberInfoMap.size() >= MAX_SUBS_SIZE) {
         SGLOGE("has been max subscriber size");
         return BAD_PARAM;
-    }
-    if (g_subscriberInfoMap.count(callback) == 0) {
-        subInfo.subscribe.emplace_back(subscribeInfo);
-        subInfo.timer = std::make_shared<CleanupTimer>();
-        subInfo.timer->Start(callback, MAX_DURATION_TEN_SECOND);
-        g_subscriberInfoMap[callback] = subInfo;
-    } else {
-        g_subscriberInfoMap.at(callback).subscribe.emplace_back(subscribeInfo);
     }
 
     int32_t code = DatabaseManager::GetInstance().SubscribeDb({subscribeInfo.GetEvent().eventId}, listener_);
@@ -83,7 +74,18 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         SGLOGE("SubscribeSc error");
         return code;
     }
+
+    if (g_subscriberInfoMap.count(callback) == 0) {
+        SubscriberInfo subInfo {};
+        subInfo.subscribe.emplace_back(subscribeInfo);
+        subInfo.timer = std::make_shared<CleanupTimer>();
+        subInfo.timer->Start(callback, MAX_DURATION_TEN_SECOND);
+        g_subscriberInfoMap[callback] = subInfo;
+    } else {
+        g_subscriberInfoMap.at(callback).subscribe.emplace_back(subscribeInfo);
+    }
     SGLOGI("InsertSubscribeRecord subscriberInfoMap_size  %{public}zu", g_subscriberInfoMap.size());
+
     for (const auto &i : g_subscriberInfoMap) {
         SGLOGI("InsertSubscribeRecord subscriberInfoMap_subscribe_size  %{public}zu", i.second.subscribe.size());
     }
@@ -99,7 +101,7 @@ int AcquireDataSubscribeManager::SubscribeScInSg(int64_t eventId, const sptr<IRe
     if (eventToListenner_.count(eventId) != 0) {
         return SUCCESS;
     }
-    if (!SecurityCollector::DataCollection::GetInstance().StartCollectors({eventId}, collectorListenner)) {
+    if (!SecurityCollector::DataCollection::GetInstance().SubscribeCollectors({eventId}, collectorListenner)) {
         SGLOGI("Subscribe SG failed, eventId=%{public}" PRId64, eventId);
         return FAILED;
     }
@@ -200,7 +202,7 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
             SGLOGE("not find evenId in linstener, eventId=%{public}" PRId64, eventId);
             return FAILED;
         }
-        if (!SecurityCollector::DataCollection::GetInstance().StopCollectors({eventId})) {
+        if (!SecurityCollector::DataCollection::GetInstance().UnsubscribeCollectors({eventId})) {
             SGLOGE("UnSubscribe SG failed, eventId=%{public}" PRId64, eventId);
             return FAILED;
         }
@@ -371,6 +373,19 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
     ffrt::submit(task);
 }
 
+size_t AcquireDataSubscribeManager::GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event)
+{
+    size_t res = sizeof(event.eventId);
+    res += event.version.length();
+    res += event.content.length();
+    res += event.extra.length();
+    res += event.timestamp.length();
+    for (const auto &i : event.eventSubscribes) {
+        res += i.length();
+    }
+    return res;
+}
+
 bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &event)
 {
     for (auto &it : g_subscriberInfoMap) {
@@ -392,7 +407,7 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &e
                 SGLOGD("publish eventSubscribes =%{public}s", iter.c_str());
             }
             it.second.events.emplace_back(event);
-            it.second.eventsBuffSize += sizeof(event);
+            it.second.eventsBuffSize += GetSecurityCollectorEventBufSize(event);
             SGLOGD("cache batch upload event to subscribe %{public}zu", it.second.eventsBuffSize);
             if (it.second.eventsBuffSize >= MAX_CACHE_EVENT_SIZE) {
                 BatchUpload(it.first, it.second.events);

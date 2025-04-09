@@ -81,6 +81,8 @@ public:
     MOCK_METHOD2(QueryRecentEventByEventId, int(const std::vector<int64_t> &, std::vector<SecEvent> &));
     MOCK_METHOD2(QueryEventByEventId, int(int64_t, std::vector<SecEvent> &));
     MOCK_METHOD2(QueryEventByEventId, int(std::vector<int64_t> &, std::vector<SecEvent> &));
+    MOCK_METHOD4(QueryEventByEventIdAndDate, int(std::vector<int64_t> &,
+        std::vector<SecEvent> &, std::string, std::string));
     MOCK_METHOD2(QueryEventByEventType, int(int32_t, std::vector<SecEvent> &));
     MOCK_METHOD2(QueryEventByLevel, int(int32_t, std::vector<SecEvent> &));
     MOCK_METHOD2(QueryEventByOwner, int(std::string, std::vector<SecEvent> &));
@@ -96,7 +98,7 @@ public:
     MOCK_METHOD2(GetEventConfig, bool(int64_t, EventCfg &));
 };
 
-HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerImpl001, TestSize.Level1)
+HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerImpl001, TestSize.Level0)
 {
     auto impl = std::make_shared<ModelManagerImpl>();
     std::shared_ptr<IDbOperate> oper = impl->GetDbOperate("risk_event");
@@ -107,7 +109,7 @@ HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerImpl001, TestSize.Level1
     EXPECT_TRUE(oper == nullptr);
 }
 
-HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInit001, TestSize.Level1)
+HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInit001, TestSize.Level0)
 {
     std::vector<uint32_t> emptyVector{};
     std::vector<uint32_t> vector{0};
@@ -136,7 +138,7 @@ HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInit001, TestSize.Level1
     EXPECT_TRUE(ModelManager::GetInstance().InitModel(0) != SUCCESS);
 }
 
-HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInitModel001, TestSize.Level1)
+HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInitModel001, TestSize.Level0)
 {
     MockModel *model = new MockModel();
     EXPECT_CALL(*model, Release()).Times(1);
@@ -147,7 +149,7 @@ HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInitModel001, TestSize.L
     EXPECT_TRUE(ModelManager::GetInstance().InitModel(8888) != SUCCESS);
 }
 
-HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInitModel002, TestSize.Level1)
+HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInitModel002, TestSize.Level0)
 {
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetModelConfig).Times(AtLeast(6))
         .WillOnce([](uint32_t modelId, ModelCfg &config) {

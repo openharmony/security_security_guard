@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,9 @@
 #include "ffrt.h"
 
 namespace OHOS::Security::SecurityGuard {
+namespace {
+    constexpr uint32_t SENSITIVITY_INFO = 2;
+}
 DatabaseManager &DatabaseManager::GetInstance()
 {
     static DatabaseManager instance;
@@ -52,7 +55,7 @@ int DatabaseManager::InsertEvent(uint32_t source, const SecEvent& event,
     if (config.source == source) {
         std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(event.eventId);
         SGLOGD("table=%{public}s, eventId=%{public}" PRId64, table.c_str(), config.eventId);
-        if (table == AUDIT_TABLE) {
+        if (table == AUDIT_TABLE || config.dataSensitivityLevel == SENSITIVITY_INFO) {
             SGLOGD("audit event insert");
             DbChanged(IDbListener::INSERT, event, eventSubscribes);
             return SUCCESS;

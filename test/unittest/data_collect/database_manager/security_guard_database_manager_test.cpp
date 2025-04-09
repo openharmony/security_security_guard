@@ -75,7 +75,7 @@ void SecurityGuardDatabaseManagerTest::TearDown()
 {
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock006, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock006, TestSize.Level0)
 {
     uint32_t source = 0;
     SecEvent event{};
@@ -100,7 +100,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock006, TestSize.
     EXPECT_EQ(ret, NOT_SUPPORT);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock008, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock008, TestSize.Level0)
 {
     uint32_t source = 0;
     SecEvent event{};
@@ -123,7 +123,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock008, TestSize.
     AccountSA::OsAccountManager::DelInterface();
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock009, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock009, TestSize.Level0)
 {
     EXPECT_CALL(RiskEventRdbHelper::GetInstance(), QueryAllEvent).WillOnce(Return(SUCCESS));
     std::vector<SecEvent> events;
@@ -133,7 +133,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock009, TestSize.
     EXPECT_EQ(ret, NOT_SUPPORT);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock011, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock011, TestSize.Level0)
 {
     EXPECT_CALL(RiskEventRdbHelper::GetInstance(), QueryRecentEventByEventId(
         An<int64_t>(), An<SecEvent &>())).WillOnce(Return(SUCCESS));
@@ -149,7 +149,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock011, TestSize.
     EXPECT_EQ(ret, NOT_SUPPORT);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock012, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock012, TestSize.Level0)
 {
     EXPECT_CALL(RiskEventRdbHelper::GetInstance(), QueryRecentEventByEventId(
         An<const std::vector<int64_t> &>(), An<std::vector<SecEvent> &>())).WillOnce(Return(SUCCESS));
@@ -163,7 +163,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock012, TestSize.
     EXPECT_EQ(ret, NOT_SUPPORT);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock013, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock013, TestSize.Level0)
 {
     EXPECT_CALL(RiskEventRdbHelper::GetInstance(), QueryEventByEventIdAndDate).WillOnce(Return(SUCCESS));
     std::vector<int64_t> eventIds{};
@@ -177,7 +177,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock013, TestSize.
     EXPECT_EQ(ret, NOT_SUPPORT);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock014, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock014, TestSize.Level0)
 {
     EXPECT_CALL(RiskEventRdbHelper::GetInstance(), QueryEventByEventId(
         An<int64_t>(), An<std::vector<SecEvent> &>())).WillOnce(Return(SUCCESS));
@@ -193,7 +193,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock014, TestSize.
     EXPECT_EQ(ret, NOT_SUPPORT);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock015, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock015, TestSize.Level0)
 {
     EXPECT_CALL(RiskEventRdbHelper::GetInstance(), QueryEventByEventId(
         An<std::vector<int64_t> &>(), An<std::vector<SecEvent> &>())).WillOnce(Return(SUCCESS));
@@ -207,7 +207,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock015, TestSize.
     EXPECT_EQ(ret, NOT_SUPPORT);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock016, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock016, TestSize.Level0)
 {
     EXPECT_CALL(RiskEventRdbHelper::GetInstance(), QueryEventByEventType).WillOnce(Return(SUCCESS));
     int32_t eventType = 0;
@@ -220,7 +220,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock016, TestSize.
     EXPECT_EQ(ret, NOT_SUPPORT);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock017, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock017, TestSize.Level0)
 {
     EXPECT_CALL(RiskEventRdbHelper::GetInstance(), QueryEventByLevel).WillOnce(Return(SUCCESS));
     int32_t level = 0;
@@ -233,7 +233,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock017, TestSize.
     EXPECT_EQ(ret, NOT_SUPPORT);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock018, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock018, TestSize.Level0)
 {
     EXPECT_CALL(RiskEventRdbHelper::GetInstance(), QueryEventByOwner).WillOnce(Return(SUCCESS));
     std::string owner;
@@ -246,7 +246,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock018, TestSize.
     EXPECT_EQ(ret, NOT_SUPPORT);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock019, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock019, TestSize.Level0)
 {
     EXPECT_CALL(RiskEventRdbHelper::GetInstance(), CountAllEvent).WillOnce(Return(1));
     int ret = DatabaseManager::GetInstance().CountAllEvent("risk_event");
@@ -255,7 +255,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock019, TestSize.
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock020, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock020, TestSize.Level0)
 {
     EXPECT_CALL(RiskEventRdbHelper::GetInstance(), CountEventByEventId).WillOnce(Return(1));
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetTableFromEventId).WillOnce(
@@ -267,7 +267,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock020, TestSize.
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock021, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock021, TestSize.Level0)
 {
     EXPECT_CALL(RiskEventRdbHelper::GetInstance(), DeleteOldEventByEventId).WillOnce(Return(SUCCESS));
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetTableFromEventId).WillOnce(Return("audit_event")).WillOnce(
@@ -282,7 +282,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock021, TestSize.
     EXPECT_EQ(ret, NOT_SUPPORT);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock022, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock022, TestSize.Level0)
 {
     EXPECT_CALL(RiskEventRdbHelper::GetInstance(), DeleteAllEventByEventId).WillOnce(Return(SUCCESS));
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetTableFromEventId).WillOnce(Return("audit_event")).WillOnce(
@@ -296,7 +296,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock022, TestSize.
     EXPECT_EQ(ret, NOT_SUPPORT);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock023, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock023, TestSize.Level0)
 {
     auto mockListener = std::make_shared<MockDbListener>();
     EXPECT_CALL(*mockListener, OnChange).Times(Exactly(2));
@@ -322,14 +322,14 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock023, TestSize.
 }
 
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, CheckRiskContent001, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, CheckRiskContent001, TestSize.Level0)
 {
     std::string content(MAX_CONTENT_SIZE, 'c');
     bool ret = DataFormat::CheckRiskContent(content);
     EXPECT_FALSE(ret);
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions001, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions001, TestSize.Level0)
 {
     std::string conditions;
     RequestCondition reqCondition;
@@ -337,7 +337,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions001, TestSize.Level1)
     EXPECT_TRUE(reqCondition.riskEvent.empty());
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions002, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions002, TestSize.Level0)
 {
     std::string conditions = "{\"eventId\":0}";
     RequestCondition reqCondition;
@@ -345,7 +345,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions002, TestSize.Level1)
     EXPECT_TRUE(reqCondition.riskEvent.empty());
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions003, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions003, TestSize.Level0)
 {
     std::string conditions = "{\"eventId\":[\"t\", \"e\", \"s\", \"t\"]}";
     RequestCondition reqCondition;
@@ -353,7 +353,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions003, TestSize.Level1)
     EXPECT_TRUE(reqCondition.riskEvent.empty());
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions004, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions004, TestSize.Level0)
 {
     std::string conditions = "{\"eventId\":[1, 2, 3, 4]}";
     RequestCondition reqCondition;
@@ -363,7 +363,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions004, TestSize.Level1)
     EXPECT_FALSE(reqCondition.riskEvent.empty());
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions005, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions005, TestSize.Level0)
 {
     std::string conditions = "{\"beginTime\":1}";
     RequestCondition reqCondition;
@@ -371,7 +371,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions005, TestSize.Level1)
     EXPECT_TRUE(reqCondition.beginTime.empty());
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions006, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions006, TestSize.Level0)
 {
     std::string conditions = "{\"beginTime\":\"0001\"}";
     RequestCondition reqCondition;
@@ -379,7 +379,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions006, TestSize.Level1)
     EXPECT_TRUE(reqCondition.beginTime == "0001");
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions007, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions007, TestSize.Level0)
 {
     std::string conditions = "{\"endTime\":1}";
     RequestCondition reqCondition;
@@ -387,7 +387,7 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions007, TestSize.Level1)
     EXPECT_TRUE(reqCondition.endTime.empty());
 }
 
-HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions008, TestSize.Level1)
+HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions008, TestSize.Level0)
 {
     std::string conditions = "{\"endTime\":\"0001\"}";
     RequestCondition reqCondition;

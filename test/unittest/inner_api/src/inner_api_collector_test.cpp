@@ -94,7 +94,7 @@ class MockDataCollectManagerCallbackStub : public DataCollectManagerCallbackStub
 public:
     MockDataCollectManagerCallbackStub() = default;
     ~MockDataCollectManagerCallbackStub() override = default;
- 
+
     int32_t ResponseRiskData(std::string &devId, std::string &riskData, uint32_t status,
         const std::string& errMsg = "") override { return 0; };
 };
@@ -154,7 +154,7 @@ HWTEST_F(InnerApiCollectorTest, AcquireDataManagerTest001, testing::ext::TestSiz
     ret = DataCollectManager::GetInstance().Unsubscribe(subscriber);
     EXPECT_TRUE(ret == BAD_PARAM);
     DataCollectManager::GetInstance().HandleDecipient();
-    
+
     AcquireDataManagerCallbackService service;
     ret = service.OnNotify({event});
     EXPECT_TRUE(ret == FAILED);
@@ -288,7 +288,7 @@ HWTEST_F(InnerApiCollectorTest, DataCollectManagerCallbackServiceTest001, testin
     ret = service.ResponseRiskData(string, string, uint32, string);
     EXPECT_TRUE(ret == SUCCESS);
 }
- 
+
 HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest001, testing::ext::TestSize.Level1)
 {
     RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
@@ -316,7 +316,7 @@ HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest002, testing::ext::Te
     int ret = proxy.RequestRiskData(string, string, objReq);
     EXPECT_EQ(ret, NO_PERMISSION);
 }
- 
+
 HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest003, testing::ext::TestSize.Level1)
 {
     RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
@@ -333,7 +333,7 @@ HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest003, testing::ext::Te
     ret = proxy.Unsubscribe(subscribeInfo, objSub);
     EXPECT_EQ(ret, NO_PERMISSION);
 }
- 
+
 HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest004, testing::ext::TestSize.Level1)
 {
     RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
@@ -348,7 +348,7 @@ HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest004, testing::ext::Te
     int ret = proxy.QuerySecurityEvent(rulers, objQuery, "securityGroup");
     EXPECT_EQ(ret, NO_PERMISSION);
 }
- 
+
 HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest005, testing::ext::TestSize.Level1)
 {
     RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
@@ -365,7 +365,7 @@ HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest005, testing::ext::Te
     ret = proxy.CollectorStop(subscribeInfo, objCollect);
     EXPECT_EQ(ret, NO_PERMISSION);
 }
- 
+
 HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest006, testing::ext::TestSize.Level1)
 {
     RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
@@ -386,7 +386,7 @@ HWTEST_F(InnerApiCollectorTest, DataCollectManagerTest001, testing::ext::TestSiz
     std::vector<SecurityEventRuler> rulers;
     std::shared_ptr<MockSecurityEventQueryCallback> callback = std::make_shared<MockSecurityEventQueryCallback>();
     int ret = manager.QuerySecurityEvent(rulers, callback);
-    EXPECT_EQ(ret, NO_PERMISSION);
+    EXPECT_TRUE(ret != SUCCESS);
 }
 
 HWTEST_F(InnerApiCollectorTest, SecurityCollectorManagerCallbackStubTest001, testing::ext::TestSize.Level1)

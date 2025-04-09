@@ -54,7 +54,7 @@ bool DataCollection::StartCollectors(const std::vector<int64_t>& eventIds, std::
             StopCollectors(loadedEventIds_);
             return false;
         }
-        ret = LoadCollector(eventId, collectorPath, api);
+        ret = LoadCollector(eventId, collectorPath, api, false);
         if (ret != SUCCESS) {
             LOGE("Load collector failed, eventId is 0x%{public}" PRIx64, eventId);
             StopCollectors(loadedEventIds_);
@@ -81,7 +81,7 @@ bool DataCollection::SecurityGuardSubscribeCollector(const std::vector<int64_t>&
             LOGE("GetCollectorPath failed, eventId is 0x%{public}" PRIx64, eventId);
             continue;
         }
-        ret = LoadCollector(eventId, collectorPath, nullptr);
+        ret = LoadCollector(eventId, collectorPath, nullptr, true);
         if (ret != SUCCESS) {
             LOGE("LoadCollector failed, eventId is 0x%{public}" PRIx64, eventId);
             continue;
@@ -120,10 +120,6 @@ bool DataCollection::StopCollectors(const std::vector<int64_t>& eventIds)
             ret = false;
         } else {
             int result = collector->Stop();
-            int isStartWithSub = collector->IsStartWithSub();
-            if (isStartWithSub == 1) {
-                result = collector->Unsubscribe(eventId);
-            }
             if (result != 0) {
                 LOGE("Failed to stop collector, eventId is 0x%{public}" PRIx64, eventId);
                 ret = false;
@@ -136,6 +132,73 @@ bool DataCollection::StopCollectors(const std::vector<int64_t>& eventIds)
     return ret;
 }
 
+bool DataCollection::SubscribeCollectors(const std::vector<int64_t>& eventIds, std::shared_ptr<ICollectorFwk> api)
+{
+    LOGI("SubscribeCollectors start");
+    if (eventIds.empty() || !api) {
+        LOGE("Invalid input parameter");
+        return false;
+    }
+    std::vector<int64_t> loadedEventIds_;
+    for (int64_t eventId : eventIds) {
+        LOGI("SubscribeCollectors eventId is 0x%{public}" PRIx64, eventId);
+        if (IsCollectorStarted(eventId)) {
+            LOGI("Collector already started, eventId is 0x%{public}" PRIx64, eventId);
+            continue;
+        }
+        std::string collectorPath;
+        ErrorCode ret = GetCollectorPath(eventId, collectorPath);
+        if (ret != SUCCESS) {
+            LOGE("GetCollectorPath failed, eventId is 0x%{public}" PRIx64, eventId);
+            UnsubscribeCollectors(loadedEventIds_);
+            return false;
+        }
+        ret = LoadCollector(eventId, collectorPath, api, true);
+        if (ret != SUCCESS) {
+            LOGE("Load collector failed, eventId is 0x%{public}" PRIx64, eventId);
+            UnsubscribeCollectors(loadedEventIds_);
+            return false;
+        }
+        loadedEventIds_.push_back(eventId);
+    }
+    LOGI("SubscribeCollectors finish");
+    return true;
+}
+
+bool DataCollection::UnsubscribeCollectors(const std::vector<int64_t> &eventIds)
+{
+    LOGI("UnsubscribeCollectors start");
+    if (eventIds.empty()) {
+        LOGW("The eventId list is empty");
+        return true;
+    }
+    bool ret = true;
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (int64_t eventId : eventIds) {
+        LOGI("UnsubscribeCollectors eventId is 0x%{public}" PRIx64, eventId);
+        auto loader = eventIdToLoaderMap_.find(eventId);
+        if (loader == eventIdToLoaderMap_.end()) {
+            LOGI("Collector not found, eventId is 0x%{public}" PRIx64, eventId);
+            continue;
+        }
+        ICollector* collector = loader->second.CallGetCollector();
+        if (collector == nullptr) {
+            LOGE("CallGetCollector error");
+            ret = false;
+        } else {
+            int result = collector->Unsubscribe(eventId);
+            if (result != 0) {
+                LOGE("Failed to Unsubscribe collector, eventId is 0x%{public}" PRIx64, eventId);
+                ret = false;
+            }
+            LOGI("Unsubscribe collector");
+            eventIdToLoaderMap_.erase(loader);
+        }
+    }
+    LOGI("UnsubscribeCollectors finish");
+    return ret;
+}
+
 void DataCollection::CloseLib()
 {
     std::lock_guard<std::mutex> lock(closeLibmutex_);
@@ -144,7 +207,8 @@ void DataCollection::CloseLib()
     }
     needCloseLibMap_.clear();
 }
-ErrorCode DataCollection::LoadCollector(int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api)
+ErrorCode DataCollection::LoadCollector(
+    int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api, bool isStartWithSub)
 {
     LOGI("Start LoadCollector");
     LibLoader loader(path);
@@ -162,11 +226,7 @@ ErrorCode DataCollection::LoadCollector(int64_t eventId, std::string path, std::
         LOGE("CallGetCollector error");
         return FAILED;
     }
-    int result = collector->Start(api);
-    int isStartWithSub = collector->IsStartWithSub();
-    if (isStartWithSub == 1) {
-        result = collector->Subscribe(eventId);
-    }
+    int result = isStartWithSub ? collector->Subscribe(api, eventId) : collector->Start(api);
     if (result != 0) {
         LOGE("Failed to start collector");
         return FAILED;

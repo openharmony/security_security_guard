@@ -548,7 +548,7 @@ HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd05, TestSize.Level1)
         Return(AccessToken::PermissionState::PERMISSION_GRANTED));
     int32_t result =
         g_service.OnRemoteRequest(SecurityCollectorManagerService::CMD_COLLECTOR_UNSUBCRIBE, data, reply, option);
-    EXPECT_EQ(result, SecurityCollector::ErrorCode::SUCCESS);
+    EXPECT_EQ(result, SecurityCollector::ErrorCode::FAILED);
 }
 
 HWTEST_F(SecurityCollectorTest, TestOnRemoteRequestWithCmd06, TestSize.Level1)
