@@ -133,7 +133,7 @@ int32_t StartSecurityModel(uint32_t modelId, const std::string &param)
     }
 
     auto object = registry->GetSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID);
-    auto proxy = iface_cast<RiskAnalysisManagerProxy>(object);
+    auto proxy = iface_cast<IRiskAnalysisManager>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
