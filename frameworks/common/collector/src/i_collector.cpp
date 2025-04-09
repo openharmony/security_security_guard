@@ -20,7 +20,7 @@ int ICollector::Query(const SecurityEventRuler &ruler, std::vector<SecurityEvent
 {
     return 0;
 };
-int ICollector::Subscribe(int64_t eventId)
+int ICollector::Subscribe(std::shared_ptr<ICollectorFwk> api, int64_t eventId)
 {
     return 0;
 };

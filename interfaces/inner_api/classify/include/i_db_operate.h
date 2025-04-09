@@ -30,6 +30,8 @@ public:
         std::vector<SecEvent> &event) = 0;
     virtual int QueryEventByEventId(int64_t eventId, std::vector<SecEvent> &events) = 0;
     virtual int QueryEventByEventId(std::vector<int64_t> &eventIds, std::vector<SecEvent> &events) = 0;
+    virtual int QueryEventByEventIdAndDate(std::vector<int64_t> &eventIds,
+        std::vector<SecEvent> &events, std::string beginTime, std::string endTime) = 0;
     virtual int QueryEventByEventType(int32_t eventType, std::vector<SecEvent> &events) = 0;
     virtual int QueryEventByLevel(int32_t level, std::vector<SecEvent> &events) = 0;
     virtual int QueryEventByOwner(std::string owner, std::vector<SecEvent> &events) = 0;

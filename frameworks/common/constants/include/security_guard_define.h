@@ -91,6 +91,12 @@ using RequestCondition = struct {
     std::string endTime;
 };
 
+using FileSystemStoreErrMesg = struct {
+    std::string operation;
+    std::string fileName;
+    std::string mesg;
+};
+
 using ResultCallback = std::function<int32_t (const std::string &devId, uint32_t modelId, const std::string &result)>;
 
 const size_t MAX_QUERY_EVENT_SIZE = 1000;
