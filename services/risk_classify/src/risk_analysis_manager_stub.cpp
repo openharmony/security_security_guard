@@ -90,7 +90,7 @@ int32_t RiskAnalysisManagerStub::HandleSetModelState(MessageParcel &data, Messag
 
 int32_t RiskAnalysisManagerStub::HandleStartModel(MessageParcel &data, MessageParcel &reply)
 {
-    uint32_t expected = sizeof(uint32_t) + sizeof(bool);
+    uint32_t expected = sizeof(uint32_t);
     uint32_t actual = data.GetReadableBytes();
     if (actual <= expected) {
         SGLOGE("actual length error, value=%{public}u", actual);
