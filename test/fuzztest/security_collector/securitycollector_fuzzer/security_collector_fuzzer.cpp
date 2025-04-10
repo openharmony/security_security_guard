@@ -75,8 +75,7 @@ void DataCollectionFuzzTest(const uint8_t* data, size_t size)
     DataCollection::GetInstance().StopCollectors(eventIds);
     DataCollection::GetInstance().GetCollectorType(eventId, collectorType);
     DataCollection::GetInstance().QuerySecurityEvent(rulers, events);
-    DataCollection::GetInstance().LoadCollector(eventId, string, collectorListenner, true);
-    DataCollection::GetInstance().LoadCollector(eventId, string, collectorListenner, false);
+    DataCollection::GetInstance().LoadCollector(eventId, string, collectorListenner);
     DataCollection::GetInstance().LoadCollector(string, ruler, events);
     DataCollection::GetInstance().GetCollectorPath(eventId, string);
     DataCollection::GetInstance().CheckFileStream(stream);

@@ -47,7 +47,7 @@ public:
     bool Unmute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag);
 private:
     DataCollection() = default;
-    ErrorCode LoadCollector(int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api, bool isStartWithSub);
+    ErrorCode LoadCollector(int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api);
     ErrorCode LoadCollector(std::string path, const SecurityEventRuler &ruler, std::vector<SecurityEvent> &events);
     ErrorCode GetCollectorPath(int64_t eventId, std::string& path);
     ErrorCode CheckFileStream(std::ifstream &stream);
