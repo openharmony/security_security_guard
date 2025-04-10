@@ -47,8 +47,7 @@ public:
     virtual bool Unmute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag);
 private:
     DataCollection() = default;
-    virtual ErrorCode LoadCollector(
-        int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api, bool isStartWithSub);
+    virtual ErrorCode LoadCollector(int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api);
     virtual ErrorCode LoadCollector(std::string path, const SecurityEventRuler &ruler,
                                     std::vector<SecurityEvent> &events);
     virtual ErrorCode GetCollectorPath(int64_t eventId, std::string& path);

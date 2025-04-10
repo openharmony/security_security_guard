@@ -54,7 +54,7 @@ bool DataCollection::StartCollectors(const std::vector<int64_t>& eventIds, std::
             StopCollectors(loadedEventIds_);
             return false;
         }
-        ret = LoadCollector(eventId, collectorPath, api, false);
+        ret = LoadCollector(eventId, collectorPath, api);
         if (ret != SUCCESS) {
             LOGE("Load collector failed, eventId is 0x%{public}" PRIx64, eventId);
             StopCollectors(loadedEventIds_);
@@ -81,7 +81,7 @@ bool DataCollection::SecurityGuardSubscribeCollector(const std::vector<int64_t>&
             LOGE("GetCollectorPath failed, eventId is 0x%{public}" PRIx64, eventId);
             continue;
         }
-        ret = LoadCollector(eventId, collectorPath, nullptr, true);
+        ret = LoadCollector(eventId, collectorPath, nullptr);
         if (ret != SUCCESS) {
             LOGE("LoadCollector failed, eventId is 0x%{public}" PRIx64, eventId);
             continue;
@@ -153,7 +153,7 @@ bool DataCollection::SubscribeCollectors(const std::vector<int64_t>& eventIds, s
             UnsubscribeCollectors(loadedEventIds_);
             return false;
         }
-        ret = LoadCollector(eventId, collectorPath, api, true);
+        ret = LoadCollector(eventId, collectorPath, api);
         if (ret != SUCCESS) {
             LOGE("Load collector failed, eventId is 0x%{public}" PRIx64, eventId);
             UnsubscribeCollectors(loadedEventIds_);
@@ -208,7 +208,7 @@ void DataCollection::CloseLib()
     needCloseLibMap_.clear();
 }
 ErrorCode DataCollection::LoadCollector(
-    int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api, bool isStartWithSub)
+    int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api)
 {
     LOGI("Start LoadCollector");
     LibLoader loader(path);
@@ -226,7 +226,7 @@ ErrorCode DataCollection::LoadCollector(
         LOGE("CallGetCollector error");
         return FAILED;
     }
-    int result = isStartWithSub ? collector->Subscribe(api, eventId) : collector->Start(api);
+    int result = collector->IsStartWithSub() ? collector->Subscribe(api, eventId) : collector->Start(api);
     if (result != 0) {
         LOGE("Failed to start collector");
         return FAILED;
