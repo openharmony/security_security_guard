@@ -154,11 +154,16 @@ HWTEST_F(SecurityGuardRiskAnalysisTest, HandleStartModel_001, TestSize.Level1)
 
 HWTEST_F(SecurityGuardRiskAnalysisTest, HandleStartModel_002, TestSize.Level1)
 {
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+    .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_DENIED));
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_NATIVE));
     MessageParcel *data;
     MessageParcel *reply;
     data = new MessageParcel();
     reply = new MessageParcel();
     data->WriteUint32(2);
+    data->WriteString("param");
     int32_t ret = riskAnalysisManagerService.HandleStartModel(*data, *reply);
     ASSERT_EQ(ret, NO_PERMISSION);
     delete data;

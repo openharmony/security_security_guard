@@ -171,13 +171,14 @@ int32_t ModelManager::StartSecurityModel(uint32_t modelId, const std::string &pa
 {
     int32_t ret = InitModel(modelId);
     if (ret != SUCCESS) {
+        SGLOGE("InitModel fail, ret=%{public}d, modelId=%{public}u", ret, modelId);
         return ret;
     }
 
     std::lock_guard<std::mutex> lock(mutex_);
     auto iter = modelIdApiMap_.find(modelId);
     if (iter == modelIdApiMap_.end() || iter->second == nullptr || iter->second->GetModelApi() == nullptr) {
-        SGLOGI("the model has not been initialized, modelId=%{public}u", modelId);
+        SGLOGE("the model has not been initialized, modelId=%{public}u", modelId);
         return FAILED;
     }
 
