@@ -186,7 +186,7 @@ bool DataCollection::UnsubscribeCollectors(const std::vector<int64_t> &eventIds)
             LOGE("CallGetCollector error");
             ret = false;
         } else {
-            int result = collector->Unsubscribe(eventId);
+            int result = collector->IsStartWithSub() ? collector->Unsubscribe(eventId) : collector->Stop();
             if (result != 0) {
                 LOGE("Failed to Unsubscribe collector, eventId is 0x%{public}" PRIx64, eventId);
                 ret = false;
