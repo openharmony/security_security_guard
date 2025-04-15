@@ -213,11 +213,10 @@ bool DataCollectManagerService::IsDiscardEventInThisHour(int64_t eventId)
     return false;
 }
 
-int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
-    std::string &content, bool isSync)
+ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std::string &version,
+    const std::string &time, const std::string &content)
 {
     SGLOGD("enter DataCollectManagerService RequestDataSubmit");
-    SGLOGD("isSync: %{public}s", isSync ? "true" : "false");
     int32_t ret = IsApiHasPermission("RequestDataSubmit");
     if (ret != SUCCESS) {
         return ret;
@@ -255,8 +254,15 @@ int32_t DataCollectManagerService::RequestDataSubmit(int64_t eventId, std::strin
     return SUCCESS;
 }
 
-int32_t DataCollectManagerService::RequestRiskData(std::string &devId, std::string &eventList,
-    const sptr<IRemoteObject> &callback)
+ErrCode DataCollectManagerService::RequestDataSubmitAsync(int64_t eventId, const std::string &version,
+    const std::string &time, const std::string &content)
+{
+    SGLOGD("enter DataCollectManagerService RequestDataSubmitAsync");
+    return RequestDataSubmit(eventId, version, time, content);
+}
+
+ErrCode DataCollectManagerService::RequestRiskData(const std::string &devId, const std::string &eventList,
+    const sptr<IRemoteObject> &cb)
 {
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, REQUEST_PERMISSION);
@@ -279,7 +285,7 @@ int32_t DataCollectManagerService::RequestRiskData(std::string &devId, std::stri
     SGLOGI("eventList=%{public}s", eventList.c_str());
     auto promise = std::make_shared<std::promise<int32_t>>();
     auto future = promise->get_future();
-    PushDataCollectTask(callback, eventList, devId, promise);
+    PushDataCollectTask(cb, eventList, devId, promise);
     std::chrono::milliseconds span(TIMEOUT_REPLY);
     if (future.wait_for(span) == std::future_status::timeout) {
         SGLOGE("wait for result timeout");
@@ -358,8 +364,8 @@ void DataCollectManagerService::OnRemoveSystemAbility(int32_t systemAbilityId, c
     SGLOGW("OnRemoveSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
 }
 
-int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
-    const sptr<IRemoteObject> &callback)
+ErrCode DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
+    const sptr<IRemoteObject> &cb)
 {
     SGLOGD("DataCollectManagerService, start subscribe");
     int32_t ret = FAILED;
@@ -378,19 +384,19 @@ int32_t DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
         BigData::ReportSgSubscribeEvent(event);
         return ret;
     }
-    ret = SetDeathCallBack(event, callback);
+    ret = SetDeathCallBack(event, cb);
     if (ret != SUCCESS) {
         return ret;
     }
-    ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, callback);
+    ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, cb);
     event.ret = ret;
     SGLOGI("DataCollectManagerService, InsertSubscribeRecord eventId=%{public}" PRId64, event.eventId);
     BigData::ReportSgSubscribeEvent(event);
     return ret;
 }
 
-int32_t DataCollectManagerService::Unsubscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
-    const sptr<IRemoteObject> &callback)
+ErrCode DataCollectManagerService::Unsubscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
+    const sptr<IRemoteObject> &cb)
 {
     int32_t ret = FAILED;
     SgUnsubscribeEvent event;
@@ -409,10 +415,10 @@ int32_t DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
     }
     std::lock_guard<std::mutex> lock(mutex_);
     if (deathRecipient_ != nullptr) {
-        callback->RemoveDeathRecipient(deathRecipient_);
+        cb->RemoveDeathRecipient(deathRecipient_);
     }
 
-    ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, callback);
+    ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, cb);
     event.ret = ret;
     SGLOGI("DataCollectManagerService, RemoveSubscribeRecord ret=%{public}d", ret);
     BigData::ReportSgUnsubscribeEvent(event);
@@ -457,8 +463,8 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
     return true;
 }
 
-int32_t DataCollectManagerService::QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
-    const sptr<IRemoteObject> &callback, const std::string &eventGroup)
+ErrCode DataCollectManagerService::QuerySecurityEvent(const std::vector<SecurityCollector::SecurityEventRuler> &rulers,
+    const sptr<IRemoteObject> &cb, const std::string &eventGroup)
 {
     SGLOGI("enter DataCollectManagerService QuerySecurityEvent");
     int32_t ret = 0;
@@ -470,7 +476,7 @@ int32_t DataCollectManagerService::QuerySecurityEvent(std::vector<SecurityCollec
     if (ret != SUCCESS) {
         return ret;
     }
-    auto proxy = iface_cast<ISecurityEventQueryCallback>(callback);
+    auto proxy = iface_cast<ISecurityEventQueryCallback>(cb);
     if (proxy == nullptr) {
         SGLOGI("proxy is null");
         return NULL_OBJECT;
@@ -529,8 +535,8 @@ void DataCollectManagerService::SubscriberDeathRecipient::OnRemoteDied(const wpt
     SGLOGI("end OnRemoteDied");
 }
 
-int32_t DataCollectManagerService::CollectorStart(
-    const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &callback)
+ErrCode DataCollectManagerService::CollectorStart(
+    const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &cb)
 {
     SGLOGI("enter DataCollectManagerService CollectorStart.");
     int32_t code = IsApiHasPermission("CollectorStart");
@@ -545,8 +551,8 @@ int32_t DataCollectManagerService::CollectorStart(
     return SUCCESS;
 }
 
-int32_t DataCollectManagerService::CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
-    const sptr<IRemoteObject> &callback)
+ErrCode DataCollectManagerService::CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
+    const sptr<IRemoteObject> &cb)
 {
     SGLOGI("enter DataCollectManagerService CollectorStop.");
     int32_t code = IsApiHasPermission("CollectorStop");
@@ -700,7 +706,7 @@ bool DataCollectManagerService::ParseTrustListFile(const std::string &trustListF
     return true;
 }
 
-int32_t DataCollectManagerService::ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &info)
+ErrCode DataCollectManagerService::ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &info)
 {
     SGLOGI("enter DataCollectManagerService ConfigUpdate.");
     int32_t code = IsApiHasPermission("ConfigUpdate");
@@ -762,7 +768,7 @@ int32_t DataCollectManagerService::QueryEventConfig(std::string &result)
     return SUCCESS;
 }
 
-int32_t DataCollectManagerService::QuerySecurityEventConfig(std::string &result)
+ErrCode DataCollectManagerService::QuerySecurityEventConfig(std::string &result)
 {
     SGLOGI("enter QuerySecurityEventConfig");
     int32_t ret = IsApiHasPermission("QuerySecurityEventConfig");
@@ -772,8 +778,8 @@ int32_t DataCollectManagerService::QuerySecurityEventConfig(std::string &result)
     return QueryEventConfig(result);
 }
 
-int32_t DataCollectManagerService::Mute(const SecurityEventFilter &subscribeMute,
-    const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
+ErrCode DataCollectManagerService::Mute(const SecurityEventFilter &subscribeMute,
+    const sptr<IRemoteObject> &cb, const std::string &sdkFlag)
 {
     SGLOGI("enter DataCollectManagerService Mute.");
     SgSubscribeEvent event;
@@ -793,18 +799,18 @@ int32_t DataCollectManagerService::Mute(const SecurityEventFilter &subscribeMute
         BigData::ReportSetMuteEvent(event);
         return ret;
     }
-    ret = SetDeathCallBack(event, callback);
+    ret = SetDeathCallBack(event, cb);
     if (ret != SUCCESS) {
         return ret;
     }
-    ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, callback, sdkFlag);
+    ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, cb, sdkFlag);
     event.ret = ret;
     BigData::ReportSetMuteEvent(event);
     return ret;
 }
 
-int32_t DataCollectManagerService::Unmute(const SecurityEventFilter &subscribeMute,
-    const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
+ErrCode DataCollectManagerService::Unmute(const SecurityEventFilter &subscribeMute,
+    const sptr<IRemoteObject> &cb, const std::string &sdkFlag)
 {
     SGLOGI("enter DataCollectManagerService Unmute.");
     SgSubscribeEvent event;
@@ -824,11 +830,11 @@ int32_t DataCollectManagerService::Unmute(const SecurityEventFilter &subscribeMu
         BigData::ReportSetUnMuteEvent(event);
         return ret;
     }
-    ret = SetDeathCallBack(event, callback);
+    ret = SetDeathCallBack(event, cb);
     if (ret != SUCCESS) {
         return ret;
     }
-    ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, callback, sdkFlag);
+    ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, cb, sdkFlag);
     event.ret = ret;
     BigData::ReportSetUnMuteEvent(event);
     return ret;
