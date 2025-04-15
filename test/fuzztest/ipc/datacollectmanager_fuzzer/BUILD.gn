@@ -43,7 +43,10 @@ ohos_fuzztest("DataCollectManagerFuzzTest") {
 
   sources = [ "data_collect_manager_fuzzer.cpp" ]
 
-  deps = [ "${sg_root_dir}/services/data_collect:sg_collect_service" ]
+  deps = [
+    "${sg_root_dir}/services/data_collect:sg_collect_service",
+    "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_stub",
+  ]
 
   external_deps = [
     "c_utils:utils",

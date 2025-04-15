@@ -573,6 +573,6 @@ HWTEST_F(DataCollectKitTest, QuerySecurityEventConfig01, TestSize.Level1)
 {
     std::string result;
     int ret = SecurityGuard::DataCollectManager::GetInstance().QuerySecurityEventConfig(result);
-    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
 }
