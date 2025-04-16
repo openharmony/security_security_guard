@@ -25,7 +25,7 @@
 #include "acquire_data_manager_callback_stub.h"
 #include "data_collect_manager_callback_service.h"
 #include "data_collect_manager_callback_stub.h"
-#include "data_collect_manager_proxy.h"
+#include "data_collect_manager_idl_proxy.h"
 #include "data_collect_manager.h"
 #include "risk_analysis_manager_callback_service.h"
 #include "risk_analysis_manager_callback_stub.h"
@@ -287,97 +287,6 @@ HWTEST_F(InnerApiCollectorTest, DataCollectManagerCallbackServiceTest001, testin
     service.callback_ = TestRequestRiskDataCallback;
     ret = service.ResponseRiskData(string, string, uint32, string);
     EXPECT_TRUE(ret == SUCCESS);
-}
-
-HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest001, testing::ext::TestSize.Level1)
-{
-    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg) -> int32_t {
-        return 0;
-    };
-    sptr<DataCollectManagerCallbackService> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
-    int64_t int64 = 0;
-    std::string string = "test";
-    DataCollectManagerProxy proxy{callback};
-    int ret = proxy.RequestDataSubmit(int64, string, string, string);
-    EXPECT_EQ(ret, NO_PERMISSION);
-}
-
-HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest002, testing::ext::TestSize.Level1)
-{
-    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg) -> int32_t {
-        return 0;
-    };
-    sptr<DataCollectManagerCallbackService> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
-    std::string string = "test";
-    sptr<IRemoteObject> objReq(new (std::nothrow) DataCollectManagerCallbackService(func));
-    DataCollectManagerProxy proxy{callback};
-    int ret = proxy.RequestRiskData(string, string, objReq);
-    EXPECT_EQ(ret, NO_PERMISSION);
-}
-
-HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest003, testing::ext::TestSize.Level1)
-{
-    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg) -> int32_t {
-        return 0;
-    };
-    sptr<DataCollectManagerCallbackService> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
-    std::string string = "test";
-    sptr<IRemoteObject> objSub(new (std::nothrow) SecurityCollectorManagerCallbackService(nullptr));
-    SecurityCollectorSubscribeInfo subscribeInfo{};
-    DataCollectManagerProxy proxy{callback};
-    int ret = proxy.Subscribe(subscribeInfo, objSub);
-    EXPECT_EQ(ret, NO_PERMISSION);
-    ret = proxy.Unsubscribe(subscribeInfo, objSub);
-    EXPECT_EQ(ret, NO_PERMISSION);
-}
-
-HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest004, testing::ext::TestSize.Level1)
-{
-    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg) -> int32_t {
-        return 0;
-    };
-    sptr<DataCollectManagerCallbackService> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
-    std::string string = "test";
-    sptr<IRemoteObject> objQuery(new (std::nothrow) SecurityEventQueryCallbackService(nullptr));
-    std::vector<SecurityEventRuler> rulers{};
-    DataCollectManagerProxy proxy{callback};
-    int ret = proxy.QuerySecurityEvent(rulers, objQuery, "securityGroup");
-    EXPECT_EQ(ret, NO_PERMISSION);
-}
-
-HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest005, testing::ext::TestSize.Level1)
-{
-    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg) -> int32_t {
-        return 0;
-    };
-    sptr<DataCollectManagerCallbackService> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
-    std::string string = "test";
-    sptr<IRemoteObject> objCollect(new (std::nothrow) SecurityCollectorManagerCallbackService(nullptr));
-    SecurityCollectorSubscribeInfo subscribeInfo{};
-    DataCollectManagerProxy proxy{callback};
-    int ret = proxy.CollectorStart(subscribeInfo, objCollect);
-    EXPECT_EQ(ret, NO_PERMISSION);
-    ret = proxy.CollectorStop(subscribeInfo, objCollect);
-    EXPECT_EQ(ret, NO_PERMISSION);
-}
-
-HWTEST_F(InnerApiCollectorTest, DataCollectManagerProxyTest006, testing::ext::TestSize.Level1)
-{
-    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg) -> int32_t {
-        return 0;
-    };
-    sptr<DataCollectManagerCallbackService> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
-    std::string string = "test";
-    SecurityConfigUpdateInfo updateInfo{};
-    DataCollectManagerProxy proxy{callback};
-    int ret = proxy.ConfigUpdate(updateInfo);
-    EXPECT_EQ(ret, NO_PERMISSION);
 }
 
 HWTEST_F(InnerApiCollectorTest, DataCollectManagerTest001, testing::ext::TestSize.Level1)

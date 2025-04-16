@@ -16,7 +16,7 @@
 #include "iservice_registry.h"
 #include "securec.h"
 
-#include "data_collect_manager_proxy.h"
+#include "data_collect_manager_idl_proxy.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"

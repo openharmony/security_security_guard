@@ -39,7 +39,10 @@ ohos_fuzztest("RiskAnalysisManagerFuzzTest") {
 
   sources = [ "risk_analysis_manager_fuzzer.cpp" ]
 
-  deps = [ "${sg_root_dir}/services/risk_classify:sg_classify_service" ]
+  deps = [
+    "${sg_root_dir}/services/risk_classify:sg_classify_service",
+    "${sg_root_dir}/services/risk_classify/idl:risk_analysis_manager_idl_sa_stub",
+  ]
 
   external_deps = [
     "c_utils:utils",

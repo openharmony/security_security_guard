@@ -14,7 +14,7 @@
  */
 
 #include "data_collect_manager_fuzzer.h"
-
+#include "data_collect_manager_idl.h"
 #include <string>
 
 #include "data_collect_manager_callback_service.h"
@@ -59,7 +59,7 @@ void OnRemoteRequestFuzzTest(const uint8_t* data, size_t size)
     MessageParcel datas;
     MessageParcel reply;
     MessageOption option;
-    datas.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
+    datas.WriteInterfaceToken(DataCollectManagerIdl::GetDescriptor());
     if (size % REMAINDER_VALUE == CMD_DATA_COLLECT_VALUE) {
         // handle data collect cmd
         OnRemoteCollectRequest(data, size, &datas, &reply, &option);
@@ -113,7 +113,8 @@ void OnRemoteCollectRequest(const uint8_t* data, size_t size, MessageParcel* dat
     datas->WriteString(string);
     datas->WriteString(string);
     datas->WriteString(string);
-    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_DATA_COLLECT, *datas, *reply, *option);
+    g_service.OnRemoteRequest(
+        static_cast<uint32_t>(DataCollectManagerIdlIpcCode::COMMAND_REQUEST_DATA_SUBMIT), *datas, *reply, *option);
 }
 
 void OnRemoteRequestRequest(const uint8_t* data, size_t size, MessageParcel* datas,
@@ -132,7 +133,8 @@ void OnRemoteRequestRequest(const uint8_t* data, size_t size, MessageParcel* dat
     };
     sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
     datas->WriteRemoteObject(callback);
-    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_DATA_REQUEST, *datas, *reply, *option);
+    g_service.OnRemoteRequest(
+        static_cast<uint32_t>(DataCollectManagerIdlIpcCode::COMMAND_REQUEST_RISK_DATA), *datas, *reply, *option);
 }
 
 void OnRemoteSubscribeRequest(const uint8_t* data, size_t size, MessageParcel* datas,
@@ -160,7 +162,8 @@ void OnRemoteSubscribeRequest(const uint8_t* data, size_t size, MessageParcel* d
     };
     sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
     datas->WriteRemoteObject(callback);
-    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_DATA_SUBSCRIBE, *datas, *reply, *option);
+    g_service.OnRemoteRequest(
+        static_cast<uint32_t>(DataCollectManagerIdlIpcCode::COMMAND_SUBSCRIBE), *datas, *reply, *option);
 }
 
 void OnRemoteUnsubscribeRequest(const uint8_t* data, size_t size, MessageParcel* datas,
@@ -188,7 +191,8 @@ void OnRemoteUnsubscribeRequest(const uint8_t* data, size_t size, MessageParcel*
     SecurityCollector::SecurityCollectorSubscribeInfo subscriberInfo{event, duration, true};
     sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
     datas->WriteRemoteObject(callback);
-    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_DATA_UNSUBSCRIBE, *datas, *reply, *option);
+    g_service.OnRemoteRequest(
+        static_cast<uint32_t>(DataCollectManagerIdlIpcCode::COMMAND_UNSUBSCRIBE), *datas, *reply, *option);
 }
 
 void OnRemoteSecurityEventQuery(const uint8_t* data, size_t size, MessageParcel* datas,
@@ -217,7 +221,8 @@ void OnRemoteSecurityEventQuery(const uint8_t* data, size_t size, MessageParcel*
     };
     sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
     datas->WriteRemoteObject(callback);
-    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_SECURITY_EVENT_QUERY, *datas, *reply, *option);
+    g_service.OnRemoteRequest(
+        static_cast<uint32_t>(DataCollectManagerIdlIpcCode::COMMAND_QUERY_SECURITY_EVENT), *datas, *reply, *option);
 }
 
 void OnRemoteStart(const uint8_t* data, size_t size, MessageParcel* datas,
@@ -245,7 +250,8 @@ void OnRemoteStart(const uint8_t* data, size_t size, MessageParcel* datas,
     };
     sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
     datas->WriteRemoteObject(callback);
-    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_SECURITY_COLLECTOR_START, *datas, *reply, *option);
+    g_service.OnRemoteRequest(
+        static_cast<uint32_t>(DataCollectManagerIdlIpcCode::COMMAND_COLLECTOR_START), *datas, *reply, *option);
 }
 
 void OnRemoteStop(const uint8_t* data, size_t size, MessageParcel* datas,
@@ -273,7 +279,8 @@ void OnRemoteStop(const uint8_t* data, size_t size, MessageParcel* datas,
     };
     sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
     datas->WriteRemoteObject(callback);
-    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_SECURITY_COLLECTOR_STOP, *datas, *reply, *option);
+    g_service.OnRemoteRequest(
+        static_cast<uint32_t>(DataCollectManagerIdlIpcCode::COMMAND_COLLECTOR_STOP), *datas, *reply, *option);
 }
 
 void OnRemoteConfigUpdate(const uint8_t* data, size_t size, MessageParcel* datas,
@@ -283,7 +290,8 @@ void OnRemoteConfigUpdate(const uint8_t* data, size_t size, MessageParcel* datas
     std::string fileName(reinterpret_cast<const char *>(data), size);
     datas->WriteFileDescriptor(fd);
     datas->WriteString(fileName);
-    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_SECURITY_CONFIG_UPDATE, *datas, *reply, *option);
+    g_service.OnRemoteRequest(
+        static_cast<uint32_t>(DataCollectManagerIdlIpcCode::COMMAND_CONFIG_UPDATE), *datas, *reply, *option);
 }
 
 void OnRemoteSecurityEventConfigQuery(const uint8_t* data, size_t size, MessageParcel* datas,
@@ -311,7 +319,9 @@ void OnRemoteSecurityEventConfigQuery(const uint8_t* data, size_t size, MessageP
     SecurityCollector::SecurityCollectorSubscribeInfo subscriberInfo{event, duration, true};
     sptr<IRemoteObject> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
     datas->WriteRemoteObject(callback);
-    g_service.OnRemoteRequest(DataCollectManagerStub::CMD_SECURITY_EVENT_CONFIG_QUERY, *datas, *reply, *option);
+    g_service.OnRemoteRequest(
+        static_cast<uint32_t>(DataCollectManagerIdlIpcCode::COMMAND_QUERY_SECURITY_EVENT_CONFIG),
+        *datas, *reply, *option);
 }
 
 }  // namespace OHOS::Security::SecurityGuard

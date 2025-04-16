@@ -45,7 +45,10 @@ ohos_fuzztest("InnerSdkFuzzTest") {
   }
   sources = [ "inner_sdk_fuzzer.cpp" ]
 
-  deps = []
+  deps = [
+    "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_proxy",
+    "${sg_root_dir}/services/risk_classify/idl:risk_analysis_manager_idl_sa_proxy",
+  ]
 
   external_deps = [
     "c_utils:utils",

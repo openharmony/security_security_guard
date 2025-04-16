@@ -69,7 +69,6 @@ ohos_fuzztest("DataCollectFuzzTest") {
     "${sg_root_dir}/services/data_collect/sa/acquire_data_subscribe_manager.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_service.cpp",
-    "${sg_root_dir}/services/data_collect/sa/data_collect_manager_stub.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_format.cpp",
     "${sg_root_dir}/services/data_collect/sa/security_event_query_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
@@ -88,6 +87,7 @@ ohos_fuzztest("DataCollectFuzzTest") {
     "${sg_root_dir}/services/collector_manager:security_collector_manager",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/data_collect:sg_collect_service_database",
+    "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_stub",
     "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
   ]
 

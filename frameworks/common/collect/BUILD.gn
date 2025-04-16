@@ -61,7 +61,6 @@ ohos_shared_library("libsg_collect_sdk") {
     "src/data_collect_manager.cpp",
     "src/data_collect_manager_callback_service.cpp",
     "src/data_collect_manager_callback_stub.cpp",
-    "src/data_collect_manager_proxy.cpp",
     "src/event_info.cpp",
     "src/security_event_filter.cpp",
     "src/security_event_query_callback_service.cpp",
@@ -69,6 +68,8 @@ ohos_shared_library("libsg_collect_sdk") {
     "src/sg_collect_client.cpp",
     "src/sg_obtaindata_client.cpp",
   ]
+
+  deps = [ "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_proxy" ]
 
   sanitize = {
     integer_overflow = true
