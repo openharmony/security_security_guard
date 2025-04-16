@@ -48,13 +48,16 @@ void OnRemoteRequestFuzzTest(const uint8_t* data, size_t size)
         };
         sptr<IRemoteObject> callback = new (std::nothrow) RiskAnalysisManagerCallbackService(func);
         datas.WriteRemoteObject(callback);
-        g_service.OnRemoteRequest(RiskAnalysisManagerStub::CMD_GET_SECURITY_MODEL_RESULT, datas, reply, option);
+        g_service.OnRemoteRequest(
+            static_cast<uint32_t>(RiskAnalysisManagerIpcCode::COMMAND_REQUEST_SECURITY_MODEL_RESULT),
+            datas, reply, option);
         return;
     }
     // handle set model state cmd
     datas.WriteUint32(modelId);
     datas.WriteBool(size % REMAINDER_VALUE == 0);
-    g_service.OnRemoteRequest(RiskAnalysisManagerStub::CMD_SET_MODEL_STATE, datas, reply, option);
+    g_service.OnRemoteRequest(
+        static_cast<uint32_t>(RiskAnalysisManagerIpcCode::COMMAND_SET_MODEL_STATE), datas, reply, option);
 }
 }  // namespace OHOS::Security::SecurityGuard
 

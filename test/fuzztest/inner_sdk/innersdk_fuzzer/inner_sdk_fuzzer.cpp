@@ -26,7 +26,7 @@
 #include "acquire_data_manager_callback_stub.h"
 #include "data_collect_manager_callback_service.h"
 #include "data_collect_manager_callback_stub.h"
-#include "data_collect_manager_proxy.h"
+#include "data_collect_manager_idl_proxy.h"
 #ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 #include "risk_analysis_manager_callback_service.h"
 #include "risk_analysis_manager_callback_stub.h"
@@ -296,109 +296,6 @@ void DataCollectManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)
     service.ResponseRiskData(string, string, uint32, string);
 }
 
-void DataCollectManagerProxyRequestDataSubmitFuzzTest(const uint8_t* data, size_t size)
-{
-    if (data == nullptr || size < sizeof(int64_t)) {
-        return;
-    }
-    size_t offset = 0;
-    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg) -> int32_t {
-        return 0;
-    };
-    sptr<DataCollectManagerCallbackService> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
-    int64_t int64 = *(reinterpret_cast<const int64_t *>(data));
-    offset += sizeof(int64_t);
-    std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
-    DataCollectManagerProxy proxy{callback};
-    proxy.RequestDataSubmit(int64, string, string, string);
-}
-
-void DataCollectManagerProxyRequestRiskDataFuzzTest(const uint8_t* data, size_t size)
-{
-    if (data == nullptr) {
-        return;
-    }
-    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg) -> int32_t {
-        return 0;
-    };
-    sptr<DataCollectManagerCallbackService> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
-    std::string string(reinterpret_cast<const char*>(data), size);
-    sptr<IRemoteObject> objReq(new (std::nothrow) DataCollectManagerCallbackService(func));
-    DataCollectManagerProxy proxy{callback};
-    proxy.RequestRiskData(string, string, objReq);
-}
-
-void DataCollectManagerProxySubscribeFuzzTest(const uint8_t* data, size_t size)
-{
-    if (data == nullptr) {
-        return;
-    }
-    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg) -> int32_t {
-        return 0;
-    };
-    sptr<DataCollectManagerCallbackService> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
-    std::string string(reinterpret_cast<const char*>(data), size);
-    sptr<IRemoteObject> objSub(new (std::nothrow) SecurityCollectorManagerCallbackService(nullptr));
-    SecurityCollectorSubscribeInfo subscribeInfo{};
-    DataCollectManagerProxy proxy{callback};
-    proxy.Subscribe(subscribeInfo, objSub);
-    proxy.Unsubscribe(subscribeInfo, objSub);
-}
-
-void DataCollectManagerProxyQuerySecurityEventFuzzTest(const uint8_t* data, size_t size)
-{
-    if (data == nullptr) {
-        return;
-    }
-    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg) -> int32_t {
-        return 0;
-    };
-    sptr<DataCollectManagerCallbackService> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
-    std::string eventGroup(reinterpret_cast<const char*>(data), size);
-    sptr<IRemoteObject> objQuery(new (std::nothrow) SecurityEventQueryCallbackService(nullptr));
-    std::vector<SecurityEventRuler> rulers{};
-    DataCollectManagerProxy proxy{callback};
-    proxy.QuerySecurityEvent(rulers, objQuery, eventGroup);
-}
-
-void DataCollectManagerProxyCollectorStartStopFuzzTest(const uint8_t* data, size_t size)
-{
-    if (data == nullptr) {
-        return;
-    }
-    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg) -> int32_t {
-        return 0;
-    };
-    sptr<DataCollectManagerCallbackService> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
-    std::string string(reinterpret_cast<const char*>(data), size);
-    sptr<IRemoteObject> objCollect(new (std::nothrow) SecurityCollectorManagerCallbackService(nullptr));
-    SecurityCollectorSubscribeInfo subscribeInfo{};
-    DataCollectManagerProxy proxy{callback};
-    proxy.CollectorStart(subscribeInfo, objCollect);
-    proxy.CollectorStop(subscribeInfo, objCollect);
-}
-
-void DataCollectManagerProxyConfigUpdateFuzzTest(const uint8_t* data, size_t size)
-{
-    if (data == nullptr) {
-        return;
-    }
-    RequestRiskDataCallback func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg) -> int32_t {
-        return 0;
-    };
-    sptr<DataCollectManagerCallbackService> callback = new (std::nothrow) DataCollectManagerCallbackService(func);
-    std::string string(reinterpret_cast<const char*>(data), size);
-    SecurityConfigUpdateInfo updateInfo{};
-    DataCollectManagerProxy proxy{callback};
-    proxy.ConfigUpdate(updateInfo);
-}
-
 void SecurityCollectorManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)
 {
     if (data == nullptr || size < sizeof(uint32_t) + sizeof(uint32_t)) {
@@ -560,12 +457,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 #endif
     OHOS::CollectorManagerFuzzTest(data, size);
     OHOS::DataCollectManagerCallbackStubFuzzTest(data, size);
-    OHOS::DataCollectManagerProxyRequestDataSubmitFuzzTest(data, size);
-    OHOS::DataCollectManagerProxyRequestRiskDataFuzzTest(data, size);
-    OHOS::DataCollectManagerProxySubscribeFuzzTest(data, size);
-    OHOS::DataCollectManagerProxyQuerySecurityEventFuzzTest(data, size);
-    OHOS::DataCollectManagerProxyCollectorStartStopFuzzTest(data, size);
-    OHOS::DataCollectManagerProxyConfigUpdateFuzzTest(data, size);
     OHOS::SecurityCollectorManagerCallbackStubFuzzTest(data, size);
     OHOS::SecurityCollectorManagerProxyFuzzTest(data, size);
     OHOS::SecurityCollectorSubscribeInfoFuzzTest(data, size);

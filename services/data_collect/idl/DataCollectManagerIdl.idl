@@ -1,0 +1,35 @@
+/* Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package OHOS.Security.SecurityGuard;
+package OHOS.Security.SecurityCollector;
+sequenceable OHOS.IRemoteObject;
+sequenceable OHOS.Security.SecurityCollector.SecurityEventRuler;
+sequenceable OHOS.Security.SecurityCollector.SecurityCollectorSubscribeInfo;
+sequenceable OHOS.Security.SecurityGuard.SecurityEventFilter;
+sequenceable OHOS.Security.SecurityGuard.SecurityConfigUpdateInfo;
+
+interface OHOS.Security.SecurityGuard.DataCollectManagerIdl {
+    void RequestDataSubmit([in] long eventId, [in] String version, [in] String time, [in] String content);
+    [oneway] void RequestDataSubmitAsync([in] long eventId, [in] String version, [in] String time, [in] String content);
+    void RequestRiskData([in] String devId, [in] String eventList, [in] IRemoteObject cb);
+    void Subscribe([in] SecurityCollectorSubscribeInfo subscribeInfo, [in] IRemoteObject cb);
+    void Unsubscribe([in] SecurityCollectorSubscribeInfo subscribeInfo, [in] IRemoteObject cb);
+    void QuerySecurityEvent([in] List<SecurityEventRuler> rulers, [in] IRemoteObject cb, [in] String eventGroup);
+    void CollectorStart([in] SecurityCollectorSubscribeInfo subscribeInfo, [in] IRemoteObject cb);
+    void CollectorStop([in] SecurityCollectorSubscribeInfo subscribeInfo, [in] IRemoteObject cb);
+    void ConfigUpdate([in] SecurityConfigUpdateInfo updateInfo);
+    void QuerySecurityEventConfig([inout] String resStr);
+    void Mute([in] SecurityEventFilter subscribeMute, [in] IRemoteObject cb, [in] String sdkFlag);
+    void Unmute([in] SecurityEventFilter subscribeMute, [in] IRemoteObject cb, [in] String sdkFlag);
+}

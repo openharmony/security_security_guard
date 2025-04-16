@@ -38,14 +38,12 @@ ohos_unittest("inner_api_test") {
   sources = [
     "${sg_root_dir}/frameworks/common/classify/src/risk_analysis_manager_callback_service.cpp",
     "${sg_root_dir}/frameworks/common/classify/src/risk_analysis_manager_callback_stub.cpp",
-    "${sg_root_dir}/frameworks/common/classify/src/risk_analysis_manager_proxy.cpp",
     "${sg_root_dir}/frameworks/common/classify/src/sg_classify_client.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/acquire_data_manager_callback_service.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/acquire_data_manager_callback_stub.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/data_collect_manager.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/data_collect_manager_callback_service.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/data_collect_manager_callback_stub.cpp",
-    "${sg_root_dir}/frameworks/common/collect/src/data_collect_manager_proxy.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/security_event_query_callback_service.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/security_event_query_callback_stub.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/collector_manager.cpp",
@@ -62,7 +60,10 @@ ohos_unittest("inner_api_test") {
     "src/inner_api_collector_test.cpp",
   ]
 
-  deps = []
+  deps = [
+    "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_proxy",
+    "${sg_root_dir}/services/risk_classify/idl:risk_analysis_manager_idl_sa_proxy",
+  ]
 
   external_deps = [
     "c_utils:utils",

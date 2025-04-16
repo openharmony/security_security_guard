@@ -48,7 +48,6 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/risk_classify/src/risk_analysis_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/risk_classify/src/risk_analysis_manager_service.cpp",
-    "${sg_root_dir}/services/risk_classify/src/risk_analysis_manager_stub.cpp",
     "src/security_guard_risk_analysis_test.cpp",
   ]
 
@@ -58,6 +57,7 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/data_collect:sg_collect_service",
     "${sg_root_dir}/services/data_collect:sg_collect_service_database",
+    "${sg_root_dir}/services/risk_classify/idl:risk_analysis_manager_idl_sa_stub",
     "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
   ]
 
