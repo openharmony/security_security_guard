@@ -393,8 +393,7 @@ int32_t DataCollectManager::SecurityGuardConfigUpdate(int32_t fd, const std::str
         SGLOGE("proxy is null");
         return NULL_OBJECT;
     }
-    SecurityGuard::SecurityConfigUpdateInfo updateInfo(fd, name);
-    int32_t ret = proxy->ConfigUpdate(updateInfo);
+    int32_t ret = proxy->ConfigUpdate(fd, name);
     if (ret != SUCCESS) {
         SGLOGE("ConfigUpdate error, ret=%{public}d", ret);
         return ret;

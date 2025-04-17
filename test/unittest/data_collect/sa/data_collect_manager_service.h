@@ -52,7 +52,7 @@ public:
         const sptr<IRemoteObject> &cb) override;
     ErrCode CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
         const sptr<IRemoteObject> &cb) override;
-    ErrCode ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &info) override;
+        ErrCode ConfigUpdate(int fd, const std::string& name) override;
     ErrCode QuerySecurityEventConfig(std::string &result) override;
     ErrCode Mute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &cb,
         const std::string &sdkFlag) override;
@@ -76,7 +76,7 @@ private:
     static bool QueryEventByRuler(sptr<ISecurityEventQueryCallback> proxy,
         SecurityCollector::SecurityEventRuler ruler);
     static int32_t QueryEventConfig(std::string &result);
-    bool WriteRemoteFileToLocal(const SecurityGuard::SecurityConfigUpdateInfo &info, const std::string &realPath);
+    bool WriteRemoteFileToLocal(int fd, const std::string &realPath);
     int32_t IsApiHasPermission(const std::string &api);
     int32_t IsEventGroupHasPermission(const std::string &eventGroup, std::vector<int64_t> eventIds);
     bool ParseTrustListFile(const std::string &trustListFile);

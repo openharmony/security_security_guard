@@ -17,7 +17,6 @@ sequenceable OHOS.IRemoteObject;
 sequenceable OHOS.Security.SecurityCollector.SecurityEventRuler;
 sequenceable OHOS.Security.SecurityCollector.SecurityCollectorSubscribeInfo;
 sequenceable OHOS.Security.SecurityGuard.SecurityEventFilter;
-sequenceable OHOS.Security.SecurityGuard.SecurityConfigUpdateInfo;
 
 interface OHOS.Security.SecurityGuard.DataCollectManagerIdl {
     void RequestDataSubmit([in] long eventId, [in] String version, [in] String time, [in] String content);
@@ -28,7 +27,7 @@ interface OHOS.Security.SecurityGuard.DataCollectManagerIdl {
     void QuerySecurityEvent([in] List<SecurityEventRuler> rulers, [in] IRemoteObject cb, [in] String eventGroup);
     void CollectorStart([in] SecurityCollectorSubscribeInfo subscribeInfo, [in] IRemoteObject cb);
     void CollectorStop([in] SecurityCollectorSubscribeInfo subscribeInfo, [in] IRemoteObject cb);
-    void ConfigUpdate([in] SecurityConfigUpdateInfo updateInfo);
+    void ConfigUpdate([in] FileDescriptor fd, [in] String name);
     void QuerySecurityEventConfig([inout] String resStr);
     void Mute([in] SecurityEventFilter subscribeMute, [in] IRemoteObject cb, [in] String sdkFlag);
     void Unmute([in] SecurityEventFilter subscribeMute, [in] IRemoteObject cb, [in] String sdkFlag);
