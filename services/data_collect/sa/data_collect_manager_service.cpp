@@ -627,10 +627,8 @@ int32_t DataCollectManagerService::IsEventGroupHasPermission(const std::string &
     return NO_PERMISSION;
 }
 
-bool DataCollectManagerService::WriteRemoteFileToLocal(const SecurityGuard::SecurityConfigUpdateInfo &info,
-    const std::string &realPath)
+bool DataCollectManagerService::WriteRemoteFileToLocal(int fd, const std::string &realPath)
 {
-    int32_t fd = info.GetFd();
     int32_t outputFd = dup(fd);
     close(fd);
     if (outputFd == -1) {
@@ -706,7 +704,7 @@ bool DataCollectManagerService::ParseTrustListFile(const std::string &trustListF
     return true;
 }
 
-ErrCode DataCollectManagerService::ConfigUpdate(const SecurityGuard::SecurityConfigUpdateInfo &info)
+ErrCode DataCollectManagerService::ConfigUpdate(int fd, const std::string& name)
 {
     SGLOGI("enter DataCollectManagerService ConfigUpdate.");
     int32_t code = IsApiHasPermission("ConfigUpdate");
@@ -716,13 +714,13 @@ ErrCode DataCollectManagerService::ConfigUpdate(const SecurityGuard::SecurityCon
     if (!ParseTrustListFile(TRUST_LIST_FILE_PATH)) {
         return BAD_PARAM;
     }
-    if (g_configCacheFilesSet.empty() || !g_configCacheFilesSet.count(info.GetFileName())) {
+    if (g_configCacheFilesSet.empty() || !g_configCacheFilesSet.count(name)) {
         return BAD_PARAM;
     }
-    const std::string &realPath = CONFIG_ROOT_PATH + "tmp/" + info.GetFileName();
-    SGLOGI("config file is %{public}s, fd is %{public}d", realPath.c_str(), info.GetFd());
+    const std::string &realPath = CONFIG_ROOT_PATH + "tmp/" + name;
+    SGLOGI("config file is %{public}s, fd is %{public}d", realPath.c_str(), fd);
     std::string tmpPath = realPath + ".t";
-    int32_t ret = WriteRemoteFileToLocal(info, tmpPath);
+    int32_t ret = WriteRemoteFileToLocal(fd, tmpPath);
     if (ret != SUCCESS) {
         SGLOGE("write remote file to local fail");
         return ret;

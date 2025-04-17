@@ -132,7 +132,6 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
     Security::SecurityCollector::SecurityEventRuler ruler{eventId};
     Security::SecurityCollector::Event event{eventId, string, string, string};
     Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
-    SecurityConfigUpdateInfo updateInfo{0};
     RequestCondition condition;
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     auto proxy = iface_cast<ISecurityEventQueryCallback>(obj);
@@ -145,8 +144,8 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
     service.QueryEventByRuler(proxy, ruler);
     service.CollectorStart(subscribeInfo, callback);
     service.CollectorStop(subscribeInfo, callback);
-    service.ConfigUpdate(updateInfo);
-    service.WriteRemoteFileToLocal(updateInfo, string);
+    service.ConfigUpdate(fd, string);
+    service.WriteRemoteFileToLocal(fd, string);
     DataCollectManagerService::GetSecEventsFromConditions(condition);
     return true;
 }

@@ -1166,17 +1166,15 @@ HWTEST_F(SecurityGuardDataCollectSaTest, IsApiHasPermission01, TestSize.Level0)
 
 HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate01, TestSize.Level0)
 {
-    SecurityGuard::SecurityConfigUpdateInfo  subscribeInfo{};
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_DENIED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.ConfigUpdate(subscribeInfo);
+    int32_t result = service.ConfigUpdate(-1, "");
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate02, TestSize.Level0)
 {
-    SecurityGuard::SecurityConfigUpdateInfo subscribeInfo{};
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
@@ -1184,13 +1182,12 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate02, TestSize.Level0)
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(false));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.ConfigUpdate(subscribeInfo);
+    int32_t result = service.ConfigUpdate(-1, "");
     EXPECT_EQ(result, NO_SYSTEMCALL);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate03, TestSize.Level0)
 {
-    SecurityGuard::SecurityConfigUpdateInfo subscribeInfo{};
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
@@ -1198,14 +1195,12 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate03, TestSize.Level0)
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.ConfigUpdate(subscribeInfo);
+    int32_t result = service.ConfigUpdate(-1, "");
     EXPECT_EQ(result, BAD_PARAM);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate04, TestSize.Level0)
 {
-    SecurityGuard::SecurityConfigUpdateInfo subscribeInfo(-1,
-        SECURITY_GUARD_EVENT_CFG_FILE);
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
@@ -1215,7 +1210,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate04, TestSize.Level0)
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.ConfigUpdate(subscribeInfo);
+    int32_t result = service.ConfigUpdate(-1, SECURITY_GUARD_EVENT_CFG_FILE);
     EXPECT_EQ(result, FAILED);
 }
 
@@ -1228,11 +1223,10 @@ HWTEST_F(SecurityGuardDataCollectSaTest, WriteRemoteFileToLocal01, TestSize.Leve
     })";
     out << errtmp << std::endl;
     int32_t fd = open("/data/test/unittest/resource/test.json", O_RDONLY);
-    SecurityGuard::SecurityConfigUpdateInfo subscribeInfo(fd, "test.json");
 
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     std::string toPath = "/data/test/unittest/resource/";
-    int32_t result = service.WriteRemoteFileToLocal(subscribeInfo, toPath + "testFile.json");
+    int32_t result = service.WriteRemoteFileToLocal(fd, toPath + "testFile.json");
     close(fd);
     EXPECT_EQ(result, FAILED);
 }
@@ -1246,11 +1240,10 @@ HWTEST_F(SecurityGuardDataCollectSaTest, WriteRemoteFileToLocal02, TestSize.Leve
     })";
     out << errtmp << std::endl;
     int32_t fd = 0;
-    SecurityGuard::SecurityConfigUpdateInfo subscribeInfo(fd, "test.json");
 
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     std::string toPath = "/data/test/unittest/resource/";
-    int32_t result = service.WriteRemoteFileToLocal(subscribeInfo, toPath + "testFile.json");
+    int32_t result = service.WriteRemoteFileToLocal(fd, toPath + "testFile.json");
     EXPECT_EQ(result, FAILED);
 }
 
