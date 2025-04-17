@@ -22,6 +22,7 @@
 #include "securec.h"
 #include "risk_analysis_manager_callback_service.h"
 #include "risk_analysis_manager_proxy.h"
+#include "risk_analysis_manager.h"
 #endif
 
 #include "security_guard_define.h"
@@ -47,7 +48,7 @@ static int32_t RequestSecurityModelResult(const std::string &devId, uint32_t mod
     }
 
     auto object = registry->GetSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID);
-    auto proxy = iface_cast<RiskAnalysisManagerProxy>(object);
+    auto proxy = iface_cast<RiskAnalysisManager>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
@@ -133,7 +134,7 @@ int32_t StartSecurityModel(uint32_t modelId, const std::string &param)
     }
 
     auto object = registry->GetSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID);
-    auto proxy = iface_cast<IRiskAnalysisManager>(object);
+    auto proxy = iface_cast<RiskAnalysisManager>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
