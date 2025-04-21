@@ -30,12 +30,12 @@
 namespace OHOS::Security::SecurityGuard {
 class ModelManager : public Singleton<ModelManager> {
 public:
-    void Init();
-    int32_t InitModel(uint32_t modelId);
-    std::string GetResult(uint32_t modelId, const std::string &param);
-    int32_t SubscribeResult(uint32_t modelId, std::shared_ptr<IModelResultListener> listener);
-    void Release(uint32_t modelId);
-    int32_t StartSecurityModel(uint32_t modelId, const std::string &param);
+    virtual void Init();
+    virtual int32_t InitModel(uint32_t modelId);
+    virtual std::string GetResult(uint32_t modelId, const std::string &param);
+    virtual int32_t SubscribeResult(uint32_t modelId, std::shared_ptr<IModelResultListener> listener);
+    virtual void Release(uint32_t modelId);
+    virtual int32_t StartSecurityModel(uint32_t modelId, const std::string &param);
 private:
     std::mutex mutex_;
     std::unordered_map<uint32_t, std::unique_ptr<ModelAttrs>> modelIdApiMap_;

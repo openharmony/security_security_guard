@@ -139,6 +139,7 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, false);
     service.Dump(fd, args);
     service.RequestDataSubmit(eventId, string, string, string);
+    service.RequestDataSubmitAsync(eventId, string, string, string);
     service.OnAddSystemAbility(fd, string);
     service.OnRemoveSystemAbility(fd, string);
     service.QueryEventByRuler(proxy, ruler);
