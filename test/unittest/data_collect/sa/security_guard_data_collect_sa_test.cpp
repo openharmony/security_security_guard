@@ -403,6 +403,21 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_NoPermission, TestSiz
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
+HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmitAsync_NoPermission, TestSize.Level0)
+{
+    int64_t eventId = 1;
+    std::string version = "1.0";
+    std::string time = "2022-01-01";
+    std::string content = "content";
+
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillRepeatedly(
+        Return(AccessToken::PermissionState::PERMISSION_DENIED));
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    service.OnAddSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID, "deviceId");
+    int32_t result = service.RequestDataSubmitAsync(eventId, version, time, content);
+    EXPECT_EQ(result, NO_PERMISSION);
+}
+
 HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_BadParam, TestSize.Level0)
 {
     int64_t eventId = 1;
