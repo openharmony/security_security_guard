@@ -111,4 +111,22 @@ HWTEST_F(SecurityGuardRiskAnalysisTest, SetModelState_Success, TestSize.Level1) 
     int32_t result = riskAnalysisManagerService.SetModelState(modelId, enable);
     ASSERT_EQ(result, SUCCESS);
 }
+
+HWTEST_F(SecurityGuardRiskAnalysisTest, RequestSecurityModelResult01, TestSize.Level1) {
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+        .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_NATIVE));
+    int32_t result = riskAnalysisManagerService.RequestSecurityModelResult("111", 111, "test", nullptr);
+    ASSERT_EQ(result, NULL_OBJECT);
+}
+
+HWTEST_F(SecurityGuardRiskAnalysisTest, StartSecurityModel, TestSize.Level1) {
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+        .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_NATIVE));
+    int32_t result = riskAnalysisManagerService.StartSecurityModel(111, "test");
+    ASSERT_EQ(result, NOT_FOUND);
+}
 }
