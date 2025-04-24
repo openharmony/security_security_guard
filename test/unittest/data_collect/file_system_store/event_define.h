@@ -45,17 +45,10 @@ struct Event {
     std::set<std::string> eventSubscribes;
 };
 
-using SecurityCollectorEventMuteType = enum {
-    EVENT_TYPE_EQUAL = 0,
-    EVENT_SUB_TYPE_EQUAL = 1,
-    PID_EQUAL = 2,
-    FILE_PATH_EQUAL = 3,
-    FILE_PATH_PREFIX = 4,
-};
-
 using SecurityCollectorEventMuteFilter = struct {
     int64_t eventId;
-    SecurityCollectorEventMuteType type;
+    int64_t type;
+    bool isInclude;
     std::vector<std::string> mutes;
     bool isSetMute;
 };

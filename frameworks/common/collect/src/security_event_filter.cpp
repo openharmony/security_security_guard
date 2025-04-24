@@ -25,8 +25,12 @@ bool SecurityEventFilter::Marshalling(Parcel& parcel) const
         SGLOGE("failed to write eventId");
         return false;
     }
-    if (!parcel.WriteInt64(static_cast<int64_t>(filter_.type))) {
+    if (!parcel.WriteInt64(filter_.type)) {
         SGLOGE("failed to write type");
+        return false;
+    }
+    if (!parcel.WriteBool(filter_.isInclude)) {
+        SGLOGE("failed to write isInclude");
         return false;
     }
     if (!parcel.WriteString(filter_.eventGroup)) {
@@ -57,12 +61,14 @@ bool SecurityEventFilter::ReadFromParcel(Parcel &parcel)
         SGLOGE("failed to read eventId");
         return false;
     }
-    int64_t muteType = 0;
-    if (!parcel.ReadInt64(muteType)) {
+    if (!parcel.ReadInt64(filter_.type)) {
         SGLOGE("failed to read type");
         return false;
     }
-    filter_.type = static_cast<EventMuteType>(muteType);
+    if (!parcel.ReadBool(filter_.isInclude)) {
+        SGLOGE("failed to read isInclude");
+        return false;
+    }
     if (!parcel.ReadString(filter_.eventGroup)) {
         SGLOGE("failed to read event group");
         return false;

@@ -404,7 +404,7 @@ int32_t DataCollection::QuerySecurityEvent(const std::vector<SecurityEventRuler>
     return true;
 }
 
-bool DataCollection::Mute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
+bool DataCollection::AddFilter(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
 {
     if (!IsCollectorStarted(filter.eventId)) {
         LOGE("collector not start, eventId is 0x%{public}" PRIx64, filter.eventId);
@@ -417,14 +417,14 @@ bool DataCollection::Mute(const SecurityCollectorEventMuteFilter &filter, const 
         LOGE("CallGetCollector error");
         return false;
     }
-    if (collector->Mute(filter, sdkFlag) != 0) {
+    if (collector->AddFilter(filter, sdkFlag) != 0) {
         LOGE("fail to set mute to collector, eventId is 0x%{public}" PRIx64, filter.eventId);
         return false;
     }
     return true;
 }
 
-bool DataCollection::Unmute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
+bool DataCollection::RemoveFilter(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
 {
     if (!IsCollectorStarted(filter.eventId)) {
         LOGE("collector not start, eventId is 0x%{public}" PRIx64, filter.eventId);
@@ -437,7 +437,7 @@ bool DataCollection::Unmute(const SecurityCollectorEventMuteFilter &filter, cons
         LOGE("CallGetCollector error");
         return false;
     }
-    if (collector->Unmute(filter, sdkFlag) != 0) {
+    if (collector->RemoveFilter(filter, sdkFlag) != 0) {
         LOGE("fail to set unmute to collector, eventId is 0x%{public}" PRIx64, filter.eventId);
         return false;
     }
