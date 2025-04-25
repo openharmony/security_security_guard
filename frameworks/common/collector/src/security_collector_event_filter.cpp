@@ -33,6 +33,10 @@ bool SecurityCollectorEventFilter::Marshalling(Parcel& parcel) const
         LOGE("failed to write type");
         return false;
     }
+    if (!parcel.WriteString(filter_.instanceFlag)) {
+        LOGE("failed to write instanceFlag");
+        return false;
+    }
     if (filter_.mutes.size() > MAX_MUTE_SIZE) {
         LOGE("the mutes size err");
         return false;
@@ -62,6 +66,10 @@ bool SecurityCollectorEventFilter::ReadFromParcel(Parcel &parcel)
     }
     if (!parcel.ReadBool(filter_.isInclude)) {
         LOGE("failed to read isInclude");
+        return false;
+    }
+    if (!parcel.ReadString(filter_.instanceFlag)) {
+        LOGE("failed to read instanceFlag");
         return false;
     }
     uint32_t size = 0;

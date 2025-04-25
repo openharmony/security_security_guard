@@ -27,6 +27,7 @@ using EventMuteFilter = struct {
     int64_t type;
     std::vector<std::string> mutes;
     std::string eventGroup;
+    std::string instanceFlag;
 };
 class EventInfo {
 public:
