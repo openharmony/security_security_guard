@@ -386,6 +386,16 @@ size_t AcquireDataSubscribeManager::GetSecurityCollectorEventBufSize(const Secur
     return res;
 }
 
+bool AcquireDataSubscribeManager::FindSdkFlag(const std::set<std::string> &eventSubscribes, const std::string &sdkFlag)
+{
+    auto sdkFlagFinder = [sdkFlag] (const std::string &flag) {
+        std::string subStr = flag.substr(0, flag.find_first_of("+"));
+        return subStr == sdkFlag;
+    };
+    return std::find_if(eventSubscribes.begin(), eventSubscribes.end(), sdkFlagFinder) ==
+        eventSubscribes.end();
+}
+
 bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &event)
 {
     for (auto &it : g_subscriberInfoMap) {
@@ -395,7 +405,7 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &e
             }
             // has set mute, but this event not belong the sub, means the filter of this sub set has work
             if (callbackHashMap_.count(it.first) != 0 &&
-                event.eventSubscribes.count(callbackHashMap_.at(it.first)) == 0) {
+                FindSdkFlag(event.eventSubscribes, callbackHashMap_.at(it.first))) {
                 continue;
             }
             if (!ConfigDataManager::GetInstance().GetIsBatchUpload(i.GetEventGroup())) {
@@ -462,6 +472,7 @@ int AcquireDataSubscribeManager::InsertSubscribeMute(const SecurityEventFilter &
     collectorFilter.type = sgFilter.type;
     collectorFilter.isInclude = sgFilter.isInclude;
     collectorFilter.isSetMute = true;
+    collectorFilter.instanceFlag = sgFilter.instanceFlag;
     EventCfg config {};
     bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(collectorFilter.eventId, config);
     if (!isSuccess) {
@@ -514,6 +525,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeMute(const SecurityEventFilter &
     collectorFilter.type = sgFilter.type;
     collectorFilter.isInclude = sgFilter.isInclude;
     collectorFilter.isSetMute = false;
+    collectorFilter.instanceFlag = sgFilter.instanceFlag;
     EventCfg config {};
     bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(collectorFilter.eventId, config);
     if (!isSuccess) {
