@@ -74,8 +74,8 @@ namespace {
         {"UnSubscribe", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
         {"ConfigUpdate", {MANAGE_CONFIG_PERMISSION}},
         {"QuerySecurityEventConfig", {MANAGE_CONFIG_PERMISSION}},
-        {"Mute", {QUERY_SECURITY_EVENT_PERMISSION}},
-        {"Unmute", {QUERY_SECURITY_EVENT_PERMISSION}},
+        {"AddFilter", {QUERY_SECURITY_EVENT_PERMISSION}},
+        {"RemoveFilter", {QUERY_SECURITY_EVENT_PERMISSION}},
     };
     std::unordered_set<std::string> g_configCacheFilesSet;
     constexpr uint32_t FINISH = 0;
@@ -776,10 +776,10 @@ ErrCode DataCollectManagerService::QuerySecurityEventConfig(std::string &result)
     return QueryEventConfig(result);
 }
 
-ErrCode DataCollectManagerService::Mute(const SecurityEventFilter &subscribeMute,
+ErrCode DataCollectManagerService::AddFilter(const SecurityEventFilter &subscribeMute,
     const sptr<IRemoteObject> &cb, const std::string &sdkFlag)
 {
-    SGLOGI("enter DataCollectManagerService Mute.");
+    SGLOGI("enter DataCollectManagerService AddFilter.");
     SgSubscribeEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
@@ -807,10 +807,10 @@ ErrCode DataCollectManagerService::Mute(const SecurityEventFilter &subscribeMute
     return ret;
 }
 
-ErrCode DataCollectManagerService::Unmute(const SecurityEventFilter &subscribeMute,
+ErrCode DataCollectManagerService::RemoveFilter(const SecurityEventFilter &subscribeMute,
     const sptr<IRemoteObject> &cb, const std::string &sdkFlag)
 {
-    SGLOGI("enter DataCollectManagerService Unmute.");
+    SGLOGI("enter DataCollectManagerService RemoveFilter.");
     SgSubscribeEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
