@@ -500,12 +500,22 @@ HWTEST_F(DataCollectKitTest, Mute003, testing::ext::TestSize.Level1)
 
     parcel.WriteInt64(int64);
     parcel.WriteInt64(int64);
+    parcel.WriteBool(true);
+    ret = filter.ReadFromParcel(parcel);
+    EXPECT_FALSE(ret);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteInt64(int64);
+    parcel.WriteBool(true);
+    parcel.WriteString(string);
     parcel.WriteString(string);
     ret = filter.ReadFromParcel(parcel);
     EXPECT_FALSE(ret);
 
     parcel.WriteInt64(int64);
     parcel.WriteInt64(int64);
+    parcel.WriteBool(true);
+    parcel.WriteString(string);
     parcel.WriteString(string);
     parcel.WriteUint32(uint32);
     ret = filter.ReadFromParcel(parcel);
@@ -513,6 +523,8 @@ HWTEST_F(DataCollectKitTest, Mute003, testing::ext::TestSize.Level1)
 
     parcel.WriteInt64(int64);
     parcel.WriteInt64(int64);
+    parcel.WriteBool(true);
+    parcel.WriteString(string);
     parcel.WriteString(string);
     parcel.WriteUint32(1);
     ret = filter.ReadFromParcel(parcel);
@@ -520,6 +532,8 @@ HWTEST_F(DataCollectKitTest, Mute003, testing::ext::TestSize.Level1)
 
     parcel.WriteInt64(int64);
     parcel.WriteInt64(int64);
+    parcel.WriteBool(true);
+    parcel.WriteString(string);
     parcel.WriteString(string);
     parcel.WriteUint32(1);
     parcel.WriteString(string);
