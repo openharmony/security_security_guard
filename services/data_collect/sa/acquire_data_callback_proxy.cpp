@@ -37,6 +37,16 @@ int32_t AcquireDataCallbackProxy::OnNotify(const std::vector<SecurityCollector::
         data.WriteString(event.content);
         data.WriteString(event.extra);
         data.WriteString(event.timestamp);
+        if (!data.WriteUint32(event.eventSubscribes.size())) {
+            SGLOGE("failed to write eventSubscribes size");
+            return WRITE_ERR;
+        }
+        for (auto iter : event.eventSubscribes) {
+            if (!data.WriteString(iter)) {
+                SGLOGE("failed to write eventSubscribes");
+                return WRITE_ERR;
+            }
+        }
     }
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
