@@ -22,7 +22,6 @@
 #include "event_define.h"
 
 namespace OHOS::Security::SecurityCollector {
-constexpr size_t MAX_SUB_SIZE = 10000;
 class SecuritySdkFlag : public Parcelable {
 public:
     SecuritySdkFlag() = default;
@@ -55,7 +54,7 @@ public:
             return false;
         }
         uint32_t size = parcel.ReadUint32();
-        if (size > MAX_SUB_SIZE) {
+        if (size > MAX_API_INSTACNE_SIZE) {
             LOGE("the subs size error");
             return false;
         }

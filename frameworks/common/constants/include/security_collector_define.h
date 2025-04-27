@@ -82,6 +82,7 @@ constexpr const char* MODULE_VERSION = "version";
 constexpr const char* MODULE_COLLECTOR_TYPE = "collectorType";
 
 const size_t MAX_QUERY_EVENT_SIZE = 1000;
+const size_t MAX_API_INSTACNE_SIZE = 1000;
 
 } // namespace OHOS::Security::SecurityGuard
 
