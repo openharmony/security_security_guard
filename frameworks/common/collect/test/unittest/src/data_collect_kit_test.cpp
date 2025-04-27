@@ -429,12 +429,12 @@ HWTEST_F(DataCollectKitTest, Mute001, TestSize.Level1)
 {
     auto muteinfo = std::make_shared<SecurityGuard::EventMuteFilter> ();
     muteinfo->eventGroup = "securityGroup";
-    int ret = SecurityGuard::DataCollectManager::GetInstance().Mute(muteinfo);
+    int ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
     muteinfo->eventGroup = "";
-    ret = SecurityGuard::DataCollectManager::GetInstance().Mute(muteinfo);
+    ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
-    ret = SecurityGuard::DataCollectManager::GetInstance().Mute(nullptr);
+    ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(nullptr);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
 }
 
@@ -442,12 +442,12 @@ HWTEST_F(DataCollectKitTest, UnMute001, TestSize.Level1)
 {
     auto muteinfo = std::make_shared<SecurityGuard::EventMuteFilter> ();
     muteinfo->eventGroup = "securityGroup";
-    int ret = SecurityGuard::DataCollectManager::GetInstance().Unmute(muteinfo);
+    int ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
     muteinfo->eventGroup = "";
-    ret = SecurityGuard::DataCollectManager::GetInstance().Unmute(muteinfo);
+    ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
-    ret = SecurityGuard::DataCollectManager::GetInstance().Unmute(nullptr);
+    ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(nullptr);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
 }
 
@@ -553,9 +553,9 @@ HWTEST_F(DataCollectKitTest, CallBackIsNull, TestSize.Level1)
     SecurityGuard::DataCollectManager::GetInstance().callback_ = nullptr;
     auto muteinfo = std::make_shared<SecurityGuard::EventMuteFilter> ();
     muteinfo->eventGroup = "securityGroup";
-    int ret = SecurityGuard::DataCollectManager::GetInstance().Unmute(muteinfo);
+    int ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
-    ret = SecurityGuard::DataCollectManager::GetInstance().Mute(muteinfo);
+    ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
     ret = SecurityGuard::DataCollectManager::GetInstance().Unsubscribe(g_sub);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
