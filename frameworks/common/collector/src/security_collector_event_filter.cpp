@@ -87,7 +87,7 @@ bool SecurityCollectorEventFilter::ReadFromParcel(Parcel &parcel)
             LOGE("failed to read mute");
             return false;
         }
-        filter_.mutes.emplace_back(tmp);
+        filter_.mutes.insert(tmp);
     }
     return true;
 };
