@@ -145,7 +145,7 @@ void SecurityCollectorManagerServiceNewFuzzTest(const uint8_t* data, size_t size
     FuzzedDataProvider fdp(data, size);
     SecurityCollectorEventMuteFilter fil {};
     fil.eventId = fdp.ConsumeIntegral<int64_t>();
-    fil.mutes.emplace_back(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    fil.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     fil.isSetMute = fdp.ConsumeBool();
     fil.type = fdp.ConsumeIntegral<int64_t>();
     SecurityCollectorEventFilter filter(fil);
@@ -215,7 +215,7 @@ void SecurityCollectorICollectorFuzzTest(const uint8_t* data, size_t size)
     TestCollector collector;
     SecurityCollectorEventMuteFilter collectorFilter {};
     collectorFilter.eventId = fdp.ConsumeIntegral<int64_t>();
-    collectorFilter.mutes.emplace_back(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    collectorFilter.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     SecurityEvent event {};
     event.eventId_ = fdp.ConsumeIntegral<int64_t>();
     event.content_ = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);

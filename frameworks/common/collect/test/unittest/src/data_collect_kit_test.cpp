@@ -483,7 +483,6 @@ HWTEST_F(DataCollectKitTest, Mute003, testing::ext::TestSize.Level1)
     SecurityGuard::SecurityEventFilter filter(info);
     Parcel parcel {};
     int64_t int64 = 0;
-    uint32_t uint32 = 0;
     std::string string = "111";
 
     bool ret = filter.ReadFromParcel(parcel);
@@ -511,14 +510,25 @@ HWTEST_F(DataCollectKitTest, Mute003, testing::ext::TestSize.Level1)
     parcel.WriteString(string);
     ret = filter.ReadFromParcel(parcel);
     EXPECT_FALSE(ret);
+    SecurityGuard::SecurityEventFilter *retInfo = filter.Unmarshalling(parcel);
+    EXPECT_TRUE(retInfo == nullptr);
+}
 
+HWTEST_F(DataCollectKitTest, Mute005, testing::ext::TestSize.Level1)
+{
+    SecurityGuard::EventMuteFilter info {};
+    SecurityGuard::SecurityEventFilter filter(info);
+    Parcel parcel {};
+    int64_t int64 = 0;
+    uint32_t uint32 = 0;
+    std::string string = "111";
     parcel.WriteInt64(int64);
     parcel.WriteInt64(int64);
     parcel.WriteBool(true);
     parcel.WriteString(string);
     parcel.WriteString(string);
     parcel.WriteUint32(uint32);
-    ret = filter.ReadFromParcel(parcel);
+    bool ret = filter.ReadFromParcel(parcel);
     EXPECT_TRUE(ret);
 
     parcel.WriteInt64(int64);
@@ -539,7 +549,6 @@ HWTEST_F(DataCollectKitTest, Mute003, testing::ext::TestSize.Level1)
     parcel.WriteString(string);
     ret = filter.ReadFromParcel(parcel);
     EXPECT_TRUE(ret);
-
     SecurityGuard::SecurityEventFilter *retInfo = filter.Unmarshalling(parcel);
     EXPECT_TRUE(retInfo == nullptr);
 }

@@ -45,13 +45,18 @@ struct Event {
     std::string timestamp;
     std::set<std::string> eventSubscribes;
 };
-using SecurityCollectorEventMuteFilter = struct {
+struct SecurityCollectorEventMuteFilter {
     int64_t eventId;
     int64_t type;
     bool isInclude;
-    std::vector<std::string> mutes;
+    std::set<std::string> mutes;
     bool isSetMute;
     std::string instanceFlag;
+    bool operator == (const SecurityCollectorEventMuteFilter &input) const
+    {
+        return eventId == input.eventId && isInclude == input.isInclude && type == input.type &&
+            instanceFlag == input.instanceFlag && mutes.size() == input.mutes.size() && mutes == input.mutes;
+    }
 };
 } // namespace OHOS::Security::SecurityCollector
 #endif // SECURITY_COLLECTOR_EVENT_INFO_H
