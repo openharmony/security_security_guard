@@ -143,7 +143,7 @@ void DataCollectManagerFuzzTest(const uint8_t* data, size_t size)
     mute->type = fdp.ConsumeIntegral<int64_t>();
     mute->isInclude = fdp.ConsumeIntegral<bool>();
     mute->eventGroup = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    mute->mutes.emplace_back(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    mute->mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     DataCollectManager::GetInstance().AddFilter(mute);
     DataCollectManager::GetInstance().RemoveFilter(mute);
     auto func = [] (std::string &devId, std::string &riskData, uint32_t status,
@@ -265,7 +265,7 @@ void CollectorManagerFuzzTest(const uint8_t* data, size_t size)
     filter.eventId = fdp.ConsumeIntegral<int64_t>();
     filter.type = fdp.ConsumeIntegral<int64_t>();
     filter.isSetMute = static_cast<bool>(fdp.ConsumeBool());
-    filter.mutes.emplace_back(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    filter.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     SecurityCollectorEventFilter subscribeMute(filter);
     CollectorManager::GetInstance().AddFilter(subscribeMute, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     CollectorManager::GetInstance().RemoveFilter(subscribeMute, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));

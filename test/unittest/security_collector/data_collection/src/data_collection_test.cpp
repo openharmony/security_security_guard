@@ -315,7 +315,7 @@ HWTEST_F(DataCollectionTest, AddFilter, testing::ext::TestSize.Level1)
     MockMyClass myOb;
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
     collectorFilter.eventId = 1;
-    collectorFilter.mutes.emplace_back("1111");
+    collectorFilter.mutes.insert("1111");
     collectorFilter.type = 1;
     collectorFilter.isSetMute = false;
     myOb.eventIdToLoaderMap_.emplace(1, LibLoader("testPath"));
@@ -329,7 +329,7 @@ HWTEST_F(DataCollectionTest, RemoveFilter, testing::ext::TestSize.Level1)
     MockMyClass myOb;
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
     collectorFilter.eventId = 1;
-    collectorFilter.mutes.emplace_back("1111");
+    collectorFilter.mutes.insert("1111");
     collectorFilter.type = 1;
     collectorFilter.isSetMute = false;
     ModuleCfgSt st {};

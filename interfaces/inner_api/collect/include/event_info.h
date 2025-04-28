@@ -19,13 +19,14 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <set>
 #include <functional>
 namespace OHOS::Security::SecurityGuard {
 using EventMuteFilter = struct {
     int64_t eventId;
     bool isInclude;
     int64_t type;
-    std::vector<std::string> mutes;
+    std::set<std::string> mutes;
     std::string eventGroup;
     std::string instanceFlag;
 };
