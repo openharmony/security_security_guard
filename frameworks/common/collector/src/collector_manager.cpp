@@ -182,10 +182,10 @@ int32_t CollectorManager::CollectorStop(const SecurityCollector::SecurityCollect
     return SUCCESS;
 }
 
-int32_t CollectorManager::AddFilter(const SecurityCollectorEventFilter &subscribeMute,
+int32_t CollectorManager::Mute(const SecurityCollectorEventFilter &subscribeMute,
     const std::string &callbackFlag)
 {
-    LOGI("enter CollectorManager AddFilter");
+    LOGI("enter CollectorManager Mute");
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
     auto proxy = iface_cast<ISecurityCollectorManager>(object);
     if (proxy == nullptr) {
@@ -193,19 +193,19 @@ int32_t CollectorManager::AddFilter(const SecurityCollectorEventFilter &subscrib
         return NULL_OBJECT;
     }
 
-    int32_t ret = proxy->AddFilter(subscribeMute, callbackFlag);
+    int32_t ret = proxy->Mute(subscribeMute, callbackFlag);
     if (ret != SUCCESS) {
-        LOGI("AddFilter failed, ret=%{public}d", ret);
+        LOGI("Mute failed, ret=%{public}d", ret);
         return ret;
     }
-    LOGI("AddFilter result, ret=%{public}d", ret);
+    LOGI("Mute result, ret=%{public}d", ret);
     return SUCCESS;
 }
 
-int32_t CollectorManager::RemoveFilter(const SecurityCollectorEventFilter &subscribeMute,
+int32_t CollectorManager::Unmute(const SecurityCollectorEventFilter &subscribeMute,
     const std::string &callbackFlag)
 {
-    LOGI("enter CollectorManager RemoveFilter");
+    LOGI("enter CollectorManager Unmute");
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
     auto proxy = iface_cast<ISecurityCollectorManager>(object);
     if (proxy == nullptr) {
@@ -213,12 +213,12 @@ int32_t CollectorManager::RemoveFilter(const SecurityCollectorEventFilter &subsc
         return NULL_OBJECT;
     }
 
-    int32_t ret = proxy->RemoveFilter(subscribeMute, callbackFlag);
+    int32_t ret = proxy->Unmute(subscribeMute, callbackFlag);
     if (ret != SUCCESS) {
-        LOGI("RemoveFilter failed, ret=%{public}d", ret);
+        LOGI("Unmute failed, ret=%{public}d", ret);
         return ret;
     }
-    LOGI("RemoveFilter result, ret=%{public}d", ret);
+    LOGI("Unmute result, ret=%{public}d", ret);
     return SUCCESS;
 }
 }
