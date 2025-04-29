@@ -83,7 +83,6 @@ private:
     int SubscribeScInSg(int64_t eventId, const sptr<IRemoteObject> &callback);
     int SubscribeScInSc(int64_t eventId, const sptr<IRemoteObject> &callback);
     size_t GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event);
-    bool FindSdkFlag(const std::set<std::string> &eventSubscribes, const std::string &sdkFlag);
     class DbListener : public IDbListener {
     public:
         DbListener() = default;

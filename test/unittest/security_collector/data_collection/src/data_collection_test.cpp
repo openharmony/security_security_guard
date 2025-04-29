@@ -310,34 +310,34 @@ HWTEST_F(DataCollectionTest, LoadCollectorWithNonApi01, testing::ext::TestSize.L
     EXPECT_EQ(DataCollection::GetInstance().LoadCollector(path, ruler, events), FAILED);
 }
 
-HWTEST_F(DataCollectionTest, AddFilter, testing::ext::TestSize.Level1)
+HWTEST_F(DataCollectionTest, Mute, testing::ext::TestSize.Level1)
 {
     MockMyClass myOb;
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
     collectorFilter.eventId = 1;
     collectorFilter.mutes.emplace_back("1111");
-    collectorFilter.type = 1;
+    collectorFilter.type = SecurityCollector::EVENT_SUB_TYPE_EQUAL;
     collectorFilter.isSetMute = false;
     myOb.eventIdToLoaderMap_.emplace(1, LibLoader("testPath"));
     EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false)).WillOnce(Return(true));
-    EXPECT_FALSE(myOb.AddFilter(collectorFilter, "1111"));
-    EXPECT_FALSE(myOb.AddFilter(collectorFilter, "1111"));
+    EXPECT_FALSE(myOb.Mute(collectorFilter, "1111"));
+    EXPECT_FALSE(myOb.Mute(collectorFilter, "1111"));
 }
 
-HWTEST_F(DataCollectionTest, RemoveFilter, testing::ext::TestSize.Level1)
+HWTEST_F(DataCollectionTest, Unmute, testing::ext::TestSize.Level1)
 {
     MockMyClass myOb;
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
     collectorFilter.eventId = 1;
     collectorFilter.mutes.emplace_back("1111");
-    collectorFilter.type = 1;
+    collectorFilter.type = SecurityCollector::EVENT_SUB_TYPE_EQUAL;
     collectorFilter.isSetMute = false;
     ModuleCfgSt st {};
     nlohmann::json json = st;
     myOb.eventIdToLoaderMap_.emplace(1, LibLoader("testPath"));
     EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false)).WillOnce(Return(true));
-    EXPECT_FALSE(myOb.RemoveFilter(collectorFilter, "1111"));
-    EXPECT_FALSE(myOb.RemoveFilter(collectorFilter, "1111"));
+    EXPECT_FALSE(myOb.Unmute(collectorFilter, "1111"));
+    EXPECT_FALSE(myOb.Unmute(collectorFilter, "1111"));
 }
 
 HWTEST_F(DataCollectionTest, ICollector01, testing::ext::TestSize.Level1)
@@ -348,8 +348,8 @@ HWTEST_F(DataCollectionTest, ICollector01, testing::ext::TestSize.Level1)
     SecurityEventRuler ruler;
     std::shared_ptr<ICollectorFwk> api = std::make_shared<TestFwk> ();
     EXPECT_EQ(collector.IsStartWithSub(), 0);
-    EXPECT_EQ(collector.AddFilter(collectorFilter, "111"), -1);
-    EXPECT_EQ(collector.RemoveFilter(collectorFilter, "111"), -1);
+    EXPECT_EQ(collector.Mute(collectorFilter, "111"), -1);
+    EXPECT_EQ(collector.Unmute(collectorFilter, "111"), -1);
     EXPECT_EQ(collector.Query(ruler, eventIds), 0);
     EXPECT_EQ(collector.Subscribe(api, 0), 0);
     EXPECT_EQ(collector.Unsubscribe(0), 0);
