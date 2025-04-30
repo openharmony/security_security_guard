@@ -209,10 +209,10 @@ int32_t SecurityCollectorManagerProxy::QuerySecurityEvent(const std::vector<Secu
     return SUCCESS;
 }
 
-int32_t SecurityCollectorManagerProxy::AddFilter(const SecurityCollectorEventFilter &subscribeMute,
+int32_t SecurityCollectorManagerProxy::Mute(const SecurityCollectorEventFilter &subscribeMute,
     const std::string &callbackFlag)
 {
-    LOGI("enter SecurityCollectorManagerProxy AddFilter");
+    LOGI("enter SecurityCollectorManagerProxy Mute");
     MessageParcel data;
     MessageParcel reply;
 
@@ -247,10 +247,10 @@ int32_t SecurityCollectorManagerProxy::AddFilter(const SecurityCollectorEventFil
     return ret;
 }
 
-int32_t SecurityCollectorManagerProxy::RemoveFilter(const SecurityCollectorEventFilter &subscribeMute,
+int32_t SecurityCollectorManagerProxy::Unmute(const SecurityCollectorEventFilter &subscribeMute,
     const std::string &callbackFlag)
 {
-    LOGI("enter SecurityCollectorManagerProxy RemoveFilter");
+    LOGI("enter SecurityCollectorManagerProxy Unmute");
     MessageParcel data;
     MessageParcel reply;
 
