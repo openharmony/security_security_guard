@@ -397,32 +397,32 @@ int32_t SecurityCollectorManagerService::HasPermission(const std::string &permis
     return SUCCESS;
 }
 
-int32_t SecurityCollectorManagerService::AddFilter(const SecurityCollectorEventFilter &subscribeMute,
+int32_t SecurityCollectorManagerService::Mute(const SecurityCollectorEventFilter &subscribeMute,
     const std::string &callbackFlag)
 {
-    LOGI("In SecurityCollectorManagerService AddFilter");
+    LOGI("In SecurityCollectorManagerService Mute");
     int32_t ret = HasPermission(QUERY_EVENT_PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;
     }
-    if (!DataCollection::GetInstance().AddFilter(subscribeMute.GetMuteFilter(), callbackFlag)) {
+    if (!DataCollection::GetInstance().Mute(subscribeMute.GetMuteFilter(), callbackFlag)) {
         LOGE("fail to set mute");
         return FAILED;
     }
     return SUCCESS;
 }
 
-int32_t SecurityCollectorManagerService::RemoveFilter(const SecurityCollectorEventFilter &subscribeMute,
+int32_t SecurityCollectorManagerService::Unmute(const SecurityCollectorEventFilter &subscribeMute,
     const std::string &callbackFlag)
 {
-    LOGI("In SecurityCollectorManagerService RemoveFilter");
+    LOGI("In SecurityCollectorManagerService Unmute");
     int32_t ret = HasPermission(QUERY_EVENT_PERMISSION);
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;
     }
-    if (!DataCollection::GetInstance().RemoveFilter(subscribeMute.GetMuteFilter(), callbackFlag)) {
+    if (!DataCollection::GetInstance().Unmute(subscribeMute.GetMuteFilter(), callbackFlag)) {
         LOGE("fail to set unmute");
         return FAILED;
     }

@@ -126,7 +126,7 @@ HWTEST_F(SecurityGuardRiskAnalysisTest, StartSecurityModel, TestSize.Level1) {
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_NATIVE));
-    int32_t result = riskAnalysisManagerService.StartSecurityModel(222, "test");
+    int32_t result = riskAnalysisManagerService.StartSecurityModel(111, "test");
     ASSERT_EQ(result, NOT_FOUND);
 }
 }
