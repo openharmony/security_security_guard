@@ -54,7 +54,7 @@ bool DataCollection::StartCollectors(const std::vector<int64_t>& eventIds, std::
             StopCollectors(loadedEventIds_);
             return false;
         }
-        ret = LoadCollector(eventId, collectorPath, api, false);
+        ret = LoadCollector(eventId, collectorPath, api);
         if (ret != SUCCESS) {
             LOGE("Load collector failed, eventId is 0x%{public}" PRIx64, eventId);
             StopCollectors(loadedEventIds_);
@@ -81,7 +81,7 @@ bool DataCollection::SecurityGuardSubscribeCollector(const std::vector<int64_t>&
             LOGE("GetCollectorPath failed, eventId is 0x%{public}" PRIx64, eventId);
             continue;
         }
-        ret = LoadCollector(eventId, collectorPath, nullptr, true);
+        ret = LoadCollector(eventId, collectorPath, nullptr);
         if (ret != SUCCESS) {
             LOGE("LoadCollector failed, eventId is 0x%{public}" PRIx64, eventId);
             continue;
@@ -153,7 +153,7 @@ bool DataCollection::SubscribeCollectors(const std::vector<int64_t>& eventIds, s
             UnsubscribeCollectors(loadedEventIds_);
             return false;
         }
-        ret = LoadCollector(eventId, collectorPath, api, true);
+        ret = LoadCollector(eventId, collectorPath, api);
         if (ret != SUCCESS) {
             LOGE("Load collector failed, eventId is 0x%{public}" PRIx64, eventId);
             UnsubscribeCollectors(loadedEventIds_);
@@ -186,7 +186,7 @@ bool DataCollection::UnsubscribeCollectors(const std::vector<int64_t> &eventIds)
             LOGE("CallGetCollector error");
             ret = false;
         } else {
-            int result = collector->Unsubscribe(eventId);
+            int result = collector->IsStartWithSub() ? collector->Unsubscribe(eventId) : collector->Stop();
             if (result != 0) {
                 LOGE("Failed to Unsubscribe collector, eventId is 0x%{public}" PRIx64, eventId);
                 ret = false;
@@ -208,7 +208,7 @@ void DataCollection::CloseLib()
     needCloseLibMap_.clear();
 }
 ErrorCode DataCollection::LoadCollector(
-    int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api, bool isStartWithSub)
+    int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api)
 {
     LOGI("Start LoadCollector");
     LibLoader loader(path);
@@ -226,7 +226,7 @@ ErrorCode DataCollection::LoadCollector(
         LOGE("CallGetCollector error");
         return FAILED;
     }
-    int result = isStartWithSub ? collector->Subscribe(api, eventId) : collector->Start(api);
+    int result = collector->IsStartWithSub() ? collector->Subscribe(api, eventId) : collector->Start(api);
     if (result != 0) {
         LOGE("Failed to start collector");
         return FAILED;
@@ -404,7 +404,7 @@ int32_t DataCollection::QuerySecurityEvent(const std::vector<SecurityEventRuler>
     return true;
 }
 
-bool DataCollection::Mute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
+bool DataCollection::AddFilter(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
 {
     if (!IsCollectorStarted(filter.eventId)) {
         LOGE("collector not start, eventId is 0x%{public}" PRIx64, filter.eventId);
@@ -417,14 +417,14 @@ bool DataCollection::Mute(const SecurityCollectorEventMuteFilter &filter, const 
         LOGE("CallGetCollector error");
         return false;
     }
-    if (collector->Mute(filter, sdkFlag) != 0) {
+    if (collector->AddFilter(filter, sdkFlag) != 0) {
         LOGE("fail to set mute to collector, eventId is 0x%{public}" PRIx64, filter.eventId);
         return false;
     }
     return true;
 }
 
-bool DataCollection::Unmute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
+bool DataCollection::RemoveFilter(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
 {
     if (!IsCollectorStarted(filter.eventId)) {
         LOGE("collector not start, eventId is 0x%{public}" PRIx64, filter.eventId);
@@ -437,7 +437,7 @@ bool DataCollection::Unmute(const SecurityCollectorEventMuteFilter &filter, cons
         LOGE("CallGetCollector error");
         return false;
     }
-    if (collector->Unmute(filter, sdkFlag) != 0) {
+    if (collector->RemoveFilter(filter, sdkFlag) != 0) {
         LOGE("fail to set unmute to collector, eventId is 0x%{public}" PRIx64, filter.eventId);
         return false;
     }

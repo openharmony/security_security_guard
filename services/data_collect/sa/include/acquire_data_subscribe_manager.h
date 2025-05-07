@@ -82,6 +82,12 @@ private:
     int UnSubscribeScAndDb(int64_t eventId);
     int SubscribeScInSg(int64_t eventId, const sptr<IRemoteObject> &callback);
     int SubscribeScInSc(int64_t eventId, const sptr<IRemoteObject> &callback);
+    size_t GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event);
+    void EraseSubscribeMute(int64_t eventId, const sptr<IRemoteObject> &callback);
+    SecurityCollector::SecurityCollectorEventMuteFilter ConvertFilter(const SecurityGuard::EventMuteFilter &sgFilter);
+    bool FindSdkFlag(const std::set<std::string> &eventSubscribes, const std::string &sdkFlag);
+    int32_t CheckMuteInfo(const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter,
+        const sptr<IRemoteObject> &callback);
     class DbListener : public IDbListener {
     public:
         DbListener() = default;

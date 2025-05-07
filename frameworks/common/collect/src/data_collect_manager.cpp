@@ -15,7 +15,8 @@
 #include "iservice_registry.h"
 #include "data_collect_manager.h"
 #include <chrono>
-#include "data_collect_manager_proxy.h"
+#include "data_collect_manager_idl_proxy.h"
+#include "data_collect_manager_idl.h"
 #include "security_event_ruler.h"
 #include "security_event_query_callback_service.h"
 #include "security_guard_define.h"
@@ -77,7 +78,7 @@ int32_t DataCollectManager::QuerySecurityEvent(std::vector<SecurityCollector::Se
     }
 
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<IDataCollectManager>(object);
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
@@ -110,7 +111,7 @@ int32_t DataCollectManager::QuerySecurityEventConfig(std::string &result)
         SGLOGE("object is nullptr");
         return FAILED;
     }
-    auto proxy = iface_cast<IDataCollectManager>(object);
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return FAILED;
@@ -156,7 +157,7 @@ void DataCollectManager::HandleDecipient()
         return;
     }
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<IDataCollectManager>(object);
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return;
@@ -199,7 +200,7 @@ int32_t DataCollectManager::Subscribe(const std::shared_ptr<SecurityCollector::I
         return NULL_OBJECT;
     }
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<IDataCollectManager>(object);
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
@@ -250,7 +251,7 @@ int32_t DataCollectManager::Unsubscribe(const std::shared_ptr<SecurityCollector:
     }
 
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<IDataCollectManager>(object);
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
@@ -279,9 +280,9 @@ bool DataCollectManager::IsCurrentSubscriberEventIdExist(
     return false;
 }
 
-int32_t DataCollectManager::Mute(const std::shared_ptr<EventMuteFilter> &subscribeMute)
+int32_t DataCollectManager::AddFilter(const std::shared_ptr<EventMuteFilter> &subscribeMute)
 {
-    SGLOGI("enter DataCollectManager Mute");
+    SGLOGI("enter DataCollectManager AddFilter");
     std::lock_guard<std::mutex> lock(mutex_);
     if (subscribeMute == nullptr) {
         SGLOGE("subscriber is nullptr");
@@ -297,13 +298,13 @@ int32_t DataCollectManager::Mute(const std::shared_ptr<EventMuteFilter> &subscri
         return NULL_OBJECT;
     }
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<IDataCollectManager>(object);
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
     }
     SecurityEventFilter filter(*subscribeMute);
-    int32_t ret = proxy->Mute(filter, callback_, sdkFlag_);
+    int32_t ret = proxy->AddFilter(filter, callback_, sdkFlag_);
     if (ret != SUCCESS) {
         return ret;
     }
@@ -311,9 +312,9 @@ int32_t DataCollectManager::Mute(const std::shared_ptr<EventMuteFilter> &subscri
     return 0;
 }
 
-int32_t DataCollectManager::Unmute(const std::shared_ptr<EventMuteFilter> &subscribeMute)
+int32_t DataCollectManager::RemoveFilter(const std::shared_ptr<EventMuteFilter> &subscribeMute)
 {
-    SGLOGI("enter DataCollectManager Unmute");
+    SGLOGI("enter DataCollectManager RemoveFilter");
     std::lock_guard<std::mutex> lock(mutex_);
     if (subscribeMute == nullptr) {
         SGLOGE("subscriber is nullptr");
@@ -329,13 +330,13 @@ int32_t DataCollectManager::Unmute(const std::shared_ptr<EventMuteFilter> &subsc
         return NULL_OBJECT;
     }
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<IDataCollectManager>(object);
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
     }
     SecurityEventFilter filter(*subscribeMute);
-    int32_t ret = proxy->Unmute(filter, callback_, sdkFlag_);
+    int32_t ret = proxy->RemoveFilter(filter, callback_, sdkFlag_);
     if (ret != SUCCESS) {
         return ret;
     }
@@ -355,7 +356,7 @@ int32_t DataCollectManager::ReportSecurityEvent(const std::shared_ptr<EventInfo>
         return NULL_OBJECT;
     }
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<IDataCollectManager>(object);
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
@@ -365,7 +366,12 @@ int32_t DataCollectManager::ReportSecurityEvent(const std::shared_ptr<EventInfo>
     std::string version = info->GetVersion();
     std::string content = info->GetContent();
     std::string date = SecurityGuardUtils::GetDate();
-    int32_t ret = proxy->RequestDataSubmit(eventId, version, date, content, isSync);
+    int32_t ret = SUCCESS;
+    if (isSync) {
+        ret = proxy->RequestDataSubmit(eventId, version, date, content);
+    } else {
+        ret = proxy->RequestDataSubmitAsync(eventId, version, date, content);
+    }
     if (ret != SUCCESS) {
         SGLOGE("RequestSecurityInfo error, ret=%{public}d", ret);
         return ret;
@@ -382,13 +388,12 @@ int32_t DataCollectManager::SecurityGuardConfigUpdate(int32_t fd, const std::str
         return NULL_OBJECT;
     }
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<IDataCollectManager>(object);
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
     }
-    SecurityGuard::SecurityConfigUpdateInfo updateInfo(fd, name);
-    int32_t ret = proxy->ConfigUpdate(updateInfo);
+    int32_t ret = proxy->ConfigUpdate(fd, name);
     if (ret != SUCCESS) {
         SGLOGE("ConfigUpdate error, ret=%{public}d", ret);
         return ret;
@@ -407,7 +412,7 @@ int32_t DataCollectManager::StartCollector(const SecurityCollector::Event &event
     }
 
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerProxy>(object);
+    auto proxy = iface_cast<DataCollectManagerIdlProxy>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
@@ -436,7 +441,7 @@ int32_t DataCollectManager::StopCollector(const SecurityCollector::Event &event)
     }
 
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerProxy>(object);
+    auto proxy = iface_cast<DataCollectManagerIdlProxy>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
@@ -465,7 +470,7 @@ int32_t DataCollectManager::RequestSecurityEventInfo(std::string &devId, std::st
     }
 
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerProxy>(object);
+    auto proxy = iface_cast<DataCollectManagerIdlProxy>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;

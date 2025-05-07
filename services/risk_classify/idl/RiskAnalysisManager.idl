@@ -1,5 +1,4 @@
-/*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+/* Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,20 +12,12 @@
  * limitations under the License.
  */
 
-#ifndef SECURITY_GUARD_I_DB_LISTENER_H
-#define SECURITY_GUARD_I_DB_LISTENER_H
+package OHOS.Security.SecurityGuard;
+sequenceable OHOS.IRemoteObject;
 
-#include "i_model_info.h"
-namespace OHOS::Security::SecurityGuard {
-class IDbListener {
-public:
-    using OptType = enum {
-        INSERT,
-        DELETE
-    };
-    virtual ~IDbListener() = default;
-    virtual void OnChange(uint32_t optType, const SecEvent &events) = 0;
-};
-} // namespace OHOS::Security::SecurityGuard
-
-#endif // SECURITY_GUARD_I_DB_LISTENER_H
+interface OHOS.Security.SecurityGuard.RiskAnalysisManager {
+    void RequestSecurityModelResult([in] String devId, [in] unsigned int modelId,
+        [in] String param, [in] IRemoteObject cb);
+    void SetModelState([in] unsigned int modelId, [in] boolean enable);
+    void StartSecurityModel([in] unsigned int modelId, [in] String param);
+}

@@ -60,6 +60,14 @@ int32_t AcquireDataManagerCallbackStub::HandleBatchSubscribeCallback(MessageParc
         event.content = data.ReadString();
         event.extra = data.ReadString();
         event.timestamp = data.ReadString();
+        uint32_t size = data.ReadUint32();
+        if (size > MAX_API_INSTACNE_SIZE) {
+            SGLOGE("the subs size error");
+            return BAD_PARAM;
+        }
+        for (uint32_t i = 0; i < size; i++) {
+            event.eventSubscribes.insert(data.ReadString());
+        }
         events.emplace_back(event);
     }
     OnNotify(events);

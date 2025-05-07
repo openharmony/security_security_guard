@@ -48,8 +48,8 @@ public:
 
 class MockMyClass : public DataCollection {
 public:
-    MOCK_METHOD4(LoadCollector, ErrorCode(
-        int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api, bool isStartWithSub));
+    MOCK_METHOD3(LoadCollector, ErrorCode(
+        int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api));
     MOCK_METHOD2(GetCollectorPath, ErrorCode(int64_t eventId, std::string &path));
     MOCK_METHOD1(IsCollectorStarted, bool(int64_t eventId));
 };
@@ -63,7 +63,7 @@ HWTEST_F(DataCollectionTest, Instance01, testing::ext::TestSize.Level0)
 HWTEST_F(DataCollectionTest, Instance02, testing::ext::TestSize.Level0)
 {
     std::shared_ptr<ICollectorFwk> api = std::make_shared<TestFwk> ();
-    EXPECT_EQ(DataCollection::GetInstance().LoadCollector(1, "", api, false), FAILED);
+    EXPECT_EQ(DataCollection::GetInstance().LoadCollector(1, "", api), FAILED);
     std::vector<SecurityEvent> eventIds {};
     SecurityEventRuler ruler;
     EXPECT_EQ(DataCollection::GetInstance().LoadCollector("", ruler, eventIds), FAILED);
@@ -94,7 +94,7 @@ HWTEST_F(DataCollectionTest, StartCollectors03, testing::ext::TestSize.Level0)
     std::shared_ptr<SecurityCollector::ICollectorFwk> api = std::make_shared<TestFwk> ();
     EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false));
     EXPECT_CALL(myOb, GetCollectorPath).WillOnce(Return(SUCCESS));
-    EXPECT_CALL(myOb, LoadCollector(1, "", api, false)).WillOnce(Return(SUCCESS));
+    EXPECT_CALL(myOb, LoadCollector(1, "", api)).WillOnce(Return(SUCCESS));
     EXPECT_TRUE(myOb.StartCollectors(eventIds, api));
 }
 
@@ -105,7 +105,7 @@ HWTEST_F(DataCollectionTest, StartCollectors04, testing::ext::TestSize.Level0)
     std::shared_ptr<SecurityCollector::ICollectorFwk> api = std::make_shared<TestFwk> ();
     EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false));
     EXPECT_CALL(myOb, GetCollectorPath).WillOnce(Return(SUCCESS));
-    EXPECT_CALL(myOb, LoadCollector(1, "", api, false)).WillOnce(Return(FAILED));
+    EXPECT_CALL(myOb, LoadCollector(1, "", api)).WillOnce(Return(FAILED));
     EXPECT_FALSE(myOb.StartCollectors(eventIds, api));
 }
 
@@ -214,7 +214,7 @@ HWTEST_F(DataCollectionTest, SecurityGuardSubscribeCollector04, testing::ext::Te
     MockMyClass myOb;
     std::shared_ptr<SecurityCollector::ICollectorFwk> api;
     EXPECT_CALL(myOb, GetCollectorPath).WillOnce(Return(SUCCESS));
-    EXPECT_CALL(myOb, LoadCollector(1, "", api, true)).WillOnce(Return(SUCCESS));
+    EXPECT_CALL(myOb, LoadCollector(1, "", api)).WillOnce(Return(SUCCESS));
     EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false));
     EXPECT_TRUE(myOb.SecurityGuardSubscribeCollector(eventIds));
 }
@@ -225,7 +225,7 @@ HWTEST_F(DataCollectionTest, SecurityGuardSubscribeCollector02, testing::ext::Te
     MockMyClass myOb;
     std::shared_ptr<SecurityCollector::ICollectorFwk> api;
     EXPECT_CALL(myOb, GetCollectorPath).WillOnce(Return(SUCCESS));
-    EXPECT_CALL(myOb, LoadCollector(1, "", api, true)).WillOnce(Return(FAILED));
+    EXPECT_CALL(myOb, LoadCollector(1, "", api)).WillOnce(Return(FAILED));
     EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false));
     EXPECT_TRUE(myOb.SecurityGuardSubscribeCollector(eventIds));
 }
@@ -299,7 +299,7 @@ HWTEST_F(DataCollectionTest, LoadCollectorWithApi01, testing::ext::TestSize.Leve
     std::string path = "/system/lib64/module/security/libsecurityguard_napi.z.so";
     std::shared_ptr<ICollectorFwk> api = nullptr;
     int64_t eventId = 1;
-    EXPECT_EQ(DataCollection::GetInstance().LoadCollector(eventId, path, api, false), FAILED);
+    EXPECT_EQ(DataCollection::GetInstance().LoadCollector(eventId, path, api), FAILED);
 }
 
 HWTEST_F(DataCollectionTest, LoadCollectorWithNonApi01, testing::ext::TestSize.Level0)
@@ -310,34 +310,34 @@ HWTEST_F(DataCollectionTest, LoadCollectorWithNonApi01, testing::ext::TestSize.L
     EXPECT_EQ(DataCollection::GetInstance().LoadCollector(path, ruler, events), FAILED);
 }
 
-HWTEST_F(DataCollectionTest, Mute, testing::ext::TestSize.Level1)
+HWTEST_F(DataCollectionTest, AddFilter, testing::ext::TestSize.Level1)
 {
     MockMyClass myOb;
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
     collectorFilter.eventId = 1;
-    collectorFilter.mutes.emplace_back("1111");
-    collectorFilter.type = SecurityCollector::EVENT_SUB_TYPE_EQUAL;
+    collectorFilter.mutes.insert("1111");
+    collectorFilter.type = 1;
     collectorFilter.isSetMute = false;
     myOb.eventIdToLoaderMap_.emplace(1, LibLoader("testPath"));
     EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false)).WillOnce(Return(true));
-    EXPECT_FALSE(myOb.Mute(collectorFilter, "1111"));
-    EXPECT_FALSE(myOb.Mute(collectorFilter, "1111"));
+    EXPECT_FALSE(myOb.AddFilter(collectorFilter, "1111"));
+    EXPECT_FALSE(myOb.AddFilter(collectorFilter, "1111"));
 }
 
-HWTEST_F(DataCollectionTest, Unmute, testing::ext::TestSize.Level1)
+HWTEST_F(DataCollectionTest, RemoveFilter, testing::ext::TestSize.Level1)
 {
     MockMyClass myOb;
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
     collectorFilter.eventId = 1;
-    collectorFilter.mutes.emplace_back("1111");
-    collectorFilter.type = SecurityCollector::EVENT_SUB_TYPE_EQUAL;
+    collectorFilter.mutes.insert("1111");
+    collectorFilter.type = 1;
     collectorFilter.isSetMute = false;
     ModuleCfgSt st {};
     nlohmann::json json = st;
     myOb.eventIdToLoaderMap_.emplace(1, LibLoader("testPath"));
     EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false)).WillOnce(Return(true));
-    EXPECT_FALSE(myOb.Unmute(collectorFilter, "1111"));
-    EXPECT_FALSE(myOb.Unmute(collectorFilter, "1111"));
+    EXPECT_FALSE(myOb.RemoveFilter(collectorFilter, "1111"));
+    EXPECT_FALSE(myOb.RemoveFilter(collectorFilter, "1111"));
 }
 
 HWTEST_F(DataCollectionTest, ICollector01, testing::ext::TestSize.Level1)
@@ -348,11 +348,98 @@ HWTEST_F(DataCollectionTest, ICollector01, testing::ext::TestSize.Level1)
     SecurityEventRuler ruler;
     std::shared_ptr<ICollectorFwk> api = std::make_shared<TestFwk> ();
     EXPECT_EQ(collector.IsStartWithSub(), 0);
-    EXPECT_EQ(collector.Mute(collectorFilter, "111"), -1);
-    EXPECT_EQ(collector.Unmute(collectorFilter, "111"), -1);
+    EXPECT_EQ(collector.AddFilter(collectorFilter, "111"), -1);
+    EXPECT_EQ(collector.RemoveFilter(collectorFilter, "111"), -1);
     EXPECT_EQ(collector.Query(ruler, eventIds), 0);
     EXPECT_EQ(collector.Subscribe(api, 0), 0);
     EXPECT_EQ(collector.Unsubscribe(0), 0);
 }
 
+HWTEST_F(DataCollectionTest, SubscribeCollectors01, testing::ext::TestSize.Level0)
+{
+    DataCollection collec {};
+    std::vector<int64_t> eventIds {};
+    std::shared_ptr<SecurityCollector::ICollectorFwk> api;
+    EXPECT_FALSE(collec.SubscribeCollectors(eventIds, api));
+    eventIds.emplace_back(1);
+    EXPECT_FALSE(collec.SubscribeCollectors(eventIds, api));
+}
+
+HWTEST_F(DataCollectionTest, SubscribeCollectors02, testing::ext::TestSize.Level0)
+{
+    DataCollection collec {};
+    std::vector<int64_t> eventIds {1};
+    std::shared_ptr<SecurityCollector::ICollectorFwk> api = std::make_shared<TestFwk> ();
+    EXPECT_FALSE(collec.SubscribeCollectors(eventIds, api));
+}
+
+HWTEST_F(DataCollectionTest, SubscribeCollectors03, testing::ext::TestSize.Level0)
+{
+    MockMyClass myOb;
+    std::vector<int64_t> eventIds {1};
+    std::shared_ptr<SecurityCollector::ICollectorFwk> api = std::make_shared<TestFwk> ();
+    EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false));
+    EXPECT_CALL(myOb, GetCollectorPath).WillOnce(Return(SUCCESS));
+    EXPECT_CALL(myOb, LoadCollector(1, "", api)).WillOnce(Return(SUCCESS));
+    EXPECT_TRUE(myOb.SubscribeCollectors(eventIds, api));
+}
+
+HWTEST_F(DataCollectionTest, SubscribeCollectors04, testing::ext::TestSize.Level0)
+{
+    MockMyClass myOb;
+    std::vector<int64_t> eventIds {1};
+    std::shared_ptr<SecurityCollector::ICollectorFwk> api = std::make_shared<TestFwk> ();
+    EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false));
+    EXPECT_CALL(myOb, GetCollectorPath).WillOnce(Return(SUCCESS));
+    EXPECT_CALL(myOb, LoadCollector(1, "", api)).WillOnce(Return(FAILED));
+    EXPECT_FALSE(myOb.SubscribeCollectors(eventIds, api));
+}
+
+HWTEST_F(DataCollectionTest, SubscribeCollectors05, testing::ext::TestSize.Level0)
+{
+    MockMyClass myOb;
+    std::vector<int64_t> eventIds {1};
+    std::shared_ptr<SecurityCollector::ICollectorFwk> api = std::make_shared<TestFwk> ();
+    EXPECT_CALL(myOb, GetCollectorPath).WillOnce(Return(FAILED));
+    EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false));
+    EXPECT_FALSE(myOb.SubscribeCollectors(eventIds, api));
+}
+
+HWTEST_F(DataCollectionTest, SubscribeCollectors06, testing::ext::TestSize.Level0)
+{
+    MockMyClass myOb;
+    std::vector<int64_t> eventIds {1};
+    std::shared_ptr<SecurityCollector::ICollectorFwk> api = std::make_shared<TestFwk> ();
+    EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(true));
+    EXPECT_TRUE(myOb.SubscribeCollectors(eventIds, api));
+}
+
+HWTEST_F(DataCollectionTest, UnsubscribeCollectors01, testing::ext::TestSize.Level0)
+{
+    DataCollection myOb;
+    std::vector<int64_t> eventIds;
+    EXPECT_TRUE(myOb.UnsubscribeCollectors(eventIds));
+}
+
+HWTEST_F(DataCollectionTest, UnsubscribeCollectors02, testing::ext::TestSize.Level0)
+{
+    DataCollection myOb;
+    std::vector<int64_t> eventIds {1};
+    EXPECT_TRUE(myOb.UnsubscribeCollectors(eventIds));
+}
+
+HWTEST_F(DataCollectionTest, UnsubscribeCollectors03, testing::ext::TestSize.Level0)
+{
+    DataCollection myOb;
+    std::vector<int64_t> eventIds {1};
+    EXPECT_TRUE(myOb.UnsubscribeCollectors(eventIds));
+}
+
+HWTEST_F(DataCollectionTest, UnsubscribeCollectors04, testing::ext::TestSize.Level0)
+{
+    DataCollection myOb;
+    myOb.eventIdToLoaderMap_.emplace(1, LibLoader("testPath"));
+    std::vector<int64_t> eventIds {1};
+    EXPECT_FALSE(myOb.UnsubscribeCollectors(eventIds));
+}
 }

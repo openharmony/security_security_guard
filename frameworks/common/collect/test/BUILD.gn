@@ -15,7 +15,7 @@ import("//base/security/security_guard/security_guard.gni")
 import("//build/test.gni")
 
 ohos_unittest("libsg_collect_sdk_test") {
-  subsystem_name = "security"
+  subsystem_name = "securitycloudgovernance"
   part_name = "security_guard"
   module_out_path = part_name + "/" + part_name
 

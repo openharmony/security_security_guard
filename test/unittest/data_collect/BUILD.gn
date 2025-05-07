@@ -17,7 +17,7 @@ import("//build/test.gni")
 ohos_unittest("data_collect_test") {
   install_enable = true
   part_name = "security_guard"
-  subsystem_name = "security"
+  subsystem_name = "securitycloudgovernance"
   module_out_path = part_name + "/" + part_name
 
   defines = []
@@ -50,6 +50,9 @@ ohos_unittest("data_collect_test") {
   ]
 
   sources = [
+    "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_event_ruler.cpp",
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/collector_manager/src/collector_cfg_marshalling.cpp",
@@ -61,6 +64,7 @@ ohos_unittest("data_collect_test") {
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/data_collect:sg_collect_service",
+    "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_stub",
   ]
 
   external_deps = [
@@ -84,7 +88,7 @@ ohos_unittest("data_collect_test") {
 ohos_unittest("SecurityGuardDataCollectTest") {
   install_enable = true
   part_name = "security_guard"
-  subsystem_name = "security"
+  subsystem_name = "securitycloudgovernance"
   module_out_path = part_name + "/" + part_name
 
   #resource_config_file = "resource/ohos_test.xml"
@@ -154,7 +158,7 @@ ohos_unittest("SecurityGuardDataCollectTest") {
 ohos_unittest("SecurityGuardDatabaseManagerTest") {
   install_enable = true
   part_name = "security_guard"
-  subsystem_name = "security"
+  subsystem_name = "securitycloudgovernance"
   module_out_path = part_name + "/" + part_name
 
   #resource_config_file = "resource/ohos_test.xml"
@@ -208,7 +212,7 @@ ohos_unittest("SecurityGuardDatabaseManagerTest") {
 ohos_unittest("SecurityGuardDataCollectSaTest") {
   install_enable = true
   part_name = "security_guard"
-  subsystem_name = "security"
+  subsystem_name = "securitycloudgovernance"
   module_out_path = part_name + "/" + part_name
 
   include_dirs = [
@@ -256,13 +260,14 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/i_collector_fwk.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/i_collector_subscriber.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_event_ruler.cpp",
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_subscribe_manager.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_service.cpp",
-    "${sg_root_dir}/services/data_collect/sa/data_collect_manager_stub.cpp",
     "${sg_root_dir}/services/data_collect/sa/security_event_query_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/config_operate.cpp",
@@ -275,6 +280,7 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
   deps = [
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
+    "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_stub",
   ]
 
   external_deps = [
@@ -297,7 +303,7 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
 ohos_unittest("SecurityGuardFileSystemStoreHelperTest") {
   install_enable = true
   part_name = "security_guard"
-  subsystem_name = "security"
+  subsystem_name = "securitycloudgovernance"
   module_out_path = part_name + "/" + part_name
 
   #resource_config_file = "resource/ohos_test.xml"
