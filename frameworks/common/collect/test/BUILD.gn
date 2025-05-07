@@ -42,6 +42,7 @@ ohos_unittest("libsg_collect_sdk_test") {
     "c_utils:utils",
     "googletest:gmock",
     "hilog:libhilog",
+    "ipc:ipc_single",
   ]
 }
 
