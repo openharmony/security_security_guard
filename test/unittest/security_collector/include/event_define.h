@@ -45,20 +45,18 @@ struct Event {
     std::string timestamp;
     std::set<std::string> eventSubscribes;
 };
-
-using SecurityCollectorEventMuteType = enum {
-    EVENT_TYPE_EQUAL = 0,
-    EVENT_SUB_TYPE_EQUAL = 1,
-    PID_EQUAL = 2,
-    FILE_PATH_EQUAL = 3,
-    FILE_PATH_PREFIX = 4,
-};
-
-using SecurityCollectorEventMuteFilter = struct {
+struct SecurityCollectorEventMuteFilter {
     int64_t eventId;
-    SecurityCollectorEventMuteType type;
-    std::vector<std::string> mutes;
+    int64_t type;
+    bool isInclude;
+    std::set<std::string> mutes;
     bool isSetMute;
+    std::string instanceFlag;
+    bool operator == (const SecurityCollectorEventMuteFilter &input) const
+    {
+        return eventId == input.eventId && isInclude == input.isInclude && type == input.type &&
+            instanceFlag == input.instanceFlag && mutes.size() == input.mutes.size() && mutes == input.mutes;
+    }
 };
 } // namespace OHOS::Security::SecurityCollector
 #endif // SECURITY_COLLECTOR_EVENT_INFO_H

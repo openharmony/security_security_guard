@@ -73,6 +73,10 @@ public:
     MOCK_METHOD2(UnSubscribeDb, int32_t(std::vector<int64_t>, std::shared_ptr<IDbListener>));
 };
 
+class MockMyModelManager : public ModelManager {
+public:
+    MOCK_METHOD1(InitModel, int32_t(uint32_t));
+};
 class MockDbOperate : public IDbOperate {
 public:
     MOCK_METHOD1(InsertEvent, int(SecEvent&));
@@ -191,5 +195,55 @@ HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInitModel002, TestSize.L
     ModelManager::GetInstance().SubscribeResult(9999, nullptr);
     ModelManager::GetInstance().Release(9999);
     EXPECT_TRUE(ModelManager::GetInstance().InitModel(9999) != SUCCESS);
+}
+
+HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerStartSecurityModel001, TestSize.Level0)
+{
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetModelConfig)
+    .WillOnce([](uint32_t modelId, ModelCfg &config) {
+        config.path = "/system/lib64/sg_test";
+        return false;
+    });
+    EXPECT_EQ(ModelManager::GetInstance().StartSecurityModel(111, "test"), NOT_FOUND);
+}
+
+HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerStartSecurityModel002, TestSize.Level0)
+{
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetModelConfig)
+    .WillOnce([](uint32_t modelId, ModelCfg &config) {
+        config.path = "/system/lib64/sg_test";
+        return true;
+    });
+    EXPECT_EQ(ModelManager::GetInstance().StartSecurityModel(111, "test"), FILE_ERR);
+}
+
+HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerGetResult002, TestSize.Level0)
+{
+    MockMyModelManager manager {};
+    EXPECT_CALL(manager, InitModel)
+    .WillOnce([](uint32_t modelId) {
+        return SUCCESS;
+    });
+    EXPECT_EQ(manager.GetResult(111, "test"), "unknown");
+}
+
+HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerSubscribeResult002, TestSize.Level0)
+{
+    MockMyModelManager manager {};
+    EXPECT_CALL(manager, InitModel)
+    .WillOnce([](uint32_t modelId) {
+        return SUCCESS;
+    });
+    EXPECT_EQ(manager.SubscribeResult(111, nullptr), FAILED);
+}
+
+HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerStartSecurityModel003, TestSize.Level0)
+{
+    MockMyModelManager manager {};
+    EXPECT_CALL(manager, InitModel)
+    .WillOnce([](uint32_t modelId) {
+        return SUCCESS;
+    });
+    EXPECT_EQ(manager.StartSecurityModel(111, "test"), FAILED);
 }
 }

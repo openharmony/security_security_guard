@@ -93,13 +93,14 @@ using RequestCondition = struct {
 
 using FileSystemStoreErrMesg = struct {
     std::string operation;
-    std::string filepath;
+    std::string fileName;
     std::string mesg;
 };
 
 using ResultCallback = std::function<int32_t (const std::string &devId, uint32_t modelId, const std::string &result)>;
 
 const size_t MAX_QUERY_EVENT_SIZE = 1000;
+const size_t MAX_API_INSTACNE_SIZE = 1000;
 } // namespace OHOS::Security::SecurityGuard
 
 #endif // SECURITY_GUARD_DEFINE_H

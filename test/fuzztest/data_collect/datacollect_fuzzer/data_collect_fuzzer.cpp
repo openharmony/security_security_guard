@@ -27,7 +27,7 @@
 #include "acquire_data_callback_proxy.h"
 #include "data_collect_manager_callback_proxy.h"
 #include "data_collect_manager_service.h"
-#include "data_collect_manager_stub.h"
+#include "data_collect_manager_idl_stub.h"
 #include "security_event_query_callback_proxy.h"
 #include "database_helper.h"
 #include "database_manager.h"
@@ -76,7 +76,7 @@ bool AcquireDataSubscribeManagerFuzzTest(const uint8_t* data, size_t size)
     SecurityEventFilter subscribeMute {};
     subscribeMute.filter_.eventId = fdp.ConsumeIntegral<int64_t>();
     subscribeMute.filter_.eventGroup = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    subscribeMute.filter_.mutes.emplace_back(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    subscribeMute.filter_.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj,
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj,
@@ -132,7 +132,6 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
     Security::SecurityCollector::SecurityEventRuler ruler{eventId};
     Security::SecurityCollector::Event event{eventId, string, string, string};
     Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
-    SecurityConfigUpdateInfo updateInfo{0};
     RequestCondition condition;
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     auto proxy = iface_cast<ISecurityEventQueryCallback>(obj);
@@ -140,13 +139,14 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, false);
     service.Dump(fd, args);
     service.RequestDataSubmit(eventId, string, string, string);
+    service.RequestDataSubmitAsync(eventId, string, string, string);
     service.OnAddSystemAbility(fd, string);
     service.OnRemoveSystemAbility(fd, string);
     service.QueryEventByRuler(proxy, ruler);
     service.CollectorStart(subscribeInfo, callback);
     service.CollectorStop(subscribeInfo, callback);
-    service.ConfigUpdate(updateInfo);
-    service.WriteRemoteFileToLocal(updateInfo, string);
+    service.ConfigUpdate(fd, string);
+    service.WriteRemoteFileToLocal(fd, string);
     DataCollectManagerService::GetSecEventsFromConditions(condition);
     return true;
 }

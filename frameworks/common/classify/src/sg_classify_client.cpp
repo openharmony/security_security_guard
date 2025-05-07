@@ -22,6 +22,7 @@
 #include "securec.h"
 #include "risk_analysis_manager_callback_service.h"
 #include "risk_analysis_manager_proxy.h"
+#include "risk_analysis_manager.h"
 #endif
 
 #include "security_guard_define.h"
@@ -47,7 +48,7 @@ static int32_t RequestSecurityModelResult(const std::string &devId, uint32_t mod
     }
 
     auto object = registry->GetSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID);
-    auto proxy = iface_cast<RiskAnalysisManagerProxy>(object);
+    auto proxy = iface_cast<RiskAnalysisManager>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
@@ -118,6 +119,30 @@ int32_t RequestSecurityModelResultAsync(const std::string &devId, uint32_t model
     };
 
     return RequestSecurityModelResult(devId, modelId, param, func);
+#else
+    return 0;
+#endif
+}
+
+int32_t StartSecurityModel(uint32_t modelId, const std::string &param)
+{
+#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return NULL_OBJECT;
+    }
+
+    auto object = registry->GetSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID);
+    auto proxy = iface_cast<RiskAnalysisManager>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+
+    int32_t ret = proxy->StartSecurityModel(modelId, param);
+    SGLOGI("StartSecurityModel result, ret=%{public}d", ret);
+    return ret;
 #else
     return 0;
 #endif

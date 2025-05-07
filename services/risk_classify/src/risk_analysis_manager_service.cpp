@@ -48,6 +48,7 @@ namespace {
     };
     const std::unordered_map<std::string, std::vector<std::string>> g_apiPermissionsMap {
         {"RequestSecurityModelResult", {REQUEST_PERMISSION, QUERY_SECURITY_MODEL_RESULT_PERMISSION}},
+        {"StartSecurityModel", {QUERY_SECURITY_MODEL_RESULT_PERMISSION}},
     };
 }
 
@@ -113,8 +114,8 @@ int32_t RiskAnalysisManagerService::IsApiHasPermission(const std::string &api)
     return NO_PERMISSION;
 }
 
-int32_t RiskAnalysisManagerService::RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
-    const std::string &param, const sptr<IRemoteObject> &callback)
+ErrCode RiskAnalysisManagerService::RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
+    const std::string &param, const sptr<IRemoteObject> &cb)
 {
     SGLOGI("enter RiskAnalysisManagerService RequestSecurityModelResult");
     int32_t ret = IsApiHasPermission("RequestSecurityModelResult");
@@ -139,7 +140,7 @@ int32_t RiskAnalysisManagerService::RequestSecurityModelResult(const std::string
     SGLOGI("ReportClassifyEvent");
     event.status = result;
     BigData::ReportClassifyEvent(event);
-    auto proxy = iface_cast<RiskAnalysisManagerCallbackProxy>(callback);
+    auto proxy = iface_cast<RiskAnalysisManagerCallbackProxy>(cb);
     if (proxy == nullptr) {
         return NULL_OBJECT;
     }
@@ -165,9 +166,19 @@ void RiskAnalysisManagerService::PushRiskAnalysisTask(uint32_t modelId, std::str
     ffrt::submit(task);
 }
 
-int32_t RiskAnalysisManagerService::SetModelState(uint32_t modelId, bool enable)
+ErrCode RiskAnalysisManagerService::SetModelState(uint32_t modelId, bool enable)
 {
     return SUCCESS;
+}
+
+ErrCode RiskAnalysisManagerService::StartSecurityModel(uint32_t modelId, const std::string &param)
+{
+    SGLOGI("enter RiskAnalysisManagerService StartSecurityModel");
+    int32_t ret = IsApiHasPermission("StartSecurityModel");
+    if (ret != SUCCESS) {
+        return ret;
+    }
+    return ModelManager::GetInstance().StartSecurityModel(modelId, param);
 }
 
 void RiskAnalysisManagerService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)

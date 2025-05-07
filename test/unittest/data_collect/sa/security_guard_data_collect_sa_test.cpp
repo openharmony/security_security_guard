@@ -43,6 +43,8 @@
 #include "database_manager.h"
 #include "data_collect_manager_service.h"
 #include "security_event_query_callback_proxy.h"
+#include "security_event_ruler.h"
+#include "security_collector_subscribe_info.h"
 #undef private
 #undef protected
 
@@ -401,6 +403,21 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_NoPermission, TestSiz
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
+HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmitAsync_NoPermission, TestSize.Level0)
+{
+    int64_t eventId = 1;
+    std::string version = "1.0";
+    std::string time = "2022-01-01";
+    std::string content = "content";
+
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillRepeatedly(
+        Return(AccessToken::PermissionState::PERMISSION_DENIED));
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    service.OnAddSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID, "deviceId");
+    int32_t result = service.RequestDataSubmitAsync(eventId, version, time, content);
+    EXPECT_EQ(result, NO_PERMISSION);
+}
+
 HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_BadParam, TestSize.Level0)
 {
     int64_t eventId = 1;
@@ -595,7 +612,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Success, TestSize
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(DatabaseManager::GetInstance(), SubscribeDb).WillOnce(Return(SUCCESS));
-    EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb).WillOnce(Return(SUCCESS));
+    EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb).WillRepeatedly(Return(SUCCESS));
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     EXPECT_EQ(result, SUCCESS);
@@ -892,7 +909,8 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrSubscribeSc06, TestSiz
 HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrUnsubscribeSc01, TestSize.Level0)
 {
     AcquireDataSubscribeManager adsm {};
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillOnce([] (int64_t eventId, EventCfg &config) {
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
+        [] (int64_t eventId, EventCfg &config) {
         config.dbTable = "risk_event";
         config.eventType = 3;
         config.prog = "";
@@ -900,316 +918,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AcquireDataSubscrUnsubscribeSc01, TestS
     });
     int result = adsm.UnSubscribeSc(111);
     EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd01, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteInt32(DataCollectManagerService::CMD_DATA_REQUEST);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_DATA_COLLECT, data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd02, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteInt32(DataCollectManagerService::CMD_DATA_REQUEST);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_DATA_REQUEST, data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd03, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteInt32(DataCollectManagerService::CMD_DATA_SUBSCRIBE);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_DATA_SUBSCRIBE, data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd04, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteInt32(DataCollectManagerService::CMD_DATA_UNSUBSCRIBE);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_DATA_UNSUBSCRIBE, data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd05, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteInt32(DataCollectManagerService::CMD_SECURITY_EVENT_QUERY);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_SECURITY_EVENT_QUERY,
-        data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd06, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteInt64(0);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_DATA_COLLECT, data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd07, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteInt64(0);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_DATA_REQUEST, data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd08, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    SecurityCollector::Event event {
-        .eventId = 0,
-        .version = "version",
-        .content = "content",
-        .extra = ""
-    };
-    SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo(event);
-    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteParcelable(&subscribeInfo);
-    data.WriteRemoteObject(obj);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_DATA_SUBSCRIBE, data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd09, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    data.WriteRemoteObject(obj);
-
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillRepeatedly(
-        Return(AccessToken::PermissionState::PERMISSION_DENIED));
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_DATA_UNSUBSCRIBE, data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd10, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteUint32(MAX_QUERY_EVENT_SIZE + 1);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_SECURITY_EVENT_QUERY,
-        data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd11, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteUint32(1);
-    SecurityCollector::SecurityEventRuler ruler;
-    data.WriteParcelable(&ruler);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_SECURITY_EVENT_QUERY,
-        data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd12, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteUint32(1);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_SECURITY_COLLECTOR_START,
-        data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd13, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    SecurityCollector::Event event {};
-    SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo(event, -1, false);
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    data.WriteRemoteObject(obj);
-
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_SECURITY_COLLECTOR_START,
-        data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd14, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteUint32(1);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_SECURITY_COLLECTOR_START,
-        data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd15, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteFileDescriptor(-1);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_SECURITY_CONFIG_UPDATE,
-        data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd16, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteString("test");
-    data.WriteFileDescriptor(-1);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_SECURITY_CONFIG_UPDATE,
-        data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd17, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteString("test");
-    data.WriteFileDescriptor(1);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
-        Return(AccessToken::PermissionState::PERMISSION_DENIED));
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_SECURITY_CONFIG_UPDATE,
-        data, reply, option);
-    EXPECT_EQ(result, NO_PERMISSION);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd19, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    SecurityCollector::Event event {};
-    SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo(event, -1, false);
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    data.WriteRemoteObject(obj);
-
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_SECURITY_COLLECTOR_STOP,
-        data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithDataRequestCmd20, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteUint32(1);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_SECURITY_COLLECTOR_STOP,
-        data, reply, option);
-    EXPECT_EQ(result, BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithInvalidCmd, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(IDataCollectManager::GetDescriptor());
-    data.WriteInt32(100);
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(100, data, reply, option);
-
-    EXPECT_EQ(result, 305);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, TestOnRemoteRequestWithInvalidToken, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    data.WriteInterfaceToken(u"InvalidToken");
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.OnRemoteRequest(DataCollectManagerService::CMD_DATA_COLLECT, data, reply, option);
-
-    EXPECT_EQ(result, 305);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent, TestSize.Level0)
@@ -1473,17 +1181,15 @@ HWTEST_F(SecurityGuardDataCollectSaTest, IsApiHasPermission01, TestSize.Level0)
 
 HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate01, TestSize.Level0)
 {
-    SecurityGuard::SecurityConfigUpdateInfo  subscribeInfo{};
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_DENIED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.ConfigUpdate(subscribeInfo);
+    int32_t result = service.ConfigUpdate(-1, "");
     EXPECT_EQ(result, NO_PERMISSION);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate02, TestSize.Level0)
 {
-    SecurityGuard::SecurityConfigUpdateInfo subscribeInfo{};
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
@@ -1491,13 +1197,12 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate02, TestSize.Level0)
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(false));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.ConfigUpdate(subscribeInfo);
+    int32_t result = service.ConfigUpdate(-1, "");
     EXPECT_EQ(result, NO_SYSTEMCALL);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate03, TestSize.Level0)
 {
-    SecurityGuard::SecurityConfigUpdateInfo subscribeInfo{};
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
@@ -1505,14 +1210,12 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate03, TestSize.Level0)
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.ConfigUpdate(subscribeInfo);
+    int32_t result = service.ConfigUpdate(-1, "");
     EXPECT_EQ(result, BAD_PARAM);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate04, TestSize.Level0)
 {
-    SecurityGuard::SecurityConfigUpdateInfo subscribeInfo(-1,
-        SECURITY_GUARD_EVENT_CFG_FILE);
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
@@ -1522,7 +1225,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate04, TestSize.Level0)
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.ConfigUpdate(subscribeInfo);
+    int32_t result = service.ConfigUpdate(-1, SECURITY_GUARD_EVENT_CFG_FILE);
     EXPECT_EQ(result, FAILED);
 }
 
@@ -1535,11 +1238,10 @@ HWTEST_F(SecurityGuardDataCollectSaTest, WriteRemoteFileToLocal01, TestSize.Leve
     })";
     out << errtmp << std::endl;
     int32_t fd = open("/data/test/unittest/resource/test.json", O_RDONLY);
-    SecurityGuard::SecurityConfigUpdateInfo subscribeInfo(fd, "test.json");
 
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     std::string toPath = "/data/test/unittest/resource/";
-    int32_t result = service.WriteRemoteFileToLocal(subscribeInfo, toPath + "testFile.json");
+    int32_t result = service.WriteRemoteFileToLocal(fd, toPath + "testFile.json");
     close(fd);
     EXPECT_EQ(result, FAILED);
 }
@@ -1553,11 +1255,10 @@ HWTEST_F(SecurityGuardDataCollectSaTest, WriteRemoteFileToLocal02, TestSize.Leve
     })";
     out << errtmp << std::endl;
     int32_t fd = 0;
-    SecurityGuard::SecurityConfigUpdateInfo subscribeInfo(fd, "test.json");
 
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     std::string toPath = "/data/test/unittest/resource/";
-    int32_t result = service.WriteRemoteFileToLocal(subscribeInfo, toPath + "testFile.json");
+    int32_t result = service.WriteRemoteFileToLocal(fd, toPath + "testFile.json");
     EXPECT_EQ(result, FAILED);
 }
 
@@ -1623,9 +1324,10 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg, TestSize.Level0)
 HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg01, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
     EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), SubscribeCollectors).WillOnce(
         Return(true));
-    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), Mute).WillOnce(
+    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), AddFilter).WillOnce(
         Return(SUCCESS));
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
     collectorFilter.eventId = 1;
@@ -1635,22 +1337,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg01, TestSize.Level0)
     EXPECT_EQ(ret, SUCCESS);
     AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
     AcquireDataSubscribeManager::GetInstance().eventToListenner_.clear();
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg02, TestSize.Level0)
-{
-    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), SubscribeCollectors).WillOnce(
-        Return(true));
-    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), Unmute).WillOnce(
-        Return(FAILED));
-    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
-    collectorFilter.eventId = 1;
-    collectorFilter.isSetMute = false;
-    AcquireDataSubscribeManager::GetInstance().muteCache_[1][obj].emplace_back(collectorFilter);
-    int ret = AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(1, obj);
-    EXPECT_EQ(ret, SUCCESS);
-    AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc, TestSize.Level0)
@@ -1668,30 +1354,14 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc, TestSize.Level0)
 HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc01, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
     EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), Subscribe).WillOnce(
         Return(SecurityCollector::SUCCESS));
-    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), Mute).WillOnce(
+    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), AddFilter).WillOnce(
         Return(SecurityCollector::SUCCESS));
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
     collectorFilter.eventId = 1;
     collectorFilter.isSetMute = true;
-    AcquireDataSubscribeManager::GetInstance().muteCache_[1][obj].emplace_back(collectorFilter);
-    int ret = AcquireDataSubscribeManager::GetInstance().SubscribeScInSc(1, obj);
-    EXPECT_EQ(ret, SUCCESS);
-    AcquireDataSubscribeManager::GetInstance().scSubscribeMap_.clear();
-    AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc02, TestSize.Level0)
-{
-    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), Subscribe).WillOnce(
-        Return(SecurityCollector::SUCCESS));
-    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), Unmute).WillOnce(
-        Return(SecurityCollector::SUCCESS));
-    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
-    collectorFilter.eventId = 1;
-    collectorFilter.isSetMute = false;
     AcquireDataSubscribeManager::GetInstance().muteCache_[1][obj].emplace_back(collectorFilter);
     int ret = AcquireDataSubscribeManager::GetInstance().SubscribeScInSc(1, obj);
     EXPECT_EQ(ret, SUCCESS);
@@ -1730,29 +1400,29 @@ HWTEST_F(SecurityGuardDataCollectSaTest, IsEventGroupHasPermission, TestSize.Lev
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Mute, TestSize.Level0)
+HWTEST_F(SecurityGuardDataCollectSaTest, AddFilter, TestSize.Level0)
 {
     SecurityEventFilter subscribeMute {};
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    int32_t result = service.Mute(subscribeMute, obj, "111");
+    int32_t result = service.AddFilter(subscribeMute, obj, "111");
     EXPECT_EQ(result, BAD_PARAM);
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(Return(false));
     subscribeMute.filter_.eventGroup = "securityGroup";
-    result = service.Mute(subscribeMute, obj, "111");
+    result = service.AddFilter(subscribeMute, obj, "111");
     EXPECT_EQ(result, BAD_PARAM);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, Unmute, TestSize.Level0)
+HWTEST_F(SecurityGuardDataCollectSaTest, RemoveFilter, TestSize.Level0)
 {
     SecurityEventFilter subscribeMute {};
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    int32_t result = service.Unmute(subscribeMute, obj, "111");
+    int32_t result = service.RemoveFilter(subscribeMute, obj, "111");
     EXPECT_EQ(result, BAD_PARAM);
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(Return(false));
     subscribeMute.filter_.eventGroup = "securityGroup";
-    result = service.Unmute(subscribeMute, obj, "111");
+    result = service.RemoveFilter(subscribeMute, obj, "111");
     EXPECT_EQ(result, BAD_PARAM);
 }
 
@@ -1772,24 +1442,33 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeMute, TestSize.Level0)
     SecurityCollector::Event event {
         .eventId = 111
     };
+    SecurityCollector::Event event1 {
+        .eventId = 2222
+    };
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj, "1111");
     EXPECT_EQ(result, SUCCESS);
 
     auto collectorListenner = std::make_shared<AcquireDataSubscribeManager::CollectorListenner>(event);
+    auto collectorListenner1 = std::make_shared<AcquireDataSubscribeManager::CollectorListenner>(event1);
     AcquireDataSubscribeManager::GetInstance().eventToListenner_.emplace(event.eventId, collectorListenner);
-    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), Mute).WillOnce(
-        Return(false)).WillOnce(Return(true));
+    AcquireDataSubscribeManager::GetInstance().eventToListenner_.emplace(event1.eventId, collectorListenner1);
+    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), AddFilter).WillOnce(
+        Return(false)).WillOnce(Return(true)).WillOnce(Return(true));
+    subscribeMute.filter_.eventId = 2222;
     result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj, "1111");
     EXPECT_EQ(result, FAILED);
     result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj, "1111");
     EXPECT_EQ(result, SUCCESS);
+    AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
     constexpr size_t maxMute = 255;
     for (size_t i = 0; i < maxMute; i++) {
-        AcquireDataSubscribeManager::GetInstance().muteCache_[111][obj].emplace_back(collectorFilter);
+        collectorFilter.eventId = i;
+        AcquireDataSubscribeManager::GetInstance().muteCache_[2222][obj].emplace_back(collectorFilter);
     }
     result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj, "1111");
-    EXPECT_EQ(result, BAD_PARAM);
+    EXPECT_EQ(result, SUCCESS);
+    subscribeMute.filter_.isInclude = true;
     result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj, "1111");
     EXPECT_EQ(result, BAD_PARAM);
     AcquireDataSubscribeManager::GetInstance().eventToListenner_.clear();
@@ -1810,14 +1489,19 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeMute01, TestSize.Level0)
     SecurityCollector::Event event {
         .eventId = 111
     };
+    SecurityCollector::Event event1 {
+        .eventId = 222
+    };
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj, "1111");
     EXPECT_EQ(result, SUCCESS);
     AcquireDataSubscribeManager::GetInstance().scSubscribeMap_.insert({111,
         std::make_shared<AcquireDataSubscribeManager::SecurityCollectorSubscriber>(event)});
-
-    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), Mute).WillOnce(
+    AcquireDataSubscribeManager::GetInstance().scSubscribeMap_.insert({222,
+        std::make_shared<AcquireDataSubscribeManager::SecurityCollectorSubscriber>(event1)});
+    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), AddFilter).WillOnce(
         Return(FAILED)).WillOnce(Return(SUCCESS));
+    subscribeMute.filter_.eventId = 222;
     result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj, "1111");
     EXPECT_EQ(result, FAILED);
     result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj, "1111");
@@ -1844,54 +1528,20 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RemoveSubscribeMute, TestSize.Level0)
     };
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, "1111");
-    EXPECT_EQ(result, SUCCESS);
-
-    auto collectorListenner = std::make_shared<AcquireDataSubscribeManager::CollectorListenner>(event);
-    AcquireDataSubscribeManager::GetInstance().eventToListenner_.emplace(event.eventId, collectorListenner);
-    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), Unmute).WillOnce(
+    EXPECT_EQ(result, BAD_PARAM);
+    AcquireDataSubscribeManager::GetInstance().muteCache_[111][obj].emplace_back(collectorFilter);
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, nullptr, "1111");
+    EXPECT_EQ(result, BAD_PARAM);
+    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), RemoveFilter).WillOnce(
         Return(false)).WillOnce(Return(true));
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, "1111");
     EXPECT_EQ(result, FAILED);
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, "1111");
     EXPECT_EQ(result, SUCCESS);
-    constexpr size_t maxMute = 255;
-    for (size_t i = 0; i < maxMute; i++) {
-        AcquireDataSubscribeManager::GetInstance().muteCache_[111][obj].emplace_back(collectorFilter);
-    }
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, "1111");
+    AcquireDataSubscribeManager::GetInstance().muteCache_[111][obj].emplace_back(collectorFilter);
+    subscribeMute.filter_.eventId = 222;
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, nullptr, "1111");
     EXPECT_EQ(result, BAD_PARAM);
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, "1111");
-    EXPECT_EQ(result, BAD_PARAM);
-    AcquireDataSubscribeManager::GetInstance().eventToListenner_.clear();
-    AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, RemoveSubscribeMute01, TestSize.Level0)
-{
-    SecurityEventFilter subscribeMute {};
-    subscribeMute.filter_.eventId = 111;
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
-        [] (int64_t eventId, EventCfg &config) {
-        config.dbTable = "risk_event";
-        config.eventType = 3;
-        config.prog = "";
-        return true;
-    });
-    SecurityCollector::Event event {
-        .eventId = 111
-    };
-    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, "1111");
-    EXPECT_EQ(result, SUCCESS);
-    AcquireDataSubscribeManager::GetInstance().scSubscribeMap_.insert({111,
-        std::make_shared<AcquireDataSubscribeManager::SecurityCollectorSubscriber>(event)});
-
-    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), Unmute).WillOnce(
-        Return(FAILED)).WillOnce(Return(SUCCESS));
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, "1111");
-    EXPECT_EQ(result, FAILED);
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, "1111");
-    EXPECT_EQ(result, SUCCESS);
     AcquireDataSubscribeManager::GetInstance().eventToListenner_.clear();
     AcquireDataSubscribeManager::GetInstance().muteCache_.clear();
 }

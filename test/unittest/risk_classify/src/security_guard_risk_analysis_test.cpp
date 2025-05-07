@@ -34,7 +34,7 @@ namespace OHOS {
     std::shared_ptr<Security::AccessToken::MockAccessTokenKitInterface>
         Security::AccessToken::AccessTokenKit::instance_ = nullptr;
     std::mutex Security::AccessToken::AccessTokenKit::mutex_ {};
-    
+
 class MockRemoteObject final : public IRemoteObject {
 public:
     MockRemoteObject() : IRemoteObject(u"")
@@ -63,7 +63,7 @@ void SecurityGuardRiskAnalysisTest::SetUp()
 void SecurityGuardRiskAnalysisTest::TearDown()
 {
 }
- 
+
 HWTEST_F(SecurityGuardRiskAnalysisTest, IsApiHasPermission_ApiNotInMap, TestSize.Level1) {
     std::string api = "apiNotInMap";
     EXPECT_EQ(riskAnalysisManagerService.IsApiHasPermission(api), 1);
@@ -112,60 +112,21 @@ HWTEST_F(SecurityGuardRiskAnalysisTest, SetModelState_Success, TestSize.Level1) 
     ASSERT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardRiskAnalysisTest, HandleSetModelState_001, TestSize.Level1)
-{
-    MessageParcel *data;
-    MessageParcel *reply;
-    data = new MessageParcel();
-    reply = new MessageParcel();
-    data->WriteBool(true);
-    int32_t ret = riskAnalysisManagerService.HandleSetModelState(*data, *reply);
-    ASSERT_EQ(ret, BAD_PARAM);
-    delete data;
-    delete reply;
+HWTEST_F(SecurityGuardRiskAnalysisTest, RequestSecurityModelResult01, TestSize.Level1) {
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+        .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_NATIVE));
+    int32_t result = riskAnalysisManagerService.RequestSecurityModelResult("111", 111, "test", nullptr);
+    ASSERT_EQ(result, NULL_OBJECT);
 }
 
-HWTEST_F(SecurityGuardRiskAnalysisTest, HandleSetModelState_002, TestSize.Level1)
-{
-    MessageParcel *data;
-    MessageParcel *reply;
-    data = new MessageParcel();
-    reply = new MessageParcel();
-    data->WriteUint32(1);
-    data->WriteBool(true);
-    data->WriteUint32(2);
-    int32_t ret = riskAnalysisManagerService.HandleSetModelState(*data, *reply);
-    ASSERT_EQ(ret, SUCCESS);
-    delete data;
-    delete reply;
-}
-
-HWTEST_F(SecurityGuardRiskAnalysisTest, HandleGetSecurityModelResult_001, TestSize.Level1)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    EXPECT_EQ(riskAnalysisManagerService.HandleGetSecurityModelResult(data, reply), BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardRiskAnalysisTest, HandleGetSecurityModelResult_002, TestSize.Level1)
-{
-    MessageParcel data;
-    data.WriteUint32(1);
-    data.WriteString("param");
-    data.WriteRemoteObject(nullptr);
-    MessageParcel reply;
-    EXPECT_EQ(riskAnalysisManagerService.HandleGetSecurityModelResult(data, reply), BAD_PARAM);
-}
-
-HWTEST_F(SecurityGuardRiskAnalysisTest, HandleGetSecurityModelResult_003, TestSize.Level1)
-{
-    MessageParcel data;
-    data.WriteUint32(1);
-    data.WriteString("param");
-    sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    data.WriteRemoteObject(obj);
-    MessageParcel reply;
-    EXPECT_EQ(riskAnalysisManagerService.HandleGetSecurityModelResult(data, reply),
-        riskAnalysisManagerService.RequestSecurityModelResult("", 1, "param", obj));
+HWTEST_F(SecurityGuardRiskAnalysisTest, StartSecurityModel, TestSize.Level1) {
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+        .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_NATIVE));
+    int32_t result = riskAnalysisManagerService.StartSecurityModel(222, "test");
+    ASSERT_EQ(result, NOT_FOUND);
 }
 }

@@ -30,6 +30,7 @@ public:
     virtual std::string GetResult(uint32_t modelId, const std::string &param) = 0;
     virtual int32_t SubscribeResult(std::shared_ptr<IModelResultListener> listener) = 0;
     virtual void Release() = 0;
+    virtual int32_t StartSecurityModel(uint32_t modelId, const std::string &param) {return 0;};
 };
 
 typedef IModel* (*GetModelApi)();

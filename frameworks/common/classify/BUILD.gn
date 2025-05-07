@@ -42,8 +42,9 @@ ohos_source_set("sg_classify_stamp") {
   sources = [
     "src/risk_analysis_manager_callback_service.cpp",
     "src/risk_analysis_manager_callback_stub.cpp",
-    "src/risk_analysis_manager_proxy.cpp",
   ]
+
+  deps = [ "${sg_root_dir}/services/risk_classify/idl:risk_analysis_manager_idl_sa_proxy" ]
 
   sanitize = {
     integer_overflow = true
@@ -87,7 +88,7 @@ ohos_shared_library("libsg_classify_sdk") {
 
   sources = [ "src/sg_classify_client.cpp" ]
 
-  deps = []
+  deps = [ "${sg_root_dir}/services/risk_classify/idl:risk_analysis_manager_idl_sa_proxy" ]
   defines = []
   if (security_guard_trim_model_analysis) {
     defines += [ "SECURITY_GUARD_TRIM_MODEL_ANALYSIS" ]

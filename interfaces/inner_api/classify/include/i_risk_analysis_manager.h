@@ -34,11 +34,13 @@ public:
     enum {
         CMD_GET_SECURITY_MODEL_RESULT = static_cast<uint32_t>(InterfaceCode::CMD_GET_SECURITY_MODEL_RESULT),
         CMD_SET_MODEL_STATE = static_cast<uint32_t>(InterfaceCode::CMD_SET_MODEL_STATE),
+        CMD_START_MODEL = static_cast<uint32_t>(InterfaceCode::CMD_START_MODEL),
     };
 
     virtual int32_t RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
         const std::string &param, const sptr<IRemoteObject> &callback) = 0;
     virtual int32_t SetModelState(uint32_t modelId, bool enable) = 0;
+    virtual int32_t StartSecurityModel(uint32_t modelId, const std::string &param) = 0;
 };
 
 class IRiskAnalysisManagerCallback : public IRemoteBroker {
