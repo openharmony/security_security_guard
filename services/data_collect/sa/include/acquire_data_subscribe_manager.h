@@ -40,6 +40,7 @@ public:
         const std::string &sdkFlag);
     int RemoveSubscribeMute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
         const std::string &sdkFlag);
+    void SubscriberEventOnSgStart();
     class CleanupTimer {
     public:
         CleanupTimer() = default;
@@ -83,11 +84,8 @@ private:
     int SubscribeScInSg(int64_t eventId, const sptr<IRemoteObject> &callback);
     int SubscribeScInSc(int64_t eventId, const sptr<IRemoteObject> &callback);
     size_t GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event);
-    void EraseSubscribeMute(int64_t eventId, const sptr<IRemoteObject> &callback);
     SecurityCollector::SecurityCollectorEventMuteFilter ConvertFilter(const SecurityGuard::EventMuteFilter &sgFilter);
     bool FindSdkFlag(const std::set<std::string> &eventSubscribes, const std::string &sdkFlag);
-    int32_t CheckMuteInfo(const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter,
-        const sptr<IRemoteObject> &callback);
     class DbListener : public IDbListener {
     public:
         DbListener() = default;
@@ -102,21 +100,16 @@ private:
         ~SecurityCollectorSubscriber() override = default;
         int32_t OnNotify(const SecurityCollector::Event &event) override;
     };
-    class CollectorListenner : public SecurityCollector::ICollectorFwk {
+    class CollectorListener : public SecurityCollector::ICollectorFwk {
     public:
-        CollectorListenner(const SecurityCollector::Event &event) : event_(event) {}
-        int64_t GetEventId() override;
         void OnNotify(const SecurityCollector::Event &event) override;
     private:
-        SecurityCollector::Event event_;
     };
     std::shared_ptr<IDbListener> listener_{};
+    std::shared_ptr<CollectorListener> collectorListener_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
     std::map<sptr<IRemoteObject>, std::string> callbackHashMap_{};
     std::map<int64_t, std::shared_ptr<SecurityCollector::ICollectorFwk>> eventToListenner_;
-    std::map<int64_t, std::map<sptr<IRemoteObject>,
-        std::vector<SecurityCollector::SecurityCollectorEventMuteFilter>>> muteCache_;
-    std::map<sptr<IRemoteObject>, std::string> callbackHashMapNotSetMute_{};
 };
 } // namespace OHOS::Security::SecurityGuard
 

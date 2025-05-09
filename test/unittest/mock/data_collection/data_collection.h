@@ -37,8 +37,8 @@ public:
     virtual int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
         std::vector<SecurityEvent> &events) = 0;
     virtual int32_t QuerySecurityEventConfig(std::string &result) = 0;
-    virtual bool AddFilter(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag) = 0;
-    virtual bool RemoveFilter(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag) = 0;
+    virtual int32_t AddFilter(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag) = 0;
+    virtual int32_t RemoveFilter(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag) = 0;
     virtual bool SecurityGuardSubscribeCollector(const std::vector<int64_t>& eventIds) = 0;
 };
 
@@ -59,8 +59,8 @@ public:
     MOCK_METHOD2(QuerySecurityEvent, int32_t(const std::vector<SecurityEventRuler> rulers,
         std::vector<SecurityEvent> &events));
     MOCK_METHOD1(QuerySecurityEventConfig, int32_t(std::string &result));
-    MOCK_METHOD2(AddFilter, bool(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag));
-    MOCK_METHOD2(RemoveFilter, bool(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag));
+    MOCK_METHOD2(AddFilter, int32_t(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag));
+    MOCK_METHOD2(RemoveFilter, int32_t(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag));
     MOCK_METHOD1(SecurityGuardSubscribeCollector, bool(const std::vector<int64_t>& eventIds));
     void CloseLib() {};
 };
