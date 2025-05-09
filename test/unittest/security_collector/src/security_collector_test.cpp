@@ -773,7 +773,8 @@ HWTEST_F(SecurityCollectorTest, RemoveFilter, TestSize.Level1)
         Return(AccessToken::PermissionState::PERMISSION_DENIED)).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED)).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(DataCollection::GetInstance(), RemoveFilter).WillOnce(Return(false)).WillOnce(Return(true));
+    EXPECT_CALL(DataCollection::GetInstance(), RemoveFilter).WillOnce(Return(
+        SecurityCollector::ErrorCode::FAILED)).WillOnce(Return(SecurityCollector::ErrorCode::SUCCESS));
     SecurityCollectorEventMuteFilter fil {};
     SecurityCollectorEventFilter filter(fil);
     int32_t ret = g_service.RemoveFilter(filter, "111");
@@ -790,7 +791,8 @@ HWTEST_F(SecurityCollectorTest, AddFilter, TestSize.Level1)
         Return(AccessToken::PermissionState::PERMISSION_DENIED)).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED)).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(DataCollection::GetInstance(), AddFilter).WillOnce(Return(false)).WillOnce(Return(true));
+    EXPECT_CALL(DataCollection::GetInstance(), AddFilter).WillOnce(Return(
+        SecurityCollector::ErrorCode::FAILED)).WillOnce(Return(SecurityCollector::ErrorCode::SUCCESS));
     SecurityCollectorEventMuteFilter fil {};
     SecurityCollectorEventFilter filter(fil);
     int32_t ret = g_service.AddFilter(filter, "111");
