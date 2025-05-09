@@ -320,8 +320,8 @@ HWTEST_F(DataCollectionTest, AddFilter, testing::ext::TestSize.Level1)
     collectorFilter.isSetMute = false;
     myOb.eventIdToLoaderMap_.emplace(1, LibLoader("testPath"));
     EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false)).WillOnce(Return(true));
-    EXPECT_FALSE(myOb.AddFilter(collectorFilter, "1111"));
-    EXPECT_FALSE(myOb.AddFilter(collectorFilter, "1111"));
+    EXPECT_EQ(myOb.AddFilter(collectorFilter, "1111"), FAILED);
+    EXPECT_EQ(myOb.AddFilter(collectorFilter, "1111"), NULL_OBJECT);
 }
 
 HWTEST_F(DataCollectionTest, RemoveFilter, testing::ext::TestSize.Level1)
@@ -336,8 +336,8 @@ HWTEST_F(DataCollectionTest, RemoveFilter, testing::ext::TestSize.Level1)
     nlohmann::json json = st;
     myOb.eventIdToLoaderMap_.emplace(1, LibLoader("testPath"));
     EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false)).WillOnce(Return(true));
-    EXPECT_FALSE(myOb.RemoveFilter(collectorFilter, "1111"));
-    EXPECT_FALSE(myOb.RemoveFilter(collectorFilter, "1111"));
+    EXPECT_EQ(myOb.RemoveFilter(collectorFilter, "1111"), FAILED);
+    EXPECT_EQ(myOb.RemoveFilter(collectorFilter, "1111"), NULL_OBJECT);
 }
 
 HWTEST_F(DataCollectionTest, ICollector01, testing::ext::TestSize.Level1)
