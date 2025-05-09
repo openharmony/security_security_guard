@@ -113,18 +113,7 @@ void DataCollectManagerService::OnStart()
         SGLOGE("init event group config error");
     }
 #endif
-    std::vector<int64_t> eventIds = ConfigDataManager::GetInstance().GetAllEventIds();
-    std::vector<int64_t> onStartEventList;
-    for (int64_t eventId : eventIds) {
-        EventCfg eventCfg;
-        bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(eventId, eventCfg);
-        if (!isSuccess) {
-            SGLOGI("GetEventConfig error");
-        } else if (eventCfg.collectOnStart == 1) {
-            onStartEventList.push_back(eventId);
-        }
-    }
-    SecurityCollector::DataCollection::GetInstance().SecurityGuardSubscribeCollector(onStartEventList);
+    AcquireDataSubscribeManager::GetInstance().SubscriberEventOnSgStart();
     if (!Publish(this)) {
         SGLOGE("Publish error");
         return;
