@@ -78,6 +78,14 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  sanitize = {
+    integer_overflow = false
+    ubsan = false
+    boundary_sanitize = false
+    cfi = false
+    cfi_cross_dso = false
+    debug = false
+  }
 }
 
 group("unittest") {
