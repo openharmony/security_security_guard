@@ -32,11 +32,11 @@ int ICollector::IsStartWithSub()
 {
     return 0;
 };
-int ICollector::AddFilter(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
+int ICollector::Mute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
 {
     return -1;
 };
-int ICollector::RemoveFilter(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
+int ICollector::Unmute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
 {
     return -1;
 };

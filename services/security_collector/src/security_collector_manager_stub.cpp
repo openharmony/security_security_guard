@@ -229,7 +229,7 @@ int32_t SecurityCollectorManagerStub::HandleMute(MessageParcel &data, MessagePar
     if (!data.ReadString(flag)) {
         LOGE("failed to get SubscribeMute flag");
     }
-    int32_t ret = AddFilter(*info, flag);
+    int32_t ret = Mute(*info, flag);
     reply.WriteInt32(ret);
     return ret;
 }
@@ -255,7 +255,7 @@ int32_t SecurityCollectorManagerStub::HandleUnmute(MessageParcel &data, MessageP
     if (!data.ReadString(flag)) {
         LOGE("failed to get SubscribeUnMute flag");
     }
-    int32_t ret = RemoveFilter(*info, flag);
+    int32_t ret = Unmute(*info, flag);
     reply.WriteInt32(ret);
     return ret;
 }
