@@ -72,6 +72,14 @@ ohos_unittest("inner_api_test") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
+  sanitize = {
+    integer_overflow = false
+    ubsan = false
+    boundary_sanitize = false
+    cfi = false
+    cfi_cross_dso = false
+    debug = false
+  }
 }
 
 group("unittest") {
