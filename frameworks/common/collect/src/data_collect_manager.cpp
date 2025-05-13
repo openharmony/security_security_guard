@@ -280,9 +280,9 @@ bool DataCollectManager::IsCurrentSubscriberEventIdExist(
     return false;
 }
 
-int32_t DataCollectManager::AddFilter(const std::shared_ptr<EventMuteFilter> &subscribeMute)
+int32_t DataCollectManager::Mute(const std::shared_ptr<EventMuteFilter> &subscribeMute)
 {
-    SGLOGI("enter DataCollectManager AddFilter");
+    SGLOGI("enter DataCollectManager Mute");
     std::lock_guard<std::mutex> lock(mutex_);
     if (subscribeMute == nullptr) {
         SGLOGE("subscriber is nullptr");
@@ -304,7 +304,7 @@ int32_t DataCollectManager::AddFilter(const std::shared_ptr<EventMuteFilter> &su
         return NULL_OBJECT;
     }
     SecurityEventFilter filter(*subscribeMute);
-    int32_t ret = proxy->AddFilter(filter, callback_, sdkFlag_);
+    int32_t ret = proxy->Mute(filter, callback_, sdkFlag_);
     if (ret != SUCCESS) {
         return ret;
     }
@@ -312,9 +312,9 @@ int32_t DataCollectManager::AddFilter(const std::shared_ptr<EventMuteFilter> &su
     return 0;
 }
 
-int32_t DataCollectManager::RemoveFilter(const std::shared_ptr<EventMuteFilter> &subscribeMute)
+int32_t DataCollectManager::Unmute(const std::shared_ptr<EventMuteFilter> &subscribeMute)
 {
-    SGLOGI("enter DataCollectManager RemoveFilter");
+    SGLOGI("enter DataCollectManager Unmute");
     std::lock_guard<std::mutex> lock(mutex_);
     if (subscribeMute == nullptr) {
         SGLOGE("subscriber is nullptr");
@@ -336,7 +336,7 @@ int32_t DataCollectManager::RemoveFilter(const std::shared_ptr<EventMuteFilter> 
         return NULL_OBJECT;
     }
     SecurityEventFilter filter(*subscribeMute);
-    int32_t ret = proxy->RemoveFilter(filter, callback_, sdkFlag_);
+    int32_t ret = proxy->Unmute(filter, callback_, sdkFlag_);
     if (ret != SUCCESS) {
         return ret;
     }

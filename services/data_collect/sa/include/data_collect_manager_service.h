@@ -55,9 +55,9 @@ public:
         const sptr<IRemoteObject> &cb) override;
     ErrCode ConfigUpdate(int fd, const std::string& name) override;
     ErrCode QuerySecurityEventConfig(std::string &result) override;
-    ErrCode AddFilter(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &cb,
+    ErrCode Mute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &cb,
         const std::string &sdkFlag) override;
-    ErrCode RemoveFilter(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &cb,
+    ErrCode Unmute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &cb,
         const std::string &sdkFlag) override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
