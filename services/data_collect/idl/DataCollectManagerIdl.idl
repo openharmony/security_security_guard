@@ -29,6 +29,6 @@ interface OHOS.Security.SecurityGuard.DataCollectManagerIdl {
     void CollectorStop([in] SecurityCollectorSubscribeInfo subscribeInfo, [in] IRemoteObject cb);
     void ConfigUpdate([in] FileDescriptor fd, [in] String name);
     void QuerySecurityEventConfig([inout] String resStr);
-    void Mute([in] SecurityEventFilter subscribeMute, [in] IRemoteObject cb, [in] String sdkFlag);
-    void Unmute([in] SecurityEventFilter subscribeMute, [in] IRemoteObject cb, [in] String sdkFlag);
+    void AddFilter([in] SecurityEventFilter subscribeMute, [in] IRemoteObject cb, [in] String sdkFlag);
+    void RemoveFilter([in] SecurityEventFilter subscribeMute, [in] IRemoteObject cb, [in] String sdkFlag);
 }

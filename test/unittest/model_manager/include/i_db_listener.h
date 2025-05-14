@@ -17,7 +17,6 @@
 #define SECURITY_GUARD_I_DB_LISTENER_H
 
 #include "i_model_info.h"
-
 namespace OHOS::Security::SecurityGuard {
 class IDbListener {
 public:
