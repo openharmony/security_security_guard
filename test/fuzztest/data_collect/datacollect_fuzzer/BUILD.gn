@@ -58,6 +58,7 @@ ohos_fuzztest("DataCollectFuzzTest") {
     "SECURITY_GUARD_EVENT_GROUP_CFG_SOURCE = \"${security_guard_event_group_cfg_source}\"",
     "SECURITY_GUARD_CONFIG_UPDATE_TRUST_LIST_SOURCE = \"${security_guard_config_update_trust_list_source}\"",
     "SECURITY_GUARD_COLLECTOR_CFG_SOURCE = \"${security_guard_collector_cfg_source}\"",
+    "SECURITY_GUARD_EVENT_FILTER_PATH = \"${security_guard_event_filter_path}\"",
   ]
 
   sources = [

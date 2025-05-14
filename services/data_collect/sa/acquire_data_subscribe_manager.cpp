@@ -29,6 +29,7 @@
 #include "collector_manager.h"
 #include "data_collection.h"
 #include "security_event_filter.h"
+#include "security_event_info.h"
 #include "data_format.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -39,6 +40,7 @@ namespace {
     constexpr size_t MAX_SUBS_SIZE = 10;
     std::mutex g_mutex{};
     constexpr int64_t PROCESS_ID_IN_KERNEL_MONITOR = 0x01C000004;
+    constexpr int64_t FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR = 1011015020;
     std::map<sptr<IRemoteObject>, AcquireDataSubscribeManager::SubscriberInfo> g_subscriberInfoMap{};
 }
 
@@ -49,7 +51,13 @@ AcquireDataSubscribeManager& AcquireDataSubscribeManager::GetInstance()
 }
 
 AcquireDataSubscribeManager::AcquireDataSubscribeManager() : listener_(std::make_shared<DbListener>()),
-    collectorListener_(std::make_shared<CollectorListener>()){}
+    collectorListener_(std::make_shared<CollectorListener>())
+{
+    handle_ = dlopen(SECURITY_GUARD_EVENT_FILTER_PATH, RTLD_LAZY);
+    if (handle_ != nullptr) {
+        eventFilter_ = reinterpret_cast<GetEventFilterFunc>(dlsym(handle_, "GetEventFilter"));
+    }
+}
 
 int AcquireDataSubscribeManager::InsertSubscribeRecord(
     const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &callback)
@@ -143,7 +151,8 @@ int AcquireDataSubscribeManager::SubscribeSc(int64_t eventId, const sptr<IRemote
     if (config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         return SUCCESS;
     }
-    if (eventId == SecurityCollector::PROCESS_EVENTID && FileExists("/dev/hkids")) {
+    if ((eventId == SecurityCollector::PROCESS_EVENTID || eventId == SecurityCollector::FILE_EVENTID) &&
+        FileExists("/dev/hkids")) {
         SGLOGI("current eventId not need to start collector");
         return SUCCESS;
     }
@@ -271,6 +280,10 @@ void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<I
         SGLOGI("RemoveSubscribeRecordOnRemoteDied subscriberInfoMap_subscribe_size  %{public}zu",
             i.second.subscribe.size());
     }
+    if (callbackHashMap_.find(callback) != callbackHashMap_.end() && !callbackHashMap_.at(callback).empty() &&
+        eventFilter_ != nullptr) {
+        eventFilter_()->RemoveSdkAllEventFilter(callbackHashMap_.at(callback)[0]);
+    }
     callbackHashMap_.erase(callback);
 }
 
@@ -350,8 +363,13 @@ size_t AcquireDataSubscribeManager::GetSecurityCollectorEventBufSize(const Secur
     return res;
 }
 
-bool AcquireDataSubscribeManager::FindSdkFlag(const std::set<std::string> &eventSubscribes, const std::string &sdkFlag)
+bool AcquireDataSubscribeManager::FindSdkFlag(const std::set<std::string> &eventSubscribes,
+        const std::vector<std::string> &sdkFlags)
 {
+    if (sdkFlags.empty()) {
+        return false;
+    }
+    std::string sdkFlag = sdkFlags[0];
     auto sdkFlagFinder = [sdkFlag] (const std::string &flag) {
         std::string subStr = flag.substr(0, flag.find_first_of("+"));
         return subStr == sdkFlag;
@@ -362,26 +380,30 @@ bool AcquireDataSubscribeManager::FindSdkFlag(const std::set<std::string> &event
 
 bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &event)
 {
+    SecurityCollector::Event eventTmp = event;
+    if (eventFilter_ != nullptr) {
+        eventFilter_()->GetFlagsEventNeedToUpload(eventTmp);
+    }
     for (auto &it : g_subscriberInfoMap) {
         for (const auto &i : it.second.subscribe) {
-            if (i.GetEvent().eventId != event.eventId) {
+            if (i.GetEvent().eventId != eventTmp.eventId) {
                 continue;
             }
             // has set mute, but this event not belong the sub, means the filter of this sub set has work
             if (callbackHashMap_.count(it.first) != 0 &&
-                FindSdkFlag(event.eventSubscribes, callbackHashMap_.at(it.first))) {
+                FindSdkFlag(eventTmp.eventSubscribes, callbackHashMap_.at(it.first))) {
                 continue;
             }
             if (!ConfigDataManager::GetInstance().GetIsBatchUpload(i.GetEventGroup())) {
-                BatchUpload(it.first, {event});
+                BatchUpload(it.first, {eventTmp});
                 continue;
             }
-            SGLOGD("publish eventid=%{public}" PRId64, event.eventId);
-            for (auto iter : event.eventSubscribes) {
+            SGLOGD("publish eventid=%{public}" PRId64, eventTmp.eventId);
+            for (auto iter : eventTmp.eventSubscribes) {
                 SGLOGD("publish eventSubscribes =%{public}s", iter.c_str());
             }
-            it.second.events.emplace_back(event);
-            it.second.eventsBuffSize += GetSecurityCollectorEventBufSize(event);
+            it.second.events.emplace_back(eventTmp);
+            it.second.eventsBuffSize += GetSecurityCollectorEventBufSize(eventTmp);
             SGLOGD("cache batch upload event to subscribe %{public}zu", it.second.eventsBuffSize);
             if (it.second.eventsBuffSize >= MAX_CACHE_EVENT_SIZE) {
                 BatchUpload(it.first, it.second.events);
@@ -425,8 +447,14 @@ int AcquireDataSubscribeManager::InsertSubscribeMute(const SecurityEventFilter &
     std::lock_guard<std::mutex> lock(g_mutex);
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter = ConvertFilter(subscribeMute.GetMuteFilter());
     int64_t eventId = collectorFilter.eventId;
-    if (collectorFilter.eventId == SecurityCollector::PROCESS_EVENTID && FileExists("/dev/hkids")) {
-        eventId = PROCESS_ID_IN_KERNEL_MONITOR;
+    if (FileExists("/dev/hkids")) {
+        if (collectorFilter.eventId == SecurityCollector::PROCESS_EVENTID) {
+            eventId = PROCESS_ID_IN_KERNEL_MONITOR;
+        }
+        if (collectorFilter.eventId == SecurityCollector::FILE_EVENTID) {
+            eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
+            collectorFilter.eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
+        }
     }
     EventCfg config {};
     bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(eventId, config);
@@ -434,22 +462,32 @@ int AcquireDataSubscribeManager::InsertSubscribeMute(const SecurityEventFilter &
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
-
-    if (config.prog == "security_guard") {
-        int32_t ret = SecurityCollector::DataCollection::GetInstance().AddFilter(collectorFilter, sdkFlag);
+    if (config.eventType == static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
+        if (config.prog == "security_guard") {
+            int32_t ret = SecurityCollector::DataCollection::GetInstance().AddFilter(collectorFilter, sdkFlag);
+            if (ret != SUCCESS) {
+                SGLOGI("AddFilter SG failed, eventId=%{public}" PRId64, collectorFilter.eventId);
+                return ret;
+            }
+        } else {
+            int32_t ret = SecurityCollector::CollectorManager::GetInstance().AddFilter(collectorFilter, sdkFlag);
+            if (ret != SUCCESS) {
+                SGLOGE("InsertSubscribeMute failed, ret=%{public}d", ret);
+                return ret;
+            }
+        }
+    } else {
+        if (eventFilter_ == nullptr) {
+            SGLOGE("eventFilter_ is null");
+            return NULL_OBJECT;
+        }
+        int32_t ret = eventFilter_()->SetEventFilter(sdkFlag, collectorFilter);
         if (ret != SUCCESS) {
-            SGLOGI("AddFilter SG failed, eventId=%{public}" PRId64, collectorFilter.eventId);
+            SGLOGE("SetEventFilter failed, ret=%{public}d", ret);
             return ret;
         }
-        callbackHashMap_[callback] = sdkFlag;
-        return SUCCESS;
     }
-    int32_t ret = SecurityCollector::CollectorManager::GetInstance().AddFilter(collectorFilter, sdkFlag);
-    if (ret != SUCCESS) {
-        SGLOGE("InsertSubscribeMute failed, ret=%{public}d", ret);
-        return ret;
-    }
-    callbackHashMap_[callback] = sdkFlag;
+    callbackHashMap_[callback].emplace_back(sdkFlag);
     return SUCCESS;
 }
 
@@ -477,6 +515,27 @@ void AcquireDataSubscribeManager::SubscriberEventOnSgStart()
         SGLOGE("subscribe sg failed");
     }
 }
+
+int AcquireDataSubscribeManager::RemoveSubscribeMuteToSub(
+    const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter, const EventCfg &config,
+    const std::string &sdkFlag)
+{
+    if (config.prog == "security_guard") {
+        int32_t ret = SecurityCollector::DataCollection::GetInstance().RemoveFilter(collectorFilter, sdkFlag);
+        if (ret != SUCCESS) {
+            SGLOGI("RemoveFilter SG failed, eventId=%{public}" PRId64, collectorFilter.eventId);
+            return ret;
+        }
+    } else {
+        int ret = SecurityCollector::CollectorManager::GetInstance().RemoveFilter(collectorFilter, sdkFlag);
+        if (ret != SUCCESS) {
+            SGLOGE("RemoveSubscribeMute failed, ret=%{public}d", ret);
+            return ret;
+        }
+    }
+    return SUCCESS;
+}
+
 int AcquireDataSubscribeManager::RemoveSubscribeMute(const SecurityEventFilter &subscribeMute,
     const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
 {
@@ -485,31 +544,45 @@ int AcquireDataSubscribeManager::RemoveSubscribeMute(const SecurityEventFilter &
     EventCfg config {};
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter = ConvertFilter(subscribeMute.GetMuteFilter());
     int64_t eventId = collectorFilter.eventId;
-    if (collectorFilter.eventId == SecurityCollector::PROCESS_EVENTID && FileExists("/dev/hkids")) {
-        eventId = PROCESS_ID_IN_KERNEL_MONITOR;
+    if (FileExists("/dev/hkids")) {
+        if (collectorFilter.eventId == SecurityCollector::PROCESS_EVENTID) {
+            eventId = PROCESS_ID_IN_KERNEL_MONITOR;
+        }
+        if (collectorFilter.eventId == SecurityCollector::FILE_EVENTID) {
+            eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
+            collectorFilter.eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
+        }
+    }
+    if (callbackHashMap_.find(callback) == callbackHashMap_.end() || callbackHashMap_.at(callback).empty()) {
+        SGLOGE("not found current callback");
+        return NOT_FOUND;
     }
     bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(collectorFilter.eventId, config);
     if (!isSuccess) {
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
-
-    auto finder = [collectorFilter] (const SecurityCollector::SecurityCollectorEventMuteFilter &filter) {
-        return collectorFilter == filter;
-    };
-
-    if (config.prog == "security_guard") {
-        int32_t ret = SecurityCollector::DataCollection::GetInstance().RemoveFilter(collectorFilter, sdkFlag);
+    if (config.eventType == static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
+        int32_t ret = RemoveSubscribeMuteToSub(collectorFilter, config, sdkFlag);
         if (ret != SUCCESS) {
-            SGLOGI("RemoveFilter SG failed, eventId=%{public}" PRId64, collectorFilter.eventId);
+            SGLOGE("RemoveSubscribeMuteToSub failed, ret=%{public}d", ret);
             return ret;
         }
-        return SUCCESS;
+    } else {
+        if (eventFilter_ == nullptr) {
+            SGLOGE("eventFilter_ is null");
+            return NULL_OBJECT;
+        }
+        int32_t ret = eventFilter_()->RemoveEventFilter(sdkFlag, collectorFilter);
+        if (ret != SUCCESS) {
+            SGLOGE("RemoveEventFilter failed, ret=%{public}d", ret);
+            return ret;
+        }
     }
-    int ret = SecurityCollector::CollectorManager::GetInstance().RemoveFilter(collectorFilter, sdkFlag);
-    if (ret != SUCCESS) {
-        SGLOGE("RemoveSubscribeMute failed, ret=%{public}d", ret);
-        return ret;
+    auto iter = callbackHashMap_.at(callback).begin();
+    iter = callbackHashMap_.at(callback).erase(iter);
+    if (callbackHashMap_.at(callback).empty()) {
+        callbackHashMap_.erase(callback);
     }
     return SUCCESS;
 }

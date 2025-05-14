@@ -1474,6 +1474,9 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RemoveSubscribeMute, TestSize.Level0)
     EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), RemoveFilter).WillOnce(
         Return(FAILED)).WillOnce(Return(SUCCESS));
     int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, "1111");
+    EXPECT_EQ(result, NOT_FOUND);
+    AcquireDataSubscribeManager::GetInstance().callbackHashMap_[obj].emplace_back("1111");
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, "1111");
     EXPECT_EQ(result, FAILED);
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, "1111");
     EXPECT_EQ(result, SUCCESS);
