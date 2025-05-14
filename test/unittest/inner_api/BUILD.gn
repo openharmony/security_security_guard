@@ -73,12 +73,8 @@ ohos_unittest("inner_api_test") {
     "samgr:samgr_proxy",
   ]
   sanitize = {
-    integer_overflow = false
-    ubsan = false
-    boundary_sanitize = false
-    cfi = false
-    cfi_cross_dso = false
-    debug = false
+    cfi = true
+    cfi_cross_dso = true
   }
 }
 
