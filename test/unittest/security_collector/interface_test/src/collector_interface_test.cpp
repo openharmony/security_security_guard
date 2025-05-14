@@ -232,25 +232,25 @@ HWTEST_F(CollectorInterfaceTest, CollectorStop001, testing::ext::TestSize.Level1
     EXPECT_EQ(ret, SecurityCollector::BAD_PARAM);
 }
 
-HWTEST_F(CollectorInterfaceTest, Mute, testing::ext::TestSize.Level1)
+HWTEST_F(CollectorInterfaceTest, AddFilter, testing::ext::TestSize.Level1)
 {
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
     collectorFilter.eventId = 1;
     collectorFilter.mutes = {{"111"}};
-    collectorFilter.type = SecurityCollector::EVENT_SUB_TYPE_EQUAL;
+    collectorFilter.type = 1;
     collectorFilter.isSetMute = false;
-    int32_t ret = SecurityCollector::CollectorManager::GetInstance().Mute(collectorFilter, "1111");
+    int32_t ret = SecurityCollector::CollectorManager::GetInstance().AddFilter(collectorFilter, "1111");
     EXPECT_EQ(ret, SecurityCollector::NO_PERMISSION);
 }
 
-HWTEST_F(CollectorInterfaceTest, Unmute, testing::ext::TestSize.Level1)
+HWTEST_F(CollectorInterfaceTest, RemoveFilter, testing::ext::TestSize.Level1)
 {
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
     collectorFilter.eventId = 1;
     collectorFilter.mutes = {{"111"}};
-    collectorFilter.type = SecurityCollector::EVENT_SUB_TYPE_EQUAL;
+    collectorFilter.type = 1;
     collectorFilter.isSetMute = false;
-    int32_t ret = SecurityCollector::CollectorManager::GetInstance().Unmute(collectorFilter, "1111");
+    int32_t ret = SecurityCollector::CollectorManager::GetInstance().RemoveFilter(collectorFilter, "1111");
     EXPECT_EQ(ret, SecurityCollector::NO_PERMISSION);
 }
 }
