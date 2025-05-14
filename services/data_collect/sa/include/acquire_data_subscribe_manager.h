@@ -26,8 +26,11 @@
 #include "security_collector_subscribe_info.h"
 #include "i_collector_subscriber.h"
 #include "i_collector_fwk.h"
+#include "i_event_filter.h"
 #include "security_event_filter.h"
+#include "security_event_info.h"
 namespace OHOS::Security::SecurityGuard {
+typedef SecurityCollector::IEventFilter* (*GetEventFilterFunc)();
 class AcquireDataSubscribeManager {
 public:
     static AcquireDataSubscribeManager& GetInstance();
@@ -85,7 +88,9 @@ private:
     int SubscribeScInSc(int64_t eventId, const sptr<IRemoteObject> &callback);
     size_t GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event);
     SecurityCollector::SecurityCollectorEventMuteFilter ConvertFilter(const SecurityGuard::EventMuteFilter &sgFilter);
-    bool FindSdkFlag(const std::set<std::string> &eventSubscribes, const std::string &sdkFlag);
+    bool FindSdkFlag(const std::set<std::string> &eventSubscribes, const std::vector<std::string> &sdkFlags);
+    int RemoveSubscribeMuteToSub(const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter,
+        const EventCfg &config, const std::string &sdkFlag);
     class DbListener : public IDbListener {
     public:
         DbListener() = default;
@@ -108,8 +113,10 @@ private:
     std::shared_ptr<IDbListener> listener_{};
     std::shared_ptr<CollectorListener> collectorListener_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
-    std::map<sptr<IRemoteObject>, std::string> callbackHashMap_{};
+    std::map<sptr<IRemoteObject>, std::vector<std::string>> callbackHashMap_{};
     std::map<int64_t, std::shared_ptr<SecurityCollector::ICollectorFwk>> eventToListenner_;
+    void *handle_ = nullptr;
+    GetEventFilterFunc eventFilter_ = nullptr;
 };
 } // namespace OHOS::Security::SecurityGuard
 

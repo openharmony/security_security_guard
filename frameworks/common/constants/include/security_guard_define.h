@@ -39,6 +39,10 @@ using ErrorCode = enum {
     DB_OPT_ERR,
     DB_INFO_ERR,
     DUPLICATE,
+    FILTER_UNSUPPORTED = 1005,
+    FILTER_EXCEED_LIMIT = 1006,
+    CLIENT_EXCEED_PROCESS_LIMIT = 1007,
+    CLIENT_EXCEED_GLOBAL_LIMIT = 1008
 };
 
 using SecurityModel = struct {
