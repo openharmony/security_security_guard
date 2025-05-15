@@ -79,6 +79,8 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "cJSON:cjson_static",
+    "selinux_adapter:librestorecon",
   ]
 
   sanitize = {
