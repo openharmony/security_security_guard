@@ -57,7 +57,7 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/data_collect:sg_collect_service",
     "${sg_root_dir}/services/data_collect:sg_collect_service_database",
-    "${sg_root_dir}/services/risk_classify/idl:risk_analysis_manager_idl_sa_stub",
+    "${sg_root_dir}/services/risk_classify/idl:risk_analysis_manager_idl_sa_stub_tdd",
     "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
   ]
 
@@ -78,10 +78,6 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-  }
 }
 
 group("unittest") {
