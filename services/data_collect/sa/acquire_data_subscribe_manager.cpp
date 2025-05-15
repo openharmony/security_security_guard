@@ -364,7 +364,7 @@ size_t AcquireDataSubscribeManager::GetSecurityCollectorEventBufSize(const Secur
 }
 
 bool AcquireDataSubscribeManager::FindSdkFlag(const std::set<std::string> &eventSubscribes,
-        const std::vector<std::string> &sdkFlags)
+    const std::vector<std::string> &sdkFlags)
 {
     if (sdkFlags.empty()) {
         return false;
