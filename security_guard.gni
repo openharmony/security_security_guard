@@ -25,4 +25,5 @@ declare_args() {
   security_guard_collector_cfg_source = "security_audit.cfg"
   security_guard_sa_profile_path = "security_guard.cfg"
   security_guard_security_collector_sa_profile_path = "security_collector.cfg"
+  security_guard_event_filter_path = "/system/lib/libsg_event_filter.so"
 }

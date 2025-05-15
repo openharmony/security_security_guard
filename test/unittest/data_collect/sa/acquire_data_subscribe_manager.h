@@ -26,8 +26,11 @@
 #include "security_collector_subscribe_info.h"
 #include "i_collector_subscriber.h"
 #include "i_collector_fwk.h"
+#include "i_event_filter.h"
 #include "security_event_filter.h"
+#include "security_event_info.h"
 namespace OHOS::Security::SecurityGuard {
+typedef SecurityCollector::IEventFilter* (*GetEventFilterFunc)();
 class AcquireDataSubscribeManager {
 public:
     static AcquireDataSubscribeManager& GetInstance();
@@ -40,6 +43,7 @@ public:
         const std::string &sdkFlag);
     int RemoveSubscribeMute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
         const std::string &sdkFlag);
+    void SubscriberEventOnSgStart();
     class CleanupTimer {
     public:
         CleanupTimer() = default;
@@ -82,6 +86,10 @@ private:
     int UnSubscribeScAndDb(int64_t eventId);
     int SubscribeScInSg(int64_t eventId, const sptr<IRemoteObject> &callback);
     int SubscribeScInSc(int64_t eventId, const sptr<IRemoteObject> &callback);
+    SecurityCollector::SecurityCollectorEventMuteFilter ConvertFilter(const SecurityGuard::EventMuteFilter &sgFilter);
+    bool FindSdkFlag(const std::set<std::string> &eventSubscribes, const std::vector<std::string> &sdkFlags);
+    int RemoveSubscribeMuteToSub(const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter,
+        const EventCfg &config, const std::string &sdkFlag);
     size_t GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event);
     class DbListener : public IDbListener {
     public:
@@ -96,22 +104,19 @@ private:
         ~SecurityCollectorSubscriber() override = default;
         int32_t OnNotify(const SecurityCollector::Event &event) override;
     };
-    class CollectorListenner : public SecurityCollector::ICollectorFwk {
+    class CollectorListener : public SecurityCollector::ICollectorFwk {
     public:
-        explicit CollectorListenner(const SecurityCollector::Event &event) : event_(event) {}
-        int64_t GetEventId() override;
         void OnNotify(const SecurityCollector::Event &event) override;
     private:
-        SecurityCollector::Event event_;
     };
     std::shared_ptr<IDbListener> listener_{};
-    std::shared_ptr<SecurityCollector::ICollectorFwk> collectorListenner_{};
+    std::shared_ptr<SecurityCollector::ICollectorFwk> collectorListener_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
-    std::map<sptr<IRemoteObject>, std::string> callbackHashMap_{};
+    std::map<sptr<IRemoteObject>, std::vector<std::string>> callbackHashMap_{};
     std::map<int64_t, std::shared_ptr<SecurityCollector::ICollectorFwk>> eventToListenner_;
-    std::map<int64_t, std::map<sptr<IRemoteObject>,
-        std::vector<SecurityCollector::SecurityCollectorEventMuteFilter>>> muteCache_;
-    std::map<sptr<IRemoteObject>, std::string> callbackHashMapNotSetMute_{};
+    void *handle_ = nullptr;
+    GetEventFilterFunc eventFilter_ = nullptr;
+
 };
 } // namespace OHOS::Security::SecurityGuard
 

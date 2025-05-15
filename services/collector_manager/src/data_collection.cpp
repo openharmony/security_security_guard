@@ -16,6 +16,7 @@
 #include "data_collection.h"
 #include <cinttypes>
 #include "json_cfg.h"
+#include "file_ex.h"
 #include "security_collector_log.h"
 #include "collector_cfg_marshalling.h"
 #include "i_collector.h"
@@ -25,6 +26,8 @@ namespace OHOS::Security::SecurityCollector {
 namespace {
     std::string configPathPre = "/system/etc/";
     const std::string &SA_CONFIG_PATH = configPathPre + SECURITY_GUARD_COLLECTOR_CFG_SOURCE;
+    constexpr int64_t PROCESS_ID_IN_KERNEL_MONITOR = 0x01C000004;
+    constexpr int64_t FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR = 1011015020;
 }
 
 DataCollection &DataCollection::GetInstance()
@@ -404,43 +407,65 @@ int32_t DataCollection::QuerySecurityEvent(const std::vector<SecurityEventRuler>
     return true;
 }
 
-bool DataCollection::Mute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
+int32_t DataCollection::AddFilter(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
 {
-    if (!IsCollectorStarted(filter.eventId)) {
-        LOGE("collector not start, eventId is 0x%{public}" PRIx64, filter.eventId);
-        return false;
+    SecurityCollectorEventMuteFilter filterTmp = filter;
+    int64_t eventId = filterTmp.eventId;
+    if (FileExists("/dev/hkids")) {
+        if (filterTmp.eventId == PROCESS_EVENTID) {
+            eventId = PROCESS_ID_IN_KERNEL_MONITOR;
+        }
+        if (eventId == FILE_EVENTID) {
+            eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
+            filterTmp.eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
+        }
+    }
+    if (!IsCollectorStarted(eventId)) {
+        LOGE("collector not start, eventId is 0x%{public}" PRIx64, filterTmp.eventId);
+        return FAILED;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-    auto loader = eventIdToLoaderMap_.at(filter.eventId);
+    auto loader = eventIdToLoaderMap_.at(eventId);
     ICollector* collector = loader.CallGetCollector();
     if (collector == nullptr) {
         LOGE("CallGetCollector error");
-        return false;
+        return NULL_OBJECT;
     }
-    if (collector->Mute(filter, sdkFlag) != 0) {
-        LOGE("fail to set mute to collector, eventId is 0x%{public}" PRIx64, filter.eventId);
-        return false;
+    int ret = collector->AddFilter(filterTmp, sdkFlag);
+    if (ret != SUCCESS) {
+        LOGE("fail to set mute to collector, eventId is 0x%{public}" PRIx64, filterTmp.eventId);
     }
-    return true;
+    return ret;
 }
 
-bool DataCollection::Unmute(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
+int32_t DataCollection::RemoveFilter(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
 {
-    if (!IsCollectorStarted(filter.eventId)) {
-        LOGE("collector not start, eventId is 0x%{public}" PRIx64, filter.eventId);
-        return false;
+    SecurityCollectorEventMuteFilter filterTmp = filter;
+    int64_t eventId = filterTmp.eventId;
+    if (FileExists("/dev/hkids")) {
+        if (filterTmp.eventId == PROCESS_EVENTID) {
+            eventId = PROCESS_ID_IN_KERNEL_MONITOR;
+        }
+        if (eventId == FILE_EVENTID) {
+            eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
+            filterTmp.eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
+        }
+    }
+    if (!IsCollectorStarted(eventId)) {
+        LOGE("collector not start, eventId is 0x%{public}" PRIx64, filterTmp.eventId);
+        return FAILED;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-    auto loader = eventIdToLoaderMap_.at(filter.eventId);
+    auto loader = eventIdToLoaderMap_.at(eventId);
     ICollector* collector = loader.CallGetCollector();
     if (collector == nullptr) {
         LOGE("CallGetCollector error");
-        return false;
+        return NULL_OBJECT;
     }
-    if (collector->Unmute(filter, sdkFlag) != 0) {
-        LOGE("fail to set unmute to collector, eventId is 0x%{public}" PRIx64, filter.eventId);
-        return false;
+    int ret = collector->RemoveFilter(filterTmp, sdkFlag);
+    if (ret != SUCCESS) {
+        LOGE("fail to set unmute to collector, eventId is 0x%{public}" PRIx64, filterTmp.eventId);
     }
-    return true;
+    return ret;
 }
 }

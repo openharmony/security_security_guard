@@ -204,7 +204,7 @@ void OnRemoteMute(const uint8_t* data, size_t size, MessageParcel* datas,
     std::string string(reinterpret_cast<const char *>(data + offset), size - offset);
     SecurityCollectorEventMuteFilter info {};
     info.eventId = eventId;
-    info.mutes.emplace_back(string);
+    info.mutes.insert(string);
     SecurityCollectorEventFilter filter(info);
     datas->WriteParcelable(&filter);
     datas->WriteString(string);
@@ -224,7 +224,7 @@ void OnRemoteUnmute(const uint8_t* data, size_t size, MessageParcel* datas,
     std::string string(reinterpret_cast<const char *>(data + offset), size - offset);
     SecurityCollectorEventMuteFilter info {};
     info.eventId = eventId;
-    info.mutes.emplace_back(string);
+    info.mutes.insert(string);
     SecurityCollectorEventFilter filter(info);
     datas->WriteParcelable(&filter);
     datas->WriteString(string);

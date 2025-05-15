@@ -140,11 +140,12 @@ void DataCollectManagerFuzzTest(const uint8_t* data, size_t size)
     FuzzedDataProvider fdp(data, size);
     auto mute = std::make_shared<Security::SecurityGuard::EventMuteFilter>();
     mute->eventId = fdp.ConsumeIntegral<int64_t>();
-    mute->type = static_cast<Security::SecurityGuard::EventMuteType>(fdp.ConsumeIntegral<int64_t>());
+    mute->type = fdp.ConsumeIntegral<int64_t>();
+    mute->isInclude = fdp.ConsumeIntegral<bool>();
     mute->eventGroup = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    mute->mutes.emplace_back(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    DataCollectManager::GetInstance().Mute(mute);
-    DataCollectManager::GetInstance().Unmute(mute);
+    mute->mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    DataCollectManager::GetInstance().AddFilter(mute);
+    DataCollectManager::GetInstance().RemoveFilter(mute);
     auto func = [] (std::string &devId, std::string &riskData, uint32_t status,
         const std::string &errMsg)-> int32_t {
         return 0;
@@ -262,12 +263,12 @@ void CollectorManagerFuzzTest(const uint8_t* data, size_t size)
     manager.Unsubscribe(subscriber);
     SecurityCollectorEventMuteFilter filter {};
     filter.eventId = fdp.ConsumeIntegral<int64_t>();
-    filter.type = static_cast<SecurityCollectorEventMuteType>(fdp.ConsumeIntegral<int64_t>());
+    filter.type = fdp.ConsumeIntegral<int64_t>();
     filter.isSetMute = static_cast<bool>(fdp.ConsumeBool());
-    filter.mutes.emplace_back(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    filter.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     SecurityCollectorEventFilter subscribeMute(filter);
-    CollectorManager::GetInstance().Mute(subscribeMute, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    CollectorManager::GetInstance().Unmute(subscribeMute, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    CollectorManager::GetInstance().AddFilter(subscribeMute, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    CollectorManager::GetInstance().RemoveFilter(subscribeMute, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
 }
 
 void DataCollectManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)

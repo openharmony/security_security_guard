@@ -429,12 +429,12 @@ HWTEST_F(DataCollectKitTest, Mute001, TestSize.Level1)
 {
     auto muteinfo = std::make_shared<SecurityGuard::EventMuteFilter> ();
     muteinfo->eventGroup = "securityGroup";
-    int ret = SecurityGuard::DataCollectManager::GetInstance().Mute(muteinfo);
+    int ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
     muteinfo->eventGroup = "";
-    ret = SecurityGuard::DataCollectManager::GetInstance().Mute(muteinfo);
+    ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
-    ret = SecurityGuard::DataCollectManager::GetInstance().Mute(nullptr);
+    ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(nullptr);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
 }
 
@@ -442,12 +442,12 @@ HWTEST_F(DataCollectKitTest, UnMute001, TestSize.Level1)
 {
     auto muteinfo = std::make_shared<SecurityGuard::EventMuteFilter> ();
     muteinfo->eventGroup = "securityGroup";
-    int ret = SecurityGuard::DataCollectManager::GetInstance().Unmute(muteinfo);
+    int ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
     muteinfo->eventGroup = "";
-    ret = SecurityGuard::DataCollectManager::GetInstance().Unmute(muteinfo);
+    ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
-    ret = SecurityGuard::DataCollectManager::GetInstance().Unmute(nullptr);
+    ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(nullptr);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
 }
 
@@ -483,7 +483,6 @@ HWTEST_F(DataCollectKitTest, Mute003, testing::ext::TestSize.Level1)
     SecurityGuard::SecurityEventFilter filter(info);
     Parcel parcel {};
     int64_t int64 = 0;
-    uint32_t uint32 = 0;
     std::string string = "111";
 
     bool ret = filter.ReadFromParcel(parcel);
@@ -500,19 +499,42 @@ HWTEST_F(DataCollectKitTest, Mute003, testing::ext::TestSize.Level1)
 
     parcel.WriteInt64(int64);
     parcel.WriteInt64(int64);
-    parcel.WriteString(string);
+    parcel.WriteBool(true);
     ret = filter.ReadFromParcel(parcel);
     EXPECT_FALSE(ret);
 
     parcel.WriteInt64(int64);
     parcel.WriteInt64(int64);
+    parcel.WriteBool(true);
+    parcel.WriteString(string);
+    parcel.WriteString(string);
+    ret = filter.ReadFromParcel(parcel);
+    EXPECT_FALSE(ret);
+    SecurityGuard::SecurityEventFilter *retInfo = filter.Unmarshalling(parcel);
+    EXPECT_TRUE(retInfo == nullptr);
+}
+
+HWTEST_F(DataCollectKitTest, Mute005, testing::ext::TestSize.Level1)
+{
+    SecurityGuard::EventMuteFilter info {};
+    SecurityGuard::SecurityEventFilter filter(info);
+    Parcel parcel {};
+    int64_t int64 = 0;
+    uint32_t uint32 = 0;
+    std::string string = "111";
+    parcel.WriteInt64(int64);
+    parcel.WriteInt64(int64);
+    parcel.WriteBool(true);
+    parcel.WriteString(string);
     parcel.WriteString(string);
     parcel.WriteUint32(uint32);
-    ret = filter.ReadFromParcel(parcel);
+    bool ret = filter.ReadFromParcel(parcel);
     EXPECT_TRUE(ret);
 
     parcel.WriteInt64(int64);
     parcel.WriteInt64(int64);
+    parcel.WriteBool(true);
+    parcel.WriteString(string);
     parcel.WriteString(string);
     parcel.WriteUint32(1);
     ret = filter.ReadFromParcel(parcel);
@@ -520,12 +542,13 @@ HWTEST_F(DataCollectKitTest, Mute003, testing::ext::TestSize.Level1)
 
     parcel.WriteInt64(int64);
     parcel.WriteInt64(int64);
+    parcel.WriteBool(true);
+    parcel.WriteString(string);
     parcel.WriteString(string);
     parcel.WriteUint32(1);
     parcel.WriteString(string);
     ret = filter.ReadFromParcel(parcel);
     EXPECT_TRUE(ret);
-
     SecurityGuard::SecurityEventFilter *retInfo = filter.Unmarshalling(parcel);
     EXPECT_TRUE(retInfo == nullptr);
 }
@@ -553,9 +576,9 @@ HWTEST_F(DataCollectKitTest, CallBackIsNull, TestSize.Level1)
     SecurityGuard::DataCollectManager::GetInstance().callback_ = nullptr;
     auto muteinfo = std::make_shared<SecurityGuard::EventMuteFilter> ();
     muteinfo->eventGroup = "securityGroup";
-    int ret = SecurityGuard::DataCollectManager::GetInstance().Unmute(muteinfo);
+    int ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
-    ret = SecurityGuard::DataCollectManager::GetInstance().Mute(muteinfo);
+    ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
     ret = SecurityGuard::DataCollectManager::GetInstance().Unsubscribe(g_sub);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
