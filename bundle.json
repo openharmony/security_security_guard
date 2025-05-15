@@ -28,7 +28,8 @@
       "security_guard_collector_cfg_source",
       "security_guard_trim_model_analysis",
       "security_guard_sa_profile_path",
-      "security_guard_security_collector_sa_profile_path"
+      "security_guard_security_collector_sa_profile_path",
+      "security_guard_event_filter_path"
     ],
     "adapted_system_type": [
       "standard"
