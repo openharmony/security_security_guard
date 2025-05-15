@@ -62,7 +62,9 @@
         "appverify",
         "ffrt",
         "bundle_framework",
-        "zlib"
+        "zlib",
+        "cJSON",
+        "selinux_adapter"
       ],
       "third_party": [
       ]
