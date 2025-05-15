@@ -76,7 +76,7 @@ bool AcquireDataSubscribeManagerFuzzTest(const uint8_t* data, size_t size)
     SecurityEventFilter subscribeMute {};
     subscribeMute.filter_.eventId = fdp.ConsumeIntegral<int64_t>();
     subscribeMute.filter_.eventGroup = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    subscribeMute.filter_.mutes.emplace_back(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    subscribeMute.filter_.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj,
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj,
