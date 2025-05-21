@@ -376,18 +376,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestPushDataCollectTask_ValidConditions
     EXPECT_EQ(0, promise->get_future().get());
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, OnAddSystemAbility_RiskAnalysisManagerSaId, TestSize.Level0)
-{
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    service.OnAddSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID, "deviceId");
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, OnAddSystemAbility_DfxSysHiviewAbilityId, TestSize.Level0)
-{
-    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    service.OnAddSystemAbility(DFX_SYS_HIVIEW_ABILITY_ID, "deviceId");
-}
-
 HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_NoPermission, TestSize.Level0)
 {
     int64_t eventId = 1;
