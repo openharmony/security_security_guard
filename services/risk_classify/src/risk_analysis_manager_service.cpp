@@ -40,11 +40,11 @@ namespace OHOS::Security::SecurityGuard {
 REGISTER_SYSTEM_ABILITY_BY_ID(RiskAnalysisManagerService, RISK_ANALYSIS_MANAGER_SA_ID, true);
 
 namespace {
-    constexpr int32_t TIMEOUT_REPLY = 500;
+    constexpr int32_t TIMEOUT_REPLY = 3000;
     constexpr const char* REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
     constexpr const char* QUERY_SECURITY_MODEL_RESULT_PERMISSION = "ohos.permission.QUERY_SECURITY_MODEL_RESULT";
     const std::vector<uint32_t> MODELIDS = {
-        3001000000, 3001000001, 3001000002, 3001000005, 3001000006, 3001000007, 3001000009
+        3001000000, 3001000001, 3001000002, 3001000005, 3001000006, 3001000007, 3001000009, 3001000011
     };
     const std::unordered_map<std::string, std::vector<std::string>> g_apiPermissionsMap {
         {"RequestSecurityModelResult", {REQUEST_PERMISSION, QUERY_SECURITY_MODEL_RESULT_PERMISSION}},
