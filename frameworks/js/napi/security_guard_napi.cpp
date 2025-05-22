@@ -464,6 +464,8 @@ static napi_value ParseModelId(napi_env env, const std::string &modelNameStr, ui
         modelId = ModelIdType::PHYSICAL_MACHINE_DETECTION_MODEL_ID;
     } else if (modelNameStr == "SecurityGuard_RiskFactorCheck") {
         modelId = ModelIdType::SECURITY_RISK_FACTOR_MODEL_ID;
+    } else if (modelNameStr == "SecurityGuard_WifiCheck") {
+        modelId = ModelIdType::WLAN_RISK_DETECTION_MODEL_ID;
     } else {
         napi_throw(env, GenerateBusinessError(env, BAD_PARAM,
             "Parameter error, please make sure using the correct model name"));
