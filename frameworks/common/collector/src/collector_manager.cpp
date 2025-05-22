@@ -182,8 +182,7 @@ int32_t CollectorManager::CollectorStop(const SecurityCollector::SecurityCollect
     return SUCCESS;
 }
 
-int32_t CollectorManager::AddFilter(const SecurityCollectorEventFilter &subscribeMute,
-    const std::string &callbackFlag)
+int32_t CollectorManager::AddFilter(const SecurityCollectorEventFilter &subscribeMute)
 {
     LOGI("enter CollectorManager AddFilter");
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
@@ -193,7 +192,7 @@ int32_t CollectorManager::AddFilter(const SecurityCollectorEventFilter &subscrib
         return NULL_OBJECT;
     }
 
-    int32_t ret = proxy->AddFilter(subscribeMute, callbackFlag);
+    int32_t ret = proxy->AddFilter(subscribeMute);
     if (ret != SUCCESS) {
         LOGI("AddFilter failed, ret=%{public}d", ret);
         return ret;
@@ -202,8 +201,7 @@ int32_t CollectorManager::AddFilter(const SecurityCollectorEventFilter &subscrib
     return SUCCESS;
 }
 
-int32_t CollectorManager::RemoveFilter(const SecurityCollectorEventFilter &subscribeMute,
-    const std::string &callbackFlag)
+int32_t CollectorManager::RemoveFilter(const SecurityCollectorEventFilter &subscribeMute)
 {
     LOGI("enter CollectorManager RemoveFilter");
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
@@ -213,7 +211,7 @@ int32_t CollectorManager::RemoveFilter(const SecurityCollectorEventFilter &subsc
         return NULL_OBJECT;
     }
 
-    int32_t ret = proxy->RemoveFilter(subscribeMute, callbackFlag);
+    int32_t ret = proxy->RemoveFilter(subscribeMute);
     if (ret != SUCCESS) {
         LOGI("RemoveFilter failed, ret=%{public}d", ret);
         return ret;

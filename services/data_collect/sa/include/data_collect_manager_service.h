@@ -44,9 +44,9 @@ public:
     ErrCode RequestRiskData(const std::string &devId, const std::string &eventList,
         const sptr<IRemoteObject> &cb) override;
     ErrCode Subscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
-        const sptr<IRemoteObject> &cb) override;
+        const sptr<IRemoteObject> &cb, const std::string &clientId) override;
     ErrCode Unsubscribe(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
-        const sptr<IRemoteObject> &cb) override;
+        const sptr<IRemoteObject> &cb, const std::string &clientId) override;
     ErrCode QuerySecurityEvent(const std::vector<SecurityCollector::SecurityEventRuler> &rulers,
         const sptr<IRemoteObject> &cb, const std::string &eventGroup) override;
     ErrCode CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
@@ -55,10 +55,13 @@ public:
         const sptr<IRemoteObject> &cb) override;
     ErrCode ConfigUpdate(int fd, const std::string& name) override;
     ErrCode QuerySecurityEventConfig(std::string &result) override;
-    ErrCode AddFilter(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &cb,
-        const std::string &sdkFlag) override;
-    ErrCode RemoveFilter(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &cb,
-        const std::string &sdkFlag) override;
+    ErrCode AddFilter(const SecurityEventFilter &subscribeMute, const std::string &clientId) override;
+    ErrCode RemoveFilter(const SecurityEventFilter &subscribeMute, const std::string &clientId) override;
+    ErrCode Subscribe(int64_t eventId, const std::string &eventGroup, const std::string &clientId) override;
+    ErrCode Unsubscribe(int64_t eventId, const std::string &eventGroup, const std::string &clientId) override;
+    ErrCode CreatClient(const std::string &eventGroup, const std::string &clientId,
+        const sptr<IRemoteObject> &cb) override;
+    ErrCode DestoryClient(const std::string &eventGroup, const std::string &clientId) override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
 
@@ -81,6 +84,7 @@ private:
     bool WriteRemoteFileToLocal(int fd, const std::string &realPath);
     int32_t IsApiHasPermission(const std::string &api);
     int32_t IsEventGroupHasPermission(const std::string &eventGroup, std::vector<int64_t> eventIds);
+    int32_t IsEventGroupHasPublicPermission(const std::string &eventGroup, std::vector<int64_t> eventIds);
     bool ParseTrustListFile(const std::string &trustListFile);
     int32_t SetDeathCallBack(SgSubscribeEvent event, const sptr<IRemoteObject> &callback);
     std::mutex mutex_{};
@@ -89,6 +93,7 @@ private:
     std::atomic<uint32_t> discardedCount_ = 0;
     std::mutex eventsMutex_{};
     std::map<int64_t, std::atomic<uint32_t>> reportedEventsMap_;
+    std::map<std::string,  sptr<IRemoteObject>> clientCallBacks_ {};
     bool IsDiscardEventInThisHour(int64_t eventId);
 };
 } // namespace OHOS::Security::SecurityGuard
