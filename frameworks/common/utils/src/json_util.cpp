@@ -25,7 +25,7 @@ bool GetNumberInt32(const cJSON *inJson, const std::string &item, int32_t &ret)
         return false;
     }
     double tmp = cJSON_GetNumberValue(keyJson);
-    if(tmp > INT32_MAX || tmp < INT32_MIN) {
+    if (tmp > INT32_MAX || tmp < INT32_MIN) {
         return false;
     }
     ret = static_cast<int32_t>(tmp);
@@ -46,7 +46,7 @@ bool GetNumberInt64(const cJSON *inJson, const std::string &item, int64_t &ret)
 
 bool GetString(const cJSON *inJson, const std::string &item, std::string &ret)
 {
-    if(inJson == nullptr) {
+    if (inJson == nullptr) {
         return false;
     }
     cJSON *keyJson = cJSON_GetObjectItem(inJson, item.c_str());
