@@ -59,7 +59,7 @@ void DetectPluginManager::LoadPlugin(const PluginCfg &pluginCfg)
 {
     void *handle = dlopen(pluginCfg.pluginPath.c_str(), RTLD_LAZY);
     if (handle == nullptr) {
-        SGLOGE("Plugin open failed, pluginName %{public}s, reson: %{public}s",
+        SGLOGE("Plugin open failed, pluginName: %{public}s, reason: %{public}s",
             pluginCfg.pluginName.c_str(), dlerror());
         return;
     }
@@ -85,13 +85,13 @@ void DetectPluginManager::LoadPlugin(const PluginCfg &pluginCfg)
         if (!eventIdMap_.count(eventId)) {
             SubscribeEvent(eventId);
         }
-
-        if (pluginCfg.depEventIds.empty()) {
+        eventIdMap_[eventId].emplace_back(detectPluginAttrs);
+    }
+     if (pluginCfg.depEventIds.empty()) {
             const int64_t sepcialId = -1;
             eventIdMap_[sepcialId].emplace_back(detectPluginAttrs);
         }
-        SGLOGI("Load plugin success, pluginName: %{public}s", pluginCfg.pluginName.c_str());
-    }
+    SGLOGI("Load plugin success, pluginName: %{public}s", pluginCfg.pluginName.c_str());
 }
 void DetectPluginManager::SubscribeEvent(int64_t eventId)
 {
@@ -126,7 +126,7 @@ bool DetectPluginManager::ParsePluginConfig(const std::string &fileName)
     std::ios::pos_type pluginCfgFileMaxSize = 1 * 1024 * 1024;   // byte
     std::string jsonStr;
     if (!FileUtil::ReadFileToStr(fileName, pluginCfgFileMaxSize, jsonStr)) {
-        SGLOGE("Read plugin cfg error.");
+        SGLOGE("Read plugin cfg file error.");
         return false;
     }
     cJSON *inJson = cJSON_Parse(jsonStr.c_str());
@@ -136,7 +136,7 @@ bool DetectPluginManager::ParsePluginConfig(const std::string &fileName)
     }
     cJSON *plugins = cJSON_GetObjectItem(inJson, "plugins");
     if (plugins == nullptr || !cJSON_IsArray(plugins)) {
-        SGLOGE("Json Parse Error: Plugins is null or not an array.");
+        SGLOGE("Json Parse Error: plugins is null or not an array.");
         cJSON_Delete(inJson);
         inJson = nullptr;
         return false;
@@ -175,7 +175,7 @@ bool DetectPluginManager::CheckPluginNameAndSize(PluginCfg &newPlugin)
 
     const std::string path = PLUGIN_PREFIX_PATH + newPlugin.pluginName;
     if (!PathToRealPath(path, newPlugin.pluginPath) || newPlugin.pluginPath.find(PLUGIN_PREFIX_PATH) != 0) {
-        SGLOGE("Check plugin path faild, pluginName: %{public}s", newPlugin.pluginName.c_str());
+        SGLOGE("Check plugin path failed, pluginName: %{public}s", newPlugin.pluginName.c_str());
         return false;
     }
     auto it = std::find_if(plugins_.begin(), plugins_.end(),
