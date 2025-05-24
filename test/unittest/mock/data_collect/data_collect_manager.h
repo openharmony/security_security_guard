@@ -19,10 +19,13 @@
 #include "gmock/gmock.h"
 #include <string>
 
+#include "i_collector_subscriber.h"
+
 namespace OHOS::Security::SecurityGuard {
 class BaseDataCollectManager {
 public:
     virtual int32_t QuerySecurityEventConfig(std::string &result) = 0;
+    virtual int32_t Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber);
 };
 
 class DataCollectManager : public BaseDataCollectManager {
@@ -33,6 +36,7 @@ public:
         return instance;
     }
     MOCK_METHOD1(QuerySecurityEventConfig, int32_t(std::string &result));
+    MOCK_METHOD1(Subscribe, int32_t(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber));
 };
 
 } // namespace OHOS::Security::SecurityGuard

@@ -35,6 +35,7 @@
 #include "ffrt.h"
 #include "config_manager.h"
 #include "store_define.h"
+#include "detect_plugin_manager.h"
 
 namespace OHOS::Security::SecurityGuard {
 REGISTER_SYSTEM_ABILITY_BY_ID(RiskAnalysisManagerService, RISK_ANALYSIS_MANAGER_SA_ID, true);
@@ -82,6 +83,7 @@ void RiskAnalysisManagerService::OnStart()
     if (!Publish(this)) {
         SGLOGE("Publish error");
     }
+    DetectPluginManager::getInstance().LoadAllPlugins();
 }
 
 void RiskAnalysisManagerService::OnStop()
