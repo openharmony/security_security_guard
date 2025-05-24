@@ -364,7 +364,7 @@ size_t AcquireDataSubscribeManager::GetSecurityCollectorEventBufSize(const Secur
 }
 
 bool AcquireDataSubscribeManager::FindSdkFlag(const std::set<std::string> &eventSubscribes,
-        const std::vector<std::string> &sdkFlags)
+    const std::vector<std::string> &sdkFlags)
 {
     if (sdkFlags.empty()) {
         return false;
@@ -381,7 +381,9 @@ bool AcquireDataSubscribeManager::FindSdkFlag(const std::set<std::string> &event
 bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &event)
 {
     SecurityCollector::Event eventTmp = event;
-    if (eventFilter_ != nullptr) {
+    EventCfg config {};
+    if (eventFilter_ != nullptr && ConfigDataManager::GetInstance().GetEventConfig(event.eventId, config) &&
+        config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         eventFilter_()->GetFlagsEventNeedToUpload(eventTmp);
     }
     for (auto &it : g_subscriberInfoMap) {
