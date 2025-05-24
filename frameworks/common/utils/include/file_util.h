@@ -27,4 +27,4 @@ namespace FileUtil {
 }
 } // namespace OHOS::Security::SecurityGuard
 
-#endif
+#endif // SECURITY_GUARD_FILE_UTIL_H
