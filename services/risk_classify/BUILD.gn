@@ -38,6 +38,7 @@ ohos_shared_library("sg_classify_service") {
     "${sg_root_dir}/services/config_manager/include",
     "${sg_root_dir}/services/risk_classify/include",
     "${sg_root_dir}/services/risk_classify/model_manager/include",
+    "${sg_root_dir}/services/risk_classify/plugin_manager/include",
     "${sg_root_dir}/services/data_collect/store/include",
     "${sg_root_dir}/frameworks/common/database/include",
     "${sg_root_dir}/frameworks/common/log/include",
@@ -50,6 +51,9 @@ ohos_shared_library("sg_classify_service") {
 
   sources = [
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/file_util.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/json_util.cpp",
+    "${sg_root_dir}/services/risk_classify/plugin_manager/src/detect_plugin_manager.cpp",
     "${sg_root_dir}/services/risk_classify/src/risk_analysis_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/risk_classify/src/risk_analysis_manager_service.cpp",
   ]
@@ -66,6 +70,7 @@ ohos_shared_library("sg_classify_service") {
 
   deps = [
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
+    "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/data_collect:sg_collect_service",
     "${sg_root_dir}/services/risk_classify/idl:risk_analysis_manager_idl_sa_stub",
@@ -79,6 +84,7 @@ ohos_shared_library("sg_classify_service") {
     "ffrt:libffrt",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "cJSON:cjson",
     "json:nlohmann_json_static",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
