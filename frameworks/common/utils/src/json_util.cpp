@@ -102,7 +102,7 @@ bool AddString(cJSON *outJson, const std::string &item, const std::string &str)
     return true;
 }
 
-bool AddNumberInt32(cJSON *outJson, const std::string &item, int32_t &num)
+bool AddNumberInt32(cJSON *outJson, const std::string &item, const int32_t &num)
 {
     if (outJson == nullptr) {
         return false;
@@ -113,7 +113,7 @@ bool AddNumberInt32(cJSON *outJson, const std::string &item, int32_t &num)
     return true;
 }
 
-bool AddNumberInt64(cJSON *outJson, const std::string &item, int64_t &num)
+bool AddNumberInt64(cJSON *outJson, const std::string &item, const int64_t &num)
 {
     if (outJson == nullptr) {
         return false;
@@ -146,7 +146,7 @@ bool AddStrArrayInfo(cJSON *object, const std::vector<std::string> &inVector, co
         cJSON_Delete(strJsonArr);
         return false;
     }
-    return false;
+    return true;
 }
 }
 } // namespace OHOS::Security::SecurityGuard

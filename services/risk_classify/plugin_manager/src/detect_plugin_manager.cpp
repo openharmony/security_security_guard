@@ -100,7 +100,7 @@ void DetectPluginManager::SubscribeEvent(int64_t eventId)
     auto subscriber = std::make_shared<DetectPluginManagerSubscriber>(sgEvent);
     int32_t code = SecurityGuard::DataCollectManager::GetInstance().Subscribe(subscriber);
     if (code != SecurityGuard::SUCCESS) {
-        SGLOGE("Subsctribe failed, code: %{public}d, eventId: 0x%{public}" PRIx64 "in retry list", code, eventId);
+        SGLOGE("Subscribe failed, code: %{public}d, eventId: 0x%{public}" PRIx64 "in retry list", code, eventId);
         failedEventIdset_.insert(eventId);
         return;
     }
@@ -123,17 +123,17 @@ void DetectPluginManager::RetrySubscriptionTask()
 
 bool DetectPluginManager::ParsePluginConfig(const std::string &fileName)
 {
-    std::ios::pos_type PluginCfgFileMaxSize = 1 * 1024 * 1024;   // byte
+    std::ios::pos_type pluginCfgFileMaxSize = 1 * 1024 * 1024;   // byte
     std::string jsonStr;
-    if (!FileUtil::ReadFileToStr(fileName, PluginCfgFileMaxSize, jsonStr)) {
+    if (!FileUtil::ReadFileToStr(fileName, pluginCfgFileMaxSize, jsonStr)) {
         SGLOGE("Read plugin cfg error.");
         return false;
     }
     cJSON *inJson = cJSON_Parse(jsonStr.c_str());
     if (inJson == nullptr) {
         SGLOGE("Parse json error.");
+        return false;
     }
-    return false;
     cJSON *plugins = cJSON_GetObjectItem(inJson, "plugins");
     if (plugins == nullptr || !cJSON_IsArray(plugins)) {
         SGLOGE("Json Parse Error: Plugins is null or not an array.");
