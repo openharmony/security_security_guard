@@ -179,7 +179,7 @@ bool DetectPluginManager::CheckPluginNameAndSize(PluginCfg &newPlugin)
         return false;
     }
     auto it = std::find_if(plugins_.begin(), plugins_.end(),
-         [&](const PluginCfg &plugin) {return plugin.pluginName == newPlugin.pluginName;});
+        [&](const PluginCfg &plugin) {return plugin.pluginName == newPlugin.pluginName;});
     if (it != plugins_.end()) {
         SGLOGE("Duplicate plugin names are not allowed.");
         return false;
@@ -218,8 +218,8 @@ void DetectPluginManager::DispatchEvent(const SecurityCollector::Event &event)
     SGLOGI("Start distributing events, eventId: 0x%{public}" PRIx64, event.eventId);
     auto it = eventIdMap_.find(event.eventId);
     if (it == eventIdMap_.end()) {
-        SGLOGE("No Plugin is available to process th event, eventId: 0x%{public}" PRIx64
-            , event.eventId);
+        SGLOGE("No Plugin is available to process th event, eventId: 0x%{public}" PRIx64,
+             event.eventId);
         return;
     }
     for (auto& detectPlugin : it->second) {
