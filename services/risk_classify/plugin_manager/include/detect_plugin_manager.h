@@ -99,7 +99,7 @@ private:
     bool ParsePluginConfig(const std::string &fileName);
     void ParsePluginConfigObjArray(const cJSON *plugins);
     bool CheckPluginNameAndSize(PluginCfg &newPlugin);
-    bool ParsePluginDepEventIds(const cJSON *plugin, std::unordered_set<int64_t> & depEventIds);
+    bool ParsePluginDepEventIds(const cJSON *plugin, std::unordered_set<int64_t> &depEventIds);
     std::string AssembleMetadata(const SecurityCollector::Event &event);
 };
 } // namespace OHOS::Security::SecurityGuard
