@@ -1,0 +1,44 @@
+/*
+* Copyright(c) 2025 Huawei Device Co.,Ltd.
+* Licensed under the Apache License, Version 2.0 (the "lisence");
+* you may not use this file except in compliance with the license;
+* you may botain a copy of th license at
+*
+*     http://www.apache.org/license/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writting, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRINGS OR CONDITIONS OF ANY KIND, either express or implied
+* See the License for the specific language governing premission and
+* limitations under the License.
+*/
+
+#include "security_guard_log.h"
+#include "file_util.h"
+
+namespace OHOS::Security::SecurityGuard {
+namespace FileUtil {
+bool ReadFileToStr(const std::string &fileName, const std::ios::pos_type fileMaxSize, std::string &str)
+{
+    SGLOGI("Start read file.");
+    std::ifstream stream(fileName, std::ios::in);
+    if (!stream.is_open()) {
+        SGLOGE("File stream error.");
+        return false;
+    }
+    stream.seekg(0, std::ios::end);
+    std::ios::pos_type len = stream.tellg();
+    if(len == 0 || len > fileMaxSize) {
+        SGLOGE("File is empty or too large.");
+        stream.close();
+        return false;
+    }
+    stream.seekg(0, std::ios_base::beg);
+    std::stringstream strStream;
+    strStream << stream.rdbuf();
+    str = strStream.str();
+    stream.close();
+    return true;
+}
+}
+} // namespace OHOS::Security::SecurityGuard
