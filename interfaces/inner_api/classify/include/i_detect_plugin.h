@@ -15,6 +15,8 @@
 
 #ifndef I_DETECT_PLUGIN_H
 #define I_DETECT_PLUGIN_H
+#include <string>
+#include <cstdint>
 
 namespace OHOS::Security::SecurityGuard {
 class  IDetectPlugin {
