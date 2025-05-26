@@ -61,7 +61,7 @@ bool GetString(const cJSON *inJson, const std::string &item, std::string &ret)
     return true;
 }
 
-bool GetStringNokey(const cJSON *inJson, std::string &ret)
+bool GetStringNoKey(const cJSON *inJson, std::string &ret)
 {
     if (inJson == nullptr) {
         return false;

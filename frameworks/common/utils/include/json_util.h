@@ -28,8 +28,8 @@ namespace JsonUtil {
     bool AddString(cJSON *outJson, const std::string &item, const std::string &str);
     bool AddNumberInt32(cJSON *outJson, const std::string &item, const int32_t &num);
     bool AddNumberInt64(cJSON *outJson, const std::string &item, const int64_t &num);
-    bool AddStrArrayInfo(cJSON *object, const std::vector<std::string> &inVector, const char &strKey);
-    bool GetStringNokey(const cJSON *inJson, std::string &ret);
+    bool AddStrArrayInfo(cJSON *object, const std::vector<std::string> &inVector, const char *strKey);
+    bool GetStringNoKey(const cJSON *inJson, std::string &ret);
 }
 } // namespace OHOS::Security::SecurityGuard
 
