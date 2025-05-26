@@ -249,7 +249,7 @@ bool DetectPluginManager::ParsePluginDepEventIds(const cJSON *plugin,
             SGLOGE("Json Parse Error: eventId not int_64.");
             return false;
         }
-        return true;
+        depEventIds.insert(tmp);
     }
     return true;
 }
