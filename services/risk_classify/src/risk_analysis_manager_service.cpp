@@ -44,6 +44,7 @@ REGISTER_SYSTEM_ABILITY_BY_ID(RiskAnalysisManagerService, RISK_ANALYSIS_MANAGER_
 
 namespace {
     constexpr int32_t TIMEOUT_REPLY = 3000;
+    constexpr int32_t DELAY_TIME = 10000;
     constexpr const char* REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
     constexpr const char* QUERY_SECURITY_MODEL_RESULT_PERMISSION = "ohos.permission.QUERY_SECURITY_MODEL_RESULT";
     const std::vector<uint32_t> MODELIDS = {
@@ -86,13 +87,10 @@ void RiskAnalysisManagerService::OnStart()
         SGLOGE("Publish error");
     }
 
-    DetectPluginManager::getInstance().InitPluginsManager();
-    auto saIds = DetectPluginManager::getInstance().GetAllDepSaIds();
-    for (const auto &saId : saIds) {
-        AddSystemAbilityListener(saId);
-        SGLOGI("RiskAnalysisManagerService AddSystemAbilityListener %{public}" PRId64, saId);
-    }
-    ffrt::submit([this] { DetectPluginManager::getInstance().LoadAllPlugins(); });
+    ffrt::submit([this] {
+        std::this_thread::sleep_for(std::chrono::seconds(DELAY_TIME));
+        DetectPluginManager::getInstance().LoadAllPlugins();
+    });
 }
 
 void RiskAnalysisManagerService::OnStop()
