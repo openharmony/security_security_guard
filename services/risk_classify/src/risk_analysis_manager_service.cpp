@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,10 +16,12 @@
 #include "risk_analysis_manager_service.h"
 
 #include <thread>
+#include <cinttypes>
 
 #include "accesstoken_kit.h"
 #include "tokenid_kit.h"
 #include "ipc_skeleton.h"
+#include "cJSON.h"
 
 #include "bigdata.h"
 #include "database_manager.h"
@@ -83,6 +85,14 @@ void RiskAnalysisManagerService::OnStart()
     if (!Publish(this)) {
         SGLOGE("Publish error");
     }
+
+    DetectPluginManager::getInstance().InitPluginsManager();
+    auto saIds = DetectPluginManager::getInstance().GetAllDepSaIds();
+    for (const auto &saId : saIds) {
+        AddSystemAbilityListener(saId);
+        SGLOGI("RiskAnalysisManagerService AddSystemAbilityListener %{public}" PRId64, saId);
+    }
+    ffrt::submit([this] { DetectPluginManager::getInstance().LoadAllPlugins(); });
     DetectPluginManager::getInstance().LoadAllPlugins();
 }
 
