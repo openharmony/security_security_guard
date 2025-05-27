@@ -88,7 +88,7 @@ void RiskAnalysisManagerService::OnStart()
     }
 
     ffrt::submit([this] {
-        std::this_thread::sleep_for(std::chrono::seconds(DELAY_TIME));
+        std::this_thread::sleep_for(std::chrono::milliseconds(DELAY_TIME));
         DetectPluginManager::getInstance().LoadAllPlugins();
     });
 }
