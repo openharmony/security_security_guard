@@ -93,7 +93,6 @@ void RiskAnalysisManagerService::OnStart()
         SGLOGI("RiskAnalysisManagerService AddSystemAbilityListener %{public}" PRId64, saId);
     }
     ffrt::submit([this] { DetectPluginManager::getInstance().LoadAllPlugins(); });
-    DetectPluginManager::getInstance().LoadAllPlugins();
 }
 
 void RiskAnalysisManagerService::OnStop()
