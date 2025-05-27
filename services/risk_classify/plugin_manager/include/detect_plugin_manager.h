@@ -34,9 +34,6 @@ public:
     DetectPluginManager(const DetectPluginManager&) = delete;
     DetectPluginManager &operator=(const DetectPluginManager &) = delete;
     void LoadAllPlugins();
-    void InitPluginsManager();
-    void NotifySystemAbilityStart(int64_t saID);
-    std::unordered_set<int64_t> GetAllDepSaIds();
     void DispatchEvent(const SecurityCollector::Event &event);
 
 private:
@@ -86,12 +83,9 @@ private:
         std::string pluginName;
         std::string pluginPath;
         std::unordered_set<int64_t> depEventIds;
-        std::unordered_set<int64_t> depSaIds;
         std::string version;
     };
 
-    std::unordered_set<int64_t> depSaSet;
-    std::mutex saSetMutex;
     std::vector<PluginCfg> plugins_;
     std::unordered_map<int64_t, std::vector<std::shared_ptr<DetectPluginAttrs>>> eventIdMap_;
     std::unordered_set<int64_t> failedEventIdset_;
@@ -105,7 +99,6 @@ private:
     void ParsePluginConfigObjArray(const cJSON *plugins);
     bool CheckPluginNameAndSize(PluginCfg &newPlugin);
     bool ParsePluginDepEventIds(const cJSON *plugin, std::unordered_set<int64_t> &depEventIds);
-    bool ParsePluginDepSaIds(const cJSON *plugin, std::unordered_set<int64_t> &depSaIds);
     std::string AssembleMetadata(const SecurityCollector::Event &event);
 };
 }  // namespace OHOS::Security::SecurityGuard
