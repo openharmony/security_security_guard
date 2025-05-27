@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,6 +30,7 @@ namespace {
     constexpr int32_t RETRY_INTERVAL = 60;
     constexpr int32_t MAX_PLUGIN_SIZE = 20;
     constexpr const char *PLUGIN_PREFIX_PATH = "/system/lib64/";
+    constexpr const int WAIT_DEP_SA_INTERVAL = 1000;
 }
 
 DetectPluginManager& DetectPluginManager::getInstance()
@@ -38,19 +39,57 @@ DetectPluginManager& DetectPluginManager::getInstance()
     return instance;
 }
 
-void DetectPluginManager::LoadAllPlugins()
+void DetectPluginManager::InitPluginsManager()
 {
-    SGLOGI("Start LoadAllPlugins.");
+    SGLOGI("Start InitPluginsManager.");
     const std::string fileName = "/system/etc/detect_plugin.json";
     if (!ParsePluginConfig(fileName)) {
         return;
     }
-    for (size_t i = 0; i < plugins_.size(); i++) {
-        LoadPlugin(plugins_[i]);
+    SGLOGI("InitPluginsManager finished.");
+}
+
+std::unordered_set<int64_t> DetectPluginManager::GetAllDepSaIds()
+{
+    std::unordered_set<int64_t> tmpSet;
+    {
+        std::lock_guard<std::mutex> lock(saSetMutex);
+        tmpSet = depSaSet;
+    }
+    return tmpSet;
+}
+
+void DetectPluginManager::NotifySystemAbilityStart(int64_t saID)
+{
+    std::lock_guard<std::mutex> lock(saSetMutex);
+    depSaSet.erase(saID);
+}
+
+void DetectPluginManager::LoadAllPlugins()
+{
+    SGLOGI("Start LoadAllPlugins.");
+    bool isAllDepSaReady = false;
+    while (!isAllDepSaReady) {
+        {
+            std::lock_guard<std::mutex> lock(saSetMutex);
+            isAllDepSaReady = depSaSet.empty();
+            std::string tmp;
+            for (const auto &elem : depSaSet) {
+                tmp.append(std::to_string(elem));
+                tmp.append(" ");
+            }
+            if (!tmp.empty()) {
+                SGLOGE("DetectPluginManager depend SA %{public}s is not ready", tmp.c_str());
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_DEP_SA_INTERVAL));
+    }
+    for (const auto &plugin : plugins_) {
+        LoadPlugin(plugin);
     }
     if (!isFailedEventStartRetry_) {
         isFailedEventStartRetry_ = true;
-        ffrt::submit([this] {RetrySubscriptionTask(); });
+        ffrt::submit([this] { RetrySubscriptionTask(); });
     }
     SGLOGI("LoadAllPlugins finished");
 }
@@ -87,12 +126,13 @@ void DetectPluginManager::LoadPlugin(const PluginCfg &pluginCfg)
         }
         eventIdMap_[eventId].emplace_back(detectPluginAttrs);
     }
-     if (pluginCfg.depEventIds.empty()) {
-            const int64_t sepcialId = -1;
-            eventIdMap_[sepcialId].emplace_back(detectPluginAttrs);
-        }
+    if (pluginCfg.depEventIds.empty()) {
+        const int64_t sepcialId = -1;
+        eventIdMap_[sepcialId].emplace_back(detectPluginAttrs);
+    }
     SGLOGI("Load plugin success, pluginName: %{public}s", pluginCfg.pluginName.c_str());
 }
+
 void DetectPluginManager::SubscribeEvent(int64_t eventId)
 {
     SecurityCollector::Event sgEvent {};
@@ -123,7 +163,7 @@ void DetectPluginManager::RetrySubscriptionTask()
 
 bool DetectPluginManager::ParsePluginConfig(const std::string &fileName)
 {
-    std::ios::pos_type pluginCfgFileMaxSize = 1 * 1024 * 1024;   // byte
+    std::ios::pos_type pluginCfgFileMaxSize = 1 * 1024 * 1024;  // byte
     std::string jsonStr;
     if (!FileUtil::ReadFileToStr(fileName, pluginCfgFileMaxSize, jsonStr)) {
         SGLOGE("Read plugin cfg file error.");
@@ -155,14 +195,15 @@ void DetectPluginManager::ParsePluginConfigObjArray(const cJSON *plugins)
         PluginCfg pluginCfg;
         if (!JsonUtil::GetString(item, "pluginName", pluginCfg.pluginName) ||
             !JsonUtil::GetString(item, "version", pluginCfg.version) ||
-            !ParsePluginDepEventIds(item, pluginCfg.depEventIds)) {
-                SGLOGE("Json Parse Error: pluginName or version or depEventIds not correct.");
-                continue;
-            }
-            if (!CheckPluginNameAndSize(pluginCfg)) {
-                continue;
-            }
-            plugins_.emplace_back(pluginCfg);
+            !ParsePluginDepEventIds(item, pluginCfg.depEventIds) ||
+            !ParsePluginDepSaIds(item, pluginCfg.depSaIds)) {
+            SGLOGE("Json Parse Error: pluginName or version or depEventIds not correct.");
+            continue;
+        }
+        if (!CheckPluginNameAndSize(pluginCfg)) {
+            continue;
+        }
+        plugins_.emplace_back(pluginCfg);
     }
 }
 
@@ -199,7 +240,7 @@ bool DetectPluginManager::ParsePluginDepEventIds(const cJSON *plugin,
     for (int i = 0; i < size; i++) {
         cJSON *eventIdJson = cJSON_GetArrayItem(depEventIdsJson, i);
         std::string eventId;
-        if (!JsonUtil::GetStringNokey(eventIdJson, eventId)) {
+        if (!JsonUtil::GetStringNoKey(eventIdJson, eventId)) {
             SGLOGE("Json Parse Error: eventId not correct.");
             return false;
         }
@@ -209,6 +250,33 @@ bool DetectPluginManager::ParsePluginDepEventIds(const cJSON *plugin,
             return false;
         }
         depEventIds.insert(tmp);
+    }
+    return true;
+}
+
+bool DetectPluginManager::ParsePluginDepSaIds(const cJSON *plugin, std::unordered_set<int64_t> &depSaIds)
+{
+    cJSON *depSaIdsJson = cJSON_GetObjectItem(plugin, "depSaIds");
+    int size = cJSON_GetArraySize(depSaIdsJson);
+    if (depSaIdsJson == nullptr || cJSON_IsArray(depSaIdsJson)) {
+        SGLOGE("Json Parse Error: depSaIds not correct.");
+        return false;
+    }
+    for (int i = 0; i < size; i++) {
+        cJSON *saIdJson = cJSON_GetArrayItem(depSaIdsJson, i);
+        std::string saId;
+        if (!JsonUtil::GetStringNoKey(saIdJson, saId)) {
+            SGLOGE("Json Parse Error: saId not correct.");
+            return false;
+        }
+        int64_t tmp = 0;
+        if (!SecurityGuardUtils::StrToI64Hex(saId, tmp)) {
+            SGLOGE("Json Parse Error: saIds not int_64.");
+            return false;
+        }
+        depSaIds.insert(tmp);
+        std::lock_guard<std::mutex> lock(saSetMutex);
+        depSaSet.insert(tmp);
     }
     return true;
 }

@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,13 +28,15 @@
 #include "i_detect_plugin.h"
 
 namespace OHOS::Security::SecurityGuard {
-
 class DetectPluginManager {
 public:
     static DetectPluginManager& getInstance();
     DetectPluginManager(const DetectPluginManager&) = delete;
     DetectPluginManager &operator=(const DetectPluginManager &) = delete;
     void LoadAllPlugins();
+    void InitPluginsManager();
+    void NotifySystemAbilityStart(int64_t saID);
+    std::unordered_set<int64_t> GetAllDepSaIds();
     void DispatchEvent(const SecurityCollector::Event &event);
 
 private:
@@ -67,10 +69,10 @@ private:
             }
         };
 
-        void SetHandle(void *handle) {handle_ = handle; };
+        void SetHandle(void *handle) { handle_ = handle; };
         void SetInstance(IDetectPlugin *instance) { instance_ = instance; };
         void SetPluginName(std::string pluginName) { pluginName_ = pluginName; };
-        void *GetHandle() { return handle_;};
+        void *GetHandle() { return handle_; };
         IDetectPlugin *GetInstance() { return instance_; };
         std::string GetPluginName() { return pluginName_; };
 
@@ -84,9 +86,12 @@ private:
         std::string pluginName;
         std::string pluginPath;
         std::unordered_set<int64_t> depEventIds;
+        std::unordered_set<int64_t> depSaIds;
         std::string version;
     };
 
+    std::unordered_set<int64_t> depSaSet;
+    std::mutex saSetMutex;
     std::vector<PluginCfg> plugins_;
     std::unordered_map<int64_t, std::vector<std::shared_ptr<DetectPluginAttrs>>> eventIdMap_;
     std::unordered_set<int64_t> failedEventIdset_;
@@ -100,8 +105,8 @@ private:
     void ParsePluginConfigObjArray(const cJSON *plugins);
     bool CheckPluginNameAndSize(PluginCfg &newPlugin);
     bool ParsePluginDepEventIds(const cJSON *plugin, std::unordered_set<int64_t> &depEventIds);
+    bool ParsePluginDepSaIds(const cJSON *plugin, std::unordered_set<int64_t> &depSaIds);
     std::string AssembleMetadata(const SecurityCollector::Event &event);
 };
-} // namespace OHOS::Security::SecurityGuard
-
+}  // namespace OHOS::Security::SecurityGuard
 #endif
