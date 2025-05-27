@@ -30,7 +30,6 @@ namespace {
     constexpr int32_t RETRY_INTERVAL = 60;
     constexpr int32_t MAX_PLUGIN_SIZE = 20;
     constexpr const char *PLUGIN_PREFIX_PATH = "/system/lib64/";
-    constexpr const int WAIT_DEP_SA_INTERVAL = 1000;
 }
 
 DetectPluginManager& DetectPluginManager::getInstance()
@@ -39,50 +38,12 @@ DetectPluginManager& DetectPluginManager::getInstance()
     return instance;
 }
 
-void DetectPluginManager::InitPluginsManager()
-{
-    SGLOGI("Start InitPluginsManager.");
-    const std::string fileName = "/system/etc/detect_plugin.json";
-    if (!ParsePluginConfig(fileName)) {
-        return;
-    }
-    SGLOGI("InitPluginsManager finished.");
-}
-
-std::unordered_set<int64_t> DetectPluginManager::GetAllDepSaIds()
-{
-    std::unordered_set<int64_t> tmpSet;
-    {
-        std::lock_guard<std::mutex> lock(saSetMutex);
-        tmpSet = depSaSet;
-    }
-    return tmpSet;
-}
-
-void DetectPluginManager::NotifySystemAbilityStart(int64_t saID)
-{
-    std::lock_guard<std::mutex> lock(saSetMutex);
-    depSaSet.erase(saID);
-}
-
 void DetectPluginManager::LoadAllPlugins()
 {
     SGLOGI("Start LoadAllPlugins.");
-    bool isAllDepSaReady = false;
-    while (!isAllDepSaReady) {
-        {
-            std::lock_guard<std::mutex> lock(saSetMutex);
-            isAllDepSaReady = depSaSet.empty();
-            std::string tmp;
-            for (const auto &elem : depSaSet) {
-                tmp.append(std::to_string(elem));
-                tmp.append(" ");
-            }
-            if (!tmp.empty()) {
-                SGLOGE("DetectPluginManager depend SA %{public}s is not ready", tmp.c_str());
-            }
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_DEP_SA_INTERVAL));
+    const std::string fileName = "/system/etc/detect_plugin.json";
+    if (!ParsePluginConfig(fileName)) {
+        return;
     }
     for (const auto &plugin : plugins_) {
         LoadPlugin(plugin);
@@ -195,8 +156,7 @@ void DetectPluginManager::ParsePluginConfigObjArray(const cJSON *plugins)
         PluginCfg pluginCfg;
         if (!JsonUtil::GetString(item, "pluginName", pluginCfg.pluginName) ||
             !JsonUtil::GetString(item, "version", pluginCfg.version) ||
-            !ParsePluginDepEventIds(item, pluginCfg.depEventIds) ||
-            !ParsePluginDepSaIds(item, pluginCfg.depSaIds)) {
+            !ParsePluginDepEventIds(item, pluginCfg.depEventIds)) {
             SGLOGE("Json Parse Error: pluginName or version or depEventIds not correct.");
             continue;
         }
@@ -250,33 +210,6 @@ bool DetectPluginManager::ParsePluginDepEventIds(const cJSON *plugin,
             return false;
         }
         depEventIds.insert(tmp);
-    }
-    return true;
-}
-
-bool DetectPluginManager::ParsePluginDepSaIds(const cJSON *plugin, std::unordered_set<int64_t> &depSaIds)
-{
-    cJSON *depSaIdsJson = cJSON_GetObjectItem(plugin, "depSaIds");
-    int size = cJSON_GetArraySize(depSaIdsJson);
-    if (depSaIdsJson == nullptr || cJSON_IsArray(depSaIdsJson)) {
-        SGLOGE("Json Parse Error: depSaIds not correct.");
-        return false;
-    }
-    for (int i = 0; i < size; i++) {
-        cJSON *saIdJson = cJSON_GetArrayItem(depSaIdsJson, i);
-        std::string saId;
-        if (!JsonUtil::GetStringNoKey(saIdJson, saId)) {
-            SGLOGE("Json Parse Error: saId not correct.");
-            return false;
-        }
-        int64_t tmp = 0;
-        if (!SecurityGuardUtils::StrToI64Hex(saId, tmp)) {
-            SGLOGE("Json Parse Error: saIds not int_64.");
-            return false;
-        }
-        depSaIds.insert(tmp);
-        std::lock_guard<std::mutex> lock(saSetMutex);
-        depSaSet.insert(tmp);
     }
     return true;
 }
