@@ -116,7 +116,6 @@ private:
     std::map<int64_t, std::shared_ptr<SecurityCollector::ICollectorFwk>> eventToListenner_;
     void *handle_ = nullptr;
     GetEventFilterFunc eventFilter_ = nullptr;
-
 };
 } // namespace OHOS::Security::SecurityGuard
 
