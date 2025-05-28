@@ -23,6 +23,7 @@ using TimeEventRelatedCallBack = std::function<bool(void)>;
 class ConfigSubscriber {
 public:
     static bool UpdateConfig(const std::string &file);
+    static void GetUpdateFileDstPath(const std::string &fileName, std::string &dstPath);
 };
 } // OHOS::Security::SecurityGuard
 
