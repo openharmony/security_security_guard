@@ -44,7 +44,7 @@ namespace OHOS {
     std::shared_ptr<AccountSA::MockOsAccountManagerInterface> AccountSA::OsAccountManager::instance_ = nullptr;
     std::mutex NativeRdb::RdbHelper::mutex_ {};
     std::mutex AccountSA::OsAccountManager::mutex_ {};
-    constexpr uint32_t MAX_CONTENT_SIZE = 1500;
+    constexpr uint32_t MAX_CONTENT_SIZE = 10240;
 }
 
 namespace OHOS::Security::SecurityGuardTest {
