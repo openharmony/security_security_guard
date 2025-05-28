@@ -25,6 +25,19 @@
           "owner":["3001000003"],
           "source" : 0,
           "db_table": "audit_event"
+        },
+        {
+          "eventId":"0xAB000004",
+          "eventName":"config update",
+          "version":0,
+          "eventType":0,
+          "dataSensitivityLevel":1,
+          "storageRamNums":1,
+          "storageRomNums":10,
+          "storageTime" : -1,
+          "owner":[],
+          "source" : 0,
+          "db_table": "risk_event"
         }
     ]
 }

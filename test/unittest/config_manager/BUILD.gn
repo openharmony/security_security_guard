@@ -47,6 +47,8 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "SECURITY_GUARD_COLLECTOR_CFG_SOURCE = \"${security_guard_collector_cfg_source}\"",
   ]
   sources = [
+    "${sg_root_dir}/frameworks/common/utils/src/file_util.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/json_util.cpp",
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/config_manager/src/base_config.cpp",
@@ -63,6 +65,7 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
 
   deps = [
     "${sg_root_dir}/frameworks/common/classify:libsg_classify_sdk",
+    "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
   ]
 
@@ -79,7 +82,7 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "cJSON:cjson_static",
+    "cJSON:cjson",
     "selinux_adapter:librestorecon",
   ]
 

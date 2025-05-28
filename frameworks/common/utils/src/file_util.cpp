@@ -15,13 +15,19 @@
 
 #include "security_guard_log.h"
 #include "file_util.h"
+#include "directory_ex.h"
 
 namespace OHOS::Security::SecurityGuard {
 namespace FileUtil {
 bool ReadFileToStr(const std::string &fileName, const std::ios::pos_type fileMaxSize, std::string &str)
 {
     SGLOGI("Start read file.");
-    std::ifstream stream(fileName, std::ios::in);
+    std::string realPath;
+    if (!PathToRealPath(fileName, realPath)) {
+        SGLOGE("Check file path failed, fileName: %{public}s", fileName.c_str());
+        return false;
+    }
+    std::ifstream stream(realPath, std::ios::in);
     if (!stream.is_open()) {
         SGLOGE("File stream error.");
         return false;
