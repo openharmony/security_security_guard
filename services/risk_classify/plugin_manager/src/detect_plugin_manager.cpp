@@ -28,6 +28,7 @@
 namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr int32_t MAX_RETRY_INTERVAL = 60;
+    constexpr int32_t RETRY_INTERVAL_INCREMENT = 10;
     constexpr int32_t MAX_PLUGIN_SIZE = 20;
     constexpr const char *PLUGIN_PREFIX_PATH = "/system/lib64/";
 }
@@ -122,7 +123,7 @@ void DetectPluginManager::RetrySubscriptionTask()
             break;
         }
         std::this_thread::sleep_for(std::chrono::seconds(retryInterval));
-        retryInterval = std::min(retryInterval + 10, MAX_RETRY_INTERVAL);
+        retryInterval = std::min(retryInterval + RETRY_INTERVAL_INCREMENT, MAX_RETRY_INTERVAL);
     }
 }
 
