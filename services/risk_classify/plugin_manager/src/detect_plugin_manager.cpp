@@ -27,7 +27,8 @@
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
-    constexpr int32_t RETRY_INTERVAL = 60;
+    constexpr int32_t MAX_RETRY_INTERVAL = 60;
+    constexpr int32_t RETRY_INTERVAL_INCREMENT = 10;
     constexpr int32_t MAX_PLUGIN_SIZE = 20;
     constexpr const char *PLUGIN_PREFIX_PATH = "/system/lib64/";
 }
@@ -110,15 +111,19 @@ void DetectPluginManager::SubscribeEvent(int64_t eventId)
 
 void DetectPluginManager::RetrySubscriptionTask()
 {
+    int32_t retryInterval = 10;
     while (!failedEventIdset_.empty()) {
-        int64_t eventId = *failedEventIdset_.begin();
-        SGLOGI("Retry subscription event: 0x%{public}" PRIx64, eventId);
-        failedEventIdset_.erase(failedEventIdset_.begin());
-        SubscribeEvent(eventId);
+        auto tmpSet = failedEventIdset_;
+        for (const auto eventId : tmpSet) {
+            SGLOGI("Retry subscription event: 0x%{public}" PRIx64, eventId);
+            failedEventIdset_.erase(eventId);
+            SubscribeEvent(eventId);
+        }
         if (failedEventIdset_.empty()) {
             break;
         }
-        std::this_thread::sleep_for(std::chrono::seconds(RETRY_INTERVAL));
+        std::this_thread::sleep_for(std::chrono::seconds(retryInterval));
+        retryInterval = std::min(retryInterval + RETRY_INTERVAL_INCREMENT, MAX_RETRY_INTERVAL);
     }
 }
 
