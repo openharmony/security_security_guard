@@ -15,6 +15,8 @@
 
 {
   global:
+    InitAllConfig;
+    UpdateConfig;
     extern "C++" {
       vtable?for?OHOS::Security::SecurityGuard::BaseConfig;
       vtable?for?OHOS::Security::SecurityGuard::EventConfig;
