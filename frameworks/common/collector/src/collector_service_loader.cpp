@@ -71,6 +71,5 @@ sptr<IRemoteObject> CollectorServiceLoader::LoadCallback::Promise()
     } else {
         return future.get();
     }
-    return .get();
 }
 } // namespace OHOS::Security::SecurityAudit
