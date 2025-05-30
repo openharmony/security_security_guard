@@ -83,9 +83,7 @@ void SecurityCollectorManagerService::OnStart()
 }
 
 void SecurityCollectorManagerService::OnStop()
-{
-    DataCollection::GetInstance().CloseLib();
-}
+{}
 
 int SecurityCollectorManagerService::Dump(int fd, const std::vector<std::u16string>& args)
 {
