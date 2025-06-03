@@ -54,6 +54,7 @@ namespace {
         {"RequestSecurityModelResult", {REQUEST_PERMISSION, QUERY_SECURITY_MODEL_RESULT_PERMISSION}},
         {"StartSecurityModel", {QUERY_SECURITY_MODEL_RESULT_PERMISSION}},
     };
+    typedef void (*InitAllConfigFunc)();
 }
 
 RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnCreate)
@@ -65,24 +66,24 @@ RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnC
 void RiskAnalysisManagerService::OnStart()
 {
     SGLOGI("RiskAnalysisManagerService %{public}s", __func__);
-    bool success = ConfigManager::InitConfig<EventConfig>();
-    if (!success) {
-        SGLOGE("init event config error");
-    }
-    success = ConfigManager::InitConfig<ModelConfig>();
-    if (!success) {
-        SGLOGE("init model config error");
-    }
-    success = ConfigManager::InitConfig<EventGroupConfig>();
-    if (!success) {
-        SGLOGE("init event group error");
+    void *handle = dlopen("libsg_config_manager.z.so", RTLD_LAZY);
+    if (handle == nullptr) {
+        SGLOGE("dlopen error: %{public}s", dlerror());
+    } else {
+        auto func = (InitAllConfigFunc)dlsym(handle, "InitAllConfig");
+        if (func != nullptr) {
+            func();
+            SGLOGI("Call Init All Config");
+        } else {
+            SGLOGE("dlsym error: %{public}s", dlerror());
+        }
+        dlclose(handle);
     }
     auto task = [] {
         ModelManager::GetInstance().Init();
     };
     ffrt::submit(task);
 
-    AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
     if (!Publish(this)) {
         SGLOGE("Publish error");
     }
@@ -193,9 +194,6 @@ ErrCode RiskAnalysisManagerService::StartSecurityModel(uint32_t modelId, const s
 void RiskAnalysisManagerService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     SGLOGI("OnAddSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
-    if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
-        ConfigManager::GetInstance().StartUpdate();
-    }
 }
 
 void RiskAnalysisManagerService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
