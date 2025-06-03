@@ -82,6 +82,7 @@ void DetectPluginManager::LoadPlugin(const PluginCfg &pluginCfg)
         SGLOGE("Plugin init failed, pluginName: %{public}s", pluginCfg.pluginName.c_str());
         return;
     }
+    std::lock_guard<std::mutex> lock(mutex_);
     for (const int64_t& eventId : pluginCfg.depEventIds) {
         if (!eventIdMap_.count(eventId)) {
             SubscribeEvent(eventId);
@@ -222,6 +223,7 @@ bool DetectPluginManager::ParsePluginDepEventIds(const cJSON *plugin,
 void DetectPluginManager::DispatchEvent(const SecurityCollector::Event &event)
 {
     SGLOGD("Start distributing events, eventId: 0x%{public}" PRIx64, event.eventId);
+    std::lock_guard<std::mutex> lock(mutex_);
     auto it = eventIdMap_.find(event.eventId);
     if (it == eventIdMap_.end()) {
         SGLOGE("No Plugin is available to process th event, eventId: 0x%{public}" PRIx64,
