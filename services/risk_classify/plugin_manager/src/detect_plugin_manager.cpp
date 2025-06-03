@@ -233,7 +233,7 @@ void DetectPluginManager::DispatchEvent(const SecurityCollector::Event &event)
     for (auto& detectPlugin : it->second) {
         detectPlugin->GetInstance()->HandleEvent(event.eventId, event.content,
             AssembleMetadata(event));
-        SGLOGI("Event distributed successfully, eventId: 0x%{public}" PRIx64 ", pluginName: %{public}s",
+        SGLOGD("Event distributed successfully, eventId: 0x%{public}" PRIx64 ", pluginName: %{public}s",
             event.eventId, detectPlugin->GetPluginName().c_str());
     }
 }
