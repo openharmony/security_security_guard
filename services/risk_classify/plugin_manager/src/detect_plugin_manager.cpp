@@ -82,15 +82,21 @@ void DetectPluginManager::LoadPlugin(const PluginCfg &pluginCfg)
         SGLOGE("Plugin init failed, pluginName: %{public}s", pluginCfg.pluginName.c_str());
         return;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
     for (const int64_t& eventId : pluginCfg.depEventIds) {
-        if (!eventIdMap_.count(eventId)) {
+        size_t count = 0;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            count = eventIdMap_.count(eventId);
+        }
+        if (count == 0) {
             SubscribeEvent(eventId);
         }
+        std::lock_guard<std::mutex> lock(mutex_);
         eventIdMap_[eventId].emplace_back(detectPluginAttrs);
     }
     if (pluginCfg.depEventIds.empty()) {
         const int64_t sepcialId = -1;
+        std::lock_guard<std::mutex> lock(mutex_);
         eventIdMap_[sepcialId].emplace_back(detectPluginAttrs);
     }
     SGLOGI("Load plugin success, pluginName: %{public}s", pluginCfg.pluginName.c_str());
