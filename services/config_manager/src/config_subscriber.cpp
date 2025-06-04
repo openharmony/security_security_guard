@@ -99,7 +99,7 @@ bool ConfigSubscriber::UpdateConfig(const std::string &file)
         if (lastSlashPos != std::string::npos) {
             name = dstPath.substr(lastSlashPos + 1);
         }
-        std::string content = R"({"path":)" + dstPath + R"({", "name":")" + name + R"({"})";
+        std::string content = R"({"path":")" + dstPath + R"(", "name":")" + name + R"("})";
         auto info = std::make_shared<EventInfo>(0xAB000004, "1.0", content);
         int32_t ret = SecurityGuard::NativeDataCollectKit::ReportSecurityInfoAsync(info);
         if (ret != SUCCESS) {
