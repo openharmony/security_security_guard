@@ -43,6 +43,7 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "${sg_root_dir}/interfaces/inner_api/common/include",
     "${sg_root_dir}/frameworks/common/classify/include",
     "${sg_root_dir}/services/risk_classify/plugin_manager/include",
+    "${sg_root_dir}/services/risk_classify/model_manager/include",
   ]
 
   sources = [
@@ -53,6 +54,10 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "${sg_root_dir}/services/risk_classify/src/risk_analysis_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/risk_classify/src/risk_analysis_manager_service.cpp",
     "src/security_guard_risk_analysis_test.cpp",
+    "${sg_root_dir}/services/risk_classify/model_manager/src/config_operate.cpp",
+    "${sg_root_dir}/services/risk_classify/model_manager/src/db_operate.cpp",
+    "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager.cpp",
+    "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager_impl.cpp",
   ]
 
   deps = [
@@ -63,7 +68,6 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "${sg_root_dir}/services/data_collect:sg_collect_service",
     "${sg_root_dir}/services/data_collect:sg_collect_service_database",
     "${sg_root_dir}/services/risk_classify/idl:risk_analysis_manager_idl_sa_stub_tdd",
-    "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
   ]
 
   external_deps = [
