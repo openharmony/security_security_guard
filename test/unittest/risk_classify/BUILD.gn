@@ -20,10 +20,10 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
   subsystem_name = "securitycloudgovernance"
   module_out_path = part_name + "/" + part_name
 
-  #resource_config_file = "resource/ohos_test.xml"
-
+  resource_config_file = "${sg_root_dir}/test/unittest/config_manager/resource/ohos_test.xml"
   include_dirs = [
     "include",
+    "plugin_manager/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/json/include",
     "${sg_root_dir}/frameworks/common/task_handler/include",
@@ -58,6 +58,7 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "${sg_root_dir}/services/risk_classify/model_manager/src/db_operate.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager_impl.cpp",
+    "plugin_manager/src/detect_plugin_manager_test.cpp",
   ]
 
   deps = [
