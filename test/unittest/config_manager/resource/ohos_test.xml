@@ -29,4 +29,9 @@
             <option name="push" value="security_guard_update_event_group.cfg -> /data/test/unittest/resource/" src="res"/>
         </preparer>
     </target>
+    <target name="SecurityGuardRiskAnalysisTest">
+        <preparer>
+            <option name="push" value="detect_plugin.json -> /data/test/unittest/resource/" src="res"/>
+        </preparer>
+    </target>
 </configuration>
