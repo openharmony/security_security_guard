@@ -17,7 +17,7 @@
 #define SECURITY_GUARD_CONFIG_MANAGER_TEST_H
 
 #include <gtest/gtest.h>
-
+#include "cJSON.h"
 namespace OHOS::Security::SecurityGuardTest {
 class SecurityGuardConfigManagerTest : public testing::Test {
 public:
@@ -28,6 +28,20 @@ public:
     void SetUp() override;
 
     void TearDown() override;
+};
+
+class SecurityGuardUtilsTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+
+    static void TearDownTestCase();
+
+    void SetUp() override;
+
+    void TearDown() override;
+
+protected:
+    cJSON *rootJson = nullptr;
 };
 }  // namespace OHOS::Security::SecurityGuardTest
 
