@@ -1104,7 +1104,7 @@ HWTEST_F(SecurityGuardUtilsTest, TestAddStrArrayInfo, TestSize.Level1)
     EXPECT_TRUE(cJSON_IsArray(array));
     EXPECT_EQ(cJSON_GetArraySize(array), values.size());
 
-    for(size_t i = 0; i < values.size(); i++) {
+    for (size_t i = 0; i < values.size(); i++) {
         cJSON *item = cJSON_GetArrayItem(array, i);
         EXPECT_TRUE(item != nullptr);
         EXPECT_TRUE(cJSON_IsString(item));
