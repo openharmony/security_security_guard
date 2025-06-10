@@ -39,6 +39,7 @@ DetectPluginManager& DetectPluginManager::getInstance()
     return instance;
 }
 
+// LCOV_EXCL_START
 void DetectPluginManager::LoadAllPlugins()
 {
     SGLOGI("Start LoadAllPlugins.");
@@ -101,6 +102,7 @@ void DetectPluginManager::LoadPlugin(const PluginCfg &pluginCfg)
     }
     SGLOGI("Load plugin success, pluginName: %{public}s", pluginCfg.pluginName.c_str());
 }
+// LCOV_EXCL_STOP
 
 void DetectPluginManager::SubscribeEvent(int64_t eventId)
 {

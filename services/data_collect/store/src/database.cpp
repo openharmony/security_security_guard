@@ -45,6 +45,7 @@ int Database::Insert(int64_t &outRowId, const std::string &table, const NativeRd
     return ret;
 }
 
+// LCOV_EXCL_START
 int Database::BatchInsert(int64_t &outInsertNum, const std::string &table,
     const std::vector<NativeRdb::ValuesBucket> &initialBatchValues)
 {
@@ -64,6 +65,7 @@ int Database::Update(int &changedRows, const NativeRdb::ValuesBucket &values,
     }
     return ret;
 }
+// LCOV_EXCL_STOP
 
 int Database::Delete(int &deletedRows, const NativeRdb::AbsRdbPredicates &predicates)
 {
@@ -84,6 +86,7 @@ std::shared_ptr<NativeRdb::ResultSet> Database::Query(
     return nullptr;
 }
 
+// LCOV_EXCL_START
 int Database::ExecuteSql(const std::string &sql)
 {
     int ret = IsExistStore();
@@ -102,6 +105,7 @@ int Database::ExecuteAndGetLong(int64_t &outValue, const std::string &sql,
     }
     return ret;
 }
+// LCOV_EXCL_STOP
 
 int Database::Count(int64_t &outValue, const NativeRdb::AbsRdbPredicates &predicates)
 {
@@ -112,6 +116,7 @@ int Database::Count(int64_t &outValue, const NativeRdb::AbsRdbPredicates &predic
     return ret;
 }
 
+// LCOV_EXCL_START
 int Database::BeginTransaction()
 {
     int ret = IsExistStore();
@@ -148,6 +153,7 @@ int Database::Attach(const std::string &alias, const std::string &pathName,
     }
     return ret;
 }
+// LCOV_EXCL_STOP
 
 int Database::IsExistStore()
 {

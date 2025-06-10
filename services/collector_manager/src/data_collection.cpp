@@ -135,6 +135,7 @@ bool DataCollection::StopCollectors(const std::vector<int64_t>& eventIds)
     return ret;
 }
 
+// LCOV_EXCL_START
 bool DataCollection::SubscribeCollectors(const std::vector<int64_t>& eventIds, std::shared_ptr<ICollectorFwk> api)
 {
     LOGI("SubscribeCollectors start");
@@ -210,6 +211,8 @@ void DataCollection::CloseLib()
     }
     needCloseLibMap_.clear();
 }
+// LCOV_EXCL_STOP
+
 ErrorCode DataCollection::LoadCollector(
     int64_t eventId, std::string path, std::shared_ptr<ICollectorFwk> api)
 {

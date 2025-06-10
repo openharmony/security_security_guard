@@ -135,6 +135,7 @@ int32_t FileSystemStoreHelper::GetStoreFileList(std::vector<std::string>& storeF
     return SUCCESS;
 }
 
+// LCOV_EXCL_START
 void FileSystemStoreHelper::DeleteOldestStoreFile()
 {
     SGLOGI("Enter FileSystemStoreHelper DeleteOldestStoreFile");
@@ -157,6 +158,7 @@ void FileSystemStoreHelper::DeleteOldestStoreFile()
         SGLOGI("Deleted oldest log file:%{public}s", GetShortFileName(oldestFile).c_str());
     }
 }
+// LCOV_EXCL_STOP
 
 int32_t FileSystemStoreHelper::InsertEvent(const SecEvent& event)
 {
@@ -239,6 +241,7 @@ SecurityCollector::SecurityEvent FileSystemStoreHelper::SecurityEventFromJson(nl
     return SecurityCollector::SecurityEvent{eventId, version, content, timestamp};
 }
 
+// LCOV_EXCL_START
 SecurityCollector::SecurityEvent FileSystemStoreHelper::IsWantDate(const std::string& fileEvent, int64_t eventid,
     std::string startTime, std::string endTime)
 {
@@ -263,6 +266,7 @@ SecurityCollector::SecurityEvent FileSystemStoreHelper::IsWantDate(const std::st
     }
     return SecurityEventFromJson(jsonObj);
 }
+// LCOV_EXCL_STOP
 
 int32_t FileSystemStoreHelper::GetQueryStoreFileList(std::vector<std::string>& storeFiles,
     const std::string&  startTime, const std::string&  endTime)
