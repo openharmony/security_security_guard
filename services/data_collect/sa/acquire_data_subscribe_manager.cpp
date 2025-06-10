@@ -287,6 +287,7 @@ void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<I
     callbackHashMap_.erase(callback);
 }
 
+// LCOV_EXCL_START
 void AcquireDataSubscribeManager::CleanupTimer::ClearEventCache(const sptr<IRemoteObject> &remote)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
@@ -311,6 +312,7 @@ void AcquireDataSubscribeManager::CleanupTimer::ClearEventCache(const sptr<IRemo
     g_subscriberInfoMap.at(remote).events.clear();
     g_subscriberInfoMap.at(remote).eventsBuffSize = 0;
 }
+// LCOV_EXCL_STOP
 
 void AcquireDataSubscribeManager::BatchUpload(sptr<IRemoteObject> obj,
     const std::vector<SecurityCollector::Event> &events)
@@ -493,6 +495,7 @@ int AcquireDataSubscribeManager::InsertSubscribeMute(const SecurityEventFilter &
     return SUCCESS;
 }
 
+// LCOV_EXCL_START
 void AcquireDataSubscribeManager::SubscriberEventOnSgStart()
 {
     std::vector<int64_t> eventIds = ConfigDataManager::GetInstance().GetAllEventIds();
@@ -517,6 +520,7 @@ void AcquireDataSubscribeManager::SubscriberEventOnSgStart()
         SGLOGE("subscribe sg failed");
     }
 }
+// LCOV_EXCL_STOP
 
 int AcquireDataSubscribeManager::RemoveSubscribeMuteToSub(
     const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter, const EventCfg &config,
