@@ -97,6 +97,7 @@ DataCollectManagerService::DataCollectManagerService(int32_t saId, bool runOnCre
 
 typedef void (*InitAllConfigFunc)();
 typedef bool (*UpdateConfigFunc)(const std::string &);
+// LCOV_EXCL_START
 void DataCollectManagerService::OnStart()
 {
     SGLOGI("%{public}s", __func__);
@@ -126,7 +127,7 @@ void DataCollectManagerService::OnStop()
 {
     SecurityCollector::DataCollection::GetInstance().CloseLib();
 }
-
+// LCOV_EXCL_STOP
 
 int DataCollectManagerService::Dump(int fd, const std::vector<std::u16string>& args)
 {
@@ -513,6 +514,7 @@ ErrCode DataCollectManagerService::QuerySecurityEvent(const std::vector<Security
     return SUCCESS;
 }
 
+// LCOV_EXCL_START
 void DataCollectManagerService::SubscriberDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
 {
     SGLOGI("enter OnRemoteDied");
@@ -537,6 +539,7 @@ void DataCollectManagerService::SubscriberDeathRecipient::OnRemoteDied(const wpt
     }
     SGLOGI("end OnRemoteDied");
 }
+// LCOV_EXCL_STOP
 
 ErrCode DataCollectManagerService::CollectorStart(
     const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &cb)
