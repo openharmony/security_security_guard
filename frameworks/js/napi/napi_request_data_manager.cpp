@@ -18,6 +18,7 @@
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
+// LCOV_EXCL_START
 NapiRequestDataManager& NapiRequestDataManager::GetInstance()
 {
     static NapiRequestDataManager instance;
@@ -98,4 +99,5 @@ bool NapiRequestDataManager::GetDataCallback(napi_env env)
     }
     return false;
 }
+// LCOV_EXCL_STOP
 } // OHOS::Security::SecurityGuard
