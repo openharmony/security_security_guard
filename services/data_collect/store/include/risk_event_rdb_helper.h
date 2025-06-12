@@ -16,9 +16,6 @@
 #ifndef SECURITY_GUARD_RISK_EVENT_RDB_HELPER_H
 #define SECURITY_GUARD_RISK_EVENT_RDB_HELPER_H
 
-#include "rdb_predicates.h"
-#include "values_bucket.h"
-
 #include "database_helper.h"
 #include "store_define.h"
 #include "i_model_info.h"

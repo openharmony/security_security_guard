@@ -47,9 +47,9 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "SECURITY_GUARD_COLLECTOR_CFG_SOURCE = \"${security_guard_collector_cfg_source}\"",
   ]
   sources = [
+    "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/file_util.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/json_util.cpp",
-    "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/config_manager/src/base_config.cpp",
     "${sg_root_dir}/services/config_manager/src/config_data_manager.cpp",
@@ -75,6 +75,7 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "cJSON:cjson",
     "c_utils:utils",
     "googletest:gmock",
     "hilog:libhilog",
@@ -82,7 +83,6 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "cJSON:cjson",
     "selinux_adapter:librestorecon",
   ]
 
@@ -116,13 +116,16 @@ ohos_unittest("AppInfoDatabseTest") {
     "${sg_root_dir}/frameworks/common/utils/include",
     "${sg_root_dir}/services/bigdata/include",
     "${sg_root_dir}/services/config_manager/include",
-    "${sg_root_dir}/test/unittest/mock/rdb",
     "${sg_root_dir}/test/unittest/data_collect/include",
   ]
 
   sources = [
     "${sg_root_dir}/services/data_collect/store/src/database.cpp",
-    "${sg_root_dir}/services/data_collect/store/src/rdb_event_store_callback.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/generic_values.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/sg_sqlite_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/sqlite_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/statement.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/variant_value.cpp",
     "src/app_info_database_test.cpp",
   ]
 
@@ -140,6 +143,7 @@ ohos_unittest("AppInfoDatabseTest") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "sqlite:sqlite",
   ]
 
   sanitize = {

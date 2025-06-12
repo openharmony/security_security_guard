@@ -14,11 +14,10 @@
  */
 
 #include "database_helper.h"
-
+#include <sstream>
 #include <array>
 #include <cinttypes>
 #include "i_model_info.h"
-#include "rdb_event_store_callback.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 
@@ -39,147 +38,135 @@ void DatabaseHelper::Release()
 
 int DatabaseHelper::InsertEvent(const SecEvent& event)
 {
-    NativeRdb::ValuesBucket values;
+    GenericValues values;
     SetValuesBucket(event, values);
     int64_t rowId;
     int ret = Insert(rowId, dbTable_, values);
-    if (ret != NativeRdb::E_OK) {
+    if (ret != SUCCESS) {
         SGLOGI("failed to add event, eventId=%{public}" PRId64 ", ret=%{public}d", event.eventId, ret);
-        return DB_OPT_ERR;
+        return FAILED;
     }
     return SUCCESS;
 }
 
 int DatabaseHelper::QueryAllEvent(std::vector<SecEvent> &events)
 {
-    NativeRdb::RdbPredicates predicates(dbTable_);
-    return QueryEventBase(predicates, events);
+    return QueryEventBase({}, events, {});
 }
 
 int DatabaseHelper::QueryRecentEventByEventId(int64_t eventId, SecEvent &event)
 {
-    std::vector<std::string> columns { EVENT_ID, VERSION, DATE, CONTENT };
-    NativeRdb::RdbPredicates predicates(dbTable_);
-    predicates.EqualTo(EVENT_ID, std::to_string(eventId));
-    predicates.OrderByDesc(ID);
-    predicates.Limit(1);
-    std::shared_ptr<NativeRdb::ResultSet> resultSet = Query(predicates, columns);
-    if (resultSet == nullptr) {
-        SGLOGI("failed to get event");
-        return DB_OPT_ERR;
+    std::vector<SecEvent> results;
+    QueryOptions options;
+    options.orderBy = std::string(ID) + " DESC";
+    options.limit = 1;
+    GenericValues conditions;
+    conditions.Put(EVENT_ID, std::to_string(eventId));
+    int ret = QueryEventBase(conditions, results, options);
+    if (ret == SUCCESS && !results.empty()) {
+        event = results[0];
+        return SUCCESS;
     }
-    SecEventTableInfo table;
-    int32_t ret = GetResultSetTableInfo(resultSet, table);
-    if (ret != SUCCESS) {
-        return ret;
-    }
-    while (resultSet->GoToNextRow() == NativeRdb::E_OK) {
-        resultSet->GetLong(table.eventIdIndex, event.eventId);
-        resultSet->GetString(table.versionIndex, event.version);
-        resultSet->GetString(table.dateIndex, event.date);
-        resultSet->GetString(table.contentIndex, event.content);
-    }
-    resultSet->Close();
-    return SUCCESS;
+    return FAILED;
 }
 
 int DatabaseHelper::QueryRecentEventByEventId(const std::vector<int64_t> &eventIds, std::vector<SecEvent> &events)
 {
-    size_t size = eventIds.size();
-    if (size == 0) {
-        return BAD_PARAM;
+    if (eventIds.empty()) {
+        return FAILED;
     }
-    for (size_t i = 0; i < size; i++) {
-        SGLOGI("eventId=%{public}" PRId64, eventIds[i]);
-        NativeRdb::RdbPredicates predicates(dbTable_);
-        predicates.EqualTo(EVENT_ID, std::to_string(eventIds[i]));
-        predicates.OrderByDesc(ID);
-        predicates.Limit(1);
-        int ret = QueryEventBase(predicates, events);
-        if (ret != SUCCESS) {
-            return ret;
-        }
+
+    std::vector<std::string> idStrList;
+    for (const auto &id: eventIds) {
+        idStrList.push_back(std::to_string(id));
     }
-    return SUCCESS;
+
+    GenericValues conditions;
+    conditions.Put(std::string(EVENT_ID) + "_IN", Join(idStrList, ","));
+
+    QueryOptions options;
+    options.orderBy = std::string(DATE) + " DESC";
+    options.limit = 1;
+    int ret = QueryEventBase(conditions, events, options);
+    if (ret == SUCCESS) {
+        SGLOGE("query fail");
+        events.clear();
+    }
+    return ret;
 }
 
 int DatabaseHelper::QueryEventByEventId(int64_t eventId, std::vector<SecEvent> &events)
 {
-    NativeRdb::RdbPredicates predicates(dbTable_);
-    predicates.EqualTo(EVENT_ID, std::to_string(eventId));
-    return QueryEventBase(predicates, events);
+    GenericValues conditions;
+    conditions.Put(EVENT_ID, std::to_string(eventId));
+    return QueryEventBase(conditions, events);
 }
 
 int DatabaseHelper::QueryEventByEventId(std::vector<int64_t> &eventIds, std::vector<SecEvent> &events)
 {
-    size_t size = eventIds.size();
-    if (size == 0) {
+    if (eventIds.empty()) {
         return BAD_PARAM;
     }
-    NativeRdb::RdbPredicates predicates(dbTable_);
-    for (size_t i = 0; i < size; i++) {
+
+    std::ostringstream oss;
+    for (size_t i = 0; i < eventIds.size(); ++i) {
         if (i > 0) {
-            predicates.Or();
+            oss << ",";
         }
-        predicates.EqualTo(EVENT_ID, std::to_string(eventIds[i]));
+        oss << eventIds[i];
     }
-    return QueryEventBase(predicates, events);
+
+    GenericValues conditions;
+    conditions.Put(std::string(EVENT_ID) + "_IN", oss.str());
+    return QueryEventBase(conditions, events);
 }
 
 int DatabaseHelper::QueryEventByEventIdAndDate(std::vector<int64_t> &eventIds, std::vector<SecEvent> &events,
     std::string beginTime, std::string endTime)
 {
-    size_t size = eventIds.size();
-    if (size == 0) {
+    if (eventIds.empty()) {
         return BAD_PARAM;
     }
-    NativeRdb::RdbPredicates predicates(dbTable_);
-    predicates.BeginWrap();
-    for (size_t i = 0; i < size; i++) {
-        if (i > 0) {
-            predicates.Or();
-        }
-        predicates.EqualTo(EVENT_ID, std::to_string(eventIds[i]));
-    }
-    predicates.EndWrap();
+
+    GenericValues conditions;
+    conditions.Put(std::string(EVENT_ID) + "_IN", Join(eventIds, ","));
     if (!beginTime.empty()) {
-        predicates.And();
-        predicates.GreaterThanOrEqualTo(DATE, beginTime);
+        conditions.Put(std::string(DATE) + "_GE", beginTime);
     }
+
     if (!endTime.empty()) {
-        predicates.And();
-        predicates.LessThan(DATE, endTime);
+        conditions.Put(std::string(DATE) + "_LT", endTime);
     }
-    return QueryEventBase(predicates, events);
+    return QueryEventBase(conditions, events);
 }
 
 int DatabaseHelper::QueryEventByEventType(int32_t eventType, std::vector<SecEvent> &events)
 {
-    NativeRdb::RdbPredicates predicates(dbTable_);
-    predicates.EqualTo(EVENT_TYPE, std::to_string(eventType));
-    return QueryEventBase(predicates, events);
+    GenericValues conditions;
+    conditions.Put(EVENT_TYPE, std::to_string(eventType));
+    return QueryEventBase(conditions, events);
 }
 
 int DatabaseHelper::QueryEventByLevel(int32_t level, std::vector<SecEvent> &events)
 {
-    NativeRdb::RdbPredicates predicates(dbTable_);
-    predicates.EqualTo(DATA_SENSITIVITY_LEVEL, std::to_string(level));
-    return QueryEventBase(predicates, events);
+    GenericValues conditions;
+    conditions.Put(DATA_SENSITIVITY_LEVEL, std::to_string(level));
+    return QueryEventBase(conditions, events);
 }
 
 int DatabaseHelper::QueryEventByOwner(std::string owner, std::vector<SecEvent> &events)
 {
-    NativeRdb::RdbPredicates predicates(dbTable_);
-    predicates.Contains(OWNER, owner);
-    return QueryEventBase(predicates, events);
+    GenericValues conditions;
+    std::string safeOwner = FilterSpecialChars(owner);
+    conditions.Put(std::string(OWNER) + "_LIKE", "%" + safeOwner + "%");
+    return QueryEventBase(conditions, events);
 }
 
 int64_t DatabaseHelper::CountAllEvent()
 {
     int64_t count;
-    NativeRdb::RdbPredicates predicates(dbTable_);
-    int ret = Count(count, predicates);
-    if (ret != NativeRdb::E_OK) {
+    int ret = Count(count, dbTable_, {});
+    if (ret != SUCCESS) {
         SGLOGE("failed to count event, ret=%{public}d", ret);
     }
     return count;
@@ -188,10 +175,10 @@ int64_t DatabaseHelper::CountAllEvent()
 int64_t DatabaseHelper::CountEventByEventId(int64_t eventId)
 {
     int64_t count;
-    NativeRdb::RdbPredicates predicates(dbTable_);
-    predicates.EqualTo(EVENT_ID, std::to_string(eventId));
-    int ret = Count(count, predicates);
-    if (ret != NativeRdb::E_OK) {
+    GenericValues conditions;
+    conditions.Put(EVENT_ID, std::to_string(eventId));
+    int ret = Count(count, dbTable_, conditions);
+    if (ret != SUCCESS) {
         SGLOGE("failed to count event, eventId=%{public}" PRId64 ", ret=%{public}d", eventId, ret);
     }
     return count;
@@ -199,46 +186,42 @@ int64_t DatabaseHelper::CountEventByEventId(int64_t eventId)
 
 int DatabaseHelper::DeleteOldEventByEventId(int64_t eventId, int64_t count)
 {
-    NativeRdb::RdbPredicates queryPredicates(dbTable_);
-    queryPredicates.EqualTo(EVENT_ID, std::to_string(eventId));
-    queryPredicates.OrderByAsc(ID);
-    queryPredicates.Limit(count);
-    std::vector<std::string> columns { ID };
-    std::shared_ptr<NativeRdb::ResultSet> resultSet = Query(queryPredicates, columns);
-    if (resultSet == nullptr) {
-        SGLOGI("failed to get event, eventId=%{public}" PRId64, eventId);
-        return DB_OPT_ERR;
+    if (count <= 0 || eventId < 0) {
+        return BAD_PARAM;
     }
-    int64_t primaryKey = -1;
-    std::vector<std::string> primaryKeyVec;
-    while (resultSet->GoToNextRow() == NativeRdb::E_OK) {
-        resultSet->GetLong(0, primaryKey);
-        primaryKeyVec.emplace_back(std::to_string(primaryKey));
+    GenericValues conditions;
+    conditions.Put(EVENT_ID, std::to_string(eventId));
+    QueryOptions options;
+    options.orderBy = std::string(DATE) + " ASC";
+    options.limit = static_cast<int>(count);
+    options.columns = {ID};
+
+    std::vector<GenericValues> idResults;
+    int ret = Query(dbTable_, conditions, idResults, options);
+    if (ret != SUCCESS || idResults.empty()) {
+        return ret;
     }
-    resultSet->Close();
-    int rowId;
-    NativeRdb::RdbPredicates deletePredicates(dbTable_);
-    deletePredicates.In(ID, primaryKeyVec);
-    deletePredicates.EqualTo(EVENT_ID, std::to_string(eventId));
-    int ret = Delete(rowId, deletePredicates);
-    if (ret != NativeRdb::E_OK) {
-        SGLOGE("failed to delete event, eventId=%{public}" PRId64 ", ret=%{public}d", eventId, ret);
-        return DB_OPT_ERR;
+
+    std::vector<std::string> primaryKeys;
+    for (const auto& row: idResults) {
+        primaryKeys.push_back(std::to_string(row.GetInt64(ID)));
     }
-    return SUCCESS;
+
+    GenericValues deleteConditions;
+    deleteConditions.Put(std::string(ID) + "_IN", Join(primaryKeys, ","));
+    int deleteRows = 0;
+    return Delete(deleteRows, dbTable_, deleteConditions);
 }
 
 int DatabaseHelper::DeleteAllEventByEventId(int64_t eventId)
 {
-    int rowId;
-    NativeRdb::RdbPredicates predicates(dbTable_);
-    predicates.EqualTo(EVENT_ID, std::to_string(eventId));
-    int ret = Delete(rowId, predicates);
-    if (ret != NativeRdb::E_OK) {
-        SGLOGI("failed to delete event, eventId=%{public}" PRId64 ", ret=%{public}d", eventId, ret);
-        return DB_OPT_ERR;
+    if (eventId < 0) {
+        return BAD_PARAM;
     }
-    return SUCCESS;
+    GenericValues conditions;
+    conditions.Put(EVENT_ID, std::to_string(eventId));
+    int deleteRows = 0;
+    return Delete(deleteRows, dbTable_, conditions);
 }
 
 int DatabaseHelper::FlushAllEvent()
@@ -246,99 +229,44 @@ int DatabaseHelper::FlushAllEvent()
     return SUCCESS;
 }
 
-int DatabaseHelper::QueryEventBase(const NativeRdb::RdbPredicates &predicates, std::vector<SecEvent> &events)
+int DatabaseHelper::QueryEventBase(const GenericValues &conditions, std::vector<SecEvent> &events,
+    const QueryOptions &options)
 {
-    std::vector<std::string> columns { EVENT_ID, VERSION, DATE, CONTENT, USER_ID, DEVICE_ID };
-    std::shared_ptr<NativeRdb::ResultSet> resultSet = Query(predicates, columns);
-    if (resultSet == nullptr) {
-        SGLOGI("failed to get event");
-        return DB_OPT_ERR;
-    }
-    SecEventTableInfo table;
-    table.userIdIndex = INVALID_INDEX;
-    table.deviceIdIndex = INVALID_INDEX;
-    int32_t ret = GetResultSetTableInfo(resultSet, table);
+    std::vector<GenericValues> queryResults;
+    QueryOptions baseOptions = options;
+    baseOptions.columns = {EVENT_ID, VERSION, DATE, CONTENT, USER_ID, DEVICE_ID};
+
+    int ret = Query(dbTable_, conditions, queryResults, baseOptions);
     if (ret != SUCCESS) {
         return ret;
     }
-    SecEvent event;
-    while (resultSet->GoToNextRow() == NativeRdb::E_OK) {
-        resultSet->GetLong(table.eventIdIndex, event.eventId);
-        resultSet->GetString(table.versionIndex, event.version);
-        resultSet->GetString(table.dateIndex, event.date);
-        resultSet->GetString(table.contentIndex, event.content);
-        if (table.deviceIdIndex != INVALID_INDEX) {
-            resultSet->GetString(table.deviceIdIndex, event.deviceId);
-        }
-        if (table.userIdIndex != INVALID_INDEX) {
-            resultSet->GetInt(table.userIdIndex, event.userId);
-        }
-        events.emplace_back(event);
+
+    for (const auto& row : queryResults) {
+        events.emplace_back(
+            SecEvent{
+                .eventId = row.GetInt64(EVENT_ID),
+                .date = row.GetString(DATE),
+                .content = row.GetString(CONTENT),
+                .userId = row.GetInt(USER_ID),
+                .deviceId = row.GetString(DEVICE_ID)
+            }
+        );
     }
-    resultSet->Close();
+
     return SUCCESS;
 }
 
-int32_t DatabaseHelper::GetResultSetTableInfo(const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
-    SecEventTableInfo &table)
+void DatabaseHelper::SetValuesBucket(const SecEvent &event, GenericValues &values)
 {
-    int32_t rowCount = 0;
-    int32_t columnCount = 0;
-    std::vector<std::string> columnNames;
-    if (resultSet->GetRowCount(rowCount) != NativeRdb::E_OK ||
-        resultSet->GetColumnCount(columnCount) != NativeRdb::E_OK ||
-        resultSet->GetAllColumnNames(columnNames) != NativeRdb::E_OK) {
-        SGLOGE("get table info failed");
-        return DB_LOAD_ERR;
-    }
-    if (columnNames.size() > INT32_MAX) {
-        SGLOGE("columnNames size err");
-        return DB_LOAD_ERR;
-    }
-    int32_t columnNamesCount = static_cast<int32_t>(columnNames.size());
-    for (int32_t i = 0; i < columnNamesCount; i++) {
-        std::string columnName = columnNames.at(i);
-        if (columnName == ID) {
-            table.primaryKeyIndex = i;
-        }
-        if (columnName == EVENT_ID) {
-            table.eventIdIndex = i;
-        }
-        if (columnName == VERSION) {
-            table.versionIndex = i;
-        }
-        if (columnName == DATE) {
-            table.dateIndex = i;
-        }
-        if (columnName == CONTENT) {
-            table.contentIndex = i;
-        }
-        if (columnName == USER_ID) {
-            table.userIdIndex = i;
-        }
-        if (columnName == DEVICE_ID) {
-            table.deviceIdIndex = i;
-        }
-    }
-    table.rowCount = rowCount;
-    table.columnCount = columnCount;
-    SGLOGD("info: row=%{public}d col=%{public}d eventIdIdx=%{public}d versionIdx=%{public}d "
-        "dateIdx=%{public}d contentIdx=%{public}d", rowCount, columnCount,
-        table.eventIdIndex, table.versionIndex, table.dateIndex, table.contentIndex);
-    return SUCCESS;
-}
-
-void DatabaseHelper::SetValuesBucket(const SecEvent &event, NativeRdb::ValuesBucket &values)
-{
-    values.PutLong(EVENT_ID, event.eventId);
-    values.PutString(VERSION, event.version);
-    values.PutString(DATE, event.date);
-    values.PutString(CONTENT, event.content);
-    values.PutInt(EVENT_TYPE, event.eventType);
-    values.PutInt(DATA_SENSITIVITY_LEVEL, event.dataSensitivityLevel);
-    values.PutString(OWNER, event.owner);
-    values.PutInt(USER_ID, event.userId);
-    values.PutString(DEVICE_ID, event.deviceId);
+    values.Put(EVENT_ID, event.eventId);
+    values.Put(VERSION, event.version);
+    values.Put(DATE, event.date);
+    values.Put(CONTENT, event.content);
+    values.Put(EVENT_TYPE, event.eventType);
+    values.Put(DATA_SENSITIVITY_LEVEL, event.dataSensitivityLevel);
+    values.Put(OWNER, event.owner);
+    values.Put(USER_ID, event.userId);
+    values.Put(DEVICE_ID, event.deviceId);
 }
 
 std::string DatabaseHelper::CreateTable()
@@ -357,4 +285,52 @@ std::string DatabaseHelper::CreateTable()
     table.append(DEVICE_ID).append(" TEXT NOT NULL)");
     return table;
 }
+
+std::string DatabaseHelper::FilterSpecialChars(const std::string &input)
+{
+    std::string filtered;
+    for (auto c : input) {
+        if (isalnum(c) || c == '_' || c == '%') {
+            filtered += c;
+        }
+    }
+
+    return filtered;
+}
+
+std::string DatabaseHelper::Join(const std::vector<int64_t> &vec, const std::string delimiter)
+{
+    if (vec.empty()) {
+        return "";
+    }
+
+    std::ostringstream oss;
+    oss << vec[0];
+
+    for (size_t i = 1; i < vec.size(); ++i) {
+        oss << delimiter << vec[i];
+    }
+
+    return oss.str();
+}
+
+std::string DatabaseHelper::Join(const std::vector<std::string> &vec, const std::string delimiter)
+{
+    if (vec.empty()) {
+        return "";
+    }
+
+    std::string result;
+    bool isFirst = true;
+    for (const auto &str : vec) {
+        if (!isFirst) {
+            result += delimiter;
+        }
+        result += str;
+        isFirst = false;
+    }
+
+    return result;
+}
+
 } // namespace OHOS::Security::SecurityGuard
