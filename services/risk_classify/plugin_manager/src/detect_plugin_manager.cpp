@@ -87,7 +87,7 @@ void DetectPluginManager::LoadPlugin(const PluginCfg &pluginCfg)
         }
         eventIdMap_[eventId].emplace_back(detectPluginAttrs);
     }
-     if (pluginCfg.depEventIds.empty()) {
+    if (pluginCfg.depEventIds.empty()) {
             const int64_t sepcialId = -1;
             eventIdMap_[sepcialId].emplace_back(detectPluginAttrs);
         }
