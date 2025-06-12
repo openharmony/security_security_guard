@@ -41,7 +41,7 @@ void from_json(const json &jsonObj, ModuleCfgSt &moduleCfg)
     SecurityGuard::JsonCfg::Unmarshal(eventList, jsonObj, EVENT_ID);
     for (const std::string& eventId : eventList) {
         int64_t tmp = 0;
-        if (eventId == "" || ! SecurityGuard::SecurityGuardUtils::StrToI64Hex(eventId, tmp)) {
+        if (eventId.empty() || !SecurityGuard::SecurityGuardUtils::StrToI64Hex(eventId, tmp)) {
             continue;
         }
         moduleCfg.eventId.emplace_back(tmp);
