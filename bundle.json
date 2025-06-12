@@ -56,7 +56,6 @@
         "openssl",
         "os_account",
         "preferences",
-        "relational_store",
         "safwk",
         "samgr",
         "time_service",
@@ -65,7 +64,8 @@
         "bundle_framework",
         "zlib",
         "cJSON",
-        "selinux_adapter"
+        "selinux_adapter",
+        "sqlite"
       ],
       "third_party": [
       ]

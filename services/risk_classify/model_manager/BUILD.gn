@@ -62,6 +62,5 @@ ohos_source_set("sg_model_manager_stamp") {
     "c_utils:utils",
     "hilog:libhilog",
     "json:nlohmann_json_static",
-    "relational_store:native_rdb",
   ]
 }

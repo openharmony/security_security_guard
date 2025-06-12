@@ -57,7 +57,7 @@ ohos_fuzztest("RiskCollectFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
-    "relational_store:native_rdb",
     "samgr:samgr_proxy",
+    "sqlite:sqlite",
   ]
 }

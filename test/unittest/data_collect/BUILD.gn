@@ -79,9 +79,9 @@ ohos_unittest("data_collect_test") {
     "json:nlohmann_json_static",
     "os_account:os_account_innerkits",
     "preferences:native_preferences",
-    "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "sqlite:sqlite",
   ]
 }
 
@@ -135,8 +135,12 @@ ohos_unittest("SecurityGuardDataCollectTest") {
     "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
     "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
-    "${sg_root_dir}/services/data_collect/store/src/rdb_event_store_callback.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/generic_values.cpp",
     "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/sg_sqlite_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/sqlite_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/statement.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/variant_value.cpp",
     "src/security_guard_data_collect_test.cpp",
   ]
 
@@ -151,6 +155,7 @@ ohos_unittest("SecurityGuardDataCollectTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "sqlite:sqlite",
     "zlib:libz",
   ]
 }
@@ -205,6 +210,7 @@ ohos_unittest("SecurityGuardDatabaseManagerTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "sqlite:sqlite",
     "zlib:libz",
   ]
 }
