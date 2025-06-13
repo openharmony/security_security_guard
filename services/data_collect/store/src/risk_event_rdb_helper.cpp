@@ -16,8 +16,6 @@
 #include "database_helper.h"
 #include "risk_event_rdb_helper.h"
 
-#include "rdb_event_store_callback.h"
-
 namespace OHOS::Security::SecurityGuard {
 DatabaseHelper &RiskEventRdbHelper::GetInstance()
 {
@@ -33,14 +31,11 @@ RiskEventRdbHelper::RiskEventRdbHelper() : DatabaseHelper(RISK_TABLE)
 
 int RiskEventRdbHelper::Init()
 {
-    int errCode = NativeRdb::E_ERROR;
-    NativeRdb::RdbStoreConfig config(dbPath_);
-    config.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
+    int errCode = -1;
     std::string table = CreateTable();
     std::vector<std::string> createTableVec;
     createTableVec.push_back(table);
-    RdbEventStoreCallback callback(createTableVec);
-    CreateRdbStore(config, DB_VERSION, callback, errCode);
+    CreateRdbStore("risk_event.db", FOLDER_PATH, DB_VERSION, createTableVec, errCode);
     return errCode;
 }
 } // namespace OHOS::Security::SecurityGuard
