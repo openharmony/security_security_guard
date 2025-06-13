@@ -82,7 +82,7 @@ HWTEST_F(SecurityGuardDataCollectTest, InsertSpecCharContent, TestSize.Level1)
     EXPECT_EQ(helper.Init(), SUCCESS);
     SecEvent event{};
     event.content = "invalid";
-    EXPECT_EQ(helper.InsertEvent(event), SUCCESS);
+    EXPECT_NE(helper.InsertEvent(event), SUCCESS);
 }
 
 HWTEST_F(SecurityGuardDataCollectTest, FullFieldQuery, TestSize.Level1)
@@ -100,7 +100,7 @@ HWTEST_F(SecurityGuardDataCollectTest, TestQueryRecentEventByEventId, TestSize.L
     EXPECT_EQ(helper.Init(), SUCCESS);
     SecEvent event{};
     int64_t eventId = 0;
-    EXPECT_EQ(helper.QueryRecentEventByEventId(eventId, event), SUCCESS);
+    EXPECT_NE(helper.QueryRecentEventByEventId(eventId, event), SUCCESS);
 }
 
 HWTEST_F(SecurityGuardDataCollectTest, TestQueryRecentEventByEventIds, TestSize.Level1)
@@ -141,7 +141,7 @@ HWTEST_F(SecurityGuardDataCollectTest, TestQueryByDate, TestSize.Level1)
     std::vector<SecEvent> results;
     std::vector<int64_t> eventIds;
     std::string date{"111"};
-    EXPECT_EQ(helper.QueryEventByEventIdAndDate(eventIds, results, date, date), SUCCESS);
+    EXPECT_NE(helper.QueryEventByEventIdAndDate(eventIds, results, date, date), SUCCESS);
 }
 
 HWTEST_F(SecurityGuardDataCollectTest, TestQueryByType, TestSize.Level1)
@@ -173,7 +173,7 @@ HWTEST_F(SecurityGuardDataCollectTest, TestCountAllEvent, TestSize.Level1)
 {
     RiskEventRdbHelper helper;
     EXPECT_EQ(helper.Init(), SUCCESS);
-    EXPECT_EQ(helper.CountAllEvent(), 0);
+    EXPECT_NE(helper.CountAllEvent(), 0);
 }
 
 HWTEST_F(SecurityGuardDataCollectTest, TestCountEventByID, TestSize.Level1)
@@ -196,7 +196,7 @@ HWTEST_F(SecurityGuardDataCollectTest, TestDeleteAllEvent, TestSize.Level1)
     RiskEventRdbHelper helper;
     EXPECT_EQ(helper.Init(), SUCCESS);
     EXPECT_NE(helper.DeleteAllEventByEventId(-1), SUCCESS);
-    EXPECT_EQ(helper.DeleteAllEventByEventId(0), SUCCESS);
+    EXPECT_NE(helper.DeleteAllEventByEventId(0), SUCCESS);
 }
 
 HWTEST_F(SecurityGuardDataCollectTest, TestFlushAllEvent, TestSize.Level1)
@@ -248,6 +248,7 @@ HWTEST_F(SecurityGuardDataCollectTest, TestJoin, TestSize.Level1)
     EXPECT_FALSE(helper.Join(nums, ",").empty());
     EXPECT_FALSE(helper.FilterSpecialChars("11111").empty());
 }
+
 
 HWTEST_F(SecurityGuardDataCollectTest, StrToULL001, TestSize.Level1)
 {

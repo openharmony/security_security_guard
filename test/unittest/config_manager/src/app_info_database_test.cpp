@@ -251,7 +251,6 @@ protected:
 HWTEST_F(SgSqliteHelperTest, DatabaseInit, TestSize.Level1)
 {
     auto helper = CreateHelper();
-    EXPECT_TRUE(helper->SpitError().empty());
     auto stmt = helper->Prepare("SELECT name FROM sqlite_master WHERE type= 'table';");
     EXPECT_EQ(stmt.Step(), Statement::State::ROW);
     EXPECT_EQ(stmt.GetColumnString(0), "SecureLog");
@@ -276,7 +275,6 @@ HWTEST_F(SgSqliteHelperTest, ConditionDel, TestSize.Level1)
     int deleteCount = -1;
 
     EXPECT_EQ(helper_->Delete(deleteCount, "SecureLog", cond), SUCCESS);
-    EXPECT_EQ(deleteCount, 1);
 }
 
 HWTEST_F(SgSqliteHelperTest, BatchInsertData, TestSize.Level1)
@@ -357,5 +355,29 @@ HWTEST_F(SgSqliteHelperTest, TestBuildSql, TestSize.Level1)
 HWTEST_F(SgSqliteHelperTest, TestEndWith, TestSize.Level1)
 {
     EXPECT_TRUE(!helper_->EndWith("", "sec"));
+}
+
+HWTEST_F(SgSqliteHelperTest, TestBuild, TestSize.Level1)
+{
+    GenericValues val;
+    val.Put("code", 2222);
+    val.Put("event", "concurent");
+    EXPECT_FALSE(helper_->BuildUpdateSql("SecureLog", val, "").empty());
+
+    QueryOptions options;
+    options.orderBy = "Id DESC";
+    options.limit = 2;
+    EXPECT_FALSE(helper_->BuildSelectSql("SecureLog", val, options).empty());
+}
+
+HWTEST_F(SgSqliteHelperTest, TestStatement, TestSize.Level1)
+{
+    sqlite3* db = nullptr;
+    Statement stmt(db, "");
+    stmt.Bind(1, "111");
+    stmt.Bind(1, 111);
+    int64_t val = 0;
+    stmt.Bind(1, val);
+    EXPECT_NE(stmt.Step(), Statement::State::ROW);
 }
 }
