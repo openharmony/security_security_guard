@@ -204,7 +204,7 @@ std::string SgSqliteHelper::BuildInsertSql(const std::string &table, const Gener
     }
 
     std::ostringstream oss;
-    oss << "INSERT INFO" << table << " (";
+    oss << " INSERT INTO " << table << " (";
     for (size_t i = 0; i < keys.size(); ++i) {
         oss << keys[i];
         if (i != keys.size() - 1) {
@@ -213,7 +213,7 @@ std::string SgSqliteHelper::BuildInsertSql(const std::string &table, const Gener
     }
 
     oss << ") VALUES (";
-    for (size_t i = 0; i <keys.size(); ++i) {
+    for (size_t i = 0; i < keys.size(); ++i) {
         oss << ":" << keys[i];
         if (i != keys.size() - 1) {
             oss << ",";
@@ -240,8 +240,8 @@ std::string SgSqliteHelper::BuildUpdateSql(const std::string &table, const Gener
             setClause += ",";
         }
     }
-    std::string sql = "UPDATE " + table + "SET" + setClause;
-    if (!where.empty())  {
+    std::string sql = "UPDATE " + table + " SET " + setClause;
+    if (!where.empty()) {
         sql += " WHERE " + where;
     }
     return sql;
@@ -260,7 +260,7 @@ std::string SgSqliteHelper::BuildSelectSql(const std::string &table, const Gener
         sql += " ORDER BY " + options.orderBy;
     }
     if (options.limit > 0) {
-        sql += "LIMIT " + std::to_string(options.limit);
+        sql += " LIMIT " + std::to_string(options.limit);
     }
 
     return sql;
@@ -270,7 +270,7 @@ std::string SgSqliteHelper::BuildInPlaceholders(const std::string &key, const st
 {
     auto items = Split(values, ',');
     std::vector<std::string> placeholders;
-    for (size_t i = 0; i < items.size() ; ++i) {
+    for (size_t i = 0; i < items.size(); ++i) {
         placeholders.push_back(":" + key + "_" + std::to_string(i));
     }
 
@@ -342,7 +342,7 @@ std::string SgSqliteHelper::BuildWhereClause(const GenericValues &conditions)
         }
 
         if (opFound.empty()) {
-            clauses.push_back(key + " = : " + key);
+            clauses.push_back(key + " = :" + key);
             continue;
         }
 
@@ -352,7 +352,7 @@ std::string SgSqliteHelper::BuildWhereClause(const GenericValues &conditions)
         } else if (opFound == "GE") {
             clauses.push_back(field + " >= :" + key);
         } else if (opFound == "LT") {
-            clauses.push_back(field + " < : " + key);
+            clauses.push_back(field + " < :" + key);
         } else if (opFound == "LIKE") {
             clauses.push_back(field + " LIKE :" + key);
         }
