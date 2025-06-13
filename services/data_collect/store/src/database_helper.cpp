@@ -88,7 +88,7 @@ int DatabaseHelper::QueryRecentEventByEventId(const std::vector<int64_t> &eventI
     options.orderBy = std::string(DATE) + " DESC";
     options.limit = 1;
     int ret = QueryEventBase(conditions, events, options);
-    if (ret == SUCCESS) {
+    if (ret != SUCCESS) {
         SGLOGE("query fail");
         events.clear();
     }
