@@ -16,11 +16,7 @@
 #ifndef SECURITY_GUARD_EVENT_STORE_H
 #define SECURITY_GUARD_EVENT_STORE_H
 
-#include "rdb_open_callback.h"
-#include "rdb_predicates.h"
-#include "rdb_store.h"
-#include "rdb_store_config.h"
-
+#include "sg_sqlite_helper.h"
 #include "i_model_info.h"
 #include "store_define.h"
 
@@ -29,27 +25,28 @@ class Database {
 public:
     Database() = default;
     virtual ~Database() = default;
-    void CreateRdbStore(const NativeRdb::RdbStoreConfig &config, int version,
-        NativeRdb::RdbOpenCallback &openCallback, int &errCode);
-    int Insert(int64_t &outRowId, const std::string &table, const NativeRdb::ValuesBucket &initialValues);
+    void CreateRdbStore(const std::string &dbName, const std::string &dbPath, int version,
+        const std::vector<std::string> &createSqls, int &errCode);
+    int Insert(int64_t &outRowId, const std::string &table, const GenericValues &value);
     int BatchInsert(int64_t &outInsertNum, const std::string &table,
-        const std::vector<NativeRdb::ValuesBucket> &initialBatchValues);
-    int Update(int &changedRows, const NativeRdb::ValuesBucket &values, const NativeRdb::AbsRdbPredicates &predicates);
-    int Delete(int &deletedRows, const NativeRdb::AbsRdbPredicates &predicates);
-    std::shared_ptr<NativeRdb::ResultSet> Query(
-        const NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> columns);
+        const std::vector<GenericValues> &initialBatchValues);
+    int Update(int &changedRows, const std::string &table, const GenericValues &value);
+    int Delete(int &deletedRows, const std::string &table, const GenericValues &conditions = {});
+    int Query(const std::string &table, const GenericValues &conditions,
+        std::vector<GenericValues> &results, const QueryOptions &options = {});
     int ExecuteSql(const std::string &sql);
-    int ExecuteAndGetLong(int64_t &outValue, const std::string &sql,
-        const std::vector<NativeRdb::ValueObject> &bindArgs = std::vector<NativeRdb::ValueObject>());
-    int Count(int64_t &outValue, const NativeRdb::AbsRdbPredicates &predicates);
+    int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<std::string> &bindArgs);
+    int Count(int64_t &outValue, const std::string &table,  const GenericValues &conditions = {},
+         const QueryOptions &options = {});
     int BeginTransaction();
     int RollBack();
     int Commit();
-    int Attach(const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey);
+    int Attach(const std::string &alias, const std::string &pathName,
+        const std::vector<uint8_t> destEncryptKey);
 
 private:
     int IsExistStore();
-    std::shared_ptr<NativeRdb::RdbStore> store_;
+    std::shared_ptr<SgSqliteHelper> store_;
 };
 }  // OHOS::Security::SecurityGuard
 

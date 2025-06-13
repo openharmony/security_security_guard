@@ -37,7 +37,6 @@
 #include "event_config.h"
 #include "model_cfg_marshalling.h"
 #include "model_config.h"
-#include "rdb_helper.h"
 #include "security_guard_log.h"
 #include "event_group_config.h"
 #include "json_util.h"
@@ -51,10 +50,7 @@ using namespace OHOS::Security::SecurityGuard;
 using namespace OHOS::Security::SecurityGuardTest;
 using namespace OHOS::Security::SecurityGuard::FileUtil;
 using namespace OHOS::Security::SecurityGuard::JsonUtil;
-namespace OHOS {
-    std::shared_ptr<NativeRdb::MockRdbHelperInterface> NativeRdb::RdbHelper::instance_ = nullptr;
-    std::mutex NativeRdb::RdbHelper::mutex_ {};
-}
+
 namespace OHOS::Security::SecurityGuardTest {
 
 void SecurityGuardConfigManagerTest::SetUpTestCase()

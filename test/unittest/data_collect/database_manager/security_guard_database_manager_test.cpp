@@ -25,8 +25,6 @@
 #include "device_manager.h"
 #include "i_db_listener.h"
 #include "os_account_manager.h"
-#include "rdb_helper.h"
-#include "rdb_store.h"
 #include "risk_event_rdb_helper.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
@@ -40,9 +38,7 @@ using namespace OHOS::Security::SecurityGuard;
 using namespace OHOS::Security::SecurityGuardTest;
 
 namespace OHOS {
-    std::shared_ptr<NativeRdb::MockRdbHelperInterface> NativeRdb::RdbHelper::instance_ = nullptr;
     std::shared_ptr<AccountSA::MockOsAccountManagerInterface> AccountSA::OsAccountManager::instance_ = nullptr;
-    std::mutex NativeRdb::RdbHelper::mutex_ {};
     std::mutex AccountSA::OsAccountManager::mutex_ {};
     constexpr uint32_t MAX_CONTENT_SIZE = 10240;
 }

@@ -44,13 +44,15 @@ public:
     virtual int FlushAllEvent();
 
 protected:
-    int QueryEventBase(const NativeRdb::RdbPredicates &predicates, std::vector<SecEvent> &events);
+    int QueryEventBase(const GenericValues &conditions, std::vector<SecEvent> &events,
+        const QueryOptions &options = {});
     std::string CreateTable();
-    int32_t GetResultSetTableInfo(const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
-        SecEventTableInfo &table);
-    void SetValuesBucket(const SecEvent &event, NativeRdb::ValuesBucket &values);
+    void SetValuesBucket(const SecEvent &event, GenericValues &values);
+    std::string Join(const std::vector<int64_t> &vec, const std::string delimiter);
+    std::string Join(const std::vector<std::string> &vec, const std::string delimiter);
+    std::string FilterSpecialChars(const std::string &input);
     std::string dbPath_{};
     std::string dbTable_{};
 };
-} // namespace OHOS::Security::SecurityGuard {
+} // namespace OHOS::Security::SecurityGuard
 #endif // SECURITY_GUARD_DATABASE_HELPER_H

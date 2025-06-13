@@ -23,7 +23,6 @@
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 #include "store_define.h"
-#include "rdb_helper.h"
 #define private public
 #define protected public
 #include "config_data_manager.h"
@@ -42,11 +41,6 @@ using namespace OHOS::Security::SecurityGuard;
 using namespace OHOS::Security::SecurityGuardTest;
 
 namespace OHOS {
-    std::shared_ptr<NativeRdb::MockRdbHelperInterface> NativeRdb::RdbHelper::instance_ = nullptr;
-    std::shared_ptr<AccountSA::MockOsAccountManagerInterface> AccountSA::OsAccountManager::instance_ = nullptr;
-    std::shared_ptr<NativePreferences::MockPreferenceHelperInterface>
-        NativePreferences::PreferencesHelper::instance_ = nullptr;
-    std::mutex NativeRdb::RdbHelper::mutex_ {};
     std::mutex AccountSA::OsAccountManager::mutex_ {};
     std::mutex NativePreferences::PreferencesHelper::mutex_ {};
 }
@@ -63,7 +57,6 @@ void SecurityGuardDataCollectTest::SetUpTestCase()
 
 void SecurityGuardDataCollectTest::TearDownTestCase()
 {
-    NativeRdb::RdbHelper::DelInterface();
 }
 
 void SecurityGuardDataCollectTest::SetUp()
@@ -74,415 +67,186 @@ void SecurityGuardDataCollectTest::TearDown()
 {
 }
 
-HWTEST_F(SecurityGuardDataCollectTest, TestRiskEventRdbHelperMock001, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectTest, InitCleanup, TestSize.Level1)
 {
-    auto rdbStoreMock = std::make_shared<NativeRdb::RdbStore>();
-    auto resultSetMock = std::make_shared<NativeRdb::ResultSet>();
-    EXPECT_CALL(*(NativeRdb::RdbHelper::GetInterface()), GetRdbStore)
-        .WillRepeatedly([&rdbStoreMock] (
-        const NativeRdb::RdbStoreConfig &config, int version, NativeRdb::RdbOpenCallback &openCallback, int &errCode) {
-            errCode = SUCCESS;
-            return rdbStoreMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Query(_, _))
-        .WillRepeatedly(
-        [&resultSetMock] (const NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> columns) {
-            return resultSetMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Delete).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, Attach).WillRepeatedly(Return(0));
-    EXPECT_CALL(*rdbStoreMock, BatchInsert).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*resultSetMock, GoToNextRow).WillRepeatedly(Return(-1));
-    EXPECT_CALL(*resultSetMock, GetString).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetLong).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetInt).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GoToRow).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetRowCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetColumnCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetAllColumnNames).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, Close).WillRepeatedly(Return(0));
-    EXPECT_CALL(*rdbStoreMock, Insert).WillOnce(Return(FAILED)).WillOnce(Return(SUCCESS));
     RiskEventRdbHelper helper;
     int32_t ret = helper.Init();
     EXPECT_EQ(ret, SUCCESS);
-    SecEvent event;
-    ret = helper.InsertEvent(event);
-    EXPECT_EQ(ret, DB_OPT_ERR);
-    ret = helper.InsertEvent(event);
-    EXPECT_EQ(ret, SUCCESS);
+    DatabaseHelper helper1("");
+    EXPECT_EQ(helper1.Init(), SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectTest, TestRiskEventRdbHelperMock002, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectTest, InsertSpecCharContent, TestSize.Level1)
 {
-    auto rdbStoreMock = std::make_shared<NativeRdb::RdbStore>();
-    auto resultSetMock = std::make_shared<NativeRdb::ResultSet>();
-    EXPECT_CALL(*(NativeRdb::RdbHelper::GetInterface()), GetRdbStore)
-        .WillRepeatedly([&rdbStoreMock] (
-        const NativeRdb::RdbStoreConfig &config, int version, NativeRdb::RdbOpenCallback &openCallback, int &errCode) {
-            errCode = SUCCESS;
-            return rdbStoreMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Query(_, _)).WillOnce(Return(nullptr))
-        .WillRepeatedly(
-        [&resultSetMock] (const NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> columns) {
-            return resultSetMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Delete).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, Attach).WillRepeatedly(Return(0));
-    EXPECT_CALL(*rdbStoreMock, BatchInsert).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*resultSetMock, GoToNextRow).WillOnce(Return(SUCCESS)).WillRepeatedly(Return(FAILED));
-    EXPECT_CALL(*resultSetMock, GetString).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetLong).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetInt).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GoToRow).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetRowCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetColumnCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetAllColumnNames).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, Close).WillRepeatedly(Return(0));
-    EXPECT_CALL(*rdbStoreMock, Insert).WillRepeatedly(Return(SUCCESS));
     RiskEventRdbHelper helper;
-    int32_t ret = helper.Init();
-    EXPECT_EQ(ret, SUCCESS);
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    SecEvent event{};
+    event.content = "invalid";
+    EXPECT_EQ(helper.InsertEvent(event), SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, FullFieldQuery, TestSize.Level1)
+{
+    RiskEventRdbHelper helper;
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    std::vector<SecEvent> results;
+    helper.QueryAllEvent(results);
+    EXPECT_FALSE(results.empty());
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, TestQueryRecentEventByEventId, TestSize.Level1)
+{
+    RiskEventRdbHelper helper;
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    SecEvent event{};
     int64_t eventId = 0;
-    SecEvent event;
-    ret = helper.QueryRecentEventByEventId(eventId, event);
-    EXPECT_EQ(ret, DB_OPT_ERR);
-    ret = helper.QueryRecentEventByEventId(eventId, event);
-    EXPECT_EQ(ret, SUCCESS);
-    ret = helper.QueryRecentEventByEventId(eventId, event);
-    EXPECT_EQ(ret, SUCCESS);
+    EXPECT_EQ(helper.QueryRecentEventByEventId(eventId, event), SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectTest, TestRiskEventRdbHelperMock003, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectTest, TestQueryRecentEventByEventIds, TestSize.Level1)
 {
-    auto rdbStoreMock = std::make_shared<NativeRdb::RdbStore>();
-    auto resultSetMock = std::make_shared<NativeRdb::ResultSet>();
-    EXPECT_CALL(*(NativeRdb::RdbHelper::GetInterface()), GetRdbStore)
-        .WillRepeatedly([&rdbStoreMock] (
-        const NativeRdb::RdbStoreConfig &config, int version, NativeRdb::RdbOpenCallback &openCallback, int &errCode) {
-            errCode = SUCCESS;
-            return rdbStoreMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Query(_, _)).WillOnce(Return(nullptr))
-        .WillRepeatedly(
-        [&resultSetMock] (const NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> columns) {
-            return resultSetMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Delete).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, Attach).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, BatchInsert).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*resultSetMock, GoToNextRow).WillOnce(Return(SUCCESS)).WillRepeatedly(Return(FAILED));
-    EXPECT_CALL(*resultSetMock, GetString).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetLong).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetInt).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GoToRow).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetRowCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetColumnCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetAllColumnNames).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, Close).WillRepeatedly(Return(0));
-    EXPECT_CALL(*rdbStoreMock, Insert).WillRepeatedly(Return(SUCCESS));
     RiskEventRdbHelper helper;
-    int32_t ret = helper.Init();
-    EXPECT_EQ(ret, SUCCESS);
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    std::vector<SecEvent> results;
     std::vector<int64_t> eventIds;
-    std::vector<SecEvent> events;
-    ret = helper.QueryRecentEventByEventId(eventIds, events);
-    EXPECT_EQ(ret, BAD_PARAM);
-    eventIds.emplace_back(0);
-    ret = helper.QueryRecentEventByEventId(eventIds, events);
-    EXPECT_EQ(ret, DB_OPT_ERR);
-    ret = helper.QueryRecentEventByEventId(eventIds, events);
-    EXPECT_EQ(ret, SUCCESS);
+    eventIds.push_back(1);
+    eventIds.push_back(0);
+    EXPECT_EQ(helper.QueryRecentEventByEventId(eventIds, results), SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectTest, TestRiskEventRdbHelperMock004, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectTest, TestQueryByEventId, TestSize.Level1)
 {
-    auto rdbStoreMock = std::make_shared<NativeRdb::RdbStore>();
-    auto resultSetMock = std::make_shared<NativeRdb::ResultSet>();
-    EXPECT_CALL(*(NativeRdb::RdbHelper::GetInterface()), GetRdbStore)
-        .WillRepeatedly([&rdbStoreMock] (
-        const NativeRdb::RdbStoreConfig &config, int version, NativeRdb::RdbOpenCallback &openCallback, int &errCode) {
-            errCode = SUCCESS;
-            return rdbStoreMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Query(_, _))
-        .WillRepeatedly(
-        [&resultSetMock] (const NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> columns) {
-            return resultSetMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Delete).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, Attach).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, BatchInsert).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*resultSetMock, GoToNextRow).WillOnce(Return(SUCCESS)).WillRepeatedly(Return(FAILED));
-    EXPECT_CALL(*resultSetMock, GetString).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetLong).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetInt).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GoToRow).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetRowCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetColumnCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetAllColumnNames).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, Close).WillRepeatedly(Return(0));
-    EXPECT_CALL(*rdbStoreMock, Insert).WillRepeatedly(Return(SUCCESS));
     RiskEventRdbHelper helper;
-    int32_t ret = helper.Init();
-    EXPECT_EQ(ret, SUCCESS);
-    std::vector<int64_t> eventIds;
-    std::vector<SecEvent> events;
-    ret = helper.QueryEventByEventId(eventIds, events);
-    EXPECT_EQ(ret, BAD_PARAM);
-    eventIds.emplace_back(0);
-    ret = helper.QueryEventByEventId(eventIds, events);
-    EXPECT_EQ(ret, SUCCESS);
-}
-
-HWTEST_F(SecurityGuardDataCollectTest, TestRiskEventRdbHelperMock005, TestSize.Level1)
-{
-    auto rdbStoreMock = std::make_shared<NativeRdb::RdbStore>();
-    auto resultSetMock = std::make_shared<NativeRdb::ResultSet>();
-    EXPECT_CALL(*(NativeRdb::RdbHelper::GetInterface()), GetRdbStore)
-        .WillRepeatedly([&rdbStoreMock] (
-        const NativeRdb::RdbStoreConfig &config, int version, NativeRdb::RdbOpenCallback &openCallback, int &errCode) {
-            errCode = SUCCESS;
-            return rdbStoreMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Query(_, _))
-        .WillRepeatedly(
-        [&resultSetMock] (const NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> columns) {
-            return resultSetMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Delete).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, Attach).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, BatchInsert).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*resultSetMock, GoToNextRow).WillOnce(Return(SUCCESS)).WillRepeatedly(Return(FAILED));
-    EXPECT_CALL(*resultSetMock, GetString).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetLong).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetInt).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GoToRow).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetRowCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetColumnCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetAllColumnNames).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, Close).WillRepeatedly(Return(0));
-    EXPECT_CALL(*rdbStoreMock, Insert).WillRepeatedly(Return(SUCCESS));
-    RiskEventRdbHelper helper;
-    int32_t ret = helper.Init();
-    EXPECT_EQ(ret, SUCCESS);
-    std::vector<int64_t> eventIds;
-    std::vector<SecEvent> events;
-    std::string data = "202301011200";
-    ret = helper.QueryEventByEventIdAndDate(eventIds, events, data, data);
-    EXPECT_EQ(ret, BAD_PARAM);
-    eventIds.emplace_back(0);
-    ret = helper.QueryEventByEventIdAndDate(eventIds, events, data, data);
-    EXPECT_EQ(ret, SUCCESS);
-}
-
-HWTEST_F(SecurityGuardDataCollectTest, TestRiskEventRdbHelperMock006, TestSize.Level1)
-{
-    auto rdbStoreMock = std::make_shared<NativeRdb::RdbStore>();
-    auto resultSetMock = std::make_shared<NativeRdb::ResultSet>();
-    EXPECT_CALL(*(NativeRdb::RdbHelper::GetInterface()), GetRdbStore)
-        .WillRepeatedly([&rdbStoreMock] (
-        const NativeRdb::RdbStoreConfig &config, int version, NativeRdb::RdbOpenCallback &openCallback, int &errCode) {
-            errCode = SUCCESS;
-            return rdbStoreMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Query(_, _))
-        .WillRepeatedly(
-        [&resultSetMock] (const NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> columns) {
-            return resultSetMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Delete).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, Attach).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, BatchInsert).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*resultSetMock, GoToNextRow).WillOnce(Return(SUCCESS)).WillRepeatedly(Return(FAILED));
-    EXPECT_CALL(*resultSetMock, GetString).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetLong).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetInt).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GoToRow).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetRowCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetColumnCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetAllColumnNames).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, Close).WillRepeatedly(Return(0));
-    EXPECT_CALL(*rdbStoreMock, Insert).WillRepeatedly(Return(SUCCESS));
-    RiskEventRdbHelper helper;
-    int32_t ret = helper.Init();
-    EXPECT_EQ(ret, SUCCESS);
-    std::vector<int64_t> eventIds;
-    std::vector<SecEvent> events;
-    std::string data = "202301011200";
-    ret = helper.QueryEventByEventIdAndDate(eventIds, events, data, data);
-    EXPECT_EQ(ret, BAD_PARAM);
-    eventIds.emplace_back(0);
-    ret = helper.QueryEventByEventIdAndDate(eventIds, events, data, data);
-    EXPECT_EQ(ret, SUCCESS);
-}
-
-HWTEST_F(SecurityGuardDataCollectTest, TestRiskEventRdbHelperMock007, TestSize.Level1)
-{
-    auto rdbStoreMock = std::make_shared<NativeRdb::RdbStore>();
-    EXPECT_CALL(*(NativeRdb::RdbHelper::GetInterface()), GetRdbStore)
-        .WillRepeatedly([&rdbStoreMock] (
-        const NativeRdb::RdbStoreConfig &config, int version, NativeRdb::RdbOpenCallback &openCallback, int &errCode) {
-            errCode = SUCCESS;
-            return rdbStoreMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Count).WillOnce(Return(FAILED)).WillRepeatedly(Return(SUCCESS));
-    RiskEventRdbHelper helper;
-    int32_t ret = helper.Init();
-    EXPECT_EQ(ret, SUCCESS);
-    int64_t count = helper.CountAllEvent();
-    EXPECT_EQ(count, 0);
-    count = helper.CountAllEvent();
-    EXPECT_EQ(count, 0);
-}
-
-HWTEST_F(SecurityGuardDataCollectTest, TestRiskEventRdbHelperMock008, TestSize.Level1)
-{
-    auto rdbStoreMock = std::make_shared<NativeRdb::RdbStore>();
-    EXPECT_CALL(*(NativeRdb::RdbHelper::GetInterface()), GetRdbStore)
-        .WillRepeatedly([&rdbStoreMock] (
-        const NativeRdb::RdbStoreConfig &config, int version, NativeRdb::RdbOpenCallback &openCallback, int &errCode) {
-            errCode = SUCCESS;
-            return rdbStoreMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Count).WillOnce(Return(FAILED)).WillRepeatedly(Return(SUCCESS));
-    RiskEventRdbHelper helper;
-    int32_t ret = helper.Init();
-    EXPECT_EQ(ret, SUCCESS);
-    int64_t count = helper.CountEventByEventId(0);
-    EXPECT_EQ(count, 0);
-    count = helper.CountEventByEventId(0);
-    EXPECT_EQ(count, 0);
-}
-
-HWTEST_F(SecurityGuardDataCollectTest, TestRiskEventRdbHelperMock009, TestSize.Level1)
-{
-    auto rdbStoreMock = std::make_shared<NativeRdb::RdbStore>();
-    auto resultSetMock = std::make_shared<NativeRdb::ResultSet>();
-    EXPECT_CALL(*(NativeRdb::RdbHelper::GetInterface()), GetRdbStore)
-        .WillRepeatedly([&rdbStoreMock] (
-        const NativeRdb::RdbStoreConfig &config, int version, NativeRdb::RdbOpenCallback &openCallback, int &errCode) {
-            errCode = SUCCESS;
-            return rdbStoreMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Query(_, _)).WillOnce(Return(nullptr))
-        .WillRepeatedly(
-        [&resultSetMock] (const NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> columns) {
-            return resultSetMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Delete).WillOnce(Return(FAILED)).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, Attach).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, BatchInsert).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*resultSetMock, GoToNextRow).WillOnce(Return(SUCCESS)).WillRepeatedly(Return(FAILED));
-    EXPECT_CALL(*resultSetMock, GetString).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetLong).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetInt).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GoToRow).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetRowCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetColumnCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetAllColumnNames).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, Close).WillRepeatedly(Return(0));
-    EXPECT_CALL(*rdbStoreMock, Insert).WillRepeatedly(Return(SUCCESS));
-    RiskEventRdbHelper helper;
-    int32_t ret = helper.Init();
-    EXPECT_EQ(ret, SUCCESS);
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    std::vector<SecEvent> results;
     int64_t eventId = 0;
-    int64_t count = 0;
-    ret = helper.DeleteOldEventByEventId(eventId, count);
-    EXPECT_EQ(ret, DB_OPT_ERR);
-    ret = helper.DeleteOldEventByEventId(eventId, count);
-    EXPECT_EQ(ret, DB_OPT_ERR);
-    ret = helper.DeleteOldEventByEventId(eventId, count);
-    EXPECT_EQ(ret, SUCCESS);
+    EXPECT_EQ(helper.QueryEventByEventId(eventId, results), SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectTest, TestRiskEventRdbHelperMock010, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectTest, TestQueryByEventIdS, TestSize.Level1)
 {
-    auto rdbStoreMock = std::make_shared<NativeRdb::RdbStore>();
-    EXPECT_CALL(*(NativeRdb::RdbHelper::GetInterface()), GetRdbStore)
-        .WillRepeatedly([&rdbStoreMock] (
-        const NativeRdb::RdbStoreConfig &config, int version, NativeRdb::RdbOpenCallback &openCallback, int &errCode) {
-            errCode = SUCCESS;
-            return rdbStoreMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Delete).WillOnce(Return(FAILED)).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, Attach).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, BatchInsert).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, Insert).WillRepeatedly(Return(SUCCESS));
     RiskEventRdbHelper helper;
-    int32_t ret = helper.Init();
-    EXPECT_EQ(ret, SUCCESS);
-    int64_t eventId = 0;
-    ret = helper.DeleteAllEventByEventId(eventId);
-    EXPECT_EQ(ret, DB_OPT_ERR);
-    ret = helper.DeleteAllEventByEventId(eventId);
-    EXPECT_EQ(ret, SUCCESS);
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    std::vector<SecEvent> results;
+    std::vector<int64_t> eventIds;
+    eventIds.push_back(1);
+    eventIds.push_back(0);
+    EXPECT_EQ(helper.QueryEventByEventId(eventIds, results), SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectTest, TestRiskEventRdbHelperMock011, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectTest, TestQueryByDate, TestSize.Level1)
 {
-    auto rdbStoreMock = std::make_shared<NativeRdb::RdbStore>();
-    auto resultSetMock = std::make_shared<NativeRdb::ResultSet>();
-    EXPECT_CALL(*(NativeRdb::RdbHelper::GetInterface()), GetRdbStore)
-        .WillRepeatedly([&rdbStoreMock] (
-        const NativeRdb::RdbStoreConfig &config, int version, NativeRdb::RdbOpenCallback &openCallback, int &errCode) {
-            errCode = SUCCESS;
-            return rdbStoreMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Query(_, _)).WillOnce(Return(nullptr))
-        .WillRepeatedly(
-        [&resultSetMock] (const NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> columns) {
-            return resultSetMock;
-        });
-    EXPECT_CALL(*rdbStoreMock, Attach).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*rdbStoreMock, BatchInsert).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*resultSetMock, GoToNextRow).WillOnce(Return(SUCCESS)).WillRepeatedly(Return(FAILED));
-    EXPECT_CALL(*resultSetMock, GetString).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetLong).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetInt).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GoToRow).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetRowCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetColumnCount).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, GetAllColumnNames).WillRepeatedly(Return(0));
-    EXPECT_CALL(*resultSetMock, Close).WillRepeatedly(Return(0));
-    EXPECT_CALL(*rdbStoreMock, Insert).WillRepeatedly(Return(SUCCESS));
     RiskEventRdbHelper helper;
-    int32_t ret = helper.Init();
-    EXPECT_EQ(ret, SUCCESS);
-    NativeRdb::RdbPredicates predicates("");
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    std::vector<SecEvent> results;
+    std::vector<int64_t> eventIds;
+    std::string date{"111"};
+    EXPECT_EQ(helper.QueryEventByEventIdAndDate(eventIds, results, date, date), SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, TestQueryByType, TestSize.Level1)
+{
+    RiskEventRdbHelper helper;
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    std::vector<SecEvent> results;
+    EXPECT_EQ(helper.QueryEventByEventType(0, results), SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, TestQueryByLevel, TestSize.Level1)
+{
+    RiskEventRdbHelper helper;
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    std::vector<SecEvent> results;
+    EXPECT_EQ(helper.QueryEventByLevel(0, results), SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, TestQueryByOwner, TestSize.Level1)
+{
+    RiskEventRdbHelper helper;
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    std::vector<SecEvent> results;
+    std::string owner;
+    EXPECT_EQ(helper.QueryEventByOwner(owner, results), SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, TestCountAllEvent, TestSize.Level1)
+{
+    RiskEventRdbHelper helper;
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    EXPECT_EQ(helper.CountAllEvent(), 0);
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, TestCountEventByID, TestSize.Level1)
+{
+    RiskEventRdbHelper helper;
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    EXPECT_EQ(helper.CountEventByEventId(0), 0);
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, TestDeleteOldEvent, TestSize.Level1)
+{
+    RiskEventRdbHelper helper;
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    EXPECT_NE(helper.DeleteOldEventByEventId(0, 0), SUCCESS);
+    EXPECT_EQ(helper.DeleteOldEventByEventId(0, 1), SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, TestDeleteAllEvent, TestSize.Level1)
+{
+    RiskEventRdbHelper helper;
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    EXPECT_NE(helper.DeleteAllEventByEventId(-1), SUCCESS);
+    EXPECT_EQ(helper.DeleteAllEventByEventId(0), SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, TestFlushAllEvent, TestSize.Level1)
+{
+    RiskEventRdbHelper helper;
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    EXPECT_EQ(helper.FlushAllEvent(), SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, TestQueryEventBase, TestSize.Level1)
+{
+    RiskEventRdbHelper helper;
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    GenericValues conditions;
     std::vector<SecEvent> events;
-    ret = helper.QueryEventBase(predicates, events);
-    EXPECT_EQ(ret, DB_OPT_ERR);
-    ret = helper.QueryEventBase(predicates, events);
-    EXPECT_EQ(ret, SUCCESS);
+    EXPECT_EQ(helper.QueryEventBase(conditions, events), SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectTest, TestRiskEventRdbHelperMock012, TestSize.Level1)
+HWTEST_F(SecurityGuardDataCollectTest, TestCreateTable, TestSize.Level1)
 {
-    auto resultSetMock = std::make_shared<NativeRdb::ResultSet>();
-    EXPECT_CALL(*resultSetMock, GetRowCount).WillOnce(Return(FAILED)).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*resultSetMock, GetColumnCount).WillOnce(Return(FAILED)).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(*resultSetMock, GetAllColumnNames).WillOnce(Return(FAILED)).WillRepeatedly(
-        [] (std::vector<std::string> &columnNames) {
-            columnNames.emplace_back(ID);
-            columnNames.emplace_back(EVENT_ID);
-            columnNames.emplace_back(VERSION);
-            columnNames.emplace_back(DATE);
-            columnNames.emplace_back(CONTENT);
-            columnNames.emplace_back(USER_ID);
-            columnNames.emplace_back(DEVICE_ID);
-            return SUCCESS;
-        });
     RiskEventRdbHelper helper;
-    SecEventTableInfo table;
-    int32_t ret = helper.GetResultSetTableInfo(resultSetMock, table);
-    EXPECT_EQ(ret, DB_LOAD_ERR);
-    ret = helper.GetResultSetTableInfo(resultSetMock, table);
-    EXPECT_EQ(ret, DB_LOAD_ERR);
-    ret = helper.GetResultSetTableInfo(resultSetMock, table);
-    EXPECT_EQ(ret, DB_LOAD_ERR);
-    ret = helper.GetResultSetTableInfo(resultSetMock, table);
-    EXPECT_EQ(ret, SUCCESS);
+    EXPECT_TRUE(!helper.CreateTable().empty());
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, TestSetValueBucket, TestSize.Level1)
+{
+    RiskEventRdbHelper helper;
+    EXPECT_EQ(helper.Init(), SUCCESS);
+    SecEvent event{};
+    event.content = "11111";
+    GenericValues value;
+    helper.SetValuesBucket(event, value);
+}
+
+HWTEST_F(SecurityGuardDataCollectTest, TestJoin, TestSize.Level1)
+{
+    RiskEventRdbHelper helper;
+    std::vector<std::string> vec;
+    EXPECT_TRUE(helper.Join(vec, "").empty());
+
+    vec.push_back("1111,1111,1111,1111");
+    EXPECT_FALSE(helper.Join(vec, ",").empty());
+
+    std::vector<int64_t> nums;
+    EXPECT_TRUE(helper.Join(nums, "").empty());
+
+    nums.push_back(11111);
+    nums.push_back(22222);
+    EXPECT_FALSE(helper.Join(nums, ",").empty());
+    EXPECT_FALSE(helper.FilterSpecialChars("11111").empty());
 }
 
 HWTEST_F(SecurityGuardDataCollectTest, StrToULL001, TestSize.Level1)
