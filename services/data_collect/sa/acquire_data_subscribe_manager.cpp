@@ -17,6 +17,7 @@
 #include <cinttypes>
 #include <functional>
 #include "file_ex.h"
+#include "ipc_skeleton.h"
 #include "acquire_data_callback_proxy.h"
 #include "database_manager.h"
 #include "security_guard_define.h"
@@ -38,10 +39,14 @@ namespace {
     constexpr int64_t MAX_DURATION_TEN_SECOND = 10 * 1000;
     constexpr int64_t MAX_FILTER_SIZE = 256;
     constexpr size_t MAX_SUBS_SIZE = 10;
+    constexpr size_t MAX_SESSION_SIZE = 16;
+    constexpr size_t MAX_SESSION_SIZE_ONE_PROCESS = 2;
     std::mutex g_mutex{};
     constexpr int64_t PROCESS_ID_IN_KERNEL_MONITOR = 0x01C000004;
     constexpr int64_t FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR = 1011015020;
-    std::map<sptr<IRemoteObject>, AcquireDataSubscribeManager::SubscriberInfo> g_subscriberInfoMap{};
+    std::map<int64_t, std::map<sptr<IRemoteObject>,
+        std::shared_ptr<AcquireDataSubscribeManager::SubscriberInfo>>> g_subscriberInfoMap{};
+    std::map<int64_t, std::string> g_eventGroupMap{};
 }
 
 AcquireDataSubscribeManager& AcquireDataSubscribeManager::GetInstance()
@@ -60,45 +65,90 @@ AcquireDataSubscribeManager::AcquireDataSubscribeManager() : listener_(std::make
 }
 
 int AcquireDataSubscribeManager::InsertSubscribeRecord(
-    const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &callback)
+    const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &callback,
+    const std::string &clientId)
 {
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int32_t code = IsExceedLimited(clientId, callerToken);
+    if (code != SUCCESS) {
+        SGLOGE("IsExceedLimited error");
+        return code;
+    }
     EventCfg config;
-    bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(subscribeInfo.GetEvent().eventId, config);
+    int64_t eventId = subscribeInfo.GetEvent().eventId;
+    bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(eventId, config);
     if (!isSuccess) {
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
 
     std::lock_guard<std::mutex> lock(g_mutex);
-    if (g_subscriberInfoMap.size() >= MAX_SUBS_SIZE) {
-        SGLOGE("has been max subscriber size");
-        return BAD_PARAM;
-    }
-
-    int32_t code = DatabaseManager::GetInstance().SubscribeDb({subscribeInfo.GetEvent().eventId}, listener_);
+    code = DatabaseManager::GetInstance().SubscribeDb({eventId}, listener_);
     if (code != SUCCESS) {
         SGLOGE("SubscribeDb error");
         return code;
     }
-    code = SubscribeSc(subscribeInfo.GetEvent().eventId, callback);
+
+    code = SubscribeSc(eventId, callback);
     if (code != SUCCESS) {
         SGLOGE("SubscribeSc error");
         return code;
     }
-
-    if (g_subscriberInfoMap.count(callback) == 0) {
-        SubscriberInfo subInfo {};
-        subInfo.subscribe.emplace_back(subscribeInfo);
-        subInfo.timer = std::make_shared<CleanupTimer>();
-        subInfo.timer->Start(callback, MAX_DURATION_TEN_SECOND);
-        g_subscriberInfoMap[callback] = subInfo;
-    } else {
-        g_subscriberInfoMap.at(callback).subscribe.emplace_back(subscribeInfo);
+    std::shared_ptr<AcquireDataSubscribeManager::SubscriberInfo> ptr = nullptr;
+    for (auto iter : g_subscriberInfoMap) {
+        auto it = iter.second.find(callback);
+        if (it != iter.second.end()) {
+            ptr = it->second;
+            break;
+        }
     }
-    SGLOGI("InsertSubscribeRecord subscriberInfoMap_size  %{public}zu", g_subscriberInfoMap.size());
-
-    for (const auto &i : g_subscriberInfoMap) {
-        SGLOGI("InsertSubscribeRecord subscriberInfoMap_subscribe_size  %{public}zu", i.second.subscribe.size());
+    if (ptr == nullptr) {
+        ptr = std::make_shared<AcquireDataSubscribeManager::SubscriberInfo> ();
+        ptr->timer = std::make_shared<CleanupTimer>();
+        ptr->timer->Start(callback, MAX_DURATION_TEN_SECOND);
+        ptr->clientId = clientId;
+    }
+    g_subscriberInfoMap[eventId][callback] = ptr;
+    g_eventGroupMap[eventId] = subscribeInfo.GetEventGroup();
+    if(sessionsMap_.find(clientId) == sessionsMap_.end()) {
+        return SUCCESS;
+    }
+    if (sessionsMap_.at(clientId)->eventFilters.find(eventId) != sessionsMap_.at(clientId)->eventFilters.end()) {
+        return SUCCESS;
+    }
+    for (auto iter : sessionsMap_.at(clientId)->eventFilters.at(eventId)) {
+        EventCfg config {};
+        SecurityCollector::SecurityCollectorEventMuteFilter collFilter = ConvertFilter(iter, clientId);
+        bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(eventId, config);
+        if (!isSuccess) {
+            SGLOGE("GetEventConfig error");
+            return BAD_PARAM;
+        }
+        if (config.eventType == static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
+            if (config.prog == "security_guard") {
+                int32_t ret = SecurityCollector::DataCollection::GetInstance().AddFilter(collFilter);
+                if (ret != SUCCESS) {
+                    SGLOGI("AddFilter SG failed, eventId=%{public}" PRId64, iter.eventId);
+                    return ret;
+                }
+            } else {
+                int32_t ret = SecurityCollector::CollectorManager::GetInstance().AddFilter(collFilter);
+                if (ret != SUCCESS) {
+                    SGLOGE("InsertSubscribeMute failed, ret=%{public}d", ret);
+                    return ret;
+                }
+            }
+        } else {
+            if (eventFilter_ == nullptr) {
+                SGLOGW("eventFilter_ is null");
+                return SUCCESS;
+            }
+            int32_t ret = eventFilter_()->SetEventFilter(collFilter);
+            if (ret != SUCCESS) {
+                SGLOGE("SetEventFilter failed, ret=%{public}d", ret);
+                return ret;
+            }
+        }
     }
     return SUCCESS;
 }
@@ -221,39 +271,33 @@ int AcquireDataSubscribeManager::UnSubscribeScAndDb(int64_t eventId)
     return ret;
 }
 
-int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback)
+int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback,
+    const std::string &clientId)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
-    auto iter = g_subscriberInfoMap.find(callback);
+    auto iter = g_subscriberInfoMap.find(eventId);
     if (iter == g_subscriberInfoMap.end()) {
-        SGLOGI("not find caller in g_subscriberInfoMap");
+        SGLOGI("not find eventId in g_subscriberInfoMap");
         return SUCCESS;
     }
-    // first erase current callback subscribed info
-    for (auto it = g_subscriberInfoMap.at(callback).subscribe.begin();
-        it != g_subscriberInfoMap.at(callback).subscribe.end(); it++) {
-        if (it->GetEvent().eventId == eventId) {
-            g_subscriberInfoMap.at(callback).subscribe.erase(it);
-            break;
-        }
+    g_subscriberInfoMap.at(eventId).erase(callback);
+    if (g_subscriberInfoMap.at(eventId).empty()) {
+        g_subscriberInfoMap.erase(eventId);
     }
-    // second erase current callback  when subscribed member is empty
-    if (g_subscriberInfoMap.at(callback).subscribe.empty()) {
-        g_subscriberInfoMap.erase(iter);
+    int ret = UnSubscribeScAndDb(eventId);
+    if (ret == SUCCESS) {
+        return ret;
     }
-
-    for (const auto &it : g_subscriberInfoMap) {
-        for (const auto &i : it.second.subscribe) {
-            if (i.GetEvent().eventId == eventId) {
-                return SUCCESS;
-            }
-        }
+    if(sessionsMap_.find(clientId) == sessionsMap_.end()) {
+        return SUCCESS;
     }
-    SGLOGI("RemoveSubscribeRecord subscriberInfoMap__size %{public}zu", g_subscriberInfoMap.size());
-    for (const auto &i : g_subscriberInfoMap) {
-        SGLOGI("RemoveSubscribeRecord subscriberInfoMap_subscribe_size  %{public}zu", i.second.subscribe.size());
+    if (sessionsMap_.at(clientId)->eventFilters.find(eventId) != sessionsMap_.at(clientId)->eventFilters.end()) {
+        return SUCCESS;
     }
-    return UnSubscribeScAndDb(eventId);
+    for (auto iter : sessionsMap_.at(clientId)->eventFilters.at(eventId)) {
+        RemoveSubscribeMute(iter, clientId);
+    }
+    return ret;
 }
 
 void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback)
@@ -261,41 +305,48 @@ void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<I
     std::lock_guard<std::mutex> lock(g_mutex);
     std::set<int64_t> eventIdNeedUnSub {};
     std::set<int64_t> currentEventId {};
-    for (const auto &i : g_subscriberInfoMap[callback].subscribe) {
-        eventIdNeedUnSub.insert(i.GetEvent().eventId);
-    }
-    g_subscriberInfoMap.erase(callback);
-    for (const auto &i : g_subscriberInfoMap) {
-        for (const auto &iter : i.second.subscribe) {
-            currentEventId.insert(iter.GetEvent().eventId);
+    for (const auto &iter : g_subscriberInfoMap) {
+        auto i = iter.second.find(callback);
+        if (i != iter.second.end()) {
+            eventIdNeedUnSub.insert(iter.first);
         }
     }
-    for (const auto &i : eventIdNeedUnSub) {
-        if (currentEventId.count(i) == 0) {
-            (void)UnSubscribeScAndDb(i);
+    for (const auto &iter : eventIdNeedUnSub) {
+        if (g_subscriberInfoMap.find(iter) == g_subscriberInfoMap.end()) {
+            continue;
+        }
+        g_subscriberInfoMap.at(iter).erase(callback);
+        if (g_subscriberInfoMap.at(iter).empty()) {
+            g_subscriberInfoMap.erase(iter);
+            (void)UnSubscribeScAndDb(iter);
         }
     }
-    SGLOGI("RemoveSubscribeRecordOnRemoteDied subscriberInfoMap__size %{public}zu", g_subscriberInfoMap.size());
-    for (const auto &i : g_subscriberInfoMap) {
-        SGLOGI("RemoveSubscribeRecordOnRemoteDied subscriberInfoMap_subscribe_size  %{public}zu",
-            i.second.subscribe.size());
+    auto finder = [callback](std::pair<std::string, std::shared_ptr<ClientSession>> iter) {
+        return callback == iter.second->callback;
+    };
+    auto iter = find_if(sessionsMap_.begin(), sessionsMap_.end(), finder);
+    if (iter != sessionsMap_.end()) {
+        if (eventFilter_ != nullptr) {
+            eventFilter_()->RemoveSdkAllEventFilter(iter->first);
+        }
+        sessionsMap_.erase(iter);
     }
-    if (callbackHashMap_.find(callback) != callbackHashMap_.end() && !callbackHashMap_.at(callback).empty() &&
-        eventFilter_ != nullptr) {
-        eventFilter_()->RemoveSdkAllEventFilter(callbackHashMap_.at(callback)[0]);
-    }
-    callbackHashMap_.erase(callback);
 }
 
 void AcquireDataSubscribeManager::CleanupTimer::ClearEventCache(const sptr<IRemoteObject> &remote)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
     SGLOGD("timer running");
-    if (g_subscriberInfoMap.count(remote) == 0) {
-        SGLOGI("not found callback");
-        return;
+    std::vector<SecurityCollector::Event> tmp {};
+    for (const auto &iter : g_subscriberInfoMap) {
+        auto i = iter.second.find(remote);
+        if (i != iter.second.end() && i->second != nullptr) {
+            tmp = i->second->events;
+            i->second->events.clear();
+            i->second->eventsBuffSize = 0;
+            break;
+        }
     }
-    std::vector<SecurityCollector::Event> tmp = g_subscriberInfoMap.at(remote).events;
     if (tmp.empty()) {
         return;
     }
@@ -308,8 +359,6 @@ void AcquireDataSubscribeManager::CleanupTimer::ClearEventCache(const sptr<IRemo
         proxy->OnNotify(tmp);
     };
     ffrt::submit(task);
-    g_subscriberInfoMap.at(remote).events.clear();
-    g_subscriberInfoMap.at(remote).eventsBuffSize = 0;
 }
 
 void AcquireDataSubscribeManager::BatchUpload(sptr<IRemoteObject> obj,
@@ -363,19 +412,20 @@ size_t AcquireDataSubscribeManager::GetSecurityCollectorEventBufSize(const Secur
     return res;
 }
 
-bool AcquireDataSubscribeManager::FindSdkFlag(const std::set<std::string> &eventSubscribes,
-    const std::vector<std::string> &sdkFlags)
+bool AcquireDataSubscribeManager::IsFindFlag(const std::set<std::string> &eventSubscribes, int64_t eventId,
+    const std::string &clientId)
 {
-    if (sdkFlags.empty()) {
+    if (sessionsMap_.find(clientId) == sessionsMap_.end()) {
         return false;
     }
-    std::string sdkFlag = sdkFlags[0];
-    auto sdkFlagFinder = [sdkFlag] (const std::string &flag) {
-        std::string subStr = flag.substr(0, flag.find_first_of("+"));
-        return subStr == sdkFlag;
-    };
-    return std::find_if(eventSubscribes.begin(), eventSubscribes.end(), sdkFlagFinder) ==
-        eventSubscribes.end();
+    if (sessionsMap_.at(clientId)->eventFilters.find(eventId) == sessionsMap_.at(clientId)->eventFilters.end() ||
+        sessionsMap_.at(clientId)->eventFilters.at(eventId).empty()) {
+        return true;
+    }
+    if (eventSubscribes.find(clientId) != eventSubscribes.end()) {
+        return true;
+    }
+    return false;
 }
 
 bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &event)
@@ -386,34 +436,30 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &e
         config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         eventFilter_()->GetFlagsEventNeedToUpload(eventTmp);
     }
-    for (auto &it : g_subscriberInfoMap) {
-        for (const auto &i : it.second.subscribe) {
-            if (i.GetEvent().eventId != eventTmp.eventId) {
-                continue;
-            }
-            // has set mute, but this event not belong the sub, means the filter of this sub set has work
-            if (callbackHashMap_.count(it.first) != 0 &&
-                FindSdkFlag(eventTmp.eventSubscribes, callbackHashMap_.at(it.first))) {
-                continue;
-            }
-            if (!ConfigDataManager::GetInstance().GetIsBatchUpload(i.GetEventGroup())) {
-                BatchUpload(it.first, {eventTmp});
-                continue;
-            }
-            SGLOGD("publish eventid=%{public}" PRId64, eventTmp.eventId);
-            for (auto iter : eventTmp.eventSubscribes) {
-                SGLOGD("publish eventSubscribes =%{public}s", iter.c_str());
-            }
-            it.second.events.emplace_back(eventTmp);
-            it.second.eventsBuffSize += GetSecurityCollectorEventBufSize(eventTmp);
-            SGLOGD("cache batch upload event to subscribe %{public}zu", it.second.eventsBuffSize);
-            if (it.second.eventsBuffSize >= MAX_CACHE_EVENT_SIZE) {
-                BatchUpload(it.first, it.second.events);
-                SGLOGI("upload events to batch subscribe, size is %{public}zu", it.second.eventsBuffSize);
-                it.second.events.clear();
-                it.second.eventsBuffSize = 0;
-            }
-            break;
+    auto iter = g_subscriberInfoMap.find(eventTmp.eventId);
+    if (iter == g_subscriberInfoMap.end()) {
+        return true;
+    }
+    for (auto &it : iter->second) {
+        if (!IsFindFlag(eventTmp.eventSubscribes, event.eventId, it.second->clientId)) {
+            continue;
+        }
+        if (!ConfigDataManager::GetInstance().GetIsBatchUpload(g_eventGroupMap[eventTmp.eventId])) {
+            BatchUpload(it.first, {eventTmp});
+            continue;
+        }
+        SGLOGD("publish eventid=%{public}" PRId64, eventTmp.eventId);
+        for (auto iter : eventTmp.eventSubscribes) {
+            SGLOGD("publish eventSubscribes =%{public}s", iter.c_str());
+        }
+        it.second->events.emplace_back(eventTmp);
+        it.second->eventsBuffSize += GetSecurityCollectorEventBufSize(eventTmp);
+        SGLOGD("cache batch upload event to subscribe %{public}zu", it.second->eventsBuffSize);
+        if (it.second->eventsBuffSize >= MAX_CACHE_EVENT_SIZE) {
+            BatchUpload(it.first, it.second->events);
+            SGLOGI("upload events to batch subscribe, size is %{public}zu", it.second->eventsBuffSize);
+            it.second->events.clear();
+            it.second->eventsBuffSize = 0;
         }
     }
     return true;
@@ -443,11 +489,33 @@ int32_t AcquireDataSubscribeManager::SecurityCollectorSubscriber::OnNotify(const
     return 0;
 }
 
-int AcquireDataSubscribeManager::InsertSubscribeMute(const SecurityEventFilter &subscribeMute,
-    const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
+int AcquireDataSubscribeManager::InsertSubscribeMute(const EventMuteFilter &filter, const std::string &clientId)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
-    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter = ConvertFilter(subscribeMute.GetMuteFilter());
+    if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
+        SGLOGE("clientId not creat");
+        return BAD_PARAM;
+    }
+    auto finder = [filter](const EventMuteFilter &it) {
+        return filter.eventGroup == it.eventGroup && filter.eventId == it.eventId && filter.isInclude == it.isInclude &&
+        filter.type == it.type && filter.mutes.size() == it.mutes.size() && filter.mutes == it.mutes;
+    };
+    if (sessionsMap_.at(clientId)->eventFilters.find(filter.eventId) !=
+        sessionsMap_.at(clientId)->eventFilters.end() &&
+        find_if(sessionsMap_.at(clientId)->eventFilters.at(filter.eventId).begin(),
+        sessionsMap_.at(clientId)->eventFilters.at(filter.eventId).end(), finder) !=
+        sessionsMap_.at(clientId)->eventFilters.at(filter.eventId).end()) {
+        SGLOGE("filter exist");
+        return BAD_PARAM;
+    }
+    if (sessionsMap_.at(clientId)->subEvents.find(filter.eventId) ==
+        sessionsMap_.at(clientId)->subEvents.end()) {
+        SGLOGW("current event not subscribe, cache filter now evetid= %{public}" PRId64, filter.eventId);
+        sessionsMap_.at(clientId)->eventFilters[filter.eventId].emplace_back(filter);
+        return SUCCESS;
+    }
+    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter = 
+        ConvertFilter(filter, clientId);
     int64_t eventId = collectorFilter.eventId;
     if (FileExists("/dev/hkids")) {
         if (collectorFilter.eventId == SecurityCollector::PROCESS_EVENTID) {
@@ -466,13 +534,13 @@ int AcquireDataSubscribeManager::InsertSubscribeMute(const SecurityEventFilter &
     }
     if (config.eventType == static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         if (config.prog == "security_guard") {
-            int32_t ret = SecurityCollector::DataCollection::GetInstance().AddFilter(collectorFilter, sdkFlag);
+            int32_t ret = SecurityCollector::DataCollection::GetInstance().AddFilter(collectorFilter);
             if (ret != SUCCESS) {
                 SGLOGI("AddFilter SG failed, eventId=%{public}" PRId64, collectorFilter.eventId);
                 return ret;
             }
         } else {
-            int32_t ret = SecurityCollector::CollectorManager::GetInstance().AddFilter(collectorFilter, sdkFlag);
+            int32_t ret = SecurityCollector::CollectorManager::GetInstance().AddFilter(collectorFilter);
             if (ret != SUCCESS) {
                 SGLOGE("InsertSubscribeMute failed, ret=%{public}d", ret);
                 return ret;
@@ -483,13 +551,13 @@ int AcquireDataSubscribeManager::InsertSubscribeMute(const SecurityEventFilter &
             SGLOGE("eventFilter_ is null");
             return NULL_OBJECT;
         }
-        int32_t ret = eventFilter_()->SetEventFilter(sdkFlag, collectorFilter);
+        int32_t ret = eventFilter_()->SetEventFilter(collectorFilter);
         if (ret != SUCCESS) {
             SGLOGE("SetEventFilter failed, ret=%{public}d", ret);
             return ret;
         }
     }
-    callbackHashMap_[callback].emplace_back(sdkFlag);
+    sessionsMap_.at(clientId)->eventFilters[filter.eventId].emplace_back(filter);
     return SUCCESS;
 }
 
@@ -519,17 +587,16 @@ void AcquireDataSubscribeManager::SubscriberEventOnSgStart()
 }
 
 int AcquireDataSubscribeManager::RemoveSubscribeMuteToSub(
-    const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter, const EventCfg &config,
-    const std::string &sdkFlag)
+    const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter, const EventCfg &config)
 {
     if (config.prog == "security_guard") {
-        int32_t ret = SecurityCollector::DataCollection::GetInstance().RemoveFilter(collectorFilter, sdkFlag);
+        int32_t ret = SecurityCollector::DataCollection::GetInstance().RemoveFilter(collectorFilter);
         if (ret != SUCCESS) {
             SGLOGI("RemoveFilter SG failed, eventId=%{public}" PRId64, collectorFilter.eventId);
             return ret;
         }
     } else {
-        int ret = SecurityCollector::CollectorManager::GetInstance().RemoveFilter(collectorFilter, sdkFlag);
+        int ret = SecurityCollector::CollectorManager::GetInstance().RemoveFilter(collectorFilter);
         if (ret != SUCCESS) {
             SGLOGE("RemoveSubscribeMute failed, ret=%{public}d", ret);
             return ret;
@@ -538,13 +605,41 @@ int AcquireDataSubscribeManager::RemoveSubscribeMuteToSub(
     return SUCCESS;
 }
 
-int AcquireDataSubscribeManager::RemoveSubscribeMute(const SecurityEventFilter &subscribeMute,
-    const sptr<IRemoteObject> &callback, const std::string &sdkFlag)
+int AcquireDataSubscribeManager::RemoveSubscribeMute(const EventMuteFilter &filter, const std::string &clientId)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
     SGLOGI("in AcquireDataSubscribeManager RemoveSubscribeMute");
+    if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
+        SGLOGE("clientId not creat");
+        return BAD_PARAM;
+    }
+    auto finder = [filter](const EventMuteFilter &it) {
+        return filter.eventGroup == it.eventGroup && filter.eventId == it.eventId && filter.isInclude == it.isInclude &&
+        filter.type == it.type && filter.mutes.size() == it.mutes.size() && filter.mutes == it.mutes;
+    };
+    if (sessionsMap_.at(clientId)->eventFilters.find(filter.eventId) ==
+        sessionsMap_.at(clientId)->eventFilters.end()) {
+        SGLOGE("filter event id not exist");
+        return BAD_PARAM;
+    }
+    auto iter = find_if(sessionsMap_.at(clientId)->eventFilters.at(filter.eventId).begin(),
+        sessionsMap_.at(clientId)->eventFilters.at(filter.eventId).end(), finder);
+    if (iter == sessionsMap_.at(clientId)->eventFilters.at(filter.eventId).end()) {
+        SGLOGE("filter not exist");
+        return BAD_PARAM;
+    }
+    if (sessionsMap_.at(clientId)->subEvents.find(filter.eventId) ==
+        sessionsMap_.at(clientId)->subEvents.end()) {
+        SGLOGW("current event not subscribe, erase filter now evetid= %{public}" PRId64, filter.eventId);
+        iter = sessionsMap_.at(clientId)->eventFilters[filter.eventId].erase(iter);
+        if (sessionsMap_.at(clientId)->eventFilters[filter.eventId].empty()) {
+            sessionsMap_.at(clientId)->eventFilters.erase(filter.eventId);
+        }
+        return SUCCESS;
+    }
     EventCfg config {};
-    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter = ConvertFilter(subscribeMute.GetMuteFilter());
+    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter =
+        ConvertFilter(filter, clientId);
     int64_t eventId = collectorFilter.eventId;
     if (FileExists("/dev/hkids")) {
         if (collectorFilter.eventId == SecurityCollector::PROCESS_EVENTID) {
@@ -555,17 +650,13 @@ int AcquireDataSubscribeManager::RemoveSubscribeMute(const SecurityEventFilter &
             collectorFilter.eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
         }
     }
-    if (callbackHashMap_.find(callback) == callbackHashMap_.end() || callbackHashMap_.at(callback).empty()) {
-        SGLOGE("not found current callback");
-        return NOT_FOUND;
-    }
     bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(collectorFilter.eventId, config);
     if (!isSuccess) {
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
     if (config.eventType == static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
-        int32_t ret = RemoveSubscribeMuteToSub(collectorFilter, config, sdkFlag);
+        int32_t ret = RemoveSubscribeMuteToSub(collectorFilter, config);
         if (ret != SUCCESS) {
             SGLOGE("RemoveSubscribeMuteToSub failed, ret=%{public}d", ret);
             return ret;
@@ -575,22 +666,21 @@ int AcquireDataSubscribeManager::RemoveSubscribeMute(const SecurityEventFilter &
             SGLOGE("eventFilter_ is null");
             return NULL_OBJECT;
         }
-        int32_t ret = eventFilter_()->RemoveEventFilter(sdkFlag, collectorFilter);
+        int32_t ret = eventFilter_()->RemoveEventFilter(collectorFilter);
         if (ret != SUCCESS) {
             SGLOGE("RemoveEventFilter failed, ret=%{public}d", ret);
             return ret;
         }
     }
-    auto iter = callbackHashMap_.at(callback).begin();
-    iter = callbackHashMap_.at(callback).erase(iter);
-    if (callbackHashMap_.at(callback).empty()) {
-        callbackHashMap_.erase(callback);
+    iter = sessionsMap_.at(clientId)->eventFilters[filter.eventId].erase(iter);
+    if (sessionsMap_.at(clientId)->eventFilters[filter.eventId].empty()) {
+        sessionsMap_.at(clientId)->eventFilters.erase(filter.eventId);
     }
     return SUCCESS;
 }
 
 SecurityCollector::SecurityCollectorEventMuteFilter AcquireDataSubscribeManager::ConvertFilter(
-    const SecurityGuard::EventMuteFilter &sgFilter)
+    const SecurityGuard::EventMuteFilter &sgFilter, const std::string &clientId)
 {
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
     collectorFilter.eventId = sgFilter.eventId;
@@ -598,7 +688,69 @@ SecurityCollector::SecurityCollectorEventMuteFilter AcquireDataSubscribeManager:
     collectorFilter.type = sgFilter.type;
     collectorFilter.isInclude = sgFilter.isInclude;
     collectorFilter.isSetMute = false;
-    collectorFilter.instanceFlag = sgFilter.instanceFlag;
+    collectorFilter.instanceFlag = clientId;
     return collectorFilter;
+}
+
+int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, const std::string &clientId,
+    const sptr<IRemoteObject> &cb)
+{
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int ret = IsExceedLimited(clientId, callerToken);
+    if (ret != SUCCESS) {
+        SGLOGE("IsExceedLimited error");
+        return ret;
+    }
+    if (sessionsMap_.find(clientId) != sessionsMap_.end()) {
+        SGLOGE("current clientId exist");
+        return BAD_PARAM;
+    }
+    auto session = std::make_shared<ClientSession>();
+    session->clientId = clientId;
+    session->callback = cb;
+    session->tokenId = callerToken;
+    sessionsMap_[clientId] = session;
+    return SUCCESS;
+}
+
+int AcquireDataSubscribeManager::DestoryClient(const std::string &eventGroup, const std::string &clientId)
+{
+    auto iter = sessionsMap_.find(clientId);
+    if (iter == sessionsMap_.end()) {
+        SGLOGE("current clientId not exist");
+        return BAD_PARAM;
+    }
+    auto callBack = sessionsMap_.at(clientId)->callback;
+    for (auto iter : sessionsMap_.at(clientId)->subEvents) {
+        RemoveSubscribeRecord(iter, callBack, clientId);
+    }
+    for (auto iter : sessionsMap_.at(clientId)->eventFilters) {
+        for (auto it : iter.second) {
+            RemoveSubscribeMute(it, clientId);
+        }
+    }
+    sessionsMap_.erase(clientId);
+    return SUCCESS;
+}
+
+
+int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, AccessToken::AccessTokenID callerToken)
+{
+    if (sessionsMap_.size() >= MAX_SESSION_SIZE) {
+        SGLOGE("max instance limited");
+        return CLIENT_EXCEED_GLOBAL_LIMIT;
+    }
+    size_t sessionSize = 0;
+    std::set<std::string> clients {};
+    for (auto iter : sessionsMap_) {
+        if (iter.second->tokenId == callerToken) {
+            clients.insert(iter.first);
+        }
+    }
+    if (clients.find(clientId) == clients.end() && clients.size() >= MAX_SESSION_SIZE_ONE_PROCESS) {
+        SGLOGE("max instance one process limited");
+        return CLIENT_EXCEED_PROCESS_LIMIT;
+    }
+    return SUCCESS;
 }
 }

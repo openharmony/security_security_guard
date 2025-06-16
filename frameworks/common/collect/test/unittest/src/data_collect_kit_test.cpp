@@ -21,6 +21,7 @@
 #include "token_setproc.h"
 #include "accesstoken_kit.h"
 #include "sg_obtaindata_client.h"
+#include "event_subscribe_client.h"
 #define private public
 #include "data_collect_manager.h"
 #include "security_guard_define.h"
@@ -429,12 +430,13 @@ HWTEST_F(DataCollectKitTest, Mute001, TestSize.Level1)
 {
     auto muteinfo = std::make_shared<SecurityGuard::EventMuteFilter> ();
     muteinfo->eventGroup = "securityGroup";
-    int ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(muteinfo);
+    SecurityGuard::EventSubscribeClient client {};
+    int ret = client.AddFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
     muteinfo->eventGroup = "";
-    ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(muteinfo);
+    ret = client.AddFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
-    ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(nullptr);
+    ret = client.AddFilter(nullptr);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
 }
 
@@ -442,12 +444,13 @@ HWTEST_F(DataCollectKitTest, UnMute001, TestSize.Level1)
 {
     auto muteinfo = std::make_shared<SecurityGuard::EventMuteFilter> ();
     muteinfo->eventGroup = "securityGroup";
-    int ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(muteinfo);
+    SecurityGuard::EventSubscribeClient client {};
+    int ret = client.RemoveFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
     muteinfo->eventGroup = "";
-    ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(muteinfo);
+    ret = client.RemoveFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
-    ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(nullptr);
+    ret = client.RemoveFilter(nullptr);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
 }
 
@@ -576,13 +579,14 @@ HWTEST_F(DataCollectKitTest, CallBackIsNull, TestSize.Level1)
     SecurityGuard::DataCollectManager::GetInstance().callback_ = nullptr;
     auto muteinfo = std::make_shared<SecurityGuard::EventMuteFilter> ();
     muteinfo->eventGroup = "securityGroup";
-    int ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(muteinfo);
+    SecurityGuard::EventSubscribeClient client {};
+    int ret = client.RemoveFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
-    ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(muteinfo);
+    ret = client.AddFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
-    ret = SecurityGuard::DataCollectManager::GetInstance().Unsubscribe(g_sub);
+    ret = client.Unsubscribe(111);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
-    ret = SecurityGuard::DataCollectManager::GetInstance().Subscribe(g_sub);
+    ret = client.Subscribe(111);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
 }
 
