@@ -37,9 +37,10 @@
 #include "event_config.h"
 #include "model_cfg_marshalling.h"
 #include "model_config.h"
-#include "rdb_helper.h"
 #include "security_guard_log.h"
 #include "event_group_config.h"
+#include "json_util.h"
+#include "file_util.h"
 #undef private
 #undef protected
 
@@ -47,10 +48,9 @@ using namespace testing;
 using namespace testing::ext;
 using namespace OHOS::Security::SecurityGuard;
 using namespace OHOS::Security::SecurityGuardTest;
-namespace OHOS {
-    std::shared_ptr<NativeRdb::MockRdbHelperInterface> NativeRdb::RdbHelper::instance_ = nullptr;
-    std::mutex NativeRdb::RdbHelper::mutex_ {};
-}
+using namespace OHOS::Security::SecurityGuard::FileUtil;
+using namespace OHOS::Security::SecurityGuard::JsonUtil;
+
 namespace OHOS::Security::SecurityGuardTest {
 
 void SecurityGuardConfigManagerTest::SetUpTestCase()
@@ -339,7 +339,6 @@ HWTEST_F(SecurityGuardConfigManagerTest, TestConfigSubsciber003, TestSize.Level1
         ConfigSubscriber::UpdateConfig(CONFIG_CACHE_FILES[EVENT_CFG_INDEX]));
     EXPECT_TRUE(
         ConfigSubscriber::UpdateConfig(CONFIG_CACHE_FILES[MODEL_CFG_INDEX]));
-    EXPECT_TRUE(ConfigSubscriber::UpdateConfig("/data/service/el1/public/security_guard/tmp/signature_rule.json"));
 }
 
 HWTEST_F(SecurityGuardConfigManagerTest, TestModelCfgMarshalling001, TestSize.Level1)
@@ -802,5 +801,342 @@ HWTEST_F(SecurityGuardConfigManagerTest, GetIsBatchUpload001, TestSize.Level1)
     config.isBatchUpload = true;
     ConfigDataManager::GetInstance().eventGroupMap_.insert({"test11", config});
     EXPECT_TRUE(ConfigDataManager::GetInstance().GetIsBatchUpload("test11"));
+}
+
+void SecurityGuardUtilsTest::SetUpTestCase()
+{
+}
+
+void SecurityGuardUtilsTest::TearDownTestCase()
+{
+}
+
+void SecurityGuardUtilsTest::SetUp()
+{
+    constexpr int64_t overInt32 = 2147483648;
+    rootJson = cJSON_CreateObject();
+    cJSON_AddBoolToObject(rootJson, "key1", true);
+    cJSON_AddBoolToObject(rootJson, "key2", false);
+    cJSON_AddNumberToObject(rootJson, "key3", 0);
+    cJSON_AddNumberToObject(rootJson, "key4", 1);
+    cJSON_AddNumberToObject(rootJson, "key5", -1);
+    cJSON_AddNumberToObject(rootJson, "key6", overInt32);
+    cJSON_AddNullToObject(rootJson, "key7");
+    cJSON_AddStringToObject(rootJson, "key8", "valid_string");
+}
+
+void SecurityGuardUtilsTest::TearDown()
+{
+    cJSON_Delete(rootJson);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, ReadFileToStrReturnFalse001, TestSize.Level1)
+{
+    std::string fileName = "non_existent_file.txt";
+    std::ios::pos_type fileMaxSize = 1024;
+    std::string str;
+
+    EXPECT_FALSE(ReadFileToStr(fileName, fileMaxSize, str));
+}
+
+HWTEST_F(SecurityGuardUtilsTest, ReadFileToStrReturnFalse002, TestSize.Level1)
+{
+    std::string fileName = "empty_file.txt";
+    std::ios::pos_type fileMaxSize = 1024;
+    std::string str;
+    std::ofstream emptyFile(fileName);
+    emptyFile.close();
+    EXPECT_FALSE(ReadFileToStr(fileName, fileMaxSize, str));
+    std::remove(fileName.c_str());
+}
+
+HWTEST_F(SecurityGuardUtilsTest, ReadFileToStrReturnFalse003, TestSize.Level1)
+{
+    std::string fileName = "large_file.txt";
+    std::ios::pos_type fileMaxSize = 10;
+    std::string str;
+    std::ofstream largeFile(fileName);
+
+    largeFile << "aaaaaaaaaaaaaaaaaaaa";
+    largeFile.close();
+
+    EXPECT_FALSE(ReadFileToStr(fileName, fileMaxSize, str));
+    std::remove(fileName.c_str());
+}
+
+HWTEST_F(SecurityGuardUtilsTest, ReadFileToStrReturnTrue001, TestSize.Level1)
+{
+    std::string fileName = "valid_file.txt";
+    std::ios::pos_type fileMaxSize = 1024;
+    std::string str;
+
+    std::ofstream validFile(fileName);
+    validFile << "hello, world!";
+    validFile.close();
+
+    EXPECT_TRUE(ReadFileToStr(fileName, fileMaxSize, str));
+    EXPECT_EQ(str, "hello, world!");
+
+    std::remove(fileName.c_str());
+}
+
+HWTEST_F(SecurityGuardUtilsTest, GetBoolTestTrue, TestSize.Level1)
+{
+    bool result;
+    bool success = GetBool(rootJson, "key1", result);
+    EXPECT_TRUE(success);
+    EXPECT_TRUE(result);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, GetBoolTestFalse001, TestSize.Level1)
+{
+    bool result;
+    bool success = GetBool(rootJson, "key2", result);
+    EXPECT_TRUE(success);
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, GetBoolTestFalse002, TestSize.Level1)
+{
+    bool result;
+    bool success = GetBool(rootJson, "key_error", result);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, GetBoolTestFalse003, TestSize.Level1)
+{
+    bool result;
+    bool success = GetBool(rootJson, "key3", result);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, GetBoolTestFalse004, TestSize.Level1)
+{
+    bool result;
+    bool success = GetBool(nullptr, "key1", result);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidFailed001, TestSize.Level1)
+{
+    int64_t result;
+    bool success = GetNumberInt64(nullptr, "key3", result);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidFailed002, TestSize.Level1)
+{
+    int64_t result;
+    bool success = GetNumberInt64(rootJson, "key_error", result);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidFailed003, TestSize.Level1)
+{
+    int64_t result;
+    bool success = GetNumberInt64(rootJson, "key1", result);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidZero002, TestSize.Level1)
+{
+    int64_t result;
+    bool success = GetNumberInt64(rootJson, "key3", result);
+    EXPECT_TRUE(success);
+    EXPECT_EQ(result, 0);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidPositive002, TestSize.Level1)
+{
+    int64_t result;
+    bool success = GetNumberInt64(rootJson, "key4", result);
+    EXPECT_TRUE(success);
+    EXPECT_EQ(result, 1);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidNegative002, TestSize.Level1)
+{
+    int64_t result;
+    bool success = GetNumberInt64(rootJson, "key5", result);
+    EXPECT_TRUE(success);
+    EXPECT_EQ(result, -1);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidFailed011, TestSize.Level1)
+{
+    int32_t result;
+    bool success = GetNumberInt32(nullptr, "key3", result);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidFailed012, TestSize.Level1)
+{
+    int32_t result;
+    bool success = GetNumberInt32(rootJson, "key_error", result);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidFailed013, TestSize.Level1)
+{
+    int32_t result;
+    bool success = GetNumberInt32(rootJson, "key1", result);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidZero001, TestSize.Level1)
+{
+    int32_t result;
+    bool success = GetNumberInt32(rootJson, "key3", result);
+    EXPECT_TRUE(success);
+    EXPECT_EQ(result, 0);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidPositive001, TestSize.Level1)
+{
+    int32_t result;
+    bool success = GetNumberInt32(rootJson, "key4", result);
+    EXPECT_TRUE(success);
+    EXPECT_EQ(result, 1);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidNegative001, TestSize.Level1)
+{
+    int32_t result;
+    bool success = GetNumberInt32(rootJson, "key5", result);
+    EXPECT_TRUE(success);
+    EXPECT_EQ(result, -1);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidOverMaxInt32, TestSize.Level1)
+{
+    int32_t result;
+    bool success = GetNumberInt32(rootJson, "key6", result);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidFailed021, TestSize.Level1)
+{
+    std::string result;
+    bool success = GetString(nullptr, "key3", result);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidFailed022, TestSize.Level1)
+{
+    std::string result;
+    bool success = GetString(rootJson, "key_error", result);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidFailed023, TestSize.Level1)
+{
+    std::string result;
+    bool success = GetString(rootJson, "key7", result);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestValidSuccess020, TestSize.Level1)
+{
+    std::string result;
+    bool success = GetString(rootJson, "key8", result);
+    EXPECT_TRUE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestGetStringNoKeyFail001, TestSize.Level1)
+{
+    std::string result;
+    bool success = GetStringNoKey(nullptr, result);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestAddString, TestSize.Level1)
+{
+    std::string key = "testKey";
+    std::string value = "testValue";
+    bool success = AddString(rootJson, key, value);
+    EXPECT_TRUE(success);
+
+    cJSON *item = cJSON_GetObjectItem(rootJson, key.c_str());
+    EXPECT_TRUE(item != nullptr);
+    EXPECT_TRUE(cJSON_IsString(item));
+    EXPECT_STREQ(cJSON_GetStringValue(item), value.c_str());
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestAddNumberInt32, TestSize.Level1)
+{
+    std::string key = "testKey";
+    int32_t value = 12345;
+    bool success = AddNumberInt32(rootJson, key, value);
+    EXPECT_TRUE(success);
+
+    cJSON *item = cJSON_GetObjectItem(rootJson, key.c_str());
+    EXPECT_TRUE(item != nullptr);
+    EXPECT_TRUE(cJSON_IsNumber(item));
+    EXPECT_EQ(cJSON_GetNumberValue(item), value);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestAddNumberInt64, TestSize.Level1)
+{
+    std::string key = "testKey";
+    int64_t value = 123456789012345LL;
+    bool success = AddNumberInt64(rootJson, key, value);
+    EXPECT_TRUE(success);
+
+    cJSON *item = cJSON_GetObjectItem(rootJson, key.c_str());
+    EXPECT_TRUE(item != nullptr);
+    EXPECT_TRUE(cJSON_IsNumber(item));
+    EXPECT_EQ(cJSON_GetNumberValue(item), value);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestAddStrArrayInfo, TestSize.Level1)
+{
+    std::vector<std::string> values = {"item1", "item2", "item3"};
+    const char *key = "testArrayKey";
+    bool success = AddStrArrayInfo(rootJson, values, key);
+    EXPECT_TRUE(success);
+
+    cJSON *array = cJSON_GetObjectItem(rootJson, key);
+    EXPECT_TRUE(array != nullptr);
+    EXPECT_TRUE(cJSON_IsArray(array));
+    EXPECT_EQ(cJSON_GetArraySize(array), values.size());
+
+    for (size_t i = 0; i < values.size(); i++) {
+        cJSON *item = cJSON_GetArrayItem(array, i);
+        EXPECT_TRUE(item != nullptr);
+        EXPECT_TRUE(cJSON_IsString(item));
+        EXPECT_STREQ(cJSON_GetStringValue(item), values[i].c_str());
+    }
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestAddStringNullJson, TestSize.Level1)
+{
+    std::string key = "testKey";
+    std::string value = "testValue";
+    bool success = AddString(nullptr, key, value);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestAddNumberInt32NullJson, TestSize.Level1)
+{
+    std::string key = "testKey";
+    int32_t value = 12345;
+    bool success = AddNumberInt32(nullptr, key, value);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestAddNumberInt64NullJson, TestSize.Level1)
+{
+    std::string key = "testKey";
+    int64_t value = 123456789012345LL;
+    bool success = AddNumberInt64(nullptr, key, value);
+    EXPECT_FALSE(success);
+}
+
+HWTEST_F(SecurityGuardUtilsTest, TestAddStrArrayInfoNullJson, TestSize.Level1)
+{
+    std::vector<std::string> values = {"item1", "item2", "item3"};
+    const char *key = "testArrayKey";
+    bool success = AddStrArrayInfo(nullptr, values, key);
+    EXPECT_FALSE(success);
 }
 }

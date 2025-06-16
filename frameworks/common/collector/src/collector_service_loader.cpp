@@ -62,6 +62,14 @@ void CollectorServiceLoader::LoadCallback::OnLoadSystemAbilityFail(int32_t sid)
 
 sptr<IRemoteObject> CollectorServiceLoader::LoadCallback::Promise()
 {
-    return promise_.get_future().get();
+    constexpr int32_t TimeoutInterval = 1;
+    auto future = promise_.get_future();
+    auto span = std::chrono::seconds(TimeoutInterval);
+    if (future.wait_for(span) == std::future_status::timeout) {
+        LOGE("LoadCallback Get Promise Timeout");
+        return nullptr;
+    } else {
+        return future.get();
+    }
 }
 } // namespace OHOS::Security::SecurityAudit

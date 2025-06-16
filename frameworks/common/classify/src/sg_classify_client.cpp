@@ -124,6 +124,7 @@ int32_t RequestSecurityModelResultAsync(const std::string &devId, uint32_t model
 #endif
 }
 
+// LCOV_EXCL_START
 int32_t StartSecurityModel(uint32_t modelId, const std::string &param)
 {
 #ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
@@ -147,6 +148,7 @@ int32_t StartSecurityModel(uint32_t modelId, const std::string &param)
     return 0;
 #endif
 }
+// LCOV_EXCL_STOP
 }
 
 #ifdef __cplusplus

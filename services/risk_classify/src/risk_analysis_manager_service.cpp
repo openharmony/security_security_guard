@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,10 +16,12 @@
 #include "risk_analysis_manager_service.h"
 
 #include <thread>
+#include <cinttypes>
 
 #include "accesstoken_kit.h"
 #include "tokenid_kit.h"
 #include "ipc_skeleton.h"
+#include "cJSON.h"
 
 #include "bigdata.h"
 #include "database_manager.h"
@@ -42,6 +44,7 @@ REGISTER_SYSTEM_ABILITY_BY_ID(RiskAnalysisManagerService, RISK_ANALYSIS_MANAGER_
 
 namespace {
     constexpr int32_t TIMEOUT_REPLY = 3000;
+    constexpr int32_t DELAY_TIME = 10000;
     constexpr const char* REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
     constexpr const char* QUERY_SECURITY_MODEL_RESULT_PERMISSION = "ohos.permission.QUERY_SECURITY_MODEL_RESULT";
     const std::vector<uint32_t> MODELIDS = {
@@ -51,6 +54,7 @@ namespace {
         {"RequestSecurityModelResult", {REQUEST_PERMISSION, QUERY_SECURITY_MODEL_RESULT_PERMISSION}},
         {"StartSecurityModel", {QUERY_SECURITY_MODEL_RESULT_PERMISSION}},
     };
+    typedef void (*InitAllConfigFunc)();
 }
 
 RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnCreate)
@@ -59,36 +63,42 @@ RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnC
     SGLOGW("%{public}s", __func__);
 }
 
+// LCOV_EXCL_START
 void RiskAnalysisManagerService::OnStart()
 {
     SGLOGI("RiskAnalysisManagerService %{public}s", __func__);
-    bool success = ConfigManager::InitConfig<EventConfig>();
-    if (!success) {
-        SGLOGE("init event config error");
-    }
-    success = ConfigManager::InitConfig<ModelConfig>();
-    if (!success) {
-        SGLOGE("init model config error");
-    }
-    success = ConfigManager::InitConfig<EventGroupConfig>();
-    if (!success) {
-        SGLOGE("init event group error");
+    void *handle = dlopen("libsg_config_manager.z.so", RTLD_LAZY);
+    if (handle == nullptr) {
+        SGLOGE("dlopen error: %{public}s", dlerror());
+    } else {
+        auto func = (InitAllConfigFunc)dlsym(handle, "InitAllConfig");
+        if (func != nullptr) {
+            func();
+            SGLOGI("Call Init All Config");
+        } else {
+            SGLOGE("dlsym error: %{public}s", dlerror());
+        }
+        dlclose(handle);
     }
     auto task = [] {
         ModelManager::GetInstance().Init();
     };
     ffrt::submit(task);
 
-    AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
     if (!Publish(this)) {
         SGLOGE("Publish error");
     }
-    DetectPluginManager::getInstance().LoadAllPlugins();
+
+    ffrt::submit([this] {
+        std::this_thread::sleep_for(std::chrono::milliseconds(DELAY_TIME));
+        DetectPluginManager::getInstance().LoadAllPlugins();
+    });
 }
 
 void RiskAnalysisManagerService::OnStop()
 {
 }
+// LCOV_EXCL_STOP
 
 int32_t RiskAnalysisManagerService::IsApiHasPermission(const std::string &api)
 {
@@ -183,16 +193,15 @@ ErrCode RiskAnalysisManagerService::StartSecurityModel(uint32_t modelId, const s
     return ModelManager::GetInstance().StartSecurityModel(modelId, param);
 }
 
+// LCOV_EXCL_START
 void RiskAnalysisManagerService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     SGLOGI("OnAddSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
-    if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
-        ConfigManager::GetInstance().StartUpdate();
-    }
 }
 
 void RiskAnalysisManagerService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     SGLOGW("OnRemoveSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
 }
+// LCOV_EXCL_STOP
 }

@@ -36,6 +36,10 @@ int32_t CollectorManager::Subscribe(const std::shared_ptr<ICollectorSubscriber> 
     }
 
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
+    if (object == nullptr) {
+        LOGE("object is null");
+        return NULL_OBJECT;
+    }
     auto proxy = iface_cast<ISecurityCollectorManager>(object);
     if (proxy == nullptr) {
         LOGE("proxy is null");
@@ -81,6 +85,10 @@ int32_t CollectorManager::Unsubscribe(const std::shared_ptr<ICollectorSubscriber
         return BAD_PARAM;
     }
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
+    if (object == nullptr) {
+        LOGE("object is null");
+        return NULL_OBJECT;
+    }
     auto proxy = iface_cast<ISecurityCollectorManager>(object);
     if (proxy == nullptr) {
         LOGE("Proxy is null");
@@ -119,6 +127,10 @@ int32_t CollectorManager::QuerySecurityEvent(const std::vector<SecurityEventRule
 {
     LOGE("begin collector QuerySecurityEvent");
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
+    if (object == nullptr) {
+        LOGE("object is null");
+        return NULL_OBJECT;
+    }
     auto proxy = iface_cast<ISecurityCollectorManager>(object);
     if (proxy == nullptr) {
         LOGE("proxy is null");
@@ -138,6 +150,10 @@ int32_t CollectorManager::CollectorStart(const SecurityCollector::SecurityCollec
 {
     LOGI("enter CollectorManager CollectorStart");
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
+    if (object == nullptr) {
+        LOGE("object is null");
+        return NULL_OBJECT;
+    }
     auto proxy = iface_cast<ISecurityCollectorManager>(object);
     if (proxy == nullptr) {
         LOGE("proxy is null");
@@ -162,6 +178,10 @@ int32_t CollectorManager::CollectorStop(const SecurityCollector::SecurityCollect
 {
     LOGI("enter CollectorManager CollectorStart");
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
+    if (object == nullptr) {
+        LOGE("object is null");
+        return NULL_OBJECT;
+    }
     auto proxy = iface_cast<ISecurityCollectorManager>(object);
     if (proxy == nullptr) {
         LOGE("proxy is null");
@@ -186,6 +206,10 @@ int32_t CollectorManager::AddFilter(const SecurityCollectorEventFilter &subscrib
 {
     LOGI("enter CollectorManager AddFilter");
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
+    if (object == nullptr) {
+        LOGE("object is null");
+        return NULL_OBJECT;
+    }
     auto proxy = iface_cast<ISecurityCollectorManager>(object);
     if (proxy == nullptr) {
         LOGE("proxy is null");
@@ -205,6 +229,10 @@ int32_t CollectorManager::RemoveFilter(const SecurityCollectorEventFilter &subsc
 {
     LOGI("enter CollectorManager RemoveFilter");
     auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
+    if (object == nullptr) {
+        LOGE("object is null");
+        return NULL_OBJECT;
+    }
     auto proxy = iface_cast<ISecurityCollectorManager>(object);
     if (proxy == nullptr) {
         LOGE("proxy is null");

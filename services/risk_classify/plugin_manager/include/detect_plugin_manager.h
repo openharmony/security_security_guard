@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <mutex>
 #include "cJSON.h"
 
 #include "i_collector_subscriber.h"
@@ -28,7 +29,6 @@
 #include "i_detect_plugin.h"
 
 namespace OHOS::Security::SecurityGuard {
-
 class DetectPluginManager {
 public:
     static DetectPluginManager& getInstance();
@@ -67,10 +67,10 @@ private:
             }
         };
 
-        void SetHandle(void *handle) {handle_ = handle; };
+        void SetHandle(void *handle) { handle_ = handle; };
         void SetInstance(IDetectPlugin *instance) { instance_ = instance; };
         void SetPluginName(std::string pluginName) { pluginName_ = pluginName; };
-        void *GetHandle() { return handle_;};
+        void *GetHandle() { return handle_; };
         IDetectPlugin *GetInstance() { return instance_; };
         std::string GetPluginName() { return pluginName_; };
 
@@ -101,7 +101,7 @@ private:
     bool CheckPluginNameAndSize(PluginCfg &newPlugin);
     bool ParsePluginDepEventIds(const cJSON *plugin, std::unordered_set<int64_t> &depEventIds);
     std::string AssembleMetadata(const SecurityCollector::Event &event);
+    std::mutex mutex_;
 };
-} // namespace OHOS::Security::SecurityGuard
-
+}  // namespace OHOS::Security::SecurityGuard
 #endif

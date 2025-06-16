@@ -32,7 +32,6 @@
 #include "database_helper.h"
 #include "database_manager.h"
 #include "database.h"
-#include "rdb_event_store_callback.h"
 #include "risk_event_rdb_helper.h"
 #include "store_define.h"
 #undef private
@@ -188,8 +187,7 @@ bool DatabaseHelperFuzzTest(const uint8_t* data, size_t size)
         .version = string,
     };
     std::vector<SecEvent> events{event};
-    NativeRdb::ValuesBucket values{};
-    NativeRdb::RdbPredicates predicates{string};
+    GenericValues value{};
     helper.Init();
     helper.InsertEvent(event);
     helper.QueryAllEvent(events);
@@ -206,9 +204,9 @@ bool DatabaseHelperFuzzTest(const uint8_t* data, size_t size)
     helper.DeleteOldEventByEventId(eventId, eventId);
     helper.DeleteAllEventByEventId(eventId);
     helper.FlushAllEvent();
-    helper.QueryEventBase(predicates, events);
+    helper.QueryEventBase(value, events);
     helper.CreateTable();
-    helper.SetValuesBucket(event, values);
+    helper.SetValuesBucket(event, value);
     helper.Release();
     return true;
 }
@@ -263,19 +261,18 @@ bool DatabaseFuzzTest(const uint8_t* data, size_t size)
     int64_t int64 = *(reinterpret_cast<const int64_t *>(data));
     offset += sizeof(int64_t);
     std::string string(reinterpret_cast<const char *>(data + offset), size - offset);
-    NativeRdb::RdbStoreConfig config{string};
-    NativeRdb::ValuesBucket value{};
-    NativeRdb::AbsRdbPredicates predicates{string};
-    std::vector<NativeRdb::ValuesBucket> values{value};
+    GenericValues value{};
+    std::vector<std::string> strings;
+    std::vector<GenericValues> values{value};
     std::vector<std::string> columns{string};
     database.Insert(int64, string, value);
     database.BatchInsert(int64, string, values);
-    database.Update(int32, value, predicates);
-    database.Delete(int32, predicates);
-    database.Query(predicates, columns);
+    database.Update(int32, string, value);
+    database.Delete(int32, string, value);
+    database.Query(string, value, values);
     database.ExecuteSql(string);
-    database.ExecuteAndGetLong(int64, string);
-    database.Count(int64, predicates);
+    database.ExecuteAndGetLong(int64, string, strings);
+    database.Count(int64, string);
     database.BeginTransaction();
     database.RollBack();
     database.Commit();
