@@ -78,8 +78,8 @@ ohos_fuzztest("SecurityCollectorFuzzTest") {
     "json:nlohmann_json_static",
     "os_account:os_account_innerkits",
     "preferences:native_preferences",
-    "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "sqlite:sqlite",
   ]
 }

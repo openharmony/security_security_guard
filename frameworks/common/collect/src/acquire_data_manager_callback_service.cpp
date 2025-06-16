@@ -23,12 +23,12 @@ namespace OHOS::Security::SecurityGuard {
 int32_t AcquireDataManagerCallbackService::OnNotify(const std::vector<SecurityCollector::Event> &events)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (callback_ == nullptr) {
+        SGLOGE("callback is null");
+        return FAILED;
+    }
     for (const auto &it : events) {
         SGLOGD("callback eventId=%{public}" PRId64, it.eventId);
-        if (callback_ == nullptr) {
-            SGLOGE("callback is null");
-            return FAILED;
-        }
         callback_(it);
     }
     return SUCCESS;

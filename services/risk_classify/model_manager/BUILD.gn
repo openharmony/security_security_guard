@@ -56,12 +56,11 @@ ohos_source_set("sg_model_manager_stamp") {
   }
   branch_protector_ret = "pac_ret"
 
-  deps = [ "${sg_root_dir}/services/config_manager:sg_config_manager" ]
+  deps = [ "${sg_root_dir}/services/config_manager:sg_config_data_manager" ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
     "json:nlohmann_json_static",
-    "relational_store:native_rdb",
   ]
 }

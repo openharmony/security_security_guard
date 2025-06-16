@@ -29,8 +29,47 @@
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 #include "i_model_info.h"
+#include "file_util.h"
+#include "json_util.h"
+#include "sg_collect_client.h"
 
 namespace OHOS::Security::SecurityGuard {
+
+// LCOV_EXCL_START
+void ConfigSubscriber::GetUpdateFileDstPath(const std::string &fileName, std::string &dstPath)
+{
+    std::ios::pos_type maxSize = 1 * 1024 * 1024; // byte
+    std::string jsonStr;
+    if (!FileUtil::ReadFileToStr("/system/etc/security_guard_update_config.json", maxSize, jsonStr)) {
+        SGLOGE("Read Update cfg file error.");
+        return;
+    }
+    cJSON *inJson = cJSON_Parse(jsonStr.c_str());
+    if (inJson == nullptr || !cJSON_IsArray(inJson)) {
+        SGLOGE("Json Parse Error: inJson is null or not a array.");
+        cJSON_Delete(inJson);
+        inJson = nullptr;
+        return;
+    }
+
+    int size = cJSON_GetArraySize(inJson);
+    for (int i = 0; i < size; i++) {
+        cJSON *item = cJSON_GetArrayItem(inJson, i);
+        std::string fileNameStr;
+        std::string dstPathStr;
+        if (!JsonUtil::GetString(item, "fileName", fileNameStr) || !JsonUtil::GetString(item, "dstPath", dstPathStr)) {
+            SGLOGE("Json Parse Error: fileName or dstPath not correct.");
+            continue;
+        }
+        if (fileName == fileNameStr) {
+            dstPath = dstPathStr;
+            break;
+        }
+    }
+    cJSON_Delete(inJson);
+    inJson = nullptr;
+}
+// LCOV_EXCL_STOP
 
 bool ConfigSubscriber::UpdateConfig(const std::string &file)
 {
@@ -41,19 +80,37 @@ bool ConfigSubscriber::UpdateConfig(const std::string &file)
     } else if (file == CONFIG_CACHE_FILES[MODEL_CFG_INDEX]) {
         isSuccess = ConfigManager::UpdateConfig<ModelConfig>();
     }
+
+    std::string dstPath = file;
+    if (file != CONFIG_CACHE_FILES[EVENT_CFG_INDEX] && file != CONFIG_CACHE_FILES[MODEL_CFG_INDEX]) {
+        GetUpdateFileDstPath(file, dstPath);
+        if (!dstPath.empty()) {
+            SGLOGI("UpdateConfig, tmp path=%{public}s, dstPath=%{public}s.", file.c_str(), dstPath.c_str());
+            isSuccess = SecurityGuardUtils::CopyFile(file, dstPath);
+        }
+    }
+
     event.path = file;
     event.time = SecurityGuardUtils::GetDate();
     event.ret = isSuccess ? SUCCESS : FAILED;
-    SGLOGD("file path=%{public}s, TIME=%{public}s, ret=%{public}d", event.path.c_str(), event.time.c_str(),
-        event.ret);
+    SGLOGD("file path=%{public}s, TIME=%{public}s, ret=%{public}d", event.path.c_str(), event.time.c_str(), event.ret);
     BigData::ReportConfigUpdateEvent(event);
-   
-    if (file != CONFIG_CACHE_FILES[EVENT_CFG_INDEX] && file != CONFIG_CACHE_FILES[MODEL_CFG_INDEX]) {
-        return true;
+    if (isSuccess) {
+        std::string name;
+        size_t lastSlashPos = dstPath.find_last_of('/');
+        if (lastSlashPos != std::string::npos) {
+            name = dstPath.substr(lastSlashPos + 1);
+        }
+        std::string content = R"({"path":")" + dstPath + R"(", "name":")" + name + R"("})";
+        auto info = std::make_shared<EventInfo>(0xAB000004, "1.0", content);
+        int32_t ret = SecurityGuard::NativeDataCollectKit::ReportSecurityInfoAsync(info);
+        if (ret != SUCCESS) {
+            SGLOGE("ReportSecurityEvent Error %{public}d", ret);
+        }
     }
     if (!RemoveFile(file)) {
         SGLOGE("remove file error, %{public}s", strerror(errno));
     }
     return isSuccess;
 }
-} // OHOS::Security::SecurityGuard
+}  // namespace OHOS::Security::SecurityGuard

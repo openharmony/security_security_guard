@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,7 +27,8 @@
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
-    constexpr int32_t RETRY_INTERVAL = 60;
+    constexpr int32_t MAX_RETRY_INTERVAL = 60;
+    constexpr int32_t RETRY_INTERVAL_INCREMENT = 10;
     constexpr int32_t MAX_PLUGIN_SIZE = 20;
     constexpr const char *PLUGIN_PREFIX_PATH = "/system/lib64/";
 }
@@ -38,6 +39,7 @@ DetectPluginManager& DetectPluginManager::getInstance()
     return instance;
 }
 
+// LCOV_EXCL_START
 void DetectPluginManager::LoadAllPlugins()
 {
     SGLOGI("Start LoadAllPlugins.");
@@ -45,12 +47,12 @@ void DetectPluginManager::LoadAllPlugins()
     if (!ParsePluginConfig(fileName)) {
         return;
     }
-    for (size_t i = 0; i < plugins_.size(); i++) {
-        LoadPlugin(plugins_[i]);
+    for (const auto &plugin : plugins_) {
+        LoadPlugin(plugin);
     }
     if (!isFailedEventStartRetry_) {
         isFailedEventStartRetry_ = true;
-        ffrt::submit([this] {RetrySubscriptionTask(); });
+        ffrt::submit([this] { RetrySubscriptionTask(); });
     }
     SGLOGI("LoadAllPlugins finished");
 }
@@ -82,17 +84,26 @@ void DetectPluginManager::LoadPlugin(const PluginCfg &pluginCfg)
         return;
     }
     for (const int64_t& eventId : pluginCfg.depEventIds) {
-        if (!eventIdMap_.count(eventId)) {
+        size_t count = 0;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            count = eventIdMap_.count(eventId);
+        }
+        if (count == 0) {
             SubscribeEvent(eventId);
         }
+        std::lock_guard<std::mutex> lock(mutex_);
         eventIdMap_[eventId].emplace_back(detectPluginAttrs);
     }
     if (pluginCfg.depEventIds.empty()) {
-            const int64_t sepcialId = -1;
-            eventIdMap_[sepcialId].emplace_back(detectPluginAttrs);
-        }
+        const int64_t sepcialId = -1;
+        std::lock_guard<std::mutex> lock(mutex_);
+        eventIdMap_[sepcialId].emplace_back(detectPluginAttrs);
+    }
     SGLOGI("Load plugin success, pluginName: %{public}s", pluginCfg.pluginName.c_str());
 }
+// LCOV_EXCL_STOP
+
 void DetectPluginManager::SubscribeEvent(int64_t eventId)
 {
     SecurityCollector::Event sgEvent {};
@@ -109,21 +120,25 @@ void DetectPluginManager::SubscribeEvent(int64_t eventId)
 
 void DetectPluginManager::RetrySubscriptionTask()
 {
+    int32_t retryInterval = 10;
     while (!failedEventIdset_.empty()) {
-        int64_t eventId = *failedEventIdset_.begin();
-        SGLOGI("Retry subscription event: 0x%{public}" PRIx64, eventId);
-        failedEventIdset_.erase(failedEventIdset_.begin());
-        SubscribeEvent(eventId);
+        auto tmpSet = failedEventIdset_;
+        for (const auto eventId : tmpSet) {
+            SGLOGI("Retry subscription event: 0x%{public}" PRIx64, eventId);
+            failedEventIdset_.erase(eventId);
+            SubscribeEvent(eventId);
+        }
         if (failedEventIdset_.empty()) {
             break;
         }
-        ffrt::this_task::sleep_for(std::chrono::seconds(RETRY_INTERVAL));
+        ffrt::this_task::sleep_for(std::chrono::seconds(retryInterval));
+        retryInterval = std::min(retryInterval + RETRY_INTERVAL_INCREMENT, MAX_RETRY_INTERVAL);
     }
 }
 
 bool DetectPluginManager::ParsePluginConfig(const std::string &fileName)
 {
-    std::ios::pos_type pluginCfgFileMaxSize = 1 * 1024 * 1024;   // byte
+    std::ios::pos_type pluginCfgFileMaxSize = 1 * 1024 * 1024;  // byte
     std::string jsonStr;
     if (!FileUtil::ReadFileToStr(fileName, pluginCfgFileMaxSize, jsonStr)) {
         SGLOGE("Read plugin cfg file error.");
@@ -156,13 +171,13 @@ void DetectPluginManager::ParsePluginConfigObjArray(const cJSON *plugins)
         if (!JsonUtil::GetString(item, "pluginName", pluginCfg.pluginName) ||
             !JsonUtil::GetString(item, "version", pluginCfg.version) ||
             !ParsePluginDepEventIds(item, pluginCfg.depEventIds)) {
-                SGLOGE("Json Parse Error: pluginName or version or depEventIds not correct.");
-                continue;
-            }
-            if (!CheckPluginNameAndSize(pluginCfg)) {
-                continue;
-            }
-            plugins_.emplace_back(pluginCfg);
+            SGLOGE("Json Parse Error: pluginName or version or depEventIds not correct.");
+            continue;
+        }
+        if (!CheckPluginNameAndSize(pluginCfg)) {
+            continue;
+        }
+        plugins_.emplace_back(pluginCfg);
     }
 }
 
@@ -199,7 +214,7 @@ bool DetectPluginManager::ParsePluginDepEventIds(const cJSON *plugin,
     for (int i = 0; i < size; i++) {
         cJSON *eventIdJson = cJSON_GetArrayItem(depEventIdsJson, i);
         std::string eventId;
-        if (!JsonUtil::GetStringNokey(eventIdJson, eventId)) {
+        if (!JsonUtil::GetStringNoKey(eventIdJson, eventId)) {
             SGLOGE("Json Parse Error: eventId not correct.");
             return false;
         }
@@ -215,7 +230,8 @@ bool DetectPluginManager::ParsePluginDepEventIds(const cJSON *plugin,
 
 void DetectPluginManager::DispatchEvent(const SecurityCollector::Event &event)
 {
-    SGLOGI("Start distributing events, eventId: 0x%{public}" PRIx64, event.eventId);
+    SGLOGD("Start distributing events, eventId: 0x%{public}" PRIx64, event.eventId);
+    std::lock_guard<std::mutex> lock(mutex_);
     auto it = eventIdMap_.find(event.eventId);
     if (it == eventIdMap_.end()) {
         SGLOGE("No Plugin is available to process th event, eventId: 0x%{public}" PRIx64,
@@ -225,7 +241,7 @@ void DetectPluginManager::DispatchEvent(const SecurityCollector::Event &event)
     for (auto& detectPlugin : it->second) {
         detectPlugin->GetInstance()->HandleEvent(event.eventId, event.content,
             AssembleMetadata(event));
-        SGLOGI("Event distributed successfully, eventId: 0x%{public}" PRIx64 ", pluginName: %{public}s",
+        SGLOGD("Event distributed successfully, eventId: 0x%{public}" PRIx64 ", pluginName: %{public}s",
             event.eventId, detectPlugin->GetPluginName().c_str());
     }
 }

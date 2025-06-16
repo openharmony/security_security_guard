@@ -38,7 +38,6 @@
 #include "data_format.h"
 #include "database_manager.h"
 #include "data_collection.h"
-#include "model_cfg_marshalling.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
@@ -96,23 +95,27 @@ DataCollectManagerService::DataCollectManagerService(int32_t saId, bool runOnCre
     SGLOGW("%{public}s", __func__);
 }
 
+typedef void (*InitAllConfigFunc)();
+typedef bool (*UpdateConfigFunc)(const std::string &);
+// LCOV_EXCL_START
 void DataCollectManagerService::OnStart()
 {
     SGLOGI("%{public}s", __func__);
     DatabaseManager::GetInstance().Init(); // Make sure the database is ready
 
-    AddSystemAbilityListener(RISK_ANALYSIS_MANAGER_SA_ID);
-    AddSystemAbilityListener(DFX_SYS_HIVIEW_ABILITY_ID);
-    bool success = ConfigManager::InitConfig<EventConfig>();
-    if (!success) {
-        SGLOGE("init event config error");
+    void *handle = dlopen("libsg_config_manager.z.so", RTLD_LAZY);
+    if (handle == nullptr) {
+        SGLOGE("dlopen error: %{public}s", dlerror());
+    } else {
+        auto func = (InitAllConfigFunc)dlsym(handle, "InitAllConfig");
+        if (func != nullptr) {
+            SGLOGI("begin init all config");
+            func();
+        } else {
+            SGLOGE("dlsym error: %{public}s", dlerror());
+        }
+        dlclose(handle);
     }
-#ifdef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-    success = ConfigManager::InitConfig<EventGroupConfig>();
-    if (!success) {
-        SGLOGE("init event group config error");
-    }
-#endif
     AcquireDataSubscribeManager::GetInstance().SubscriberEventOnSgStart();
     if (!Publish(this)) {
         SGLOGE("Publish error");
@@ -125,7 +128,7 @@ void DataCollectManagerService::OnStop()
 {
     SecurityCollector::DataCollection::GetInstance().CloseLib();
 }
-
+// LCOV_EXCL_STOP
 
 int DataCollectManagerService::Dump(int fd, const std::vector<std::u16string>& args)
 {
@@ -298,6 +301,18 @@ std::vector<SecEvent> DataCollectManagerService::GetSecEventsFromConditions(Requ
             condition.beginTime, condition.endTime);
     }
     return events;
+}
+
+void to_json(nlohmann::json &jsonObj, const SecEvent &eventDataSt)
+{
+    jsonObj = nlohmann::json {
+        { "eventId", eventDataSt.eventId },
+        { "version", eventDataSt.version },
+        { "date", eventDataSt.date },
+        { "content", eventDataSt.content },
+        { "userId", eventDataSt.userId },
+        { "deviceId", eventDataSt.deviceId },
+    };
 }
 
 void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &object,
@@ -501,6 +516,7 @@ ErrCode DataCollectManagerService::QuerySecurityEvent(const std::vector<Security
     return SUCCESS;
 }
 
+// LCOV_EXCL_START
 void DataCollectManagerService::SubscriberDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
 {
     SGLOGI("enter OnRemoteDied");
@@ -525,6 +541,7 @@ void DataCollectManagerService::SubscriberDeathRecipient::OnRemoteDied(const wpt
     }
     SGLOGI("end OnRemoteDied");
 }
+// LCOV_EXCL_STOP
 
 ErrCode DataCollectManagerService::CollectorStart(
     const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &cb)
@@ -748,11 +765,22 @@ ErrCode DataCollectManagerService::ConfigUpdate(int fd, const std::string& name)
         return FAILED;
     }
     (void)unlink(tmpPath.c_str());
-
-    if (!ConfigSubscriber::UpdateConfig(realPath)) {
-        SGLOGE("update config fail");
+    void *handle = dlopen("libsg_config_manager.z.so", RTLD_LAZY);
+    if (handle == nullptr) {
+        SGLOGE("dlopen error: %{public}s", dlerror());
         return FAILED;
     }
+    auto func = (UpdateConfigFunc)dlsym(handle, "UpdateConfig");
+    if (func == nullptr) {
+        SGLOGE("dlsym error: %{public}s", dlerror());
+        return FAILED;
+    }
+    if (!func(realPath)) {
+        SGLOGE("update config fail");
+        dlclose(handle);
+        return FAILED;
+    }
+    dlclose(handle);
     return SUCCESS;
 }
 

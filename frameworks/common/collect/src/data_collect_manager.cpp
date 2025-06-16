@@ -31,6 +31,7 @@ namespace {
     constexpr uint32_t MAX_RESUB_COUNTS = 3;
     const std::string SECURITY_GROUP = "securityGroup";
 }
+
 namespace OHOS::Security::SecurityGuard {
 DataCollectManager& DataCollectManager::GetInstance()
 {
