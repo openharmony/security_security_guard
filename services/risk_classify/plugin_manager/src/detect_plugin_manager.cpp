@@ -117,7 +117,7 @@ void DetectPluginManager::RetrySubscriptionTask()
         if (failedEventIdset_.empty()) {
             break;
         }
-        std::this_thread::sleep_for(std::chrono::seconds(RETRY_INTERVAL));
+        ffrt::this_task::sleep_for(std::chrono::seconds(RETRY_INTERVAL));
     }
 }
 

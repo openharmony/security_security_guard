@@ -61,7 +61,7 @@ void SecurityCollectorManagerService::OnStart()
     SecurityCollectorSubscriberManager::GetInstance().SetUnsubscribeHandler(handler);
     auto task = []() {
         while (true) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
+            ffrt::this_task::sleep_for(std::chrono::seconds(SLEEP_INTERVAL));
             if (g_refCount.load() != 0) {
                 continue;
             }

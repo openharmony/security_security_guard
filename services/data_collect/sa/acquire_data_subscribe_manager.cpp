@@ -104,8 +104,6 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
     }
     if (ptr == nullptr) {
         ptr = std::make_shared<AcquireDataSubscribeManager::SubscriberInfo> ();
-        ptr->timer = std::make_shared<CleanupTimer>();
-        ptr->timer->Start(callback, MAX_DURATION_TEN_SECOND);
         ptr->clientId = clientId;
     }
     g_subscriberInfoMap[eventId][callback] = ptr;
@@ -113,7 +111,7 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
     if(sessionsMap_.find(clientId) == sessionsMap_.end()) {
         return SUCCESS;
     }
-    if (sessionsMap_.at(clientId)->eventFilters.find(eventId) != sessionsMap_.at(clientId)->eventFilters.end()) {
+    if (sessionsMap_.at(clientId)->eventFilters.find(eventId) == sessionsMap_.at(clientId)->eventFilters.end()) {
         return SUCCESS;
     }
     for (auto iter : sessionsMap_.at(clientId)->eventFilters.at(eventId)) {
@@ -333,32 +331,40 @@ void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<I
     }
 }
 
-void AcquireDataSubscribeManager::CleanupTimer::ClearEventCache(const sptr<IRemoteObject> &remote)
+void AcquireDataSubscribeManager::StartClearEventCache()
+{
+    auto task = [this]() {
+        while (true) {
+            this->ClearEventCache();
+            ffrt::this_task::sleep_for(std::chrono::milliseconds(MAX_DURATION_TEN_SECOND));
+        }
+    };
+    ffrt::submit(task);
+}
+
+void AcquireDataSubscribeManager::ClearEventCache()
 {
     std::lock_guard<std::mutex> lock(g_mutex);
     SGLOGD("timer running");
-    std::vector<SecurityCollector::Event> tmp {};
     for (const auto &iter : g_subscriberInfoMap) {
-        auto i = iter.second.find(remote);
-        if (i != iter.second.end() && i->second != nullptr) {
-            tmp = i->second->events;
-            i->second->events.clear();
-            i->second->eventsBuffSize = 0;
-            break;
+        for (auto &i : iter.second) {
+            if (i.second != nullptr) {
+                auto proxy = iface_cast<IAcquireDataCallback>(i.first);
+                if (proxy == nullptr) {
+                    SGLOGE("proxy is null");
+                    return;
+                }
+                auto tmp = i.second->events;
+                auto task = [proxy, tmp] () {
+                    proxy->OnNotify(tmp);
+                };
+                ffrt::submit(task);
+                i.second->events.clear();
+                i.second->eventsBuffSize = 0;
+            }
         }
     }
-    if (tmp.empty()) {
-        return;
-    }
-    auto proxy = iface_cast<IAcquireDataCallback>(remote);
-    if (proxy == nullptr) {
-        SGLOGE("proxy is null");
-        return;
-    }
-    auto task = [proxy, tmp] () {
-        proxy->OnNotify(tmp);
-    };
-    ffrt::submit(task);
+
 }
 
 void AcquireDataSubscribeManager::BatchUpload(sptr<IRemoteObject> obj,
