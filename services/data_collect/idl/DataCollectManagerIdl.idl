@@ -22,13 +22,17 @@ interface OHOS.Security.SecurityGuard.DataCollectManagerIdl {
     void RequestDataSubmit([in] long eventId, [in] String version, [in] String time, [in] String content);
     [oneway] void RequestDataSubmitAsync([in] long eventId, [in] String version, [in] String time, [in] String content);
     void RequestRiskData([in] String devId, [in] String eventList, [in] IRemoteObject cb);
-    void Subscribe([in] SecurityCollectorSubscribeInfo subscribeInfo, [in] IRemoteObject cb);
-    void Unsubscribe([in] SecurityCollectorSubscribeInfo subscribeInfo, [in] IRemoteObject cb);
+    void Subscribe([in] SecurityCollectorSubscribeInfo subscribeInfo, [in] IRemoteObject cb, [in] String clientId);
+    void Unsubscribe([in] SecurityCollectorSubscribeInfo subscribeInfo, [in] IRemoteObject cb, [in] String clientId);
     void QuerySecurityEvent([in] List<SecurityEventRuler> rulers, [in] IRemoteObject cb, [in] String eventGroup);
     void CollectorStart([in] SecurityCollectorSubscribeInfo subscribeInfo, [in] IRemoteObject cb);
     void CollectorStop([in] SecurityCollectorSubscribeInfo subscribeInfo, [in] IRemoteObject cb);
     void ConfigUpdate([in] FileDescriptor fd, [in] String name);
     void QuerySecurityEventConfig([inout] String resStr);
-    void AddFilter([in] SecurityEventFilter subscribeMute, [in] IRemoteObject cb, [in] String sdkFlag);
-    void RemoveFilter([in] SecurityEventFilter subscribeMute, [in] IRemoteObject cb, [in] String sdkFlag);
+    void AddFilter([in] SecurityEventFilter subscribeMute, [in] String clientId);
+    void RemoveFilter([in] SecurityEventFilter subscribeMute, [in] String clientId);
+    void CreatClient([in] String eventGroup, [in] String clientId, [in] IRemoteObject cb);
+    void DestoryClient([in] String eventGroup, [in] String clientId);
+    void Subscribe([in] long eventId, [in] String eventGroup, [in] String clientId);
+    void Unsubscribe([in] long eventId, [in] String eventGroup, [in] String clientId);
 }
