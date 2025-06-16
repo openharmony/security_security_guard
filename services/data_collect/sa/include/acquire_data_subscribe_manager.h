@@ -46,34 +46,8 @@ public:
     int CreatClient(const std::string &eventGroup, const std::string &clientId, const sptr<IRemoteObject> &cb);
     int DestoryClient(const std::string &eventGroup, const std::string &clientId);
     void SubscriberEventOnSgStart();
-    class CleanupTimer {
-    public:
-        CleanupTimer() = default;
-        ~CleanupTimer() { Shutdown(); }
-        void ClearEventCache(const sptr<IRemoteObject> &remote);
-        void Start(const sptr<IRemoteObject> &remote, int64_t duration)
-        {
-            timer_.Setup();
-            timerId_ = timer_.Register([this, remote] { this->ClearEventCache(remote); }, duration);
-        }
-        void Shutdown()
-        {
-            if (timerId_ != 0) {
-                timer_.Unregister(timerId_);
-            }
-            timer_.Shutdown();
-            timerId_ = 0;
-        }
-        uint32_t GetTimeId()
-        {
-            return timerId_;
-        }
-    private:
-        Utils::Timer timer_{"cleanup_subscriber"};
-        uint32_t timerId_{};
-    };
+    void StartClearEventCache();
     using SubscriberInfo = struct {
-        std::shared_ptr<CleanupTimer> timer;
         std::vector<SecurityCollector::Event> events;
         size_t eventsBuffSize;
         std::string clientId;
@@ -95,6 +69,7 @@ private:
         const EventCfg &config);
     int IsExceedLimited(const std::string &clientId, AccessToken::AccessTokenID callerToken);
     bool IsFindFlag(const std::set<std::string> &eventSubscribes, int64_t eventId, const std::string &clientId);
+    void ClearEventCache();
     class DbListener : public IDbListener {
     public:
         DbListener() = default;

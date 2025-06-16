@@ -118,6 +118,7 @@ void DataCollectManagerService::OnStart()
         SGLOGE("Publish error");
         return;
     }
+    AcquireDataSubscribeManager::GetInstance().StartClearEventCache();
 }
 
 void DataCollectManagerService::OnStop()
@@ -978,6 +979,11 @@ ErrCode DataCollectManagerService::DestoryClient(const std::string &eventGroup, 
     if (iter == clientCallBacks_.end()) {
         SGLOGE("clientId not exist");
         return BAD_PARAM;
+    }
+    ret = AcquireDataSubscribeManager::GetInstance().DestoryClient(eventGroup, clientId);
+    if (ret != SUCCESS) {
+        SGLOGI("AcquireDataSubscribeManager, DestoryClient ret=%{public}d", ret);
+        return ret;
     }
     if (deathRecipient_ != nullptr) {
         iter->second->RemoveDeathRecipient(deathRecipient_);

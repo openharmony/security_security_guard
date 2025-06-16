@@ -38,7 +38,7 @@ int32_t EventSubscribeClient::CreatClient(const std::string &eventGroup, EventCa
     }
     if (g_clients.find(client) != g_clients.end()) {
         SGLOGE("current client already creat");
-        return NOT_FOUND;
+        return BAD_PARAM;
     }
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
@@ -52,7 +52,7 @@ int32_t EventSubscribeClient::CreatClient(const std::string &eventGroup, EventCa
         return NULL_OBJECT;
     }
     auto serviceCallback = new (std::nothrow) AcquireDataManagerCallbackService();
-    if (serviceCallback != nullptr) {
+    if (serviceCallback == nullptr) {
         SGLOGE("serviceCallback is null");
         return NULL_OBJECT;
     }
