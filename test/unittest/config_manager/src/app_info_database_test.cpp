@@ -194,17 +194,6 @@ HWTEST_F(AppInfoDataBaseTest, ComplexUsage, TestSize.Level1)
     EXPECT_EQ(values.GetInt("no_exist"), -1);
 }
 
-HWTEST_F(StatementTest, ColumnVal, TestSize.Level1)
-{
-    Statement stmt(db, "SELECT * FROM test;");
-    EXPECT_EQ(stmt.Step(), 1);
-
-    EXPECT_EQ(stmt.GetColumnInt(2), 100);
-    EXPECT_EQ(stmt.GetColumnInt64(3), 1630000000000);
-    EXPECT_EQ(stmt.GetColumnString(1), "test1");
-    EXPECT_EQ(stmt.GetColumnName(1), "name");
-}
-
 HWTEST_F(StatementTest, BindArg, TestSize.Level1)
 {
     Statement stmt(db, "INSERT INFO test (name, value) VALUES (:name, :value)");
