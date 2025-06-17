@@ -57,10 +57,7 @@ int32_t EventSubscribeClient::CreatClient(const std::string &eventGroup, EventCa
         return NULL_OBJECT;
     }
     serviceCallback->RegistCallBack(callback);
-    std::string timeStr = std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
-    std::string ptrStr = std::to_string(reinterpret_cast<int64_t>(serviceCallback));
-    std::size_t hash = std::hash<std::string>{}(timeStr + ptrStr);
-    std::string clientId = std::to_string(hash);
+    std::string clientId = ConstructClientId(serviceCallback);
     int32_t ret = proxy->CreatClient(eventGroup, clientId, serviceCallback);
     if (ret != SUCCESS) {
         SGLOGI("NewClient result, ret=%{public}d", ret);
@@ -70,18 +67,37 @@ int32_t EventSubscribeClient::CreatClient(const std::string &eventGroup, EventCa
     client->callback_ = serviceCallback;
     client->eventGroup_ = eventGroup;
     client->clientId_ = clientId;
+    ret = SetDeathRecipient(client, object);
+    if (ret != SUCCESS) {
+        SGLOGE("SetDeathRecipient fail ret=%{public}d", ret);
+        return ret;
+    }
+    g_clients.insert(client);
+    SGLOGI("current client size %{public}zu", g_clients.size());
+    return SUCCESS;
+}
+
+std::string EventSubscribeClient::ConstructClientId(const AcquireDataManagerCallbackService *serviceCallback)
+{
+    std::string timeStr = std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+    std::string ptrStr = std::to_string(reinterpret_cast<int64_t>(serviceCallback));
+    std::size_t hash = std::hash<std::string>{}(timeStr + ptrStr);
+    return std::to_string(hash);
+}
+
+int32_t EventSubscribeClient::SetDeathRecipient(std::shared_ptr<EventSubscribeClient> client,
+    const sptr<IRemoteObject> &remote)
+{
     if (client->deathRecipient_ == nullptr) {
         client->deathRecipient_ = new (std::nothrow) DeathRecipient();
         if (client->deathRecipient_ == nullptr) {
             SGLOGE("deathRecipient_ is nullptr.");
             return NULL_OBJECT;
         }
-        if (!object->AddDeathRecipient(client->deathRecipient_)) {
+        if (!remote->AddDeathRecipient(client->deathRecipient_)) {
             SGLOGE("Failed to add death recipient");
         }
     }
-    g_clients.insert(client);
-    SGLOGI("current client size %{public}zu", g_clients.size());
     return SUCCESS;
 }
 
@@ -167,7 +183,7 @@ int32_t EventSubscribeClient::Unsubscribe(int64_t eventId)
 
 int32_t EventSubscribeClient::AddFilter(const std::shared_ptr<EventMuteFilter> &subscribeMute)
 {
-    SGLOGI("enter EventSubscribeClient UnSubscribe");
+    SGLOGI("enter EventSubscribeClient AddFilter");
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         SGLOGE("GetSystemAbilityManager error");
@@ -177,6 +193,10 @@ int32_t EventSubscribeClient::AddFilter(const std::shared_ptr<EventMuteFilter> &
     auto proxy = iface_cast<DataCollectManagerIdl>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+    if (subscribeMute == nullptr) {
+        SGLOGE("subscribeMute is null");
         return NULL_OBJECT;
     }
     SecurityEventFilter filter(*subscribeMute);
@@ -189,7 +209,7 @@ int32_t EventSubscribeClient::AddFilter(const std::shared_ptr<EventMuteFilter> &
 }
 int32_t EventSubscribeClient::RemoveFilter(const std::shared_ptr<EventMuteFilter> &subscribeMute)
 {
-    SGLOGI("enter EventSubscribeClient UnSubscribe");
+    SGLOGI("enter EventSubscribeClient RemoveFilter");
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         SGLOGE("GetSystemAbilityManager error");
@@ -199,6 +219,10 @@ int32_t EventSubscribeClient::RemoveFilter(const std::shared_ptr<EventMuteFilter
     auto proxy = iface_cast<DataCollectManagerIdl>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
+        return NULL_OBJECT;
+    }
+    if (subscribeMute == nullptr) {
+        SGLOGE("subscribeMute is null");
         return NULL_OBJECT;
     }
     SecurityEventFilter filter(*subscribeMute);

@@ -62,10 +62,17 @@ private:
     int UnSubscribeScAndDb(int64_t eventId);
     int SubscribeScInSg(int64_t eventId, const sptr<IRemoteObject> &callback);
     int SubscribeScInSc(int64_t eventId, const sptr<IRemoteObject> &callback);
+    std::shared_ptr<AcquireDataSubscribeManager::SubscriberInfo> ConstructSubInfo(const sptr<IRemoteObject> &callback,
+        const std::string &clientId);
     SecurityCollector::SecurityCollectorEventMuteFilter ConvertFilter(const SecurityGuard::EventMuteFilter &sgFilter,
         const std::string &clientId);
     int RemoveSubscribeMuteToSub(const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter,
         const EventCfg &config);
+    int AddSubscribeMuteToSub(const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter,
+        const EventCfg &config);
+    int RemoveMute(const EventMuteFilter &filter, const std::string &clientId);
+    int InsertMute(const EventMuteFilter &filter, const std::string &clientId);
+    int CheckInsertMute(const EventMuteFilter &filter, const std::string &clientId);
     size_t GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event);
     int IsExceedLimited(const std::string &clientId, AccessToken::AccessTokenID callerToken);
     bool IsFindFlag(const std::set<std::string> &eventSubscribes, int64_t eventId, const std::string &clientId);

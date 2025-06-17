@@ -184,6 +184,13 @@ void from_json(const json &jsonObj, EventCfg &eventCfg)
         return;
     }
     eventCfg.eventId = value;
+    value = 0;
+    eventId = {};
+    JsonCfg::Unmarshal(eventId, jsonObj, EVENT_CFG_OLD_EVENT_ID_KEY);
+    if (!SecurityGuardUtils::StrToI64Hex(eventId, value)) {
+        value = 0;
+    }
+    eventCfg.oldEventId = value;
     JsonCfg::Unmarshal(eventCfg.eventName, jsonObj, EVENT_CFG_EVENT_NAME_KEY);
     JsonCfg::Unmarshal(eventCfg.version, jsonObj, EVENT_CFG_VERSION_KEY);
     JsonCfg::Unmarshal(eventCfg.eventType, jsonObj, EVENT_CFG_EVENT_TYPE_KEY);
