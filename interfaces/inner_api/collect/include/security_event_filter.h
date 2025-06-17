@@ -23,7 +23,7 @@ namespace OHOS::Security::SecurityGuard {
 class SecurityEventFilter : public Parcelable {
 public:
     SecurityEventFilter() = default;
-    SecurityEventFilter(const EventMuteFilter &filter) :filter_(filter){}
+    SecurityEventFilter(const EventMuteFilter &filter) :filter_(filter) {}
     bool Marshalling(Parcel& parcel) const override;
     bool ReadFromParcel(Parcel &parcel);
     static SecurityEventFilter* Unmarshalling(Parcel& parcel);

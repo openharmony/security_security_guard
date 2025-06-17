@@ -609,30 +609,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Success, TestSize
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Fail01, TestSize.Level0)
-{
-    SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
-    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    sptr<MockRemoteObject> obj2(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(DatabaseManager::GetInstance(), SubscribeDb).WillOnce(Return(FAILED)).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
-    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj, "111");
-    EXPECT_NE(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj, "111");
-    EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj2,
-        "111");
-    EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj,
-        "111");
-    EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj2, "111");
-    EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj,
-        "111");
-    EXPECT_EQ(result, SUCCESS);
-}
-
 HWTEST_F(SecurityGuardDataCollectSaTest, Publish_WithSubscribers, TestSize.Level0)
 {
     SecurityCollector::Event event {
@@ -655,7 +631,14 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NullProxy, TestSize.Level0)
     sptr<MockRemoteObject> obj = nullptr;
     EXPECT_CALL(DatabaseManager::GetInstance(), SubscribeDb).WillRepeatedly(Return(SUCCESS));
     EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb).WillRepeatedly(Return(SUCCESS));
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
+        [] (int64_t eventId, EventCfg &config) {
+        config.dbTable = "risk_event";
+        config.eventType = 0;
+        config.prog = "security_guard";
+        config.eventId = eventId;
+        return true;
+    });
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetIsBatchUpload).WillOnce(Return(false)).WillOnce(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj, "111");
     EXPECT_EQ(result, SUCCESS);
@@ -684,7 +667,14 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NotNullProxy, TestSize.Level0)
             service.OnRemoteRequest(code, data, reply, option);
             return SUCCESS;
         });
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
+        [] (int64_t eventId, EventCfg &config) {
+        config.dbTable = "risk_event";
+        config.eventType = 0;
+        config.prog = "security_guard";
+        config.eventId = eventId;
+        return true;
+    });
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetIsBatchUpload).WillRepeatedly(Return(false));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, mockObject,
         "111");
@@ -1322,8 +1312,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg01, TestSize.Level0)
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), SubscribeCollectors).WillOnce(
         Return(true));
-    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), AddFilter).WillOnce(
-        Return(SUCCESS));
     int ret = AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(1, obj);
     EXPECT_EQ(ret, SUCCESS);
     AcquireDataSubscribeManager::GetInstance().eventToListenner_.clear();
@@ -1345,8 +1333,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc01, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), Subscribe).WillOnce(
-        Return(SecurityCollector::SUCCESS));
-    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), AddFilter).WillOnce(
         Return(SecurityCollector::SUCCESS));
     int ret = AcquireDataSubscribeManager::GetInstance().SubscribeScInSc(1, obj);
     EXPECT_EQ(ret, SUCCESS);
@@ -1390,8 +1376,29 @@ HWTEST_F(SecurityGuardDataCollectSaTest, AddFilter, TestSize.Level0)
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.AddFilter(subscribeMute, "111");
     EXPECT_EQ(result, BAD_PARAM);
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(Return(false));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(Return(false)).WillOnce(Return(false));
     subscribeMute.filter_.eventGroup = "securityGroup";
+    result = service.AddFilter(subscribeMute, "111");
+    EXPECT_EQ(result, BAD_PARAM);
+    subscribeMute.filter_.eventGroup = "auditGroup";
+    result = service.AddFilter(subscribeMute, "111");
+    EXPECT_EQ(result, BAD_PARAM);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, AddFilter001, TestSize.Level0)
+{
+    SecurityEventFilter subscribeMute {};
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    int32_t result = service.AddFilter(subscribeMute, "111");
+    EXPECT_EQ(result, BAD_PARAM);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(
+        [] (const std::string &groupName, SecurityGuard::EventGroupCfg &config) {
+            config.permissionList.insert("ohos.permission.QUERY_AUDIT_EVENT");
+            return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+        Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    subscribeMute.filter_.eventGroup = "auditGroup";
     result = service.AddFilter(subscribeMute, "111");
     EXPECT_EQ(result, BAD_PARAM);
 }
@@ -1402,8 +1409,29 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RemoveFilter, TestSize.Level0)
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.RemoveFilter(subscribeMute, "111");
     EXPECT_EQ(result, BAD_PARAM);
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(Return(false));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(Return(false)).WillOnce(Return(false));
     subscribeMute.filter_.eventGroup = "securityGroup";
+    result = service.RemoveFilter(subscribeMute, "111");
+    EXPECT_EQ(result, BAD_PARAM);
+    subscribeMute.filter_.eventGroup = "auditGroup";
+    result = service.RemoveFilter(subscribeMute, "111");
+    EXPECT_EQ(result, BAD_PARAM);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, RemoveFilter001, TestSize.Level0)
+{
+    SecurityEventFilter subscribeMute {};
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    int32_t result = service.AddFilter(subscribeMute, "111");
+    EXPECT_EQ(result, BAD_PARAM);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(
+        [] (const std::string &groupName, SecurityGuard::EventGroupCfg &config) {
+            config.permissionList.insert("ohos.permission.QUERY_AUDIT_EVENT");
+            return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+        Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    subscribeMute.filter_.eventGroup = "auditGroup";
     result = service.RemoveFilter(subscribeMute, "111");
     EXPECT_EQ(result, BAD_PARAM);
 }
@@ -1412,6 +1440,8 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeMute, TestSize.Level0)
 {
     EventMuteFilter subscribeMute {};
     subscribeMute.eventId = 111;
+    EventMuteFilter subscribeMute1 {};
+    subscribeMute1.eventId = 222;
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
         [] (int64_t eventId, EventCfg &config) {
         config.dbTable = "risk_event";
@@ -1420,58 +1450,404 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeMute, TestSize.Level0)
         return true;
     });
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), AddFilter).WillOnce(
-        Return(FAILED)).WillOnce(Return(SUCCESS));
-    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, "111");
-    EXPECT_EQ(result, FAILED);
-    result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, "111");
+    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, "222");
+    EXPECT_EQ(result, BAD_PARAM);
+    result = AcquireDataSubscribeManager::GetInstance().CreatClient("securityGroup", "222", obj);
+    EXPECT_EQ(result, SUCCESS);
+    result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, "222");
+    EXPECT_EQ(result, SUCCESS);
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, "222");
+    EXPECT_EQ(result, SUCCESS);
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute1, "222");
+    EXPECT_EQ(result, BAD_PARAM);
+    result =  AcquireDataSubscribeManager::GetInstance().DestoryClient("securityGroup", "222");
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeMute01, TestSize.Level0)
+HWTEST_F(SecurityGuardDataCollectSaTest, RemoveSubscribeMute001, TestSize.Level0)
 {
+    AcquireDataSubscribeManager::GetInstance().sessionsMap_.clear();
     EventMuteFilter subscribeMute {};
+    EventMuteFilter subscribeMute1 {};
     subscribeMute.eventId = 111;
+    int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, "222");
+    EXPECT_EQ(result, BAD_PARAM);
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
-        [] (int64_t eventId, EventCfg &config) {
-        config.dbTable = "risk_event";
+    [] (int64_t eventId, EventCfg &config) {
         config.eventType = 3;
         config.prog = "";
         return true;
     });
-    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), AddFilter).WillOnce(
-        Return(FAILED)).WillOnce(Return(SUCCESS));
-    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, "111");
-    EXPECT_EQ(result, FAILED);
-    result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, "111");
+    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), RemoveFilter(_)).WillOnce(Return(SUCCESS));
+    auto session = std::make_shared<SecurityGuard::AcquireDataSubscribeManager::ClientSession>();
+    session->clientId = "222";
+    session->eventFilters[111].emplace_back(subscribeMute1);
+    AcquireDataSubscribeManager::GetInstance().sessionsMap_["222"] = session;
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, "222");
+    EXPECT_EQ(result, BAD_PARAM);
+    session->eventFilters[111].emplace_back(subscribeMute);
+    session->subEvents.insert(111);
+    AcquireDataSubscribeManager::GetInstance().sessionsMap_["222"] = session;
+    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, "222");
     EXPECT_EQ(result, SUCCESS);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, RemoveSubscribeMute, TestSize.Level0)
+HWTEST_F(SecurityGuardDataCollectSaTest, NewSubscribe001, TestSize.Level0)
 {
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    int32_t result = service.Subscribe(111, "", "111");
+    EXPECT_EQ(result, BAD_PARAM);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(
+        [] (const std::string &groupName, SecurityGuard::EventGroupCfg &config) {
+            config.permissionList.insert("ohos.permission.QUERY_AUDIT_EVENT");
+            config.eventList.insert(111);
+            return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+    .WillOnce(Return(AccessToken::PermissionState::PERMISSION_DENIED)).WillOnce(Return(
+        AccessToken::PermissionState::PERMISSION_DENIED)).WillOnce(Return(
+        AccessToken::PermissionState::PERMISSION_GRANTED));
+    result = service.Subscribe(111, "securityGroup", "111");
+    EXPECT_EQ(result, NO_PERMISSION);
+    result = service.Subscribe(111, "auditGroup", "111");
+    EXPECT_EQ(result, NO_PERMISSION);
+    result = service.Subscribe(111, "auditGroup", "111");
+    EXPECT_EQ(result, NOT_FOUND);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, NewSubscribe002, TestSize.Level0)
+{
+    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(
+        [] (const std::string &groupName, SecurityGuard::EventGroupCfg &config) {
+            config.permissionList.insert("ohos.permission.QUERY_AUDIT_EVENT");
+            config.eventList.insert(111);
+            return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+    .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(DatabaseManager::GetInstance(), SubscribeDb).WillOnce(Return(FAILED));
+    service.clientCallBacks_["111"] = obj;
+    int32_t result = service.Subscribe(111, "auditGroup", "111");
+    EXPECT_EQ(result, FAILED);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, NewSubscribe003, TestSize.Level0)
+{
+    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(
+        [] (const std::string &groupName, SecurityGuard::EventGroupCfg &config) {
+            config.permissionList.insert("ohos.permission.QUERY_AUDIT_EVENT");
+            config.eventList.insert(111);
+            return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+    .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillOnce(
+        [] (int64_t eventId, EventCfg &config) {
+        config.eventType = 0;
+        return true;
+    });
+    EXPECT_CALL(DatabaseManager::GetInstance(), SubscribeDb).WillOnce(Return(SUCCESS));
+    service.clientCallBacks_["111"] = obj;
+    int32_t result = service.Subscribe(111, "auditGroup", "111");
+    EXPECT_EQ(result, SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, NewUnSubscribe001, TestSize.Level0)
+{
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    int32_t result = service.Unsubscribe(111, "", "111");
+    EXPECT_EQ(result, BAD_PARAM);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(
+        [] (const std::string &groupName, SecurityGuard::EventGroupCfg &config) {
+            config.permissionList.insert("ohos.permission.QUERY_AUDIT_EVENT");
+            config.eventList.insert(111);
+            return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+    .WillOnce(Return(AccessToken::PermissionState::PERMISSION_DENIED)).WillOnce(Return(
+        AccessToken::PermissionState::PERMISSION_DENIED)).WillOnce(Return(
+        AccessToken::PermissionState::PERMISSION_GRANTED));
+    result = service.Unsubscribe(111, "securityGroup", "111");
+    EXPECT_EQ(result, NO_PERMISSION);
+    result = service.Unsubscribe(111, "auditGroup", "111");
+    EXPECT_EQ(result, NO_PERMISSION);
+    result = service.Unsubscribe(111, "auditGroup", "111");
+    EXPECT_EQ(result, NOT_FOUND);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, NewUnSubscribe002, TestSize.Level0)
+{
+    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(
+        [] (const std::string &groupName, SecurityGuard::EventGroupCfg &config) {
+            config.permissionList.insert("ohos.permission.QUERY_AUDIT_EVENT");
+            config.eventList.insert(111);
+            return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+    .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb).WillOnce(Return(FAILED));
+    service.clientCallBacks_["111"] = obj;
+    int32_t result = service.Unsubscribe(111, "auditGroup", "111");
+    EXPECT_EQ(result, FAILED);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, NewUnSubscribe003, TestSize.Level0)
+{
+    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(
+        [] (const std::string &groupName, SecurityGuard::EventGroupCfg &config) {
+            config.permissionList.insert("ohos.permission.QUERY_AUDIT_EVENT");
+            config.eventList.insert(111);
+            return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+    .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillOnce(
+        [] (int64_t eventId, EventCfg &config) {
+        config.eventType = 0;
+        return true;
+    });
+    EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb).WillOnce(Return(SUCCESS));
+    service.clientCallBacks_["111"] = obj;
+    int32_t result = service.Unsubscribe(111, "auditGroup", "111");
+    EXPECT_EQ(result, SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, CreatClient001, TestSize.Level0)
+{
+    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    sptr<IPCObjectProxy::DeathRecipient> rec = nullptr;
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    int32_t result = service.CreatClient("", "111", obj);
+    EXPECT_EQ(result, BAD_PARAM);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(
+        [] (const std::string &groupName, SecurityGuard::EventGroupCfg &config) {
+            config.permissionList.insert("ohos.permission.QUERY_AUDIT_EVENT");
+            config.eventList.insert(111);
+            return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+    .WillOnce(Return(AccessToken::PermissionState::PERMISSION_DENIED)).WillOnce(Return(
+        AccessToken::PermissionState::PERMISSION_DENIED)).WillOnce(Return(
+        AccessToken::PermissionState::PERMISSION_GRANTED)).WillOnce(Return(
+        AccessToken::PermissionState::PERMISSION_GRANTED)).WillOnce(Return(
+        AccessToken::PermissionState::PERMISSION_GRANTED)).WillOnce(Return(
+        AccessToken::PermissionState::PERMISSION_GRANTED)).WillOnce(Return(
+        AccessToken::PermissionState::PERMISSION_GRANTED));
+    result = service.CreatClient("securityGroup", "111", obj);
+    EXPECT_EQ(result, NO_PERMISSION);
+    result = service.CreatClient("auditGroup", "111", obj);
+    EXPECT_EQ(result, NO_PERMISSION);
+    AcquireDataSubscribeManager::GetInstance().sessionsMap_.clear();
+    EXPECT_CALL(*obj, AddDeathRecipient(_))
+    .WillRepeatedly([&rec] (const sptr<IPCObjectProxy::DeathRecipient> &recipient) {
+        rec = recipient;
+        return true;
+    });
+    result = service.CreatClient("auditGroup", "111", nullptr);
+    EXPECT_EQ(result, NULL_OBJECT);
+    result = service.CreatClient("auditGroup", "111", obj);
+    EXPECT_EQ(result, SUCCESS);
+    result = service.CreatClient("auditGroup", "111", obj);
+    EXPECT_EQ(result, BAD_PARAM);
+    EXPECT_CALL(*obj, RemoveDeathRecipient).Times(1);
+    result = service.DestoryClient("auditGroup", "111");
+    EXPECT_EQ(result, SUCCESS);
+    result = service.DestoryClient("auditGroup", "111");
+    EXPECT_EQ(result, BAD_PARAM);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, CreatClient002, TestSize.Level0)
+{
+    AcquireDataSubscribeManager::GetInstance().sessionsMap_.clear();
+    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    int32_t result = AcquireDataSubscribeManager::GetInstance().CreatClient("auditGroup", "111", obj);
+    EXPECT_EQ(result, SUCCESS);
+    result = AcquireDataSubscribeManager::GetInstance().CreatClient("auditGroup", "111",obj);
+    EXPECT_EQ(result, BAD_PARAM);
+    result = AcquireDataSubscribeManager::GetInstance().CreatClient("auditGroup", "222", obj);
+    EXPECT_EQ(result, SUCCESS);
+    result = AcquireDataSubscribeManager::GetInstance().CreatClient("auditGroup", "333", obj);
+    EXPECT_EQ(result, CLIENT_EXCEED_PROCESS_LIMIT);
+    SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo {};
+    result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj, "333");
+    EXPECT_EQ(result, CLIENT_EXCEED_PROCESS_LIMIT);
+
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, DestoryClient001, TestSize.Level0)
+{
+    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    int32_t result = service.DestoryClient("", "111");
+    EXPECT_EQ(result, BAD_PARAM);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(
+        [] (const std::string &groupName, SecurityGuard::EventGroupCfg &config) {
+            config.permissionList.insert("ohos.permission.QUERY_AUDIT_EVENT");
+            config.eventList.insert(111);
+            return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+    .WillOnce(Return(AccessToken::PermissionState::PERMISSION_DENIED)).WillOnce(Return(
+        AccessToken::PermissionState::PERMISSION_DENIED)).WillOnce(Return(
+        AccessToken::PermissionState::PERMISSION_GRANTED)).WillOnce(Return(
+        AccessToken::PermissionState::PERMISSION_GRANTED));
+    result = service.DestoryClient("securityGroup", "111");
+    EXPECT_EQ(result, NO_PERMISSION);
+    result = service.DestoryClient("auditGroup", "111");
+    EXPECT_EQ(result, NO_PERMISSION);
+    AcquireDataSubscribeManager::GetInstance().sessionsMap_.clear();
+    result = service.DestoryClient("auditGroup", "111");
+    EXPECT_EQ(result, BAD_PARAM);
+    service.clientCallBacks_["111"] = obj;
+    result = service.DestoryClient("auditGroup", "111");
+    EXPECT_EQ(result, BAD_PARAM);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, DestoryClient002, TestSize.Level0)
+{
+    AcquireDataSubscribeManager::GetInstance().sessionsMap_.clear();
+    int32_t result = AcquireDataSubscribeManager::GetInstance().DestoryClient("auditGroup", "111");
+    EXPECT_EQ(result, BAD_PARAM);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillOnce(Return(false)).WillOnce(Return(false));
+    EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb).WillOnce(Return(SUCCESS));
     EventMuteFilter subscribeMute {};
     subscribeMute.eventId = 111;
+    auto session = std::make_shared<SecurityGuard::AcquireDataSubscribeManager::ClientSession>();
+    session->clientId = "111";
+    session->eventFilters[111].emplace_back(subscribeMute);
+    session->subEvents.insert(111);
+    AcquireDataSubscribeManager::GetInstance().sessionsMap_["111"] = session;
+    result = AcquireDataSubscribeManager::GetInstance().DestoryClient("auditGroup", "111");
+    EXPECT_EQ(result, SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, InsertMute001, TestSize.Level0)
+{
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillOnce([] (int64_t eventId, EventCfg &config) {
+        config.eventType = 0;
+        return true;
+    });
+    AcquireDataSubscribeManager::GetInstance().eventFilter_ == nullptr;
+    EventMuteFilter filter {};
+    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter,"111");
+    EXPECT_EQ(result, NULL_OBJECT);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, InsertMute002, TestSize.Level0)
+{
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
-        [] (int64_t eventId, EventCfg &config) {
-        config.dbTable = "risk_event";
+    [] (int64_t eventId, EventCfg &config) {
         config.eventType = 3;
         config.prog = "security_guard";
         return true;
     });
-    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
-    collectorFilter.eventId = 111;
-    SecurityCollector::Event event {
-        .eventId = 111
-    };
-    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), RemoveFilter).WillOnce(
-        Return(FAILED)).WillOnce(Return(SUCCESS));
-    int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, "111");
-    EXPECT_EQ(result, NOT_FOUND);
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, "111");
+    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), AddFilter).WillOnce(
+        Return(SUCCESS)).WillOnce(Return(FAILED));
+    EventMuteFilter filter {};
+    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter,"111");
+    EXPECT_EQ(result, SUCCESS);
+    result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter,"111");
     EXPECT_EQ(result, FAILED);
-    result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, "111");
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, InsertMute003, TestSize.Level0)
+{
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
+    [] (int64_t eventId, EventCfg &config) {
+        config.eventType = 3;
+        config.prog = "";
+        return true;
+    });
+    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), AddFilter(_)).WillOnce(
+        Return(SUCCESS)).WillOnce(Return(FAILED));
+    EventMuteFilter filter {};
+    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter,"111");
+    EXPECT_EQ(result, SUCCESS);
+    result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter,"111");
+    EXPECT_EQ(result, FAILED);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, RemoveMute001, TestSize.Level0)
+{
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillOnce([] (int64_t eventId, EventCfg &config) {
+        config.eventType = 0;
+        return true;
+    });
+    AcquireDataSubscribeManager::GetInstance().eventFilter_ == nullptr;
+    EventMuteFilter filter {};
+    int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter,"111");
+    EXPECT_EQ(result, NULL_OBJECT);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, RemoveMute002, TestSize.Level0)
+{
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
+    [] (int64_t eventId, EventCfg &config) {
+        config.eventType = 3;
+        config.prog = "security_guard";
+        return true;
+    });
+    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), RemoveFilter).WillOnce(
+        Return(SUCCESS)).WillOnce(Return(FAILED));
+    EventMuteFilter filter {};
+    int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter,"111");
+    EXPECT_EQ(result, SUCCESS);
+    result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter,"111");
+    EXPECT_EQ(result, FAILED);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, RemoveMute003, TestSize.Level0)
+{
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
+    [] (int64_t eventId, EventCfg &config) {
+        config.eventType = 3;
+        config.prog = "";
+        return true;
+    });
+    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), RemoveFilter(_)).WillOnce(
+        Return(SUCCESS)).WillOnce(Return(FAILED));
+    EventMuteFilter filter {};
+    int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter,"111");
+    EXPECT_EQ(result, SUCCESS);
+    result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter,"111");
+    EXPECT_EQ(result, FAILED);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, IsEventGroupHasPublicPermission001, TestSize.Level0)
+{
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(
+        [] (const std::string &groupName, EventGroupCfg &config) {
+        config.eventList.insert(11111);
+        config.permissionList.insert("testPermission");
+        return true;
+    });
+    int32_t result = service.IsEventGroupHasPermission("111", {222});
+    EXPECT_EQ(result, BAD_PARAM);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord001, TestSize.Level0)
+{
+    auto session = std::make_shared<SecurityGuard::AcquireDataSubscribeManager::ClientSession>();
+    session->clientId = "111";
+    session->subEvents.insert(111);
+    AcquireDataSubscribeManager::GetInstance().sessionsMap_["111"] = session;
+    auto session1 = std::make_shared<SecurityGuard::AcquireDataSubscribeManager::ClientSession>();
+    session1->clientId = "222";
+    session1->subEvents.insert(111);
+    AcquireDataSubscribeManager::GetInstance().sessionsMap_["222"] = session1;
+    SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo {};
+    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    subscribeInfo.event_.eventId = 111;
+    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj, "222");
     EXPECT_EQ(result, SUCCESS);
 }
 }

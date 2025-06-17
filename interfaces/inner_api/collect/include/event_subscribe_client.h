@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
- #ifndef SECURITY_GUARD_EVENT_SUBSCRIBE_CLIENT_H
- #define SECURITY_GUARD_EVENT_SUBSCRIBE_CLIENT_H
+#ifndef SECURITY_GUARD_EVENT_SUBSCRIBE_CLIENT_H
+#define SECURITY_GUARD_EVENT_SUBSCRIBE_CLIENT_H
 
 #include "acquire_data_manager_callback_service.h"
 #include "event_info.h"
@@ -31,6 +31,9 @@ public:
         std::shared_ptr<EventSubscribeClient> &client);
     static int32_t DestoryClient(const std::shared_ptr<EventSubscribeClient> &client);
 private:
+    static std::string ConstructClientId(const AcquireDataManagerCallbackService *serviceCallback);
+    static int32_t SetDeathRecipient(std::shared_ptr<EventSubscribeClient> client,
+        const sptr<IRemoteObject> &remote);
     class DeathRecipient : public IRemoteObject::DeathRecipient {
     public:
         DeathRecipient() = default;
@@ -43,4 +46,4 @@ private:
     std::string clientId_{};
 };
 }
- #endif
+#endif

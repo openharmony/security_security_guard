@@ -617,9 +617,9 @@ int32_t DataCollectManagerService::IsEventGroupHasPublicPermission(const std::st
     }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     if (std::any_of(config.permissionList.cbegin(), config.permissionList.cend(),
-    [callerToken](const std::string &per) {
-    int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, per);
-    return code == AccessToken::PermissionState::PERMISSION_GRANTED;
+        [callerToken](const std::string &per) {
+        int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, per);
+        return code == AccessToken::PermissionState::PERMISSION_GRANTED;
     })) {
         return SUCCESS;
     }
@@ -914,7 +914,7 @@ int32_t DataCollectManagerService::SetDeathCallBack(SgSubscribeEvent event, cons
 ErrCode DataCollectManagerService::Subscribe(int64_t eventId, const std::string &eventGroup,
     const std::string &clientId)
 {
-    SGLOGD("DataCollectManagerService, start new subscribe");
+    SGLOGI("DataCollectManagerService, start new subscribe");
     int32_t ret = FAILED;
     SgSubscribeEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
@@ -945,6 +945,12 @@ ErrCode DataCollectManagerService::Subscribe(int64_t eventId, const std::string 
     SecurityCollector::SecurityCollectorSubscribeInfo info(subEvent);
     ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(info,
         clientCallBacks_.at(clientId), clientId);
+    if (ret != SUCCESS) {
+        SGLOGE("InsertSubscribeRecord fail");
+        event.ret = ret;
+        BigData::ReportSgSubscribeEvent(event);
+        return ret;
+    }
     event.ret = ret;
     SGLOGI("DataCollectManagerService, InsertSubscribeRecord eventId=%{public}" PRId64, event.eventId);
     BigData::ReportSgSubscribeEvent(event);
@@ -954,7 +960,7 @@ ErrCode DataCollectManagerService::Subscribe(int64_t eventId, const std::string 
 ErrCode DataCollectManagerService::Unsubscribe(int64_t eventId, const std::string &eventGroup,
     const std::string &clientId)
 {
-    SGLOGD("DataCollectManagerService, start new subscribe");
+    SGLOGI("DataCollectManagerService, start new Unsubscribe");
     int32_t ret = FAILED;
     SgUnsubscribeEvent event;
     event.pid = IPCSkeleton::GetCallingPid();
@@ -981,6 +987,12 @@ ErrCode DataCollectManagerService::Unsubscribe(int64_t eventId, const std::strin
     }
     ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(eventId, clientCallBacks_.at(clientId),
         clientId);
+    if (ret != SUCCESS) {
+        SGLOGE("RemoveSubscribeRecord fail");
+        event.ret = ret;
+        BigData::ReportSgUnsubscribeEvent(event);
+        return ret;
+    }
     event.ret = ret;
     SGLOGI("DataCollectManagerService, RemoveSubscribeRecord ret=%{public}d", ret);
     BigData::ReportSgUnsubscribeEvent(event);
@@ -989,6 +1001,7 @@ ErrCode DataCollectManagerService::Unsubscribe(int64_t eventId, const std::strin
 
 ErrCode DataCollectManagerService::DestoryClient(const std::string &eventGroup, const std::string &clientId)
 {
+    SGLOGI("DataCollectManagerService, DestoryClient");
     if (eventGroup == "") {
         SGLOGE("event group empty");
         return BAD_PARAM;
@@ -1023,6 +1036,7 @@ ErrCode DataCollectManagerService::DestoryClient(const std::string &eventGroup, 
 ErrCode DataCollectManagerService::CreatClient(const std::string &eventGroup, const std::string &clientId,
     const sptr<IRemoteObject> &cb)
 {
+    SGLOGI("DataCollectManagerService, CreatClient");
     if (eventGroup == "") {
         SGLOGE("event group empty");
         return BAD_PARAM;
@@ -1046,13 +1060,13 @@ ErrCode DataCollectManagerService::CreatClient(const std::string &eventGroup, co
         return BAD_PARAM;
     }
     SgSubscribeEvent event {};
-    ret = SetDeathCallBack(event, cb);
-    if (ret != SUCCESS) {
-        return ret;
-    }
     ret = AcquireDataSubscribeManager::GetInstance().CreatClient(eventGroup, clientId, cb);
     if (ret != SUCCESS) {
         SGLOGI("AcquireDataSubscribeManager, CreatClient ret=%{public}d", ret);
+        return ret;
+    }
+    ret = SetDeathCallBack(event, cb);
+    if (ret != SUCCESS) {
         return ret;
     }
     clientCallBacks_[clientId] = cb;
