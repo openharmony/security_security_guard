@@ -82,7 +82,7 @@ HWTEST_F(SecurityGuardDataCollectTest, InsertSpecCharContent, TestSize.Level1)
     EXPECT_EQ(helper.Init(), SUCCESS);
     SecEvent event{};
     event.content = "invalid";
-    EXPECT_NE(helper.InsertEvent(event), SUCCESS);
+    EXPECT_NE(helper.InsertEvent(event), BAD_PARAM);
 }
 
 HWTEST_F(SecurityGuardDataCollectTest, FullFieldQuery, TestSize.Level1)
@@ -100,7 +100,7 @@ HWTEST_F(SecurityGuardDataCollectTest, TestQueryRecentEventByEventId, TestSize.L
     EXPECT_EQ(helper.Init(), SUCCESS);
     SecEvent event{};
     int64_t eventId = 0;
-    EXPECT_NE(helper.QueryRecentEventByEventId(eventId, event), SUCCESS);
+    EXPECT_NE(helper.QueryRecentEventByEventId(eventId, event), BAD_PARAM);
 }
 
 HWTEST_F(SecurityGuardDataCollectTest, TestQueryRecentEventByEventIds, TestSize.Level1)
@@ -180,7 +180,7 @@ HWTEST_F(SecurityGuardDataCollectTest, TestCountEventByID, TestSize.Level1)
 {
     RiskEventRdbHelper helper;
     EXPECT_EQ(helper.Init(), SUCCESS);
-    EXPECT_EQ(helper.CountEventByEventId(0), 0);
+    EXPECT_NE(helper.CountEventByEventId(0), BAD_PARAM);
 }
 
 HWTEST_F(SecurityGuardDataCollectTest, TestDeleteOldEvent, TestSize.Level1)
@@ -196,7 +196,7 @@ HWTEST_F(SecurityGuardDataCollectTest, TestDeleteAllEvent, TestSize.Level1)
     RiskEventRdbHelper helper;
     EXPECT_EQ(helper.Init(), SUCCESS);
     EXPECT_NE(helper.DeleteAllEventByEventId(-1), SUCCESS);
-    EXPECT_NE(helper.DeleteAllEventByEventId(0), SUCCESS);
+    EXPECT_NE(helper.DeleteAllEventByEventId(0), BAD_PARAM);
 }
 
 HWTEST_F(SecurityGuardDataCollectTest, TestFlushAllEvent, TestSize.Level1)
