@@ -805,6 +805,7 @@ int32_t DataCollectManagerService::QueryEventConfig(std::string &result)
         jObject["source"] = event.source;
         jObject["dbTable"] = event.dbTable;
         jObject["prog"] = event.prog;
+        jObject["isNotBatchUpload"] = event.isNotBatchUpload;
         resultObj.push_back(jObject);
     }
     result = resultObj.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);

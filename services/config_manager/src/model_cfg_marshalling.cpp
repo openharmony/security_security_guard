@@ -171,7 +171,8 @@ void to_json(json &jsonObj, const EventCfg &eventCfg)
         { EVENT_CFG_OWNER_KEY, eventCfg.owner },
         { EVENT_CFG_SOURCE_KEY, eventCfg.source },
         { EVENT_CFG_DB_TABLE_KEY, eventCfg.dbTable },
-        { EVENT_CFG_PROG_KEY, eventCfg.prog}
+        { EVENT_CFG_PROG_KEY, eventCfg.prog},
+        { EVENT_CFG_BATCH_UPLOAD_KEY, eventCfg.isNotBatchUpload }
     };
 }
 
@@ -204,6 +205,7 @@ void from_json(const json &jsonObj, EventCfg &eventCfg)
     JsonCfg::Unmarshal(eventCfg.source, jsonObj, EVENT_CFG_SOURCE_KEY);
     JsonCfg::Unmarshal(eventCfg.dbTable, jsonObj, EVENT_CFG_DB_TABLE_KEY);
     JsonCfg::Unmarshal(eventCfg.prog, jsonObj, EVENT_CFG_PROG_KEY);
+    JsonCfg::Unmarshal(eventCfg.isNotBatchUpload, jsonObj, EVENT_CFG_BATCH_UPLOAD_KEY);
 }
 
 void to_json(json &jsonObj, const DataMgrCfgSt &dataMgrCfg)
