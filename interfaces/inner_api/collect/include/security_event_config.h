@@ -118,7 +118,8 @@ public:
             WriteStringArrayToParcel(parcel, config_.owner) &&
             WriteUint32ToParcel(parcel, config_.source) &&
             WriteStringToParcel(parcel, config_.dbTable) &&
-            WriteStringToParcel(parcel, config_.prog);
+            WriteStringToParcel(parcel, config_.prog) &&
+            WriteUint32ToParcel(parcel, config_.isNotBatchUpload);
     }
 
     bool ReadFromParcel(Parcel &parcel)
@@ -136,7 +137,8 @@ public:
             ReadStringArrayFromParcel(parcel, config_.owner) &&
             ReadUint32FromParcel(parcel, config_.source) &&
             ReadStringFromParcel(parcel, config_.dbTable) &&
-            ReadStringFromParcel(parcel, config_.prog);
+            ReadStringFromParcel(parcel, config_.prog) &&
+            ReadUint32FromParcel(parcel, config_.isNotBatchUpload);
     }
 
     static SecurityEventConfig *Unmarshalling(Parcel &parcel)

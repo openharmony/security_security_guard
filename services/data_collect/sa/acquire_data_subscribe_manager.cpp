@@ -460,7 +460,7 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &e
             SGLOGW("IsFindFlag eventId=%{public}" PRId64, eventTmp.eventId);
             continue;
         }
-        if (!ConfigDataManager::GetInstance().GetIsBatchUpload(g_eventGroupMap[eventTmp.eventId])) {
+        if (config.isNotBatchUpload) {
             BatchUpload(it.first, {eventTmp});
             continue;
         }
