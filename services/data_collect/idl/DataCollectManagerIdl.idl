@@ -31,4 +31,5 @@ interface OHOS.Security.SecurityGuard.DataCollectManagerIdl {
     void QuerySecurityEventConfig([inout] String resStr);
     void AddFilter([in] SecurityEventFilter subscribeMute, [in] IRemoteObject cb, [in] String sdkFlag);
     void RemoveFilter([in] SecurityEventFilter subscribeMute, [in] IRemoteObject cb, [in] String sdkFlag);
+    void QueryProcInfo([in] SecurityEventRuler ruler, [inout] String resStr);
 }
