@@ -390,7 +390,7 @@ int32_t DataCollection::QuerySecurityEvent(const std::vector<SecurityEventRuler>
     LOGI("QuerySecurityEvent start");
     if (rulers.empty()) {
         LOGE("Invalid input parameter");
-        return false;
+        return FAILED;
     }
     for (const auto &ruler : rulers) {
         LOGI("QuerySecurityEvent eventId is 0x%{public}" PRIx64, ruler.GetEventId());
@@ -398,16 +398,16 @@ int32_t DataCollection::QuerySecurityEvent(const std::vector<SecurityEventRuler>
         ErrorCode ret = GetCollectorPath(ruler.GetEventId(), collectorPath);
         if (ret != SUCCESS) {
             LOGE("GetCollectorPath failed, eventId is 0x%{public}" PRIx64, ruler.GetEventId());
-            return false;
+            return FAILED;
         }
         ret = LoadCollector(collectorPath, ruler, events);
         if (ret != SUCCESS) {
             LOGE("Load collector failed, eventId is 0x%{public}" PRIx64, ruler.GetEventId());
-            return false;
+            return FAILED;
         }
     }
     LOGI("StartCollectors finish");
-    return true;
+    return SUCCESS;
 }
 
 int32_t DataCollection::AddFilter(const SecurityCollectorEventMuteFilter &filter, const std::string &sdkFlag)
