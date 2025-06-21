@@ -62,6 +62,7 @@ namespace {
     const std::string REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
     const std::string MANAGE_CONFIG_PERMISSION = "ohos.permission.MANAGE_SECURITY_GUARD_CONFIG";
     const std::string QUERY_SECURITY_EVENT_PERMISSION = "ohos.permission.QUERY_SECURITY_EVENT";
+    const std::string QUERY_AUDIT_EVENT_PERMISSION = "ohos.permission.QUERY_AUDIT_EVENT";
     constexpr int32_t CFG_FILE_MAX_SIZE = 1 * 1024 * 1024;
     constexpr int32_t CFG_FILE_BUFF_SIZE = 1 * 1024 * 1024 + 1;
     const std::unordered_map<std::string, std::vector<std::string>> g_apiPermissionsMap {
@@ -75,6 +76,7 @@ namespace {
         {"QuerySecurityEventConfig", {MANAGE_CONFIG_PERMISSION}},
         {"AddFilter", {QUERY_SECURITY_EVENT_PERMISSION}},
         {"RemoveFilter", {QUERY_SECURITY_EVENT_PERMISSION}},
+        {"QueryProcInfo", {QUERY_AUDIT_EVENT_PERMISSION}},
     };
     std::unordered_set<std::string> g_configCacheFilesSet;
     constexpr uint32_t FINISH = 0;
@@ -792,6 +794,40 @@ ErrCode DataCollectManagerService::QuerySecurityEventConfig(std::string &result)
         return ret;
     }
     return QueryEventConfig(result);
+}
+
+ErrCode DataCollectManagerService::QueryProcInfo(const SecurityCollector::SecurityEventRuler &ruler,
+    std::string &result)
+{
+    SGLOGI("enter QueryProcInfo");
+    int32_t ret = IsApiHasPermission("QueryProcInfo");
+    if (ret != SUCCESS) {
+        return ret;
+    }
+    EventCfg config;
+    bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(ruler.GetEventId(), config);
+    if (!isSuccess) {
+        SGLOGE("GetEventConfig error, eventId is 0x%{public}" PRIx64, ruler.GetEventId());
+        return FAILED;
+    }
+    std::vector<SecurityCollector::SecurityEvent> replyEvents;
+    std::vector<int64_t> eventIds{ruler.GetEventId()};
+    SGLOGD("eventType is %{public}u", config.eventType);
+    int32_t code = SUCCESS;
+    if (config.eventType == 1) { // query in collector
+        code = SecurityCollector::CollectorManager::GetInstance().QuerySecurityEvent(
+            {ruler}, replyEvents);
+    } else if (config.prog == "security_guard") {
+        code = SecurityCollector::DataCollection::GetInstance().QuerySecurityEvent({ruler}, replyEvents);
+    } else {
+        return FAILED;
+    }
+
+    if (!replyEvents.empty()) {
+        result = replyEvents[0].GetContent();
+    }
+
+    return SUCCESS;
 }
 
 ErrCode DataCollectManagerService::AddFilter(const SecurityEventFilter &subscribeMute,

@@ -178,7 +178,7 @@ int32_t SecurityCollectorManagerService::CollectorStart(const SecurityCollectorS
         LOGE("get collector type error event id: %{public}" PRId64, event.eventId);
         return BAD_PARAM;
     }
-    
+
     if (collectorType != COLLECTOR_CAN_START) {
         LOGE("collector type not support be start, event id: %{public}" PRId64, event.eventId);
         return BAD_PARAM;
@@ -352,8 +352,8 @@ int32_t SecurityCollectorManagerService::QuerySecurityEvent(const std::vector<Se
         g_refCount.fetch_sub(1);
         return NO_PERMISSION;
     }
-    bool isSuccess = DataCollection::GetInstance().QuerySecurityEvent(rulers, events);
-    if (!isSuccess) {
+
+    if (DataCollection::GetInstance().QuerySecurityEvent(rulers, events) != SUCCESS) {
         LOGI("QuerySecurityEvent error");
         g_refCount.fetch_sub(1);
         return READ_ERR;
