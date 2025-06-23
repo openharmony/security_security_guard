@@ -54,10 +54,8 @@ public:
         const sptr<IRemoteObject> &callback) override;
     int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
         std::vector<SecurityEvent> &events) override;
-    int32_t AddFilter(const SecurityCollectorEventFilter &subscribeMute,
-        const std::string &callbackFlag) override;
-    int32_t RemoveFilter(const SecurityCollectorEventFilter &subscribeMute,
-        const std::string &callbackFlag) override;
+    int32_t AddFilter(const SecurityCollectorEventFilter &subscribeMute) override;
+    int32_t RemoveFilter(const SecurityCollectorEventFilter &subscribeMute) override;
     static void ReportScSubscribeEvent(const ScSubscribeEvent &event);
     static void ReportScUnsubscribeEvent(const ScUnsubscribeEvent &event);
 private:

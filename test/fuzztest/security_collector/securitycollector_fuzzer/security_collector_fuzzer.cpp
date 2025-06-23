@@ -149,8 +149,8 @@ void SecurityCollectorManagerServiceNewFuzzTest(const uint8_t* data, size_t size
     fil.isSetMute = fdp.ConsumeBool();
     fil.type = fdp.ConsumeIntegral<int64_t>();
     SecurityCollectorEventFilter filter(fil);
-    service.AddFilter(filter, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    service.RemoveFilter(filter, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    service.AddFilter(filter);
+    service.RemoveFilter(filter);
 }
 
 void SecurityCollectorRunManagerFuzzTest(const uint8_t* data, size_t size)
@@ -230,8 +230,8 @@ void SecurityCollectorICollectorFuzzTest(const uint8_t* data, size_t size)
     ruler.endTime_ = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     ruler.param_ = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     collector.IsStartWithSub();
-    collector.AddFilter(collectorFilter, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    collector.RemoveFilter(collectorFilter, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    collector.AddFilter(collectorFilter);
+    collector.RemoveFilter(collectorFilter);
     collector.Query(ruler, eventIds);
     collector.Unsubscribe(fdp.ConsumeIntegral<int64_t>());
 }

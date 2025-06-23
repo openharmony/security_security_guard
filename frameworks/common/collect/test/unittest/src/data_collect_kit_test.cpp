@@ -22,6 +22,7 @@
 #include "accesstoken_kit.h"
 #include "sg_obtaindata_client.h"
 #define private public
+#include "event_subscribe_client.h"
 #include "data_collect_manager.h"
 #include "security_guard_define.h"
 #include "sg_collect_client.h"
@@ -429,12 +430,13 @@ HWTEST_F(DataCollectKitTest, Mute001, TestSize.Level1)
 {
     auto muteinfo = std::make_shared<SecurityGuard::EventMuteFilter> ();
     muteinfo->eventGroup = "securityGroup";
-    int ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(muteinfo);
-    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    SecurityGuard::EventSubscribeClient client {};
+    int ret = client.AddFilter(muteinfo);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
     muteinfo->eventGroup = "";
-    ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(muteinfo);
+    ret = client.AddFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
-    ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(nullptr);
+    ret = client.AddFilter(nullptr);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
 }
 
@@ -442,12 +444,13 @@ HWTEST_F(DataCollectKitTest, UnMute001, TestSize.Level1)
 {
     auto muteinfo = std::make_shared<SecurityGuard::EventMuteFilter> ();
     muteinfo->eventGroup = "securityGroup";
-    int ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(muteinfo);
-    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+    SecurityGuard::EventSubscribeClient client {};
+    int ret = client.RemoveFilter(muteinfo);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
     muteinfo->eventGroup = "";
-    ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(muteinfo);
+    ret = client.RemoveFilter(muteinfo);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
-    ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(nullptr);
+    ret = client.RemoveFilter(nullptr);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
 }
 
@@ -526,7 +529,6 @@ HWTEST_F(DataCollectKitTest, Mute005, testing::ext::TestSize.Level1)
     parcel.WriteInt64(int64);
     parcel.WriteBool(true);
     parcel.WriteString(string);
-    parcel.WriteString(string);
     parcel.WriteUint32(uint32);
     bool ret = filter.ReadFromParcel(parcel);
     EXPECT_TRUE(ret);
@@ -535,7 +537,6 @@ HWTEST_F(DataCollectKitTest, Mute005, testing::ext::TestSize.Level1)
     parcel.WriteInt64(int64);
     parcel.WriteBool(true);
     parcel.WriteString(string);
-    parcel.WriteString(string);
     parcel.WriteUint32(1);
     ret = filter.ReadFromParcel(parcel);
     EXPECT_FALSE(ret);
@@ -543,7 +544,6 @@ HWTEST_F(DataCollectKitTest, Mute005, testing::ext::TestSize.Level1)
     parcel.WriteInt64(int64);
     parcel.WriteInt64(int64);
     parcel.WriteBool(true);
-    parcel.WriteString(string);
     parcel.WriteString(string);
     parcel.WriteUint32(1);
     parcel.WriteString(string);
@@ -571,21 +571,6 @@ HWTEST_F(DataCollectKitTest, Mute004, testing::ext::TestSize.Level1)
     EXPECT_EQ(filter.GetMuteFilter().eventId, 0);
 }
 
-HWTEST_F(DataCollectKitTest, CallBackIsNull, TestSize.Level1)
-{
-    SecurityGuard::DataCollectManager::GetInstance().callback_ = nullptr;
-    auto muteinfo = std::make_shared<SecurityGuard::EventMuteFilter> ();
-    muteinfo->eventGroup = "securityGroup";
-    int ret = SecurityGuard::DataCollectManager::GetInstance().RemoveFilter(muteinfo);
-    EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
-    ret = SecurityGuard::DataCollectManager::GetInstance().AddFilter(muteinfo);
-    EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
-    ret = SecurityGuard::DataCollectManager::GetInstance().Unsubscribe(g_sub);
-    EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
-    ret = SecurityGuard::DataCollectManager::GetInstance().Subscribe(g_sub);
-    EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
-}
-
 HWTEST_F(DataCollectKitTest, ReportSecurityEvent01, TestSize.Level1)
 {
     int ret = SecurityGuard::DataCollectManager::GetInstance().ReportSecurityEvent(nullptr, true);
@@ -597,5 +582,49 @@ HWTEST_F(DataCollectKitTest, QuerySecurityEventConfig01, TestSize.Level1)
     std::string result;
     int ret = SecurityGuard::DataCollectManager::GetInstance().QuerySecurityEventConfig(result);
     EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+}
+
+HWTEST_F(DataCollectKitTest, ClientCreatClient01, TestSize.Level1)
+{
+    auto func = [](const OHOS::Security::SecurityCollector::Event &event) {};
+    std::shared_ptr<SecurityGuard::EventSubscribeClient> client {};
+    int32_t ret = OHOS::Security::SecurityGuard::EventSubscribeClient::CreatClient("securityGroup", func, client);
+    EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
+    ret = OHOS::Security::SecurityGuard::EventSubscribeClient::CreatClient("securityGroup", nullptr, client);
+    EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
+    ret = OHOS::Security::SecurityGuard::EventSubscribeClient::CreatClient("", func, client);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+}
+
+HWTEST_F(DataCollectKitTest, ClientDestoryClient01, TestSize.Level1)
+{
+    std::shared_ptr<SecurityGuard::EventSubscribeClient> client {};
+    int32_t ret = SecurityGuard::EventSubscribeClient::DestoryClient(client);
+    EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
+    client = std::make_shared<SecurityGuard::EventSubscribeClient>();
+    ret = SecurityGuard::EventSubscribeClient::DestoryClient(client);
+    EXPECT_EQ(ret, SecurityGuard::NOT_FOUND);
+}
+
+HWTEST_F(DataCollectKitTest, ClientSubscribe01, TestSize.Level1)
+{
+    auto client = std::make_shared<SecurityGuard::EventSubscribeClient>();
+    int32_t ret = client->Subscribe(11);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+}
+
+HWTEST_F(DataCollectKitTest, ClientUnSubscribe01, TestSize.Level1)
+{
+    auto client = std::make_shared<SecurityGuard::EventSubscribeClient>();
+    int32_t ret = client->Unsubscribe(11);
+    EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
+}
+
+HWTEST_F(DataCollectKitTest, ClientSetDeathRecipient01, TestSize.Level1)
+{
+    auto client = std::make_shared<SecurityGuard::EventSubscribeClient>();
+    auto serviceCallback = new (std::nothrow) SecurityGuard::AcquireDataManagerCallbackService();
+    int32_t ret = SecurityGuard::EventSubscribeClient::SetDeathRecipient(client, serviceCallback);
+    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
 }
 }
