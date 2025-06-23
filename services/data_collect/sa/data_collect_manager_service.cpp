@@ -747,6 +747,7 @@ ErrCode DataCollectManagerService::ConfigUpdate(int fd, const std::string& name)
     auto func = (UpdateConfigFunc)dlsym(handle, "UpdateConfig");
     if (func == nullptr) {
         SGLOGE("dlsym error: %{public}s", dlerror());
+        dlclose(handle);
         return FAILED;
     }
     if (!func(realPath)) {
