@@ -22,6 +22,7 @@
 #define private public
 #define protected public
 #include "data_collect_manager.h"
+#include "event_subscribe_client.h"
 #include "acquire_data_manager_callback_service.h"
 #include "acquire_data_manager_callback_stub.h"
 #include "data_collect_manager_callback_service.h"
@@ -138,14 +139,15 @@ void DataCollectManagerFuzzTest(const uint8_t* data, size_t size)
         return;
     }
     FuzzedDataProvider fdp(data, size);
+    EventSubscribeClient client {};
     auto mute = std::make_shared<Security::SecurityGuard::EventMuteFilter>();
     mute->eventId = fdp.ConsumeIntegral<int64_t>();
     mute->type = fdp.ConsumeIntegral<int64_t>();
     mute->isInclude = fdp.ConsumeIntegral<bool>();
     mute->eventGroup = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     mute->mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    DataCollectManager::GetInstance().AddFilter(mute);
-    DataCollectManager::GetInstance().RemoveFilter(mute);
+    client.AddFilter(mute);
+    client.RemoveFilter(mute);
     auto func = [] (std::string &devId, std::string &riskData, uint32_t status,
         const std::string &errMsg)-> int32_t {
         return 0;
@@ -267,8 +269,8 @@ void CollectorManagerFuzzTest(const uint8_t* data, size_t size)
     filter.isSetMute = static_cast<bool>(fdp.ConsumeBool());
     filter.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     SecurityCollectorEventFilter subscribeMute(filter);
-    CollectorManager::GetInstance().AddFilter(subscribeMute, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    CollectorManager::GetInstance().RemoveFilter(subscribeMute, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    CollectorManager::GetInstance().AddFilter(subscribeMute);
+    CollectorManager::GetInstance().RemoveFilter(subscribeMute);
 }
 
 void DataCollectManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)

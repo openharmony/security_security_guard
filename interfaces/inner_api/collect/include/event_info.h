@@ -28,7 +28,6 @@ using EventMuteFilter = struct {
     int64_t type;
     std::set<std::string> mutes;
     std::string eventGroup;
-    std::string instanceFlag;
 };
 class EventInfo {
 public:
@@ -44,6 +43,10 @@ private:
     std::string content_{};
 };
 
+using ClientSubScribeEventInfo = struct {
+    int64_t eventId;
+    std::string eventGroup;
+};
 using RequestRiskDataCallback = std::function<int32_t(std::string &, std::string &, uint32_t, const std::string &)>;
 } // namespace OHOS::Security::SecurityGuard
 

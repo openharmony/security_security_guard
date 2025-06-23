@@ -239,7 +239,7 @@ HWTEST_F(CollectorInterfaceTest, AddFilter, testing::ext::TestSize.Level1)
     collectorFilter.mutes = {{"111"}};
     collectorFilter.type = 1;
     collectorFilter.isSetMute = false;
-    int32_t ret = SecurityCollector::CollectorManager::GetInstance().AddFilter(collectorFilter, "1111");
+    int32_t ret = SecurityCollector::CollectorManager::GetInstance().AddFilter(collectorFilter);
     EXPECT_EQ(ret, SecurityCollector::NO_PERMISSION);
 }
 
@@ -250,7 +250,7 @@ HWTEST_F(CollectorInterfaceTest, RemoveFilter, testing::ext::TestSize.Level1)
     collectorFilter.mutes = {{"111"}};
     collectorFilter.type = 1;
     collectorFilter.isSetMute = false;
-    int32_t ret = SecurityCollector::CollectorManager::GetInstance().RemoveFilter(collectorFilter, "1111");
+    int32_t ret = SecurityCollector::CollectorManager::GetInstance().RemoveFilter(collectorFilter);
     EXPECT_EQ(ret, SecurityCollector::NO_PERMISSION);
 }
 }

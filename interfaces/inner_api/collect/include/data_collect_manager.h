@@ -37,8 +37,6 @@ public:
     int32_t SecurityGuardConfigUpdate(int32_t fd, const std::string &name);
     int32_t Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber);
     int32_t Unsubscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber);
-    int32_t AddFilter(const std::shared_ptr<EventMuteFilter> &subscribeMute);
-    int32_t RemoveFilter(const std::shared_ptr<EventMuteFilter> &subscribeMute);
     int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
         std::shared_ptr<SecurityEventQueryCallback> callback);
     int32_t QuerySecurityEvent(std::vector<SecurityCollector::SecurityEventRuler> rulers,
@@ -58,7 +56,6 @@ private:
     std::string sdkFlag_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
     std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> subscribers_{};
-    std::set<std::shared_ptr<EventMuteFilter>> subscribeMutes_{};
     uint32_t count_ = 0;
 };
 }  // namespace OHOS::Security::SecurityGuard
