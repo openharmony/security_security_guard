@@ -45,6 +45,7 @@ public:
     int32_t StartCollector(const SecurityCollector::Event &event, int64_t duration);
     int32_t StopCollector(const SecurityCollector::Event &event);
     int32_t RequestSecurityEventInfo(std::string &devId, std::string &eventList, RequestRiskDataCallback callback);
+    int32_t QueryProcInfo(const SecurityCollector::SecurityEventRuler &ruler, std::string &result);
 private:
     DataCollectManager();
     ~DataCollectManager() = default;

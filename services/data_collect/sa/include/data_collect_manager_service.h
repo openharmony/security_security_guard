@@ -64,7 +64,7 @@ public:
     ErrCode DestoryClient(const std::string &eventGroup, const std::string &clientId) override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
-
+    ErrCode QueryProcInfo(const SecurityCollector::SecurityEventRuler &ruler, std::string &result) override;
 private:
     class SubscriberDeathRecipient : public IRemoteObject::DeathRecipient {
     public:

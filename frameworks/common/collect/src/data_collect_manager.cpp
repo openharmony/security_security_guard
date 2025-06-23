@@ -98,6 +98,27 @@ int32_t DataCollectManager::QuerySecurityEvent(std::vector<SecurityCollector::Se
     return 0;
 }
 
+int32_t DataCollectManager::QueryProcInfo(const SecurityCollector::SecurityEventRuler &ruler, std::string &result)
+{
+    SGLOGI("Start DataCollectManager QueryProcInfo");
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return FAILED;
+    }
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    if (object == nullptr) {
+        SGLOGE("object is nullptr");
+        return FAILED;
+    }
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return FAILED;
+    }
+    return proxy->QueryProcInfo(ruler, result);
+}
+
 int32_t DataCollectManager::QuerySecurityEventConfig(std::string &result)
 {
     SGLOGI("Start DataCollectManager QuerySecurityEventConfig");
