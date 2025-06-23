@@ -253,14 +253,14 @@ HWTEST_F(DataCollectionTest, SecurityGuardSubscribeCollector06, testing::ext::Te
     MockQuerySecurityEventClass myOb;
     std::vector<SecurityEvent> events;
     std::vector<SecurityEventRuler> rulers;
-    EXPECT_FALSE(myOb.QuerySecurityEvent(rulers, events));
+    EXPECT_EQ(myOb.QuerySecurityEvent(rulers, events), FAILED);
 
     SecurityEventRuler rule(11111);
     std::string path("/system/lib64/chipset-pub-sdk/libeventhandler.z.so");
     rulers.emplace_back(rule);
     EXPECT_CALL(myOb, GetCollectorPath).WillOnce(Return(SUCCESS));
     EXPECT_CALL(myOb, LoadCollector).WillOnce(Return(SUCCESS));
-    EXPECT_TRUE(myOb.QuerySecurityEvent(rulers, events));
+    EXPECT_EQ(myOb.QuerySecurityEvent(rulers, events), SUCCESS);
 }
 
 HWTEST_F(DataCollectionTest, SecurityGuardSubscribeCollector07, testing::ext::TestSize.Level0)
@@ -268,14 +268,14 @@ HWTEST_F(DataCollectionTest, SecurityGuardSubscribeCollector07, testing::ext::Te
     MockQuerySecurityEventClass myOb;
     std::vector<SecurityEvent> events;
     std::vector<SecurityEventRuler> rulers;
-    EXPECT_FALSE(myOb.QuerySecurityEvent(rulers, events));
+    EXPECT_EQ(myOb.QuerySecurityEvent(rulers, events), FAILED);
 
     SecurityEventRuler rule(11111);
     std::string path("/system/lib64/chipset-pub-sdk/libeventhandler.z.so");
     rulers.emplace_back(rule);
     EXPECT_CALL(myOb, GetCollectorPath).WillOnce(Return(FAILED));
 
-    EXPECT_FALSE(myOb.QuerySecurityEvent(rulers, events));
+    EXPECT_EQ(myOb.QuerySecurityEvent(rulers, events), FAILED);
 }
 
 HWTEST_F(DataCollectionTest, SecurityGuardSubscribeCollector08, testing::ext::TestSize.Level0)
@@ -283,7 +283,7 @@ HWTEST_F(DataCollectionTest, SecurityGuardSubscribeCollector08, testing::ext::Te
     MockQuerySecurityEventClass myOb;
     std::vector<SecurityEvent> events;
     std::vector<SecurityEventRuler> rulers;
-    EXPECT_FALSE(myOb.QuerySecurityEvent(rulers, events));
+    EXPECT_EQ(myOb.QuerySecurityEvent(rulers, events), FAILED);
 
     SecurityEventRuler rule(11111);
     std::string path("/system/lib64/chipset-pub-sdk/libeventhandler.z.so");
@@ -291,7 +291,7 @@ HWTEST_F(DataCollectionTest, SecurityGuardSubscribeCollector08, testing::ext::Te
 
     EXPECT_CALL(myOb, GetCollectorPath).WillOnce(Return(SUCCESS));
     EXPECT_CALL(myOb, LoadCollector).WillOnce(Return(FAILED));
-    EXPECT_FALSE(myOb.QuerySecurityEvent(rulers, events));
+    EXPECT_EQ(myOb.QuerySecurityEvent(rulers, events), FAILED);
 }
 
 HWTEST_F(DataCollectionTest, LoadCollectorWithApi01, testing::ext::TestSize.Level0)

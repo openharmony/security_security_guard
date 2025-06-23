@@ -412,7 +412,8 @@ HWTEST_F(SecurityCollectorTest, QuerySecurityEvent02, TestSize.Level1)
     std::vector<SecurityEvent> events{};
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(DataCollection::GetInstance(), QuerySecurityEvent).WillOnce(Return(false));
+    EXPECT_CALL(DataCollection::GetInstance(), QuerySecurityEvent).WillOnce(
+        Return(OHOS::Security::SecurityGuard::FAILED));
     EXPECT_EQ(g_service.QuerySecurityEvent(rulers, events), SecurityCollector::ErrorCode::READ_ERR);
 }
 
@@ -422,7 +423,8 @@ HWTEST_F(SecurityCollectorTest, QuerySecurityEvent03, TestSize.Level1)
     std::vector<SecurityEvent> events{};
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(DataCollection::GetInstance(), QuerySecurityEvent).WillOnce(Return(true));
+    EXPECT_CALL(DataCollection::GetInstance(), QuerySecurityEvent).WillOnce(Return(
+        OHOS::Security::SecurityGuard::SUCCESS));
     EXPECT_EQ(g_service.QuerySecurityEvent(rulers, events), SecurityCollector::ErrorCode::SUCCESS);
 }
 

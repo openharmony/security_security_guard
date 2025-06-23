@@ -584,13 +584,10 @@ HWTEST_F(DataCollectKitTest, QuerySecurityEventConfig01, TestSize.Level1)
     EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
 
-auto func = [](const OHOS::Security::SecurityCollector::Event &event) {
-    printf("callback called");
-};
-
 HWTEST_F(DataCollectKitTest, ClientCreatClient01, TestSize.Level1)
 {
-	std::shared_ptr<SecurityGuard::EventSubscribeClient> client {};
+    auto func = [](const OHOS::Security::SecurityCollector::Event &event) {};
+    std::shared_ptr<SecurityGuard::EventSubscribeClient> client {};
     int32_t ret = OHOS::Security::SecurityGuard::EventSubscribeClient::CreatClient("securityGroup", func, client);
     EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
     ret = OHOS::Security::SecurityGuard::EventSubscribeClient::CreatClient("securityGroup", nullptr, client);
@@ -601,7 +598,7 @@ HWTEST_F(DataCollectKitTest, ClientCreatClient01, TestSize.Level1)
 
 HWTEST_F(DataCollectKitTest, ClientDestoryClient01, TestSize.Level1)
 {
-	std::shared_ptr<SecurityGuard::EventSubscribeClient> client {};
+    std::shared_ptr<SecurityGuard::EventSubscribeClient> client {};
     int32_t ret = SecurityGuard::EventSubscribeClient::DestoryClient(client);
     EXPECT_EQ(ret, SecurityGuard::NULL_OBJECT);
     client = std::make_shared<SecurityGuard::EventSubscribeClient>();

@@ -1670,7 +1670,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CreatClient002, TestSize.Level0)
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     int32_t result = AcquireDataSubscribeManager::GetInstance().CreatClient("auditGroup", "111", obj);
     EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().CreatClient("auditGroup", "111",obj);
+    result = AcquireDataSubscribeManager::GetInstance().CreatClient("auditGroup", "111", obj);
     EXPECT_EQ(result, BAD_PARAM);
     result = AcquireDataSubscribeManager::GetInstance().CreatClient("auditGroup", "222", obj);
     EXPECT_EQ(result, SUCCESS);
@@ -1679,7 +1679,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CreatClient002, TestSize.Level0)
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo {};
     result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj, "333");
     EXPECT_EQ(result, CLIENT_EXCEED_PROCESS_LIMIT);
-
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, DestoryClient001, TestSize.Level0)
@@ -1737,7 +1736,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertMute001, TestSize.Level0)
     });
     AcquireDataSubscribeManager::GetInstance().eventFilter_ == nullptr;
     EventMuteFilter filter {};
-    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter,"111");
+    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter, "111");
     EXPECT_EQ(result, NULL_OBJECT);
 }
 
@@ -1752,9 +1751,9 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertMute002, TestSize.Level0)
     EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), AddFilter).WillOnce(
         Return(SUCCESS)).WillOnce(Return(FAILED));
     EventMuteFilter filter {};
-    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter,"111");
+    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter, "111");
     EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter,"111");
+    result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter, "111");
     EXPECT_EQ(result, FAILED);
 }
 
@@ -1769,9 +1768,9 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertMute003, TestSize.Level0)
     EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), AddFilter(_)).WillOnce(
         Return(SUCCESS)).WillOnce(Return(FAILED));
     EventMuteFilter filter {};
-    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter,"111");
+    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter, "111");
     EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter,"111");
+    result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter, "111");
     EXPECT_EQ(result, FAILED);
 }
 
@@ -1783,7 +1782,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RemoveMute001, TestSize.Level0)
     });
     AcquireDataSubscribeManager::GetInstance().eventFilter_ == nullptr;
     EventMuteFilter filter {};
-    int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter,"111");
+    int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter, "111");
     EXPECT_EQ(result, NULL_OBJECT);
 }
 
@@ -1798,9 +1797,9 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RemoveMute002, TestSize.Level0)
     EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), RemoveFilter).WillOnce(
         Return(SUCCESS)).WillOnce(Return(FAILED));
     EventMuteFilter filter {};
-    int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter,"111");
+    int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter, "111");
     EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter,"111");
+    result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter, "111");
     EXPECT_EQ(result, FAILED);
 }
 
@@ -1815,9 +1814,9 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RemoveMute003, TestSize.Level0)
     EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), RemoveFilter(_)).WillOnce(
         Return(SUCCESS)).WillOnce(Return(FAILED));
     EventMuteFilter filter {};
-    int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter,"111");
+    int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter, "111");
     EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter,"111");
+    result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter, "111");
     EXPECT_EQ(result, FAILED);
 }
 

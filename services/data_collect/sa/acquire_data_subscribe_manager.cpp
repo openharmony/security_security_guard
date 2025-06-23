@@ -337,12 +337,23 @@ void AcquireDataSubscribeManager::StartClearEventCache()
     auto task = [this]() {
         while (true) {
             this->ClearEventCache();
+            {
+                std::lock_guard<std::mutex> lock(clearCachemutex_);
+                if (isStopClearCache_ == true) {
+                    break;
+                }
+            }
             ffrt::this_task::sleep_for(std::chrono::milliseconds(MAX_DURATION_TEN_SECOND));
         }
     };
     ffrt::submit(task);
 }
 
+void AcquireDataSubscribeManager::StopClearEventCache()
+{
+    std::lock_guard<std::mutex> lock(clearCachemutex_);
+    isStopClearCache_ = true;
+}
 // LCOV_EXCL_START
 void AcquireDataSubscribeManager::ClearEventCache()
 {

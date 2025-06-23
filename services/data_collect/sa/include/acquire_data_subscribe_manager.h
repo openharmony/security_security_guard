@@ -47,6 +47,7 @@ public:
     int DestoryClient(const std::string &eventGroup, const std::string &clientId);
     void SubscriberEventOnSgStart();
     void StartClearEventCache();
+    void StopClearEventCache();
     using SubscriberInfo = struct {
         std::vector<SecurityCollector::Event> events;
         size_t eventsBuffSize;
@@ -111,6 +112,8 @@ private:
     std::map<int64_t, std::shared_ptr<SecurityCollector::ICollectorFwk>> eventToListenner_;
     void *handle_ = nullptr;
     GetEventFilterFunc eventFilter_ = nullptr;
+    bool isStopClearCache_ = false;
+    std::mutex clearCachemutex_ {};
 };
 } // namespace OHOS::Security::SecurityGuard
 
