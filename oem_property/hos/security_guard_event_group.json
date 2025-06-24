@@ -3,8 +3,8 @@
         {
             "eventGroupName" : "securityGroup",
             "eventList" : [
-                "0x10000100",
-                "0x12003000"
+                "1011015001",
+                "1011015014"
             ],
             "permission" : [
                 "ohos.permission.QUERY_SECURITY_EVENT"
