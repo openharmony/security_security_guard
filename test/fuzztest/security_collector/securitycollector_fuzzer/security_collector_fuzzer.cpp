@@ -56,12 +56,11 @@ void DataCollectionFuzzTest(const uint8_t* data, size_t size)
     if (data == nullptr || size < sizeof(int64_t) + sizeof(int32_t)) {
         return;
     }
-    size_t offset = 0;
-    int64_t eventId = *(reinterpret_cast<const int64_t *>(data));
-    offset += sizeof(int64_t);
-    int32_t collectorType = *(reinterpret_cast<const int32_t *>(data + offset));
-    offset += sizeof(int32_t);
-    std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
+    FuzzedDataProvider fdp(data, size);
+    SecurityCollectorEventMuteFilter fil{};
+    int32_t collectorType = fdp.ConsumeIntegral<int32_t>();
+    int64_t eventId = fdp.ConsumeIntegral<int64_t>();
+    std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     SecurityCollectorSubscribeInfo subseciberInfo{};
     auto subscriber = std::make_shared<SecurityCollectorSubscriber>(string, subseciberInfo, nullptr,
         [] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {});
@@ -80,6 +79,9 @@ void DataCollectionFuzzTest(const uint8_t* data, size_t size)
     DataCollection::GetInstance().GetCollectorPath(eventId, string);
     DataCollection::GetInstance().CheckFileStream(stream);
     DataCollection::GetInstance().IsCollectorStarted(eventId);
+    DataCollection::GetInstance().SecurityGuardSubscribeCollector(eventIds);
+    DataCollection::GetInstance().AddFilter(fil);
+    DataCollection::GetInstance().RemoveFilter(fil);
 }
 
 void LibLoaderFuzzTest(const uint8_t* data, size_t size)
@@ -111,10 +113,13 @@ void SecurityCollectorManagerServiceFuzzTest(const uint8_t* data, size_t size)
     if (data == nullptr || size < sizeof(int64_t)) {
         return;
     }
-    size_t offset = 0;
-    int64_t eventId = *(reinterpret_cast<const int64_t *>(data));
-    offset += sizeof(int64_t);
-    std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
+    FuzzedDataProvider fdp(data, size);
+    int fd = fdp.ConsumeIntegral<int32_t>();
+    int32_t systemAbilityId = fdp.ConsumeIntegral<int32_t>();
+    int64_t eventId = fdp.ConsumeIntegral<int64_t>();
+    std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    SecurityCollectorEventMuteFilter fil{};
+    std::vector<std::u16string> args;
     SecurityCollectorManagerService service(SECURITY_COLLECTOR_MANAGER_SA_ID, false);
     Security::SecurityCollector::Event event{eventId, string, string, string};
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -126,6 +131,9 @@ void SecurityCollectorManagerServiceFuzzTest(const uint8_t* data, size_t size)
     ScUnsubscribeEvent scuEvent{};
     scEvent.eventId = eventId;
     std::vector<SecurityEvent> events{};
+    service.Dump(fd, args);
+    service.OnAddSystemAbility(systemAbilityId, string);
+    service.OnRemoveSystemAbility(systemAbilityId, string);
     service.Subscribe(subscribeInfo, obj);
     service.Unsubscribe(obj);
     service.CollectorStop(subscribeInfo, obj);
@@ -137,6 +145,8 @@ void SecurityCollectorManagerServiceFuzzTest(const uint8_t* data, size_t size)
     SecurityCollectorManagerService::HasPermission(string);
     service.CleanSubscriber(obj);
     service.ExecuteOnNotifyByTask(obj, event);
+    service.AddFilter(fil);
+    service.RemoveFilter(fil);
 }
 
 void SecurityCollectorManagerServiceNewFuzzTest(const uint8_t* data, size_t size)
