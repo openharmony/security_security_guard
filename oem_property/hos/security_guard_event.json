@@ -1,8 +1,7 @@
 {
     "eventcfg": [
         {
-          "eventId":"0x10000100",
-          "oldEventId": "1011015001",
+          "eventId":"1011015001",
           "eventName":"account",
           "version":0,
           "eventType":0,
@@ -12,11 +11,10 @@
           "storageTime" : -1,
           "owner":["3001000003"],
           "source" : 0,
-          "db_table": "file_system"
+          "db_table": "audit_event"
         },
         {
-          "eventId":"0x12003000",
-          "oldEventId": "1011015014",
+          "eventId":"1011015014",
           "eventName":"cert",
           "version":0,
           "eventType":0,
@@ -26,7 +24,7 @@
           "storageTime" : -1,
           "owner":["3001000003"],
           "source" : 0,
-          "db_table": "file_system"
+          "db_table": "audit_event"
         },
         {
           "eventId":"0xAB000004",

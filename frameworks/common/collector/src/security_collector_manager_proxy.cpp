@@ -209,7 +209,8 @@ int32_t SecurityCollectorManagerProxy::QuerySecurityEvent(const std::vector<Secu
     return SUCCESS;
 }
 
-int32_t SecurityCollectorManagerProxy::AddFilter(const SecurityCollectorEventFilter &subscribeMute)
+int32_t SecurityCollectorManagerProxy::AddFilter(const SecurityCollectorEventFilter &subscribeMute,
+    const std::string &callbackFlag)
 {
     LOGI("enter SecurityCollectorManagerProxy AddFilter");
     MessageParcel data;
@@ -222,6 +223,11 @@ int32_t SecurityCollectorManagerProxy::AddFilter(const SecurityCollectorEventFil
 
     if (!data.WriteParcelable(&subscribeMute)) {
         LOGE("failed to write parcelable for subscribeMute");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteString(callbackFlag)) {
+        LOGE("failed to write parcelable for callbackFlag");
         return WRITE_ERR;
     }
 
@@ -241,7 +247,8 @@ int32_t SecurityCollectorManagerProxy::AddFilter(const SecurityCollectorEventFil
     return ret;
 }
 
-int32_t SecurityCollectorManagerProxy::RemoveFilter(const SecurityCollectorEventFilter &subscribeMute)
+int32_t SecurityCollectorManagerProxy::RemoveFilter(const SecurityCollectorEventFilter &subscribeMute,
+    const std::string &callbackFlag)
 {
     LOGI("enter SecurityCollectorManagerProxy RemoveFilter");
     MessageParcel data;
@@ -254,6 +261,11 @@ int32_t SecurityCollectorManagerProxy::RemoveFilter(const SecurityCollectorEvent
 
     if (!data.WriteParcelable(&subscribeMute)) {
         LOGE("failed to write parcelable for subscribeMute");
+        return WRITE_ERR;
+    }
+
+    if (!data.WriteString(callbackFlag)) {
+        LOGE("failed to write parcelable for callbackFlag");
         return WRITE_ERR;
     }
 

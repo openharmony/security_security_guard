@@ -22,7 +22,6 @@
 namespace OHOS::Security::SecurityGuard {
 using EventCfg = struct {
     int64_t eventId;
-    int64_t oldEventId;
     std::string eventName;
     uint32_t version;
     uint32_t eventType;

@@ -136,9 +136,6 @@ bool EventConfig::ParseEventConfig(std::vector<EventCfg> &configs, nlohmann::jso
 void EventConfig::CacheEventConfig(const std::vector<EventCfg> &configs)
 {
     for (const EventCfg &config : configs) {
-        if (config.oldEventId != 0) {
-            ConfigDataManager::GetInstance().InsertEventMap(config.oldEventId, config);
-        }
         ConfigDataManager::GetInstance().InsertEventMap(config.eventId, config);
     }
 }
@@ -146,9 +143,6 @@ void EventConfig::CacheEventConfig(const std::vector<EventCfg> &configs)
 void EventConfig::CacheEventToTable(const std::vector<EventCfg> &configs)
 {
     for (const EventCfg &config : configs) {
-        if (config.oldEventId != 0) {
-            ConfigDataManager::GetInstance().InsertEventToTableMap(config.oldEventId, config.dbTable);
-        }
         ConfigDataManager::GetInstance().InsertEventToTableMap(config.eventId, config.dbTable);
     }
 }
