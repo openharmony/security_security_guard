@@ -35,7 +35,7 @@ using EventCfg = struct {
     uint32_t source;
     std::string dbTable;
     std::string prog;
-    uint32_t isNotBatchUpload;
+    uint32_t isBatchUpload;
 };
 
 using EventGroupCfg = struct {

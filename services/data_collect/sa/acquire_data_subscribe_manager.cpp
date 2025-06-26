@@ -398,7 +398,7 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &e
                 FindSdkFlag(eventTmp.eventSubscribes, callbackHashMap_.at(it.first))) {
                 continue;
             }
-            if (config.isNotBatchUpload) {
+            if (!config.isBatchUpload) {
                 BatchUpload(it.first, {eventTmp});
                 continue;
             }
