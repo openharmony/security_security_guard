@@ -41,6 +41,7 @@ ohos_shared_library("security_collector_manager") {
 
   sources = [
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/collector_manager/src/collector_cfg_marshalling.cpp",
     "${sg_root_dir}/services/collector_manager/src/data_collection.cpp",
     "${sg_root_dir}/services/collector_manager/src/lib_loader.cpp",
@@ -57,7 +58,6 @@ ohos_shared_library("security_collector_manager") {
   branch_protector_ret = "pac_ret"
 
   deps = [
-    "${sg_root_dir}/frameworks/common/utils:security_guard_utils_stamp",
   ]
 
   external_deps = [

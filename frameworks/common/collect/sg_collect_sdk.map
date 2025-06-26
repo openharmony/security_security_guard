@@ -40,9 +40,15 @@
         OHOS::Security::SecurityGuard::DataCollectManager::QueryProcInfo*;
         OHOS::Security::SecurityGuard::DataCollectManager::SecurityGuardConfigUpdate*;
         VTT?for?OHOS::Security::SecurityCollector::SecurityCollectorSubscribeInfo*;
+        vtable?for?OHOS::Security::SecurityCollector::SecurityCollectorSubscribeInfo*;
         OHOS::Security::SecurityGuard::NativeDataCollectKit::ReportSecurityInfoAsync*;
         OHOS::Security::SecurityGuard::NativeDataCollectKit::ReportSecurityInfo*;
         OHOS::Security::SecurityGuard::EventInfo::GetEventId*;
+        OHOS::Security::SecurityGuard::SecurityEventFilter::GetMuteFilter*;
+        VTT?for?OHOS::Security::SecurityGuard::SecurityEventFilter*;
+        vtable?for?OHOS::Security::SecurityGuard::SecurityEventFilter;
+        OHOS::Security::SecurityGuard::SecurityEventFilter::Unmarshalling*;
+
     };
   local:
     *;
