@@ -17,10 +17,7 @@ import("//build/test.gni")
 
 group("sg_classify_service_build_module") {
   if (is_standard_system) {
-    deps = []
-    if (!security_guard_trim_model_analysis) {
-      deps += [ "${sg_root_dir}/services/risk_classify:sg_classify_service" ]
-    }
+    deps = [ "${sg_root_dir}/services/risk_classify:sg_classify_service" ]
   }
 }
 

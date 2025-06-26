@@ -42,6 +42,12 @@ void SqliteHelper::Open() __attribute__ ((no_sanitize("cfi")))
     }
     constexpr int32_t heapLimit = 10 * 1024;
     sqlite3_soft_heap_limit64(heapLimit);
+#ifdef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
+    constexpr int32_t pageSize = 1024;
+    constexpr int32_t pageNum = 20;
+    sqlite3_config(SQLITE_CONFIG_PAGECACHE, NULL, pageSize, pageNum);
+    sqlite3_config(SQLITE_CONFIG_SMALL_MALLOC, 1);
+#endif
     std::string fileName = dbPath_ + dbName_;
     int32_t res = sqlite3_open(fileName.c_str(), &db_);
     if (res != SQLITE_OK) {
