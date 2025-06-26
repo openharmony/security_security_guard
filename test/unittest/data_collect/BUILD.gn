@@ -54,6 +54,7 @@ ohos_unittest("data_collect_test") {
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_event_ruler.cpp",
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/collector_manager/src/collector_cfg_marshalling.cpp",
     "${sg_root_dir}/services/collector_manager/src/data_collection.cpp",
     "${sg_root_dir}/services/collector_manager/src/lib_loader.cpp",
@@ -64,7 +65,6 @@ ohos_unittest("data_collect_test") {
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/data_collect:sg_collect_service",
     "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_stub",
-    "${sg_root_dir}/frameworks/common/utils:security_guard_utils_stamp",
   ]
 
   external_deps = [
@@ -127,6 +127,7 @@ ohos_unittest("SecurityGuardDataCollectTest") {
   ]
 
   sources = [
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/collector_manager/src/collector_cfg_marshalling.cpp",
     "${sg_root_dir}/services/collector_manager/src/data_collection.cpp",
     "${sg_root_dir}/services/collector_manager/src/lib_loader.cpp",
@@ -143,9 +144,7 @@ ohos_unittest("SecurityGuardDataCollectTest") {
     "src/security_guard_data_collect_test.cpp",
   ]
 
-  deps = [
-    "${sg_root_dir}/frameworks/common/utils:security_guard_utils_stamp",
-  ]
+  deps = []
 
   external_deps = [
     "c_utils:utils",
@@ -193,16 +192,14 @@ ohos_unittest("SecurityGuardDatabaseManagerTest") {
   ]
 
   sources = [
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_format.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
     "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
     "database_manager/security_guard_database_manager_test.cpp",
   ]
 
-  deps = [
-    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "${sg_root_dir}/frameworks/common/utils:security_guard_utils_stamp",
-    ]
+  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
 
   external_deps = [
     "c_utils:utils",
@@ -267,6 +264,23 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "SECURITY_GUARD_EVENT_FILTER_PATH = \"${security_guard_event_filter_path}\"",
   ]
   sources = [
+    "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/i_collector_fwk.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/i_collector_subscriber.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_event_ruler.cpp",
+    "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
+    "${sg_root_dir}/services/data_collect/sa/acquire_data_callback_proxy.cpp",
+    "${sg_root_dir}/services/data_collect/sa/acquire_data_subscribe_manager.cpp",
+    "${sg_root_dir}/services/data_collect/sa/data_collect_manager_callback_proxy.cpp",
+    "${sg_root_dir}/services/data_collect/sa/data_collect_manager_service.cpp",
+    "${sg_root_dir}/services/data_collect/sa/security_event_query_callback_proxy.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
+    "${sg_root_dir}/services/risk_classify/model_manager/src/config_operate.cpp",
+    "${sg_root_dir}/services/risk_classify/model_manager/src/db_operate.cpp",
+    "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager.cpp",
+    "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager_impl.cpp",
     "sa/security_guard_data_collect_sa_test.cpp",
   ]
 
@@ -274,11 +288,6 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/config_manager:sg_config_manager",
     "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_stub",
-    "${sg_root_dir}/frameworks/common/utils:security_guard_utils_stamp",
-    "${sg_root_dir}/frameworks/common/collector:sg_collector_sdk_stamp",
-    "${sg_root_dir}/frameworks/common/collect:sg_collect_sdk_stamp",
-    "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
-    "${sg_root_dir}/services/data_collect:sg_collect_service_stamp"
   ]
 
   external_deps = [
@@ -320,15 +329,13 @@ ohos_unittest("SecurityGuardFileSystemStoreHelperTest") {
 
   sources = [
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/data_collect/sa/security_event_query_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
     "file_system_store/security_guard_file_system_store_helper_test.cpp",
   ]
 
-  deps = [
-    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "${sg_root_dir}/frameworks/common/utils:security_guard_utils_stamp",
-    ]
+  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
 
   external_deps = [
     "c_utils:utils",

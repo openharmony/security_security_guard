@@ -13,9 +13,11 @@
 
 import("//base/security/security_guard/security_guard.gni")
 import("//build/ohos.gni")
-ohos_source_set("sg_collect_service_stamp") {
+
+ohos_shared_library("sg_collect_service") {
   subsystem_name = "security"
   part_name = "security_guard"
+  version_script = "sg_collect_service.map"
 
   configs = [
     "${sg_root_dir}/services/risk_classify:security_guard_model_configs",
@@ -59,7 +61,11 @@ ohos_source_set("sg_collect_service_stamp") {
   ]
 
   sources = [
+    "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_collector_event_filter.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_subscribe_manager.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_callback_proxy.cpp",
@@ -84,14 +90,12 @@ ohos_source_set("sg_collect_service_stamp") {
 
   deps = [
     "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
-    "${sg_root_dir}/frameworks/common/collect:sg_collect_sdk_stamp",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
     "${sg_root_dir}/services/collector_manager:security_collector_manager",
     "${sg_root_dir}/services/config_manager:sg_config_data_manager",
     "${sg_root_dir}/services/data_collect:sg_collect_service_database",
     "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_stub",
     "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
-    "${sg_root_dir}/frameworks/common/utils:security_guard_utils_stamp",
   ]
 
   external_deps = [
@@ -108,34 +112,6 @@ ohos_source_set("sg_collect_service_stamp") {
     "samgr:samgr_proxy",
     "sqlite:sqlite",
     "zlib:libz",
-  ]
-}
-
-ohos_shared_library("sg_collect_service") {
-  subsystem_name = "security"
-  part_name = "security_guard"
-  version_script = "sg_collect_service.map"
-
-  configs = [
-    "${sg_root_dir}/services/risk_classify:security_guard_model_configs",
-    "${sg_root_dir}/resource/config/build:coverage_flags",
-  ]
-
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-  branch_protector_ret = "pac_ret"
-
-  deps = [
-    ":sg_collect_service_stamp",
-  ]
-  external_deps = [
-    "hilog:libhilog",
   ]
 }
 

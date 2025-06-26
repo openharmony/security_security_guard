@@ -49,6 +49,7 @@ ohos_fuzztest("SecurityCollectorFuzzTest") {
   ]
 
   sources = [
+    "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_service.cpp",
@@ -59,8 +60,8 @@ ohos_fuzztest("SecurityCollectorFuzzTest") {
   ]
 
   deps = [
-    "${sg_root_dir}/frameworks/common/collect:sg_collect_sdk_stamp",
-    "${sg_root_dir}/frameworks/common/collector:sg_collector_sdk_stamp",
+    "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
+    "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
     "${sg_root_dir}/services/collector_manager:security_collector_manager",
   ]
 

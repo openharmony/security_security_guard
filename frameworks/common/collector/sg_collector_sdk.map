@@ -29,6 +29,7 @@
         OHOS::Security::SecurityCollector::CollectorManager::QuerySecurityEvent*;
         VTT?for?OHOS::Security::SecurityCollector::SecurityEvent*;
         vtable?for?OHOS::Security::SecurityCollector::SecurityEvent*;
+        OHOS::Security::SecurityCollector::SecurityEvent::Unmarshalling*;
         OHOS::Security::SecurityCollector::SecurityEventRuler::Unmarshalling*;
         OHOS::Security::SecurityCollector::ICollectorFwk::GetExtraInfo*;
         OHOS::Security::SecurityCollector::ICollectorFwk::GetEventId*;

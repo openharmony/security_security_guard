@@ -22,9 +22,15 @@ config("security_guard_config") {
   ]
 }
 
-ohos_source_set("sg_collector_sdk_stamp") {
+ohos_shared_library("libsg_collector_sdk") {
+  innerapi_tags = [
+    "platformsdk",
+    "sasdk",
+  ]
   subsystem_name = "security"
   part_name = "security_guard"
+  output_name = "libsg_collector_sdk"
+  version_script = "sg_collector_sdk.map"
   configs = [ "${sg_root_dir}/resource/config/build:coverage_flags" ]
 
   public_configs = [ ":security_guard_config" ]
@@ -69,34 +75,5 @@ ohos_source_set("sg_collector_sdk_stamp") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
-  ]
-}
-
-ohos_shared_library("libsg_collector_sdk") {
-  innerapi_tags = [
-    "platformsdk",
-    "sasdk",
-  ]
-  subsystem_name = "security"
-  part_name = "security_guard"
-  output_name = "libsg_collector_sdk"
-  version_script = "sg_collector_sdk.map"
-  configs = [ "${sg_root_dir}/resource/config/build:coverage_flags" ]
-
-  public_configs = [ ":security_guard_config" ]
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-  branch_protector_ret = "pac_ret"
-  deps = [
-    ":sg_collector_sdk_stamp",
-  ]
-  external_deps = [
-    "hilog:libhilog",
   ]
 }
