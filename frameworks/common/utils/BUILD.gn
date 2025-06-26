@@ -61,5 +61,6 @@ ohos_source_set("security_guard_utils_stamp") {
   external_deps = [
     "cJSON:cjson",
     "hilog:libhilog",
+    "c_utils:utils",
   ]
 }
