@@ -36,7 +36,7 @@ ohos_unittest("security_collector_test") {
   sources = [ "${sg_root_dir}/test/unittest/security_collector/interface_test/src/collector_interface_test.cpp" ]
 
   deps = [
-    "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
+    "${sg_root_dir}/frameworks/common/collector:sg_collector_sdk_stamp",
     "${sg_root_dir}/services/security_collector:security_collector_service",
   ]
 
@@ -80,7 +80,6 @@ ohos_unittest("SecurityCollectorTest") {
 
   sources = [
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_event_filter.cpp",
-    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/collector_manager/src/lib_loader.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_service.cpp",
@@ -88,7 +87,10 @@ ohos_unittest("SecurityCollectorTest") {
     "src/security_collector_test.cpp",
   ]
 
-  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
+  deps = [
+    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
+    "${sg_root_dir}/frameworks/common/utils:security_guard_utils_stamp",
+    ]
 
   external_deps = [
     "c_utils:utils",
@@ -135,11 +137,13 @@ ohos_unittest("SecurityCollectorRunManagerTest") {
   ]
 
   sources = [
-    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "src/security_collector_test.cpp",
   ]
 
-  deps = [ "${sg_root_dir}/services/bigdata:sg_bigdata_stamp" ]
+  deps = [
+    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
+    "${sg_root_dir}/frameworks/common/utils:security_guard_utils_stamp",
+    ]
 
   external_deps = [
     "c_utils:utils",
@@ -182,14 +186,15 @@ ohos_unittest("DataCollectionTest") {
 
   sources = [
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
-    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/collector_manager/src/collector_cfg_marshalling.cpp",
     "${sg_root_dir}/services/collector_manager/src/data_collection.cpp",
     "${sg_root_dir}/services/collector_manager/src/lib_loader.cpp",
     "data_collection/src/data_collection_test.cpp",
   ]
 
-  deps = []
+  deps = [
+    "${sg_root_dir}/frameworks/common/utils:security_guard_utils_stamp",
+  ]
 
   external_deps = [
     "c_utils:utils",

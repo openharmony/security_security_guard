@@ -44,8 +44,9 @@ ohos_fuzztest("DataCollectManagerFuzzTest") {
   sources = [ "data_collect_manager_fuzzer.cpp" ]
 
   deps = [
-    "${sg_root_dir}/services/data_collect:sg_collect_service",
+    "${sg_root_dir}/services/data_collect:sg_collect_service_stamp",
     "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_stub",
+    "${sg_root_dir}/frameworks/common/collect:sg_collect_sdk_stamp",
   ]
 
   external_deps = [
@@ -54,7 +55,6 @@ ohos_fuzztest("DataCollectManagerFuzzTest") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "security_guard:libsg_collect_sdk",
     "security_guard:libsg_collector_sdk",
   ]
 }

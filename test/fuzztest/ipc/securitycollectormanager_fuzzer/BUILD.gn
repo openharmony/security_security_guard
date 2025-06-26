@@ -42,7 +42,7 @@ ohos_fuzztest("SecurityCollectorManagerFuzzTest") {
   sources = [ "security_collector_manager_fuzzer.cpp" ]
 
   deps = [
-    "${sg_root_dir}/services/security_collector:security_collector_service",
+    "${sg_root_dir}/services/security_collector:security_collector_service_stamp",
   ]
 
   external_deps = [

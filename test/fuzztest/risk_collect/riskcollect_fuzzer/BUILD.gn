@@ -41,7 +41,6 @@ ohos_fuzztest("RiskCollectFuzzTest") {
   ]
 
   sources = [
-    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/config_manager/src/config_data_manager.cpp",
     "${sg_root_dir}/services/risk_collect/src/data_format.cpp",
     "${sg_root_dir}/services/risk_collect/src/kernel_interface_adapter.cpp",
@@ -49,7 +48,9 @@ ohos_fuzztest("RiskCollectFuzzTest") {
     "risk_collect_fuzzer.cpp",
   ]
 
-  deps = []
+  deps = [
+    "${sg_root_dir}/frameworks/common/utils:security_guard_utils_stamp",
+  ]
 
   external_deps = [
     "c_utils:utils",

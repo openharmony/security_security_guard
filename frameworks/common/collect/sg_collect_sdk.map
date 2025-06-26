@@ -1,0 +1,49 @@
+/*
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+{
+  global:
+    ReportSecurityInfoAsync*;
+    ReportSecurityInfo*;
+    SecurityGuardConfigUpdate*;
+    RequestSecurityEventInfoAsync*;
+    extern "C++" {
+        VTT?for?OHOS::Security::SecurityCollector::SecurityEvent*;
+        vtable?for?OHOS::Security::SecurityCollector::SecurityEvent*;
+        OHOS::Security::SecurityGuard::DataCollectManager::GetInstance*;
+        OHOS::Security::SecurityGuard::DataCollectManager::StartCollector*;
+        OHOS::Security::SecurityGuard::DataCollectManager::StopCollector*;
+        VTT?for?OHOS::Security::SecurityCollector::SecurityEventRuler*;
+        vtable?for?OHOS::Security::SecurityCollector::SecurityEventRuler*;
+        OHOS::Security::SecurityGuard::DataCollectManager::QuerySecurityEvent*;
+        OHOS::Security::SecurityGuard::EventInfo::EventInfo*;
+        OHOS::Security::SecurityGuard::DataCollectManager::ReportSecurityEvent*;
+        OHOS::Security::SecurityCollector::ICollectorSubscriber::ICollectorSubscriber*;
+        OHOS::Security::SecurityGuard::DataCollectManager::Subscribe*;
+        OHOS::Security::SecurityGuard::DataCollectManager::Unsubscribe*;
+        OHOS::Security::SecurityGuard::DataCollectManager::AddFilter*;
+        OHOS::Security::SecurityGuard::DataCollectManager::RemoveFilter*;
+        OHOS::Security::SecurityGuard::DataCollectManager::QuerySecurityEventConfig*;
+        OHOS::Security::SecurityGuard::DataCollectManager::RequestSecurityEventInfo*;
+        OHOS::Security::SecurityGuard::DataCollectManager::QueryProcInfo*;
+        OHOS::Security::SecurityGuard::DataCollectManager::SecurityGuardConfigUpdate*;
+        VTT?for?OHOS::Security::SecurityCollector::SecurityCollectorSubscribeInfo*;
+        OHOS::Security::SecurityGuard::NativeDataCollectKit::ReportSecurityInfoAsync*;
+        OHOS::Security::SecurityGuard::NativeDataCollectKit::ReportSecurityInfo*;
+        OHOS::Security::SecurityGuard::EventInfo::GetEventId*;
+    };
+  local:
+    *;
+};
