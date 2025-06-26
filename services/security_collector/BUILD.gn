@@ -13,8 +13,7 @@
 
 import("//base/security/security_guard/security_guard.gni")
 import("//build/ohos.gni")
-
-ohos_shared_library("security_collector_service") {
+ohos_source_set("security_collector_service_stamp") {
   subsystem_name = "security"
   part_name = "security_guard"
 
@@ -79,5 +78,29 @@ ohos_shared_library("security_collector_service") {
     "preferences:native_preferences",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+  ]
+}
+
+ohos_shared_library("security_collector_service") {
+  subsystem_name = "security"
+  part_name = "security_guard"
+  version_script = "security_collector_service.map"
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  branch_protector_ret = "pac_ret"
+
+  deps = [
+    ":security_collector_service_stamp",
+  ]
+
+  external_deps = [
+    "hilog:libhilog",
   ]
 }

@@ -48,9 +48,6 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
   ]
 
   sources = [
-    "${sg_root_dir}/frameworks/common/utils/src/file_util.cpp",
-    "${sg_root_dir}/frameworks/common/utils/src/json_util.cpp",
-    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/config_operate.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/db_operate.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager.cpp",
@@ -70,6 +67,7 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "${sg_root_dir}/services/data_collect:sg_collect_service",
     "${sg_root_dir}/services/data_collect:sg_collect_service_database",
     "${sg_root_dir}/services/risk_classify/idl:risk_analysis_manager_idl_sa_stub_tdd",
+    "${sg_root_dir}/frameworks/common/utils:security_guard_utils_stamp",
   ]
 
   external_deps = [

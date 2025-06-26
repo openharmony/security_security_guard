@@ -16,28 +16,19 @@
 {
   global:
     extern "C++" {
-      *OHOS::Security::SecurityGuard::DataCollectManagerService*;
-      OHOS::Security::SecurityGuard::DataCollectManagerStub::OnRemoteRequest*;
-      OHOS::Security::SecurityGuard::SecurityEventQueryCallbackProxy::SecurityEventQueryCallbackProxy*;
-      vtable?for?OHOS::Security::SecurityGuard::RdbEventStoreCallback;
-      OHOS::Security::SecurityGuard::Database::BatchInsert*;
-      OHOS::Security::SecurityGuard::Database::CreateRdbStore*;
-      OHOS::Security::SecurityGuard::Database::Count*;
-      OHOS::Security::SecurityGuard::Database::Query*;
-      OHOS::Security::SecurityGuard::Database::Delete*;
-      OHOS::Security::SecurityGuard::Database::Insert*;
       OHOS::Security::SecurityGuard::DatabaseManager::GetInstance*;
       OHOS::Security::SecurityGuard::DatabaseManager::InsertEvent*;
-      OHOS::Security::SecurityGuard::DatabaseManager::CountEventByEventId*;
-      OHOS::Security::SecurityGuard::DatabaseManager::DeleteAllEventByEventId*;
-      OHOS::Security::SecurityGuard::DatabaseManager::DeleteOldEventByEventId*;
       OHOS::Security::SecurityGuard::DatabaseManager::QueryAllEvent*;
       OHOS::Security::SecurityGuard::DatabaseManager::QueryRecentEventByEventId*;
       OHOS::Security::SecurityGuard::DatabaseManager::QueryEventByEventId*;
+      OHOS::Security::SecurityGuard::DatabaseManager::QueryEventByEventIdAndDate*;
       OHOS::Security::SecurityGuard::DatabaseManager::QueryEventByEventType*;
       OHOS::Security::SecurityGuard::DatabaseManager::QueryEventByLevel*;
       OHOS::Security::SecurityGuard::DatabaseManager::QueryEventByOwner*;
       OHOS::Security::SecurityGuard::DatabaseManager::CountAllEvent*;
+      OHOS::Security::SecurityGuard::DatabaseManager::CountEventByEventId*;
+      OHOS::Security::SecurityGuard::DatabaseManager::DeleteOldEventByEventId*;
+      OHOS::Security::SecurityGuard::DatabaseManager::DeleteAllEventByEventId*;
       OHOS::Security::SecurityGuard::DatabaseManager::SubscribeDb*;
       OHOS::Security::SecurityGuard::DatabaseManager::UnSubscribeDb*;
     };

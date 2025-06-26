@@ -33,7 +33,7 @@ ohos_unittest("libsg_collect_sdk_test") {
 
   sources = [ "unittest/src/data_collect_kit_test.cpp" ]
 
-  deps = [ "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk" ]
+  deps = [ "${sg_root_dir}/frameworks/common/collect:sg_collect_sdk_stamp" ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
