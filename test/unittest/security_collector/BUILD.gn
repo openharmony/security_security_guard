@@ -26,6 +26,7 @@ ohos_unittest("security_collector_test") {
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/interfaces/inner_api/collector/include",
     "${sg_root_dir}/frameworks/common/collector/include",
+    "${sg_root_dir}/frameworks/common/log/include",
     "${sg_root_dir}/services/security_collector/include",
     "${sg_root_dir}/services/kernel_collector/include",
     "${sg_root_dir}/test/unittest/security_collector/interface_test/include",
@@ -33,7 +34,12 @@ ohos_unittest("security_collector_test") {
     "${sg_root_dir}/interfaces/inner_api/common/include",
   ]
 
-  sources = [ "${sg_root_dir}/test/unittest/security_collector/interface_test/src/collector_interface_test.cpp" ]
+  sources = [
+    "${sg_root_dir}/test/unittest/security_collector/interface_test/src/collector_interface_test.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/collector_manager.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/collector_service_loader.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_collector_manager_proxy.cpp",
+  ]
 
   deps = [
     "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
@@ -46,6 +52,7 @@ ohos_unittest("security_collector_test") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
+    "samgr:samgr_proxy",
   ]
 }
 

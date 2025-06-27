@@ -25,7 +25,6 @@ config("security_guard_model_configs") {
 ohos_shared_library("sg_classify_service") {
   subsystem_name = "security"
   part_name = "security_guard"
-
   version_script = "sg_classify_service.map"
 
   configs = [ "${sg_root_dir}/resource/config/build:coverage_flags" ]

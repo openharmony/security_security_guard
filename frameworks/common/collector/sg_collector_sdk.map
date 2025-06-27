@@ -1,0 +1,54 @@
+/*
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+{
+  global:
+    extern "C++" {
+        OHOS::Security::SecurityCollector::ICollectorFwk::GetEventId*;
+        OHOS::Security::SecurityCollector::CollectorManager::Unsubscribe*;
+        OHOS::Security::SecurityCollector::ICollectorSubscriber::ICollectorSubscriber*;
+        OHOS::Security::SecurityCollector::CollectorManager::Subscribe*;
+        OHOS::Security::SecurityCollector::CollectorManager::CollectorStart*;
+        OHOS::Security::SecurityCollector::CollectorManager::CollectorStop*;
+        OHOS::Security::SecurityCollector::CollectorManager::AddFilter*;
+        OHOS::Security::SecurityCollector::CollectorManager::RemoveFilter*;
+        VTT?for?OHOS::Security::SecurityCollector::SecurityEventRuler*;
+        vtable?for?OHOS::Security::SecurityCollector::SecurityEventRuler*;
+        OHOS::Security::SecurityCollector::CollectorManager::QuerySecurityEvent*;
+        VTT?for?OHOS::Security::SecurityCollector::SecurityEvent*;
+        vtable?for?OHOS::Security::SecurityCollector::SecurityEvent*;
+        OHOS::Security::SecurityCollector::SecurityEvent::Unmarshalling*;
+        OHOS::Security::SecurityCollector::SecurityEventRuler::Unmarshalling*;
+        OHOS::Security::SecurityCollector::ICollectorFwk::GetExtraInfo*;
+        OHOS::Security::SecurityCollector::ICollectorFwk::GetEventId*;
+        OHOS::Security::SecurityCollector::ICollector::Query*;
+        OHOS::Security::SecurityCollector::ICollector::AddFilter*;
+        OHOS::Security::SecurityCollector::ICollector::RemoveFilter*;
+        OHOS::Security::SecurityCollector::ICollector::Subscribe*;
+        OHOS::Security::SecurityCollector::ICollector::Unsubscribe*;
+        OHOS::Security::SecurityCollector::ICollector::IsStartWithSub*;
+        VTT?for?OHOS::Security::SecurityCollector::SecurityCollectorManagerCallbackService*;
+        vtable?for?OHOS::Security::SecurityCollector::SecurityCollectorManagerCallbackService*;
+        OHOS::Security::SecurityCollector::SecurityCollectorEventFilter::GetMuteFilter*;
+        OHOS::Security::SecurityCollector::SecurityCollectorEventFilter::Unmarshalling*;
+        VTT?for?OHOS::Security::SecurityCollector::SecurityCollectorSubscribeInfo*;
+        vtable?for?OHOS::Security::SecurityCollector::SecurityCollectorSubscribeInfo*;
+        VTT?for?OHOS::Security::SecurityCollector::SecurityCollectorEventFilter*;
+        vtable?for?OHOS::Security::SecurityCollector::SecurityCollectorEventFilter*;
+        OHOS::Security::SecurityCollector::SecurityCollectorSubscribeInfo::Unmarshalling*;
+    };
+  local:
+    *;
+};

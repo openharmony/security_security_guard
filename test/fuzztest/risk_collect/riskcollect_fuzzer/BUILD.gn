@@ -49,7 +49,8 @@ ohos_fuzztest("RiskCollectFuzzTest") {
     "risk_collect_fuzzer.cpp",
   ]
 
-  deps = []
+  deps = [
+  ]
 
   external_deps = [
     "c_utils:utils",

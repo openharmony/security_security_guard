@@ -49,7 +49,6 @@ ohos_shared_library("sg_config_data_manager") {
 ohos_shared_library("sg_config_manager") {
   subsystem_name = "security"
   part_name = "security_guard"
-
   version_script = "sg_config_manager.map"
 
   defines = []

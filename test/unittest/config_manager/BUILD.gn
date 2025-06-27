@@ -85,16 +85,6 @@ ohos_unittest("SecurityGuardConfigManagerTest") {
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
   ]
-
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    blocklist = "${sg_root_dir}/cfi_blocklist.txt"
-  }
-  branch_protector_ret = "pac_ret"
 }
 
 ohos_unittest("AppInfoDatabseTest") {
