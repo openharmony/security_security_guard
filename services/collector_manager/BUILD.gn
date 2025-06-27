@@ -57,7 +57,8 @@ ohos_shared_library("security_collector_manager") {
   }
   branch_protector_ret = "pac_ret"
 
-  deps = []
+  deps = [
+  ]
 
   external_deps = [
     "c_utils:utils",

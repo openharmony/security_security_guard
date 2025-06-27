@@ -31,7 +31,7 @@ ohos_shared_library("libsg_collect_sdk") {
   subsystem_name = "security"
   part_name = "security_guard"
   output_name = "libsg_collect_sdk"
-
+  version_script = "sg_collect_sdk.map"
   configs = [ "${sg_root_dir}/resource/config/build:coverage_flags" ]
 
   public_configs = [ ":security_guard_config" ]
