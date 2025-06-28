@@ -1449,4 +1449,104 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RemoveSubscribeMute, TestSize.Level0)
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj, "1111");
     EXPECT_EQ(result, SUCCESS);
 }
+
+HWTEST_F(SecurityGuardDataCollectSaTest, TestQueryProcInfo, TestSize.Level0)
+{
+    SecurityCollector::SecurityEventRuler rule(11111);
+    std::vector<SecurityCollector::SecurityEventRuler> rules{};
+
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_DENIED));
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    std::string result;
+    EXPECT_EQ(service.QueryProcInfo(rule, result), NO_PERMISSION);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, TestQueryProcInfo002, TestSize.Level0)
+{
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    std::string queryInfo;
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+        .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
+        .WillOnce(Return(true));
+
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly([](int64_t eventId, EventCfg &config) {
+        config.dbTable = "risk_event";
+        config.eventType = 0;
+        config.prog = "security_guard";
+        return true;
+    });
+    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), QuerySecurityEvent(_, _)).WillOnce(Return(SUCCESS));
+    SecurityCollector::SecurityEventRuler rule(11111);
+    EXPECT_EQ(service.QueryProcInfo(rule, queryInfo), SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, TestQueryProcInfo003, TestSize.Level0)
+{
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    std::string queryInfo;
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+        .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
+        .WillOnce(Return(true));
+
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly([](int64_t eventId, EventCfg &config) {
+        config.dbTable = "risk_event";
+        config.eventType = 1;
+        config.prog = "security_guard";
+        return true;
+    });
+    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), QuerySecurityEvent(_, _)).WillOnce(Return(SUCCESS));
+    SecurityCollector::SecurityEventRuler rule(11111);
+    EXPECT_EQ(service.QueryProcInfo(rule, queryInfo), SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, TestQueryProcInfo004, TestSize.Level0)
+{
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    std::string queryInfo;
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+        .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
+        .WillOnce(Return(true));
+
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly([](int64_t eventId, EventCfg &config) {
+        config.dbTable = "risk_event";
+        config.eventType = 0;
+        config.prog = "security_audit";
+        return false;
+    });
+    SecurityCollector::SecurityEventRuler rule(11111);
+    EXPECT_EQ(service.QueryProcInfo(rule, queryInfo), FAILED);
+}
+
+
+HWTEST_F(SecurityGuardDataCollectSaTest, TestQueryProcInfo005, TestSize.Level0)
+{
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    std::string queryInfo;
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+        .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
+    EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
+        .WillOnce(Return(true));
+
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly([](int64_t eventId, EventCfg &config) {
+        config.dbTable = "risk_event";
+        config.eventType = 0;
+        config.prog = "security_audit";
+        return true;
+    });
+    SecurityCollector::SecurityEventRuler rule(11111);
+    EXPECT_EQ(service.QueryProcInfo(rule, queryInfo), FAILED);
+}
+
 }
