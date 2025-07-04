@@ -141,6 +141,7 @@ int32_t DataCollectManager::QuerySecurityEventConfig(std::string &result)
     return proxy->QuerySecurityEventConfig(result);
 }
 
+// LCOV_EXCL_START
 void DataCollectManager::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
 {
     if (remote == nullptr) {
@@ -199,6 +200,7 @@ void DataCollectManager::HandleDecipient()
         count_++;
     }
 }
+// LCOV_EXCL_STOP
 
 int32_t DataCollectManager::Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
 {

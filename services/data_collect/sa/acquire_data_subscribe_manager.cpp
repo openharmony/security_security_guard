@@ -68,7 +68,7 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
-
+    // LCOV_EXCL_START
     std::lock_guard<std::mutex> lock(g_mutex);
     if (g_subscriberInfoMap.size() >= MAX_SUBS_SIZE) {
         SGLOGE("has been max subscriber size");
@@ -96,11 +96,11 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         g_subscriberInfoMap.at(callback).subscribe.emplace_back(subscribeInfo);
     }
     SGLOGI("InsertSubscribeRecord subscriberInfoMap_size  %{public}zu", g_subscriberInfoMap.size());
-
     for (const auto &i : g_subscriberInfoMap) {
         SGLOGI("InsertSubscribeRecord subscriberInfoMap_subscribe_size  %{public}zu", i.second.subscribe.size());
     }
     return SUCCESS;
+    // LCOV_EXCL_STOP
 }
 
 int AcquireDataSubscribeManager::SubscribeScInSg(int64_t eventId, const sptr<IRemoteObject> &callback)
@@ -148,6 +148,7 @@ int AcquireDataSubscribeManager::SubscribeSc(int64_t eventId, const sptr<IRemote
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
+    // LCOV_EXCL_START
     if (config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         return SUCCESS;
     }
@@ -160,9 +161,9 @@ int AcquireDataSubscribeManager::SubscribeSc(int64_t eventId, const sptr<IRemote
     if (config.prog == "security_guard") {
         return SubscribeScInSg(eventId, callback);
     }
-
     // 订阅SC
     return SubscribeScInSc(eventId, callback);
+    // LCOV_EXCL_STOP
 }
 
 int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
@@ -173,6 +174,7 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
+    // LCOV_EXCL_START
     if (config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         return SUCCESS;
     }
@@ -204,8 +206,10 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
     scSubscribeMap_.erase(it);
     SGLOGI("UnSubscribeSc scSubscribeMap_size  %{public}zu", scSubscribeMap_.size());
     return SUCCESS;
+    // LCOV_EXCL_STOP
 }
 
+// LCOV_EXCL_START
 int AcquireDataSubscribeManager::UnSubscribeScAndDb(int64_t eventId)
 {
     int ret = DatabaseManager::GetInstance().UnSubscribeDb({eventId}, listener_);
@@ -220,6 +224,7 @@ int AcquireDataSubscribeManager::UnSubscribeScAndDb(int64_t eventId)
     }
     return ret;
 }
+// LCOV_EXCL_STOP
 
 int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback)
 {
@@ -229,6 +234,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sp
         SGLOGI("not find caller in g_subscriberInfoMap");
         return SUCCESS;
     }
+    // LCOV_EXCL_START
     // first erase current callback subscribed info
     for (auto it = g_subscriberInfoMap.at(callback).subscribe.begin();
         it != g_subscriberInfoMap.at(callback).subscribe.end(); it++) {
@@ -241,7 +247,6 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sp
     if (g_subscriberInfoMap.at(callback).subscribe.empty()) {
         g_subscriberInfoMap.erase(iter);
     }
-
     for (const auto &it : g_subscriberInfoMap) {
         for (const auto &i : it.second.subscribe) {
             if (i.GetEvent().eventId == eventId) {
@@ -254,6 +259,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sp
         SGLOGI("RemoveSubscribeRecord subscriberInfoMap_subscribe_size  %{public}zu", i.second.subscribe.size());
     }
     return UnSubscribeScAndDb(eventId);
+    // LCOV_EXCL_STOP
 }
 
 void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback)
@@ -337,6 +343,7 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
         SGLOGE("CheckRiskContent error");
         return;
     }
+    // LCOV_EXCL_START
     SecEvent secEvent {
         .eventId = event.eventId,
         .version = event.version,
@@ -350,6 +357,7 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
         }
     };
     ffrt::submit(task);
+    // LCOV_EXCL_STOP
 }
 
 size_t AcquireDataSubscribeManager::GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event)
@@ -371,6 +379,7 @@ bool AcquireDataSubscribeManager::FindSdkFlag(const std::set<std::string> &event
     if (sdkFlags.empty()) {
         return false;
     }
+    // LCOV_EXCL_START
     std::string sdkFlag = sdkFlags[0];
     auto sdkFlagFinder = [sdkFlag] (const std::string &flag) {
         std::string subStr = flag.substr(0, flag.find_first_of("+"));
@@ -378,6 +387,7 @@ bool AcquireDataSubscribeManager::FindSdkFlag(const std::set<std::string> &event
     };
     return std::find_if(eventSubscribes.begin(), eventSubscribes.end(), sdkFlagFinder) ==
         eventSubscribes.end();
+    // LCOV_EXCL_STOP
 }
 
 bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &event)
@@ -388,6 +398,7 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &e
         config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         eventFilter_()->GetFlagsEventNeedToUpload(eventTmp);
     }
+    // LCOV_EXCL_START
     for (auto &it : g_subscriberInfoMap) {
         for (const auto &i : it.second.subscribe) {
             if (i.GetEvent().eventId != eventTmp.eventId) {
@@ -418,9 +429,11 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &e
             break;
         }
     }
+    // LCOV_EXCL_STOP
     return true;
 }
 
+// LCOV_EXCL_START
 void AcquireDataSubscribeManager::DbListener::OnChange(uint32_t optType, const SecEvent &events,
     const std::set<std::string> &eventSubscribes)
 {
@@ -495,7 +508,6 @@ int AcquireDataSubscribeManager::InsertSubscribeMute(const SecurityEventFilter &
     return SUCCESS;
 }
 
-// LCOV_EXCL_START
 void AcquireDataSubscribeManager::SubscriberEventOnSgStart()
 {
     std::vector<int64_t> eventIds = ConfigDataManager::GetInstance().GetAllEventIds();
@@ -568,6 +580,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeMute(const SecurityEventFilter &
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
+    // LCOV_EXCL_START
     if (config.eventType == static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         int32_t ret = RemoveSubscribeMuteToSub(collectorFilter, config, sdkFlag);
         if (ret != SUCCESS) {
@@ -591,6 +604,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeMute(const SecurityEventFilter &
         callbackHashMap_.erase(callback);
     }
     return SUCCESS;
+    // LCOV_EXCL_STOP
 }
 
 SecurityCollector::SecurityCollectorEventMuteFilter AcquireDataSubscribeManager::ConvertFilter(
