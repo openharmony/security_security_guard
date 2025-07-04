@@ -129,7 +129,6 @@ void DataCollectManagerService::OnStop()
 {
     SecurityCollector::DataCollection::GetInstance().CloseLib();
 }
-// LCOV_EXCL_STOP
 
 int DataCollectManagerService::Dump(int fd, const std::vector<std::u16string>& args)
 {
@@ -206,6 +205,7 @@ bool DataCollectManagerService::IsDiscardEventInThisHour(int64_t eventId)
     }
     return false;
 }
+// LCOV_EXCL_STOP
 
 ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std::string &version,
     const std::string &time, const std::string &content)
@@ -215,6 +215,7 @@ ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std:
     if (ret != SUCCESS) {
         return ret;
     }
+    // LCOV_EXCL_START
     if (!DataFormat::CheckRiskContent(content)) {
         SGLOGE("CheckRiskContent error");
         return BAD_PARAM;
@@ -246,8 +247,10 @@ ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std:
     }
     ffrt::submit(task);
     return SUCCESS;
+    // LCOV_EXCL_STOP
 }
 
+// LCOV_EXCL_START
 ErrCode DataCollectManagerService::RequestDataSubmitAsync(int64_t eventId, const std::string &version,
     const std::string &time, const std::string &content)
 {
@@ -541,7 +544,6 @@ void DataCollectManagerService::SubscriberDeathRecipient::OnRemoteDied(const wpt
     }
     SGLOGI("end OnRemoteDied");
 }
-// LCOV_EXCL_STOP
 
 ErrCode DataCollectManagerService::CollectorStart(
     const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &cb)
@@ -908,4 +910,5 @@ int32_t DataCollectManagerService::SetDeathCallBack(SgSubscribeEvent event, cons
     callback->AddDeathRecipient(deathRecipient_);
     return SUCCESS;
 }
+// LCOV_EXCL_STOP
 }
