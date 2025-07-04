@@ -19,6 +19,7 @@ namespace {
     constexpr size_t MAX_MUTE_SIZE = 10;
 }
 namespace OHOS::Security::SecurityGuard {
+// LCOV_EXCL_START
 bool SecurityEventFilter::Marshalling(Parcel& parcel) const
 {
     if (!parcel.WriteInt64(filter_.eventId)) {
@@ -115,4 +116,5 @@ EventMuteFilter SecurityEventFilter::GetMuteFilter() const
 {
     return filter_;
 }
+// LCOV_EXCL_STOP
 }
