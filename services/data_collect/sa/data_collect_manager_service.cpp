@@ -62,7 +62,6 @@ namespace {
     const std::string REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
     const std::string MANAGE_CONFIG_PERMISSION = "ohos.permission.MANAGE_SECURITY_GUARD_CONFIG";
     const std::string QUERY_SECURITY_EVENT_PERMISSION = "ohos.permission.QUERY_SECURITY_EVENT";
-    const std::string QUERY_AUDIT_EVENT_PERMISSION = "ohos.permission.QUERY_AUDIT_EVENT";
     constexpr int32_t CFG_FILE_MAX_SIZE = 1 * 1024 * 1024;
     constexpr int32_t CFG_FILE_BUFF_SIZE = 1 * 1024 * 1024 + 1;
     const std::unordered_map<std::string, std::vector<std::string>> g_apiPermissionsMap {
@@ -75,8 +74,7 @@ namespace {
         {"ConfigUpdate", {MANAGE_CONFIG_PERMISSION}},
         {"QuerySecurityEventConfig", {MANAGE_CONFIG_PERMISSION}},
         {"AddFilter", {QUERY_SECURITY_EVENT_PERMISSION}},
-        {"RemoveFilter", {QUERY_SECURITY_EVENT_PERMISSION}},
-        {"QueryProcInfo", {QUERY_AUDIT_EVENT_PERMISSION}},
+        {"RemoveFilter", {QUERY_SECURITY_EVENT_PERMISSION}}
     };
     std::unordered_set<std::string> g_configCacheFilesSet;
     constexpr uint32_t FINISH = 0;
@@ -431,6 +429,25 @@ ErrCode DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
     return ret;
 }
 
+void DataCollectManagerService::QuerySecurityEventCallBack(sptr<ISecurityEventQueryCallback> proxy,
+    std::vector<SecurityCollector::SecurityEvent> events)
+{
+    int32_t step = MAX_ON_QUERY_SIZE;
+    if (events.size() > 0 && events.size() <= static_cast<size_t>(MAX_ON_QUERY_SIZE)) {
+        proxy->OnQuery(events);
+    } else if (events.size() > static_cast<size_t>(MAX_ON_QUERY_SIZE)) {
+        std::vector<SecurityCollector::SecurityEvent>::iterator curPtr = events.begin();
+        std::vector<SecurityCollector::SecurityEvent>::iterator endPtr = events.end();
+        std::vector<SecurityCollector::SecurityEvent>::iterator end;
+        while (curPtr < endPtr) {
+            end = endPtr - curPtr > step ? step + curPtr : endPtr;
+            step = endPtr - curPtr > step ? step : endPtr - curPtr;
+            proxy->OnQuery(std::vector<SecurityCollector::SecurityEvent>(curPtr, end));
+            curPtr += step;
+        }
+    }
+}
+
 bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallback> proxy,
     SecurityCollector::SecurityEventRuler ruler)
 {
@@ -443,13 +460,19 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
     std::vector<SecurityCollector::SecurityEvent> replyEvents;
     std::vector<int64_t> eventIds{ruler.GetEventId()};
     SGLOGD("eventType is %{public}u", config.eventType);
-    if (config.eventType == 1) { // query in collector
+    if (config.prog == "security_guard") {
+        int32_t code = SecurityCollector::DataCollection::GetInstance().QuerySecurityEvent({ruler}, replyEvents);
+        if (code != SUCCESS) {
+            return false;
+        }
+        QuerySecurityEventCallBack(proxy, replyEvents);
+    } else if (config.eventType == 1) { // query in collector
         int32_t code = SecurityCollector::CollectorManager::GetInstance().QuerySecurityEvent(
             {ruler}, replyEvents);
         if (code != SUCCESS) {
             return false;
         }
-        proxy->OnQuery(replyEvents);
+        QuerySecurityEventCallBack(proxy, replyEvents);
     } else if (config.dbTable == FILE_SYSTEM) {
         (void) FileSystemStoreHelper::GetInstance().QuerySecurityEvent(ruler, proxy);
     } else {
@@ -464,7 +487,7 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
             std::back_inserter(replyEvents), [] (SecEvent event) {
             return SecurityCollector::SecurityEvent(event.eventId, event.version, event.content, event.date);
         });
-        proxy->OnQuery(replyEvents);
+        QuerySecurityEventCallBack(proxy, replyEvents);
     }
     return true;
 }
@@ -794,40 +817,6 @@ ErrCode DataCollectManagerService::QuerySecurityEventConfig(std::string &result)
         return ret;
     }
     return QueryEventConfig(result);
-}
-
-ErrCode DataCollectManagerService::QueryProcInfo(const SecurityCollector::SecurityEventRuler &ruler,
-    std::string &result)
-{
-    SGLOGI("enter QueryProcInfo");
-    int32_t ret = IsApiHasPermission("QueryProcInfo");
-    if (ret != SUCCESS) {
-        return ret;
-    }
-    EventCfg config;
-    bool isSuccess = ConfigDataManager::GetInstance().GetEventConfig(ruler.GetEventId(), config);
-    if (!isSuccess) {
-        SGLOGE("GetEventConfig error, eventId is 0x%{public}" PRIx64, ruler.GetEventId());
-        return FAILED;
-    }
-    std::vector<SecurityCollector::SecurityEvent> replyEvents;
-    std::vector<int64_t> eventIds{ruler.GetEventId()};
-    SGLOGD("eventType is %{public}u", config.eventType);
-    int32_t code = SUCCESS;
-    if (config.eventType == 1) { // query in collector
-        code = SecurityCollector::CollectorManager::GetInstance().QuerySecurityEvent(
-            {ruler}, replyEvents);
-    } else if (config.prog == "security_guard") {
-        code = SecurityCollector::DataCollection::GetInstance().QuerySecurityEvent({ruler}, replyEvents);
-    } else {
-        return FAILED;
-    }
-
-    if (!replyEvents.empty()) {
-        result = replyEvents[0].GetContent();
-    }
-
-    return SUCCESS;
 }
 
 ErrCode DataCollectManagerService::AddFilter(const SecurityEventFilter &subscribeMute,
