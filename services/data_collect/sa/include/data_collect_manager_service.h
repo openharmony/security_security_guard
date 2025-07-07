@@ -61,7 +61,6 @@ public:
         const std::string &sdkFlag) override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
-    ErrCode QueryProcInfo(const SecurityCollector::SecurityEventRuler &ruler, std::string &result) override;
 private:
     class SubscriberDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
@@ -83,6 +82,8 @@ private:
     int32_t IsEventGroupHasPermission(const std::string &eventGroup, std::vector<int64_t> eventIds);
     bool ParseTrustListFile(const std::string &trustListFile);
     int32_t SetDeathCallBack(SgSubscribeEvent event, const sptr<IRemoteObject> &callback);
+    static void QuerySecurityEventCallBack(sptr<ISecurityEventQueryCallback> proxy,
+        std::vector<SecurityCollector::SecurityEvent> events);
     std::mutex mutex_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
     std::atomic<uint32_t> taskCount_ = 0;
