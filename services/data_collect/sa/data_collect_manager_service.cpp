@@ -472,7 +472,7 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
         if (code != SUCCESS) {
             return false;
         }
-        proxy->OnQuery(replyEvents);
+        QuerySecurityEventCallBack(proxy, replyEvents);
     } else if (config.dbTable == FILE_SYSTEM) {
         (void) FileSystemStoreHelper::GetInstance().QuerySecurityEvent(ruler, proxy);
     } else {
@@ -487,7 +487,7 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
             std::back_inserter(replyEvents), [] (SecEvent event) {
             return SecurityCollector::SecurityEvent(event.eventId, event.version, event.content, event.date);
         });
-        proxy->OnQuery(replyEvents);
+        QuerySecurityEventCallBack(proxy, replyEvents);
     }
     return true;
 }
