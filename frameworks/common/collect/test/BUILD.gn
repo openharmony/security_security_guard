@@ -52,6 +52,7 @@ ohos_unittest("libsg_collect_sdk_test") {
     "${sg_root_dir}/frameworks/common/collect/src/sg_obtaindata_client.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/acquire_data_manager_callback_service.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/acquire_data_manager_callback_stub.cpp",
+    "${sg_root_dir}/frameworks/common/collect/src/event_subscribe_client.cpp",
     "unittest/src/data_collect_kit_test.cpp",
   ]
 
