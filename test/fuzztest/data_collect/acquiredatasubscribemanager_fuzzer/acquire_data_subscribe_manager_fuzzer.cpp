@@ -62,20 +62,21 @@ bool AcquireDataSubscribeManagerFuzzTest(const uint8_t* data, size_t size)
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE)};
     Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
-    AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
-    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
+    AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj,
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId,
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     AcquireDataSubscribeManager::GetInstance().BatchPublish(event);
-    AcquireDataSubscribeManager::GetInstance().SubscribeSc(fdp.ConsumeIntegral<int64_t>(), obj);
+    AcquireDataSubscribeManager::GetInstance().SubscribeSc(fdp.ConsumeIntegral<int64_t>());
     AcquireDataSubscribeManager::GetInstance().UnSubscribeSc(fdp.ConsumeIntegral<int64_t>());
-    AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(fdp.ConsumeIntegral<int64_t>(), obj);
-    AcquireDataSubscribeManager::GetInstance().SubscribeScInSc(fdp.ConsumeIntegral<int64_t>(), obj);
+    AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(fdp.ConsumeIntegral<int64_t>());
+    AcquireDataSubscribeManager::GetInstance().SubscribeScInSc(fdp.ConsumeIntegral<int64_t>());
     SecurityEventFilter subscribeMute {};
     subscribeMute.filter_.eventId = fdp.ConsumeIntegral<int64_t>();
-    subscribeMute.filter_.eventGroup = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     subscribeMute.filter_.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj,
+    AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute.GetMuteFilter(),
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj,
+    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute.GetMuteFilter(),
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     AcquireDataSubscribeManager::GetInstance().BatchUpload(obj, std::vector<Security::SecurityCollector::Event>{event});
     AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecordOnRemoteDied(obj);
