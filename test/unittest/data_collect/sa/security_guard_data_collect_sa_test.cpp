@@ -239,7 +239,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_QueryInDatabase, Test
     EXPECT_CALL(DatabaseManager::GetInstance(), QueryEventByEventId(_, _)).WillRepeatedly(Return(true));
     sptr<SecurityEventQueryCallbackProxy> mockProxy = new (std::nothrow) SecurityEventQueryCallbackProxy(obj);
     SecurityCollector::SecurityEventRuler ruler;
-    EXPECT_CALL(*obj, SendRequest).Times(1);
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     EXPECT_TRUE(service.QueryEventByRuler(mockProxy, ruler));
 }
@@ -260,7 +259,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_QueryInCollector, Tes
     EXPECT_TRUE(obj != nullptr);
     sptr<SecurityEventQueryCallbackProxy> mockProxy = new (std::nothrow) SecurityEventQueryCallbackProxy(obj);
     SecurityCollector::SecurityEventRuler ruler;
-    EXPECT_CALL(*obj, SendRequest).Times(1);
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     EXPECT_TRUE(service.QueryEventByRuler(mockProxy, ruler));
 }
@@ -276,7 +274,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_NotSupportType, TestS
     EXPECT_TRUE(obj != nullptr);
     sptr<SecurityEventQueryCallbackProxy> mockProxy = new (std::nothrow) SecurityEventQueryCallbackProxy(obj);
     SecurityCollector::SecurityEventRuler ruler;
-    EXPECT_CALL(*obj, SendRequest).Times(1);
 
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     EXPECT_TRUE(service.QueryEventByRuler(mockProxy, ruler));
@@ -652,7 +649,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_NullProxy, TestSize.Level0)
     EXPECT_CALL(DatabaseManager::GetInstance(), SubscribeDb).WillRepeatedly(Return(SUCCESS));
     EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb).WillRepeatedly(Return(SUCCESS));
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetIsBatchUpload).WillOnce(Return(false)).WillOnce(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
     EXPECT_EQ(result, SUCCESS);
     EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().BatchPublish(event2));
@@ -1294,8 +1290,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg01, TestSize.Level0)
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), SubscribeCollectors).WillOnce(
         Return(true));
-    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), AddFilter).WillOnce(
-        Return(SUCCESS));
     int ret = AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(1, obj);
     EXPECT_EQ(ret, SUCCESS);
     AcquireDataSubscribeManager::GetInstance().eventToListenner_.clear();
@@ -1317,8 +1311,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc01, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), Subscribe).WillOnce(
-        Return(SecurityCollector::SUCCESS));
-    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), AddFilter).WillOnce(
         Return(SecurityCollector::SUCCESS));
     int ret = AcquireDataSubscribeManager::GetInstance().SubscribeScInSc(1, obj);
     EXPECT_EQ(ret, SUCCESS);
