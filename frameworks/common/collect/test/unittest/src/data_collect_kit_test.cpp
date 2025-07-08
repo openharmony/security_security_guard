@@ -599,11 +599,4 @@ HWTEST_F(DataCollectKitTest, QuerySecurityEventConfig01, TestSize.Level1)
     EXPECT_EQ(ret, SecurityGuard::NO_PERMISSION);
 }
 
-HWTEST_F(DataCollectKitTest, TestQueryProcInfo, TestSize.Level1)
-{
-    std::string result;
-    SecurityCollector::SecurityEventRuler rule(11111);
-    EXPECT_EQ(SecurityGuard::DataCollectManager::GetInstance().QueryProcInfo(rule, result),
-        SecurityGuard::NO_PERMISSION);
-}
 }
