@@ -113,5 +113,6 @@ ohos_shared_library("sg_config_manager") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",
+    "ffrt:libffrt",
   ]
 }

@@ -43,6 +43,8 @@ struct Event {
     std::string content;
     std::string extra;
     std::string timestamp;
+    std::string userId;
+    std::string deviceId;
     std::set<std::string> eventSubscribes;
 };
 struct SecurityCollectorEventMuteFilter {

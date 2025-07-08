@@ -225,11 +225,7 @@ int32_t SecurityCollectorManagerStub::HandleMute(MessageParcel &data, MessagePar
         LOGE("failed to read parcelable for mute Info");
         return BAD_PARAM;
     }
-    std::string flag {};
-    if (!data.ReadString(flag)) {
-        LOGE("failed to get SubscribeMute flag");
-    }
-    int32_t ret = AddFilter(*info, flag);
+    int32_t ret = AddFilter(*info);
     reply.WriteInt32(ret);
     return ret;
 }
@@ -250,12 +246,7 @@ int32_t SecurityCollectorManagerStub::HandleUnmute(MessageParcel &data, MessageP
         LOGE("failed to read parcelable for mute Info");
         return BAD_PARAM;
     }
-
-    std::string flag {};
-    if (!data.ReadString(flag)) {
-        LOGE("failed to get SubscribeUnMute flag");
-    }
-    int32_t ret = RemoveFilter(*info, flag);
+    int32_t ret = RemoveFilter(*info);
     reply.WriteInt32(ret);
     return ret;
 }
