@@ -21,7 +21,6 @@
 #include "security_event_query_callback_service.h"
 #include "security_guard_define.h"
 #include "acquire_data_manager_callback_service.h"
-#include "security_event_filter.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 #include "data_collect_manager_callback_service.h"
@@ -55,7 +54,7 @@ DataCollectManager::DataCollectManager() : callback_(new (std::nothrow) AcquireD
         std::string timeStr = std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
         std::string ptrStr = std::to_string(reinterpret_cast<int64_t>(callback_.GetRefPtr()));
         std::size_t hash = std::hash<std::string>{}(timeStr + ptrStr);
-        sdkFlag_ = std::to_string(hash);
+        sdkFlag_ = "sdk" + std::to_string(hash);
     }
 }
 
@@ -219,7 +218,7 @@ int32_t DataCollectManager::Subscribe(const std::shared_ptr<SecurityCollector::I
         }
     }
     if (!IsCurrentSubscriberEventIdExist(subscriber)) {
-        int32_t ret = proxy->Subscribe(subscriber->GetSubscribeInfo(), callback_);
+        int32_t ret = proxy->Subscribe(subscriber->GetSubscribeInfo(), callback_, sdkFlag_);
         if (ret != SUCCESS) {
             SGLOGI("Subscribe result, ret=%{public}d", ret);
             return ret;
@@ -261,7 +260,7 @@ int32_t DataCollectManager::Unsubscribe(const std::shared_ptr<SecurityCollector:
     }
     subscribers_.erase(subscriber);
     if (!IsCurrentSubscriberEventIdExist(subscriber)) {
-        int32_t ret = proxy->Unsubscribe(subscriber->GetSubscribeInfo(), callback_);
+        int32_t ret = proxy->Unsubscribe(subscriber->GetSubscribeInfo(), callback_, sdkFlag_);
         if (ret != SUCCESS) {
             subscribers_.insert(subscriber);
             return ret;
@@ -281,70 +280,6 @@ bool DataCollectManager::IsCurrentSubscriberEventIdExist(
         }
     }
     return false;
-}
-
-int32_t DataCollectManager::AddFilter(const std::shared_ptr<EventMuteFilter> &subscribeMute)
-{
-    SGLOGI("enter DataCollectManager AddFilter");
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (subscribeMute == nullptr) {
-        SGLOGE("subscriber is nullptr");
-        return NULL_OBJECT;
-    }
-    if (callback_ == nullptr) {
-        SGLOGE("callback is null");
-        return NULL_OBJECT;
-    }
-    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (registry == nullptr) {
-        SGLOGE("GetSystemAbilityManager error");
-        return NULL_OBJECT;
-    }
-    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerIdl>(object);
-    if (proxy == nullptr) {
-        SGLOGE("proxy is null");
-        return NULL_OBJECT;
-    }
-    SecurityEventFilter filter(*subscribeMute);
-    int32_t ret = proxy->AddFilter(filter, callback_, sdkFlag_);
-    if (ret != SUCCESS) {
-        return ret;
-    }
-    subscribeMutes_.insert(subscribeMute);
-    return 0;
-}
-
-int32_t DataCollectManager::RemoveFilter(const std::shared_ptr<EventMuteFilter> &subscribeMute)
-{
-    SGLOGI("enter DataCollectManager RemoveFilter");
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (subscribeMute == nullptr) {
-        SGLOGE("subscriber is nullptr");
-        return NULL_OBJECT;
-    }
-    if (callback_ == nullptr) {
-        SGLOGE("callback is null");
-        return NULL_OBJECT;
-    }
-    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (registry == nullptr) {
-        SGLOGE("GetSystemAbilityManager error");
-        return NULL_OBJECT;
-    }
-    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerIdl>(object);
-    if (proxy == nullptr) {
-        SGLOGE("proxy is null");
-        return NULL_OBJECT;
-    }
-    SecurityEventFilter filter(*subscribeMute);
-    int32_t ret = proxy->RemoveFilter(filter, callback_, sdkFlag_);
-    if (ret != SUCCESS) {
-        return ret;
-    }
-    subscribeMutes_.erase(subscribeMute);
-    return 0;
 }
 
 int32_t DataCollectManager::ReportSecurityEvent(const std::shared_ptr<EventInfo> &info, bool isSync)

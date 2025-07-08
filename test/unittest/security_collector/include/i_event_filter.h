@@ -18,9 +18,9 @@
 namespace OHOS::Security::SecurityCollector {
 class IEventFilter {
 public:
-    virtual int32_t SetEventFilter(const std::string &sdkFlag, const SecurityCollectorEventMuteFilter &filter) = 0;
-    virtual int32_t RemoveEventFilter(const std::string &sdkFlag, const SecurityCollectorEventMuteFilter &filter) = 0;
-    virtual int32_t RemoveSdkAllEventFilter(const std::string &sdkFlag) = 0;
+    virtual int32_t SetEventFilter(const SecurityCollectorEventMuteFilter &filter) = 0;
+    virtual int32_t RemoveEventFilter(const SecurityCollectorEventMuteFilter &filter) = 0;
+    virtual int32_t RemoveSdkAllEventFilter(const std::string &clientId) = 0;
     virtual int32_t GetFlagsEventNeedToUpload(Event &event) = 0;
 };
 }

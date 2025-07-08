@@ -34,14 +34,6 @@ bool SecurityEventFilter::Marshalling(Parcel& parcel) const
         SGLOGE("failed to write isInclude");
         return false;
     }
-    if (!parcel.WriteString(filter_.eventGroup)) {
-        SGLOGE("failed to write event group");
-        return false;
-    }
-    if (!parcel.WriteString(filter_.instanceFlag)) {
-        SGLOGE("failed to write instanceFlag");
-        return false;
-    }
     if (filter_.mutes.size() > MAX_MUTE_SIZE) {
         SGLOGE("the mutes size err");
         return false;
@@ -72,14 +64,6 @@ bool SecurityEventFilter::ReadFromParcel(Parcel &parcel)
     }
     if (!parcel.ReadBool(filter_.isInclude)) {
         SGLOGE("failed to read isInclude");
-        return false;
-    }
-    if (!parcel.ReadString(filter_.eventGroup)) {
-        SGLOGE("failed to read event group");
-        return false;
-    }
-    if (!parcel.ReadString(filter_.instanceFlag)) {
-        SGLOGE("failed to read instanceFlag");
         return false;
     }
     uint32_t size = 0;

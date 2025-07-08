@@ -56,10 +56,8 @@ public:
         std::vector<SecurityEvent> &events) override;
     static void ReportScSubscribeEvent(const ScSubscribeEvent &event);
     static void ReportScUnsubscribeEvent(const ScUnsubscribeEvent &event);
-    int32_t AddFilter(const SecurityCollectorEventFilter &subscribeMute,
-        const std::string &callbackFlag) override;
-    int32_t RemoveFilter(const SecurityCollectorEventFilter &subscribeMute,
-        const std::string &callbackFlag) override;
+    int32_t AddFilter(const SecurityCollectorEventFilter &subscribeMute) override;
+    int32_t RemoveFilter(const SecurityCollectorEventFilter &subscribeMute) override;
 private:
     static std::string GetAppName();
     static int32_t HasPermission(const std::string &permission);
