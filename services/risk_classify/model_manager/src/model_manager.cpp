@@ -109,11 +109,17 @@ int32_t ModelManager::InitModel(uint32_t modelId)
 std::string ModelManager::GetResult(uint32_t modelId, const std::string &param)
 {
     std::string result = "unknown";
-    int32_t ret = InitModel(modelId);
-    if (ret != SUCCESS) {
+    ModelCfg config;
+    bool success = ConfigDataManager::GetInstance().GetModelConfig(modelId, config);
+    if (!success) {
+        SGLOGI("GetResult GetModelConfig Failed, ModelId=%{public}u", modelId);
         return result;
     }
-
+    if (config.startMode == START_ON_DEMAND) {
+        if (InitModel(modelId) != SUCCESS) {
+            return result;
+        }
+    }
     {
         std::lock_guard<std::mutex> lock(mutex_);
         auto iter = modelIdApiMap_.find(modelId);
@@ -123,9 +129,7 @@ std::string ModelManager::GetResult(uint32_t modelId, const std::string &param)
         }
         result = iter->second->GetModelApi()->GetResult(modelId, param);
     }
-    ModelCfg config;
-    bool success = ConfigDataManager::GetInstance().GetModelConfig(modelId, config);
-    if (success && config.startMode == START_ON_DEMAND) {
+    if (config.startMode == START_ON_DEMAND) {
         Release(modelId);
     }
     return result;
