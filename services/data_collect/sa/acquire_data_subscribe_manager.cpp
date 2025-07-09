@@ -652,7 +652,6 @@ int AcquireDataSubscribeManager::RemoveSubscribeMuteToSub(
 int AcquireDataSubscribeManager::AddSubscribeMuteToSub(
     const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter, const EventCfg &config)
 {
-
     int32_t ret = SecurityCollector::CollectorManager::GetInstance().AddFilter(collectorFilter);
     if (ret != SUCCESS) {
         SGLOGE("InsertSubscribeMute failed, ret=%{public}d", ret);
