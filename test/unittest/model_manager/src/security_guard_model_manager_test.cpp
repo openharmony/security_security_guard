@@ -233,7 +233,7 @@ HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerGetResult002, TestSize.L
     EXPECT_EQ(manager.GetResult(111, "test"), "unknown");
 }
 
-HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerGetResult002, TestSize.Level0)
+HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerGetResult003, TestSize.Level0)
 {
     MockMyModelManager manager {};
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetModelConfig)
