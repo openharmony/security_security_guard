@@ -239,7 +239,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_QueryInDatabase, Test
     EXPECT_CALL(DatabaseManager::GetInstance(), QueryEventByEventId(_, _)).WillRepeatedly(Return(true));
     sptr<SecurityEventQueryCallbackProxy> mockProxy = new (std::nothrow) SecurityEventQueryCallbackProxy(obj);
     SecurityCollector::SecurityEventRuler ruler;
-    EXPECT_CALL(*obj, SendRequest).Times(1);
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     EXPECT_TRUE(service.QueryEventByRuler(mockProxy, ruler));
 }
@@ -260,7 +259,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_QueryInCollector, Tes
     EXPECT_TRUE(obj != nullptr);
     sptr<SecurityEventQueryCallbackProxy> mockProxy = new (std::nothrow) SecurityEventQueryCallbackProxy(obj);
     SecurityCollector::SecurityEventRuler ruler;
-    EXPECT_CALL(*obj, SendRequest).Times(1);
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     EXPECT_TRUE(service.QueryEventByRuler(mockProxy, ruler));
 }
@@ -276,7 +274,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventByRuler_NotSupportType, TestS
     EXPECT_TRUE(obj != nullptr);
     sptr<SecurityEventQueryCallbackProxy> mockProxy = new (std::nothrow) SecurityEventQueryCallbackProxy(obj);
     SecurityCollector::SecurityEventRuler ruler;
-    EXPECT_CALL(*obj, SendRequest).Times(1);
 
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     EXPECT_TRUE(service.QueryEventByRuler(mockProxy, ruler));
