@@ -45,7 +45,7 @@ public:
     void SetUnsubscribeHandler(UnsubscribeHandler handler) { };
     int32_t AddFilter(const SecurityCollectorEventFilter &subscribeMute) { return 0; };
     int32_t RemoveFilter(const SecurityCollectorEventFilter &subscribeMute) { return 0; };
-    void RemoveAllFilter() {}; 
+    void RemoveAllFilter() {};
 };
 }
 #endif // SECURITY_GUARD_SECURITY_COLLECTOR_SUBSCRIBLER_MANAGER_H

@@ -27,7 +27,8 @@ namespace {
 
 }
 
-void EventSubscribeClient::Deleter(EventSubscribeClient *client) {
+void EventSubscribeClient::Deleter(EventSubscribeClient *client)
+{
     SGLOGI("enter EventSubscribeClient Deleter");
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
