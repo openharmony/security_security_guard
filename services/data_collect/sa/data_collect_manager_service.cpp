@@ -121,11 +121,13 @@ void DataCollectManagerService::OnStart()
         SGLOGE("Publish error");
         return;
     }
+    AcquireDataSubscribeManager::GetInstance().StartClearEventCache();
 }
 
 void DataCollectManagerService::OnStop()
 {
     SecurityCollector::DataCollection::GetInstance().CloseLib();
+    AcquireDataSubscribeManager::GetInstance().StopClearEventCache();
 }
 
 int DataCollectManagerService::Dump(int fd, const std::vector<std::u16string>& args)

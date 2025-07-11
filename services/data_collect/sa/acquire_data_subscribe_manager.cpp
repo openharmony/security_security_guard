@@ -89,8 +89,6 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
     if (g_subscriberInfoMap.count(callback) == 0) {
         SubscriberInfo subInfo {};
         subInfo.subscribe.emplace_back(subscribeInfo);
-        subInfo.timer = std::make_shared<CleanupTimer>();
-        subInfo.timer->Start(callback, MAX_DURATION_TEN_SECOND);
         g_subscriberInfoMap[callback] = subInfo;
     } else {
         g_subscriberInfoMap.at(callback).subscribe.emplace_back(subscribeInfo);
@@ -293,30 +291,55 @@ void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<I
     callbackHashMap_.erase(callback);
 }
 
+void AcquireDataSubscribeManager::StartClearEventCache()
+{
+    auto task = [this]() {
+        while (true) {
+            this->ClearEventCache(nullptr);
+            {
+                std::lock_guard<std::mutex> lock(clearCachemutex_);
+                if (isStopClearCache_ == true) {
+                    break;
+                }
+            }
+            ffrt::this_task::sleep_for(std::chrono::milliseconds(MAX_DURATION_TEN_SECOND));
+        }
+    };
+    ffrt::submit(task);
+}
+
+void AcquireDataSubscribeManager::StopClearEventCache()
+{
+    std::lock_guard<std::mutex> lock(clearCachemutex_);
+    isStopClearCache_ = true;
+}
+
 // LCOV_EXCL_START
-void AcquireDataSubscribeManager::CleanupTimer::ClearEventCache(const sptr<IRemoteObject> &remote)
+void AcquireDataSubscribeManager::ClearEventCache(const sptr<IRemoteObject> &remote)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
     SGLOGD("timer running");
-    if (g_subscriberInfoMap.count(remote) == 0) {
-        SGLOGI("not found callback");
-        return;
+    for (auto &iter : g_subscriberInfoMap) {
+        if (iter.first == nullptr) {
+            SGLOGW("callback or SubscriberInfo is null");
+            continue;
+        }
+        auto proxy = iface_cast<IAcquireDataCallback>(iter.first);
+        if (proxy == nullptr) {
+            SGLOGE("proxy is null");
+            return;
+        }
+        auto tmp = iter.second.events;
+        if (tmp.empty()) {
+            continue;
+        }
+        auto task = [proxy, tmp] () {
+            proxy->OnNotify(tmp);
+        };
+        ffrt::submit(task);
+        iter.second.events.clear();
+        iter.second.eventsBuffSize = 0;
     }
-    std::vector<SecurityCollector::Event> tmp = g_subscriberInfoMap.at(remote).events;
-    if (tmp.empty()) {
-        return;
-    }
-    auto proxy = iface_cast<IAcquireDataCallback>(remote);
-    if (proxy == nullptr) {
-        SGLOGE("proxy is null");
-        return;
-    }
-    auto task = [proxy, tmp] () {
-        proxy->OnNotify(tmp);
-    };
-    ffrt::submit(task);
-    g_subscriberInfoMap.at(remote).events.clear();
-    g_subscriberInfoMap.at(remote).eventsBuffSize = 0;
 }
 // LCOV_EXCL_STOP
 
