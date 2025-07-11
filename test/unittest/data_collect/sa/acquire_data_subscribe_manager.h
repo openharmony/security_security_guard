@@ -44,34 +44,9 @@ public:
     int RemoveSubscribeMute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
         const std::string &sdkFlag);
     void SubscriberEventOnSgStart();
-    class CleanupTimer {
-    public:
-        CleanupTimer() = default;
-        ~CleanupTimer() { Shutdown(); }
-        void ClearEventCache(const sptr<IRemoteObject> &remote);
-        void Start(const sptr<IRemoteObject> &remote, int64_t duration)
-        {
-            timer_.Setup();
-            timerId_ = timer_.Register([this, remote] { this->ClearEventCache(remote); }, duration);
-        }
-        void Shutdown()
-        {
-            if (timerId_ != 0) {
-                timer_.Unregister(timerId_);
-            }
-            timer_.Shutdown();
-            timerId_ = 0;
-        }
-        uint32_t GetTimeId()
-        {
-            return timerId_;
-        }
-    private:
-        Utils::Timer timer_{"cleanup_subscriber"};
-        uint32_t timerId_{};
-    };
+    void StartClearEventCache();
+    void StopClearEventCache();
     using SubscriberInfo = struct {
-        std::shared_ptr<CleanupTimer> timer;
         std::vector<SecurityCollector::Event> events;
         size_t eventsBuffSize;
         std::vector<SecurityCollector::SecurityCollectorSubscribeInfo> subscribe;
@@ -81,6 +56,7 @@ public:
 private:
     AcquireDataSubscribeManager();
     ~AcquireDataSubscribeManager() = default;
+    void ClearEventCache(const sptr<IRemoteObject> &remote);
     int SubscribeSc(int64_t eventId, const sptr<IRemoteObject> &callback);
     int UnSubscribeSc(int64_t eventId);
     int UnSubscribeScAndDb(int64_t eventId);
@@ -116,6 +92,8 @@ private:
     std::map<int64_t, std::shared_ptr<SecurityCollector::ICollectorFwk>> eventToListenner_;
     void *handle_ = nullptr;
     GetEventFilterFunc eventFilter_ = nullptr;
+    bool isStopClearCache_ = false;
+    std::mutex clearCachemutex_ {};
 };
 } // namespace OHOS::Security::SecurityGuard
 
