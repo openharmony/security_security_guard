@@ -220,9 +220,31 @@ HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerStartSecurityModel002, T
 HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerGetResult002, TestSize.Level0)
 {
     MockMyModelManager manager {};
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetModelConfig)
+    .WillOnce([](uint32_t modelId, ModelCfg &config) {
+        config.path = "/system/lib64/sg_test";
+        config.startMode = START_ON_DEMAND;
+        return true;
+    });
     EXPECT_CALL(manager, InitModel)
     .WillOnce([](uint32_t modelId) {
         return SUCCESS;
+    });
+    EXPECT_EQ(manager.GetResult(111, "test"), "unknown");
+}
+
+HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerGetResult003, TestSize.Level0)
+{
+    MockMyModelManager manager {};
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetModelConfig)
+    .WillOnce([](uint32_t modelId, ModelCfg &config) {
+        config.path = "/system/lib64/sg_test";
+        config.startMode = START_ON_DEMAND;
+        return true;
+    });
+    EXPECT_CALL(manager, InitModel)
+    .WillOnce([](uint32_t modelId) {
+        return FAILED;
     });
     EXPECT_EQ(manager.GetResult(111, "test"), "unknown");
 }

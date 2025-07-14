@@ -67,7 +67,7 @@ public:
         };
     void BatchUpload(sptr<IRemoteObject> obj, const std::vector<SecurityCollector::Event> &events);
     void UploadEvent(const SecurityCollector::Event &event);
-private:
+    private:
     AcquireDataSubscribeManager();
     ~AcquireDataSubscribeManager();
     int SubscribeSc(int64_t eventId);
@@ -114,7 +114,10 @@ private:
     void *handle_ = nullptr;
     void *wrapperHandle_ = nullptr;
     GetEventFilterFunc eventFilter_ = nullptr;
+<<<<<<< HEAD
     GetEventWrapperFunc eventWrapper_ = nullptr;
+=======
+>>>>>>> 878725e7bbd71e0e6666471b0605f46bf800465f
     bool isStopClearCache_ = false;
     std::mutex clearCachemutex_ {};
 };
