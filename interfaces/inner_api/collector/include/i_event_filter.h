@@ -21,7 +21,7 @@ public:
     virtual int32_t SetEventFilter(const SecurityCollectorEventMuteFilter &filter) = 0;
     virtual int32_t RemoveEventFilter(const SecurityCollectorEventMuteFilter &filter) = 0;
     virtual int32_t RemoveSdkAllEventFilter(const std::string &clientId) = 0;
-    virtual int32_t RemoveAllEventFilter() = 0;
+    virtual void RemoveAllEventFilter() = 0;
     virtual int32_t GetFlagsEventNeedToUpload(Event &event) = 0;
 };
 }

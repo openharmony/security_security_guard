@@ -422,11 +422,12 @@ ErrCode DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
         BigData::ReportSgUnsubscribeEvent(event);
         return ret;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (deathRecipient_ != nullptr) {
-        cb->RemoveDeathRecipient(deathRecipient_);
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (deathRecipient_ != nullptr) {
+            cb->RemoveDeathRecipient(deathRecipient_);
+        }
     }
-
     ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, cb,
         clientId);
     event.ret = ret;
@@ -862,9 +863,9 @@ ErrCode DataCollectManagerService::AddFilter(const SecurityEventFilter &subscrib
     event.eventId = filter.eventId;
     std::string eventGroup = AcquireDataSubscribeManager::GetInstance().GetCurrentClientGroup(clientId);
     if (eventGroup == "securityGroup") {
-        ret = IsEventGroupHasPermission(eventGroup, {});
+        ret = IsEventGroupHasPermission(eventGroup, std::vector<int64_t>{filter.eventId});
     } else {
-        ret = IsEventGroupHasPublicPermission(eventGroup, {});
+        ret = IsEventGroupHasPublicPermission(eventGroup, std::vector<int64_t>{filter.eventId});
     }
     if (ret != SUCCESS) {
         event.ret = ret;
@@ -894,9 +895,9 @@ ErrCode DataCollectManagerService::RemoveFilter(const SecurityEventFilter &subsc
     std::string eventGroup = AcquireDataSubscribeManager::GetInstance().GetCurrentClientGroup(clientId);
     int32_t ret = 0;
     if (eventGroup == "securityGroup") {
-        ret = IsEventGroupHasPermission(eventGroup, {});
+        ret = IsEventGroupHasPermission(eventGroup, std::vector<int64_t>{filter.eventId});
     } else {
-        ret = IsEventGroupHasPublicPermission(eventGroup, {});
+        ret = IsEventGroupHasPublicPermission(eventGroup, std::vector<int64_t>{filter.eventId});
     }
     if (ret != SUCCESS) {
         event.ret = ret;
@@ -950,12 +951,6 @@ ErrCode DataCollectManagerService::Subscribe(int64_t eventId, const std::string 
         BigData::ReportSgSubscribeEvent(event);
         return ret;
     }
-    if (clientCallBacks_.find(clientId) == clientCallBacks_.end()) {
-        SGLOGE("not found current client");
-        event.ret = NOT_FOUND;
-        BigData::ReportSgSubscribeEvent(event);
-        return NOT_FOUND;
-    }
     ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(eventId, clientId);
     if (ret != SUCCESS) {
         SGLOGE("InsertSubscribeRecord fail");
@@ -987,14 +982,7 @@ ErrCode DataCollectManagerService::Unsubscribe(int64_t eventId, const std::strin
         BigData::ReportSgUnsubscribeEvent(event);
         return ret;
     }
-    if (clientCallBacks_.find(clientId) == clientCallBacks_.end()) {
-        SGLOGE("not found current client");
-        event.ret = NOT_FOUND;
-        BigData::ReportSgUnsubscribeEvent(event);
-        return NOT_FOUND;
-    }
-    ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(eventId, clientCallBacks_.at(clientId),
-        clientId);
+    ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(eventId, clientId);
     if (ret != SUCCESS) {
         SGLOGE("RemoveSubscribeRecord fail");
         event.ret = ret;
@@ -1024,20 +1012,26 @@ ErrCode DataCollectManagerService::DestoryClient(const std::string &eventGroup, 
         SGLOGE("check permission fail");
         return ret;
     }
-    auto iter = clientCallBacks_.find(clientId);
-    if (iter == clientCallBacks_.end()) {
-        SGLOGE("clientId not exist");
-        return BAD_PARAM;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto iter = clientCallBacks_.find(clientId);
+        if (iter == clientCallBacks_.end()) {
+            SGLOGE("clientId not exist");
+            return BAD_PARAM;
+        }
     }
     ret = AcquireDataSubscribeManager::GetInstance().DestoryClient(eventGroup, clientId);
     if (ret != SUCCESS) {
         SGLOGI("AcquireDataSubscribeManager, DestoryClient ret=%{public}d", ret);
         return ret;
     }
-    if (deathRecipient_ != nullptr) {
-        iter->second->RemoveDeathRecipient(deathRecipient_);
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (deathRecipient_ != nullptr) {
+            clientCallBacks_.at(clientId)->RemoveDeathRecipient(deathRecipient_);
+        }
+        clientCallBacks_.erase(clientId);
     }
-    clientCallBacks_.erase(clientId);
     return SUCCESS;
 }
 
@@ -1063,9 +1057,12 @@ ErrCode DataCollectManagerService::CreatClient(const std::string &eventGroup, co
         SGLOGE("cb is null");
         return NULL_OBJECT;
     }
-    if (clientCallBacks_.find(clientId) != clientCallBacks_.end()) {
-        SGLOGE("clientId exist");
-        return BAD_PARAM;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (clientCallBacks_.find(clientId) != clientCallBacks_.end()) {
+            SGLOGE("clientId exist");
+            return BAD_PARAM;
+        }
     }
     SgSubscribeEvent event {};
     ret = AcquireDataSubscribeManager::GetInstance().CreatClient(eventGroup, clientId, cb);
@@ -1077,7 +1074,10 @@ ErrCode DataCollectManagerService::CreatClient(const std::string &eventGroup, co
     if (ret != SUCCESS) {
         return ret;
     }
-    clientCallBacks_[clientId] = cb;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        clientCallBacks_[clientId] = cb;
+    }
     return SUCCESS;
 }
 }
