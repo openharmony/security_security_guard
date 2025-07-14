@@ -114,10 +114,7 @@ public:
     void *handle_ = nullptr;
     void *wrapperHandle_ = nullptr;
     GetEventFilterFunc eventFilter_ = nullptr;
-<<<<<<< HEAD
     GetEventWrapperFunc eventWrapper_ = nullptr;
-=======
->>>>>>> 878725e7bbd71e0e6666471b0605f46bf800465f
     bool isStopClearCache_ = false;
     std::mutex clearCachemutex_ {};
 };
