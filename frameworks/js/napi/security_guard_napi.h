@@ -38,7 +38,7 @@ constexpr char NAPI_ON_RESULT_ATTR[] = "onResult";
 constexpr char NAPI_SECURITY_MODEL_RESULT_DEVICE_ID_ATTR[] = "deviceId";
 constexpr char NAPI_SECURITY_MODEL_RESULT_MODEL_ID_ATTR[] = "modelId";
 constexpr char NAPI_SECURITY_MODEL_RESULT_RESULT_ATTR[] = "result";
-constexpr int32_t TIMEOUT_REPLY = 3000;
+constexpr int32_t TIMEOUT_REPLY = 5000;
 
 struct RequestSecurityEventInfoContext {
     napi_env env = nullptr;
