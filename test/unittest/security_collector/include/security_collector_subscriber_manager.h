@@ -23,10 +23,14 @@
 #include "timer.h"
 
 #include "i_collector_fwk.h"
+#include "i_event_filter.h"
+#include "i_event_wrapper.h"
 #include "security_collector_subscriber.h"
 #include "security_collector_event_filter.h"
 
 namespace OHOS::Security::SecurityCollector {
+typedef SecurityCollector::IEventFilter* (*GetEventFilterFunc)();
+typedef SecurityCollector::IEventWrapper* (*GetEventWrapperFunc)();
 class SecurityCollectorSubscriberManager {
 public:
     using UnsubscribeHandler = std::function<void (const sptr<IRemoteObject> &remote)>;
@@ -39,6 +43,9 @@ public:
     bool SubscribeCollector(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber) { return false; };
     bool UnsubscribeCollector(const sptr<IRemoteObject> &remote) { return false; };
     void SetUnsubscribeHandler(UnsubscribeHandler handler) { };
+    int32_t AddFilter(const SecurityCollectorEventFilter &subscribeMute) { return 0; };
+    int32_t RemoveFilter(const SecurityCollectorEventFilter &subscribeMute) { return 0; };
+    void RemoveAllFilter() {};
 };
 }
 #endif // SECURITY_GUARD_SECURITY_COLLECTOR_SUBSCRIBLER_MANAGER_H

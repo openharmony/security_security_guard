@@ -12,16 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef SECURITY_COLLECTOR_I_EVENT_FILTER_H
-#define SECURITY_COLLECTOR_I_EVENT_FILTER_H
+#ifndef SECURITY_COLLECTOR_I_EVENT_WRAPPER_H
+#define SECURITY_COLLECTOR_I_EVENT_WRAPPER_H
 #include "event_define.h"
 namespace OHOS::Security::SecurityCollector {
-class IEventFilter {
+class IEventWrapper {
 public:
-    virtual int32_t SetEventFilter(const SecurityCollectorEventMuteFilter &filter) = 0;
-    virtual int32_t RemoveEventFilter(const SecurityCollectorEventMuteFilter &filter) = 0;
-    virtual int32_t RemoveSdkAllEventFilter(const std::string &clientId) = 0;
-    virtual int32_t GetFlagsEventNeedToUpload(Event &event) = 0;
+    virtual int32_t WrapperEvent(Event &event) = 0;
 };
 }
 #endif
