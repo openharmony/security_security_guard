@@ -109,7 +109,7 @@ bool ConfigSubscriber::UpdateConfig(const std::string &file)
         auto future = promise->get_future();
         ffrt::submit([promise, content] {
             auto info = std::make_shared<EventInfo>(0xAB000004, "1.0", content);
-            int32_t ret = SecurityGuard::NativeDataCollectKit::ReportSecurityInfoAsync(info);
+            int32_t ret = SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(info);
             if (ret != SUCCESS) {
                 SGLOGE("ReportSecurityEvent Error %{public}d", ret);
             }
