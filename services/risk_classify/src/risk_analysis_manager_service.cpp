@@ -43,7 +43,7 @@ namespace OHOS::Security::SecurityGuard {
 REGISTER_SYSTEM_ABILITY_BY_ID(RiskAnalysisManagerService, RISK_ANALYSIS_MANAGER_SA_ID, true);
 
 namespace {
-    constexpr int32_t TIMEOUT_REPLY = 5000;
+    constexpr int32_t TIMEOUT_REPLY = 15000;
     constexpr int32_t DELAY_TIME = 10000;
     constexpr const char* REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_MODEL_RESULT";
     constexpr const char* QUERY_SECURITY_MODEL_RESULT_PERMISSION = "ohos.permission.QUERY_SECURITY_MODEL_RESULT";
@@ -80,15 +80,10 @@ void RiskAnalysisManagerService::OnStart()
         }
         dlclose(handle);
     }
-    auto task = [] {
-        ModelManager::GetInstance().Init();
-    };
-    ffrt::submit(task);
-
+    ModelManager::GetInstance().Init();
     if (!Publish(this)) {
         SGLOGE("Publish error");
     }
-
     ffrt::submit([this] {
         std::this_thread::sleep_for(std::chrono::milliseconds(DELAY_TIME));
         DetectPluginManager::getInstance().LoadAllPlugins();
