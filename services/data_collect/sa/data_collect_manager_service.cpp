@@ -467,22 +467,23 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
     std::vector<SecurityCollector::SecurityEvent> replyEvents;
     std::vector<int64_t> eventIds{ruler.GetEventId()};
     SGLOGD("eventType is %{public}u", config.eventType);
-    if (config.prog == "security_guard") {
-        int32_t code = SecurityCollector::DataCollection::GetInstance().QuerySecurityEvent({ruler}, replyEvents);
+    if (config.eventType == 1) { // query in collector
+        int32_t code = FAILED;
+        if (config.prog == "security_guard") {
+            code = SecurityCollector::DataCollection::GetInstance().QuerySecurityEvent({ruler}, replyEvents);
+        } else {
+            code = SecurityCollector::CollectorManager::GetInstance().QuerySecurityEvent(
+                {ruler}, replyEvents);
+        }
         if (code != SUCCESS) {
             return false;
         }
         QuerySecurityEventCallBack(proxy, replyEvents);
-    } else if (config.eventType == 1) { // query in collector
-        int32_t code = SecurityCollector::CollectorManager::GetInstance().QuerySecurityEvent(
-            {ruler}, replyEvents);
-        if (code != SUCCESS) {
-            return false;
+    } else { // query in db
+        if (config.dbTable == FILE_SYSTEM) {
+            (void) FileSystemStoreHelper::GetInstance().QuerySecurityEvent(ruler, proxy);
+            return true;
         }
-        QuerySecurityEventCallBack(proxy, replyEvents);
-    } else if (config.dbTable == FILE_SYSTEM) {
-        (void) FileSystemStoreHelper::GetInstance().QuerySecurityEvent(ruler, proxy);
-    } else {
         std::vector<SecEvent> events;
         if (ruler.GetBeginTime().empty() && ruler.GetEndTime().empty()) {
             (void) DatabaseManager::GetInstance().QueryEventByEventId(ruler.GetEventId(), events);
