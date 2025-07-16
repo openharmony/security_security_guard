@@ -105,21 +105,15 @@ bool ConfigSubscriber::UpdateConfig(const std::string &file)
             name = dstPath.substr(lastSlashPos + 1);
         }
         std::string content = R"({"path":")" + dstPath + R"(", "name":")" + name + R"("})";
-        auto promise = std::make_shared<std::promise<int32_t>>();
-        auto future = promise->get_future();
-        ffrt::submit([promise, content] {
+        auto task = [content] {
             auto info = std::make_shared<EventInfo>(0xAB000004, "1.0", content);
             int32_t ret = SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(info);
             if (ret != SUCCESS) {
                 SGLOGE("ReportSecurityEvent Error %{public}d", ret);
             }
-            promise->set_value(ret);
-        });
-        std::chrono::milliseconds span(TIME_OUT_MS);
-        if (future.wait_for(span) == std::future_status::timeout) {
-            SGLOGE("wait time out");
-        }
-        future.get();
+        };
+        auto thread = std::thread(task);
+        thread.join();
     }
     if (!RemoveFile(file)) {
         SGLOGE("remove file error, %{public}s", strerror(errno));
