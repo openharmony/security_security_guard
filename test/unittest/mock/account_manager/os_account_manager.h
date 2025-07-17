@@ -42,6 +42,7 @@ public:
     ~MockOsAccountManagerInterface() override = default;
     MOCK_METHOD1(QueryActiveOsAccountIds, ErrCode(std::vector<int32_t>& ids));
     MOCK_METHOD1(SubscribeOsAccount, ErrCode(const std::shared_ptr<OsAccountSubscriber> &subscriber));
+    MOCK_METHOD1(UnsubscribeOsAccount, ErrCode(const std::shared_ptr<OsAccountSubscriber> &subscriber));
 };
 
 class OsAccountManager {
@@ -52,6 +53,14 @@ public:
             return -1;
         }
         return instance_->SubscribeOsAccount(subscriber);
+    };
+
+    static ErrCode UnsubscribeOsAccount(const std::shared_ptr<OsAccountSubscriber> &subscriber)
+    {
+        if (instance_ == nullptr) {
+            return -1;
+        }
+        return instance_->UnsubscribeOsAccount(subscriber);
     };
 
     static ErrCode QueryActiveOsAccountIds(std::vector<int32_t>& ids)

@@ -60,6 +60,8 @@ int32_t AcquireDataManagerCallbackStub::HandleBatchSubscribeCallback(MessageParc
         event.content = data.ReadString();
         event.extra = data.ReadString();
         event.timestamp = data.ReadString();
+        event.userId = data.ReadInt32();
+        event.deviceId = data.ReadString();
         uint32_t size = data.ReadUint32();
         if (size > MAX_API_INSTACNE_SIZE) {
             SGLOGE("the subs size error");

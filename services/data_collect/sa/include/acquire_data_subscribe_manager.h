@@ -26,6 +26,7 @@
 #include "accesstoken_kit.h"
 #include "i_db_listener.h"
 #include "security_collector_subscribe_info.h"
+#include "os_account_manager.h"
 #include "i_collector_subscriber.h"
 #include "i_collector_fwk.h"
 #include "i_event_filter.h"
@@ -55,19 +56,24 @@ public:
     sptr<IRemoteObject> GetCurrentClientCallback(const std::string &clientId);
     std::string GetCurrentClientGroup(const std::string &clientId);
     class ClientSession {
-        public:
-            AccessToken::AccessTokenID tokenId {};
-            sptr<IRemoteObject> callback {};
-            std::string clientId {};
-            std::map<int64_t, std::vector<EventMuteFilter>> eventFilters {};
-            std::set<int64_t> subEvents{};
-            std::vector<SecurityCollector::Event> events;
-            size_t eventsBuffSize;
-            std::string eventGroup;
-        };
+    public:
+        AccessToken::AccessTokenID tokenId {};
+        sptr<IRemoteObject> callback {};
+        std::string clientId {};
+        std::map<int64_t, std::vector<EventMuteFilter>> eventFilters {};
+        std::set<int64_t> subEvents{};
+        std::vector<SecurityCollector::Event> events {};
+        size_t eventsBuffSize {};
+        std::string eventGroup {};
+        int32_t userId {-1};
+    };
     void BatchUpload(sptr<IRemoteObject> obj, const std::vector<SecurityCollector::Event> &events);
     void UploadEvent(const SecurityCollector::Event &event);
-    private:
+    void InitUserId();
+    void DeInitUserId();
+    void DeInitDeviceId();
+    void InitDeviceId();
+private:
     AcquireDataSubscribeManager();
     ~AcquireDataSubscribeManager();
     int SubscribeSc(int64_t eventId);
@@ -107,6 +113,23 @@ public:
         void OnNotify(const SecurityCollector::Event &event) override;
     private:
     };
+    class AccountSubscriber : public AccountSA::OsAccountSubscriber {
+    public:
+        ~AccountSubscriber() override = default;
+        int GetUserId()
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            return userId_;
+        }
+        void OnAccountsChanged(const int &id) override
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            userId_ = id;
+        }
+    private:
+        int userId_{-1};
+        std::mutex mutex_;
+    };
     std::shared_ptr<IDbListener> listener_{};
     std::shared_ptr<CollectorListener> collectorListener_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
@@ -117,6 +140,9 @@ public:
     GetEventWrapperFunc eventWrapper_ = nullptr;
     bool isStopClearCache_ = false;
     std::mutex clearCachemutex_ {};
+    std::string deviceId_ {};
+    int32_t userId_ {};
+    std::shared_ptr<AccountSubscriber> accountSubscriber_ {};
 };
 } // namespace OHOS::Security::SecurityGuard
 
