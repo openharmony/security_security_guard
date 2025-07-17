@@ -44,7 +44,7 @@ struct Event {
     std::string content;
     std::string extra;
     std::string timestamp;
-    std::string userId;
+    int32_t userId;
     std::string deviceId;
     std::set<std::string> eventSubscribes;
 };
