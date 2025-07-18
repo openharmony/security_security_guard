@@ -23,6 +23,7 @@
 #include "security_guard_define.h"
 #include "security_collector_subscribe_info.h"
 #include "security_guard_log.h"
+#include "device_manager.h"
 #include "ffrt.h"
 #include "event_define.h"
 #include "i_model_info.h"
@@ -43,7 +44,15 @@ namespace {
     constexpr size_t MAX_SESSION_SIZE_ONE_PROCESS = 2;
     std::mutex g_mutex{};
     std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> sessionsMap_ {};
+    constexpr const char *PKG_NAME = "ohos.security.securityguard";
 }
+
+class InitCallback : public DistributedHardware::DmInitCallback {
+public:
+    ~InitCallback() override = default;
+    void OnRemoteDied() override {};
+};
+
 
 AcquireDataSubscribeManager& AcquireDataSubscribeManager::GetInstance()
 {
@@ -60,7 +69,13 @@ AcquireDataSubscribeManager::AcquireDataSubscribeManager() : listener_(std::make
     }
     wrapperHandle_ = dlopen(SECURITY_GUARD_EVENT_WRAPPER_PATH, RTLD_LAZY);
     if (wrapperHandle_ != nullptr) {
-        eventWrapper_ = reinterpret_cast<GetEventWrapperFunc>(dlsym(handle_, "GetEventWrapper"));
+        eventWrapper_ = reinterpret_cast<GetEventWrapperFunc>(dlsym(wrapperHandle_, "GetEventWrapper"));
+    }
+    if (eventFilter_ == nullptr) {
+        SGLOGI("eventFilter_ is nullptr");
+    }
+    if (eventWrapper_ == nullptr) {
+        SGLOGI("eventWrapper_ is nullptr");
     }
 }
 
@@ -136,6 +151,11 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         session->clientId = clientId;
         session->callback = callback;
         session->tokenId = callerToken;
+        session->eventGroup = subscribeInfo.GetEventGroup();
+        if (accountSubscriber_ != nullptr) {
+            int32_t userId = accountSubscriber_->GetUserId();
+            session->userId = (userId == -1) ? userId_ : userId;
+        }
         sessionsMap_[clientId] = session;
     }
     sessionsMap_[clientId]->subEvents.insert(eventId);
@@ -168,22 +188,17 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sp
 
 int AcquireDataSubscribeManager::InsertMute(const EventMuteFilter &filter, const std::string &clientId)
 {
-    int ret = SUCCESS;
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter = ConvertFilter(filter, clientId);
     EventCfg config {};
     if (!ConfigDataManager::GetInstance().GetEventConfig(collectorFilter.eventId, config)) {
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
-    if (config.prog == "security_guard") {
-        if (eventFilter_ == nullptr) {
-            SGLOGE("eventFilter_ is null");
-            return NULL_OBJECT;
-        }
-        ret = eventFilter_()->SetEventFilter(collectorFilter);
-    } else {
-        ret = AddSubscribeMuteToSub(collectorFilter, config);
+    if (eventFilter_ == nullptr) {
+        SGLOGE("eventFilter_ is null");
+        return NULL_OBJECT;
     }
+    int ret = eventFilter_()->SetEventFilter(collectorFilter);
     if (ret != SUCCESS) {
         SGLOGE("SetEventFilter failed, ret=%{public}d", ret);
         return ret;
@@ -406,6 +421,52 @@ void AcquireDataSubscribeManager::StopClearEventCache()
     isStopClearCache_ = true;
 }
 
+void AcquireDataSubscribeManager::InitUserId()
+{
+    std::vector<int32_t> ids;
+    int32_t code = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
+    if (code == ERR_OK && !ids.empty()) {
+        SGLOGD("QueryActiveOsAccountIds success");
+        userId_ = ids[0];
+    }
+    accountSubscriber_ = std::make_shared<AccountSubscriber>();
+    code = AccountSA::OsAccountManager::SubscribeOsAccount(accountSubscriber_);
+    if (code != ERR_OK) {
+        SGLOGE("SubscribeOsAccount fail, code =%{public}d", code);
+    }
+}
+
+void AcquireDataSubscribeManager::DeInitUserId()
+{
+    int ret = AccountSA::OsAccountManager::UnsubscribeOsAccount(accountSubscriber_);
+    if (ret != SUCCESS) {
+        SGLOGE("UnsubscribeOsAccount fail, code =%{public}d", ret);
+    }
+}
+
+void AcquireDataSubscribeManager::InitDeviceId()
+{
+    auto callback = std::make_shared<InitCallback>();
+    int32_t ret = DistributedHardware::DeviceManager::GetInstance().InitDeviceManager(PKG_NAME, callback);
+    if (ret != SUCCESS) {
+        SGLOGI("init device manager failed, result is %{public}d", ret);
+    }
+    DistributedHardware::DmDeviceInfo deviceInfo;
+    ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceInfo(PKG_NAME, deviceInfo);
+    if (ret != SUCCESS) {
+        SGLOGI("get local device into error, code=%{public}d", ret);
+    }
+    deviceId_ = deviceInfo.deviceId;
+}
+
+void AcquireDataSubscribeManager::DeInitDeviceId()
+{
+    int ret = DistributedHardware::DeviceManager::GetInstance().UnInitDeviceManager(PKG_NAME);
+    if (ret != SUCCESS) {
+        SGLOGE("UnInitDeviceManager fail, code =%{public}d", ret);
+    }
+}
+
 // LCOV_EXCL_START
 void AcquireDataSubscribeManager::ClearEventCache()
 {
@@ -514,15 +575,19 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &e
     }
     eventTmp.eventId = config.eventId;
     eventTmp.content = event.content;
-    if (eventWrapper_ != nullptr && config.prog == "security_guard") {
+    if (eventWrapper_ != nullptr) {
         eventWrapper_()->WrapperEvent(eventTmp);
     }
-    if (eventFilter_ != nullptr && config.prog == "security_guard") {
+    if (eventFilter_ != nullptr) {
         eventFilter_()->GetFlagsEventNeedToUpload(eventTmp);
     }
     for (auto &it : sessionsMap_) {
         if (it.second->subEvents.find(eventTmp.eventId) == it.second->subEvents.end()) {
             continue;
+        }
+        if (it.second->eventGroup == "auditGroup") {
+            eventTmp.userId = it.second->userId;
+            eventTmp.deviceId = deviceId_;
         }
         if (!IsFindFlag(eventTmp.eventSubscribes, eventTmp.eventId, it.second->clientId)) {
             SGLOGW("IsFindFlag eventId=%{public}" PRId64, eventTmp.eventId);
@@ -675,16 +740,11 @@ int AcquireDataSubscribeManager::RemoveMute(const EventMuteFilter &filter, const
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
-    int ret = SUCCESS;
-    if (config.prog == "security_guard") {
-        if (eventFilter_ == nullptr) {
-            SGLOGE("eventFilter_ is null");
-            return NULL_OBJECT;
-        }
-        ret = eventFilter_()->RemoveEventFilter(collectorFilter);
-    } else {
-        ret = RemoveSubscribeMuteToSub(collectorFilter, config);
+    if (eventFilter_ == nullptr) {
+        SGLOGE("eventFilter_ is null");
+        return NULL_OBJECT;
     }
+    int ret = eventFilter_()->RemoveEventFilter(collectorFilter);
     if (ret != SUCCESS) {
         SGLOGE("RemoveSubscribeMuteToSub failed, ret=%{public}d", ret);
         return ret;
@@ -757,17 +817,26 @@ int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, cons
         SGLOGE("IsExceedLimited error");
         return ret;
     }
-    std::lock_guard<std::mutex> lock(g_mutex);
-    if (sessionsMap_.find(clientId) != sessionsMap_.end()) {
-        SGLOGE("current clientId exist");
-        return BAD_PARAM;
+    {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        if (sessionsMap_.find(clientId) != sessionsMap_.end()) {
+            SGLOGE("current clientId exist");
+            return BAD_PARAM;
+        }
     }
     auto session = std::make_shared<ClientSession>();
     session->clientId = clientId;
     session->callback = cb;
     session->tokenId = callerToken;
-    sessionsMap_[clientId] = session;
     session->eventGroup = eventGroup;
+    if (accountSubscriber_ != nullptr) {
+        int32_t userId = accountSubscriber_->GetUserId();
+        session->userId = (userId == -1) ? userId_ : userId;
+    }
+    {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        sessionsMap_[clientId] = session;
+    }
     return SUCCESS;
 }
 

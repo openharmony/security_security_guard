@@ -54,6 +54,7 @@ using namespace OHOS::Security::SecurityGuard;
 using namespace OHOS::Security::SecurityGuardTest;
 namespace OHOS {
     std::shared_ptr<Security::SecurityGuard::MockDataFormatInterface> DataFormat::instance_ = nullptr;
+    std::shared_ptr<AccountSA::MockOsAccountManagerInterface> AccountSA::OsAccountManager::instance_ = nullptr;
     std::shared_ptr<Security::AccessToken::MockAccessTokenKitInterface>
         Security::AccessToken::AccessTokenKit::instance_ = nullptr;
     std::shared_ptr<Security::AccessToken::MockTokenIdKitInterface>
@@ -1477,23 +1478,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertMute001, TestSize.Level0)
     EXPECT_EQ(result, NULL_OBJECT);
 }
 
-HWTEST_F(SecurityGuardDataCollectSaTest, InsertMute002, TestSize.Level0)
-{
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
-    [] (int64_t eventId, EventCfg &config) {
-        config.eventType = 3;
-        config.prog = "";
-        return true;
-    });
-    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), AddFilter(_)).WillOnce(
-        Return(SUCCESS)).WillOnce(Return(FAILED));
-    EventMuteFilter filter {};
-    int32_t result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter, "111");
-    EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter, "111");
-    EXPECT_EQ(result, FAILED);
-}
-
 HWTEST_F(SecurityGuardDataCollectSaTest, RemoveMute001, TestSize.Level0)
 {
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillOnce([] (int64_t eventId, EventCfg &config) {
@@ -1504,23 +1488,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RemoveMute001, TestSize.Level0)
     EventMuteFilter filter {};
     int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter, "111");
     EXPECT_EQ(result, NULL_OBJECT);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, RemoveMute002, TestSize.Level0)
-{
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
-    [] (int64_t eventId, EventCfg &config) {
-        config.eventType = 3;
-        config.prog = "";
-        return true;
-    });
-    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), RemoveFilter(_)).WillOnce(
-        Return(SUCCESS)).WillOnce(Return(FAILED));
-    EventMuteFilter filter {};
-    int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter, "111");
-    EXPECT_EQ(result, SUCCESS);
-    result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter, "111");
-    EXPECT_EQ(result, FAILED);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, IsEventGroupHasPublicPermission001, TestSize.Level0)
