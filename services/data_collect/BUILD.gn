@@ -113,6 +113,8 @@ ohos_shared_library("sg_collect_service") {
     "samgr:samgr_proxy",
     "sqlite:sqlite",
     "zlib:libz",
+    "os_account:os_account_innerkits",
+    "device_manager:devicemanagersdk",
   ]
 }
 
