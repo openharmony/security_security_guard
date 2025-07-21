@@ -104,12 +104,7 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(int64_t eventId, const st
         SGLOGE("not need subscribe again");
         return SUCCESS;
     }
-    int32_t code = DatabaseManager::GetInstance().SubscribeDb({eventId}, listener_);
-    if (code != SUCCESS) {
-        SGLOGE("SubscribeDb error");
-        return code;
-    }
-    code = SubscribeSc(eventId);
+    int32_t code = SubscribeSc(eventId);
     if (code != SUCCESS) {
         SGLOGE("SubscribeSc error");
         return code;
@@ -136,12 +131,7 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         SGLOGE("not need subscribe again");
         return SUCCESS;
     }
-    int32_t code = DatabaseManager::GetInstance().SubscribeDb({eventId}, listener_);
-    if (code != SUCCESS) {
-        SGLOGE("SubscribeDb error");
-        return code;
-    }
-    code = SubscribeSc(eventId);
+    int32_t code = SubscribeSc(eventId);
     if (code != SUCCESS) {
         SGLOGE("SubscribeSc error");
         return code;
@@ -152,10 +142,6 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         session->callback = callback;
         session->tokenId = callerToken;
         session->eventGroup = subscribeInfo.GetEventGroup();
-        if (accountSubscriber_ != nullptr) {
-            int32_t userId = accountSubscriber_->GetUserId();
-            session->userId = (userId == -1) ? userId_ : userId;
-        }
         sessionsMap_[clientId] = session;
     }
     sessionsMap_[clientId]->subEvents.insert(eventId);
@@ -519,15 +505,37 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
         SGLOGE("CheckRiskContent error");
         return;
     }
+    SecurityCollector::Event retEvent  = event;
+    EventCfg config {};
+    SecEvent secEvent {};
+    if (accountSubscriber_ != nullptr) {
+        int32_t userId = accountSubscriber_->GetUserId();
+        secEvent.userId = (userId == -1) ? userId_ : userId;
+        retEvent.userId = (userId == -1) ? userId_ : userId;
+    }
+    retEvent.deviceId = deviceId_;
     // LCOV_EXCL_START
-    SecEvent secEvent {
-        .eventId = event.eventId,
-        .version = event.version,
-        .date = event.timestamp,
-        .content = event.content
-    };
-    auto task = [secEvent, event] () mutable {
-        int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, secEvent, event.eventSubscribes);
+    if (!ConfigDataManager::GetInstance().GetEventConfig(retEvent.eventId, config)) {
+        SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
+        return;
+    }
+    // change old event id to new eventid
+    retEvent.eventId = config.eventId;
+    if (eventWrapper_ != nullptr) {
+        eventWrapper_()->WrapperEvent(retEvent);
+    }
+    if (eventFilter_ != nullptr) {
+        eventFilter_()->GetFlagsEventNeedToUpload(retEvent);
+    }
+    // upload to subscriber
+    AcquireDataSubscribeManager::GetInstance().BatchPublish(retEvent);
+    secEvent.eventId = retEvent.eventId;
+    secEvent.version = retEvent.version;
+    secEvent.date = retEvent.timestamp;
+    secEvent.content = retEvent.content;
+    // upload to store
+    auto task = [secEvent] () mutable {
+        int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, secEvent, {});
         if (code != SUCCESS) {
             SGLOGE("insert event error, %{public}d", code);
         }
@@ -567,42 +575,30 @@ bool AcquireDataSubscribeManager::IsFindFlag(const std::set<std::string> &eventS
 
 bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &event)
 {
-    SecurityCollector::Event eventTmp = event;
+    std::lock_guard<std::mutex> lock(g_mutex);
     EventCfg config {};
     if (!ConfigDataManager::GetInstance().GetEventConfig(event.eventId, config)) {
-        SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, eventTmp.eventId);
+        SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
         return false;
     }
-    eventTmp.eventId = config.eventId;
-    eventTmp.content = event.content;
-    if (eventWrapper_ != nullptr) {
-        eventWrapper_()->WrapperEvent(eventTmp);
-    }
-    if (eventFilter_ != nullptr) {
-        eventFilter_()->GetFlagsEventNeedToUpload(eventTmp);
-    }
     for (auto &it : sessionsMap_) {
-        if (it.second->subEvents.find(eventTmp.eventId) == it.second->subEvents.end()) {
+        if (it.second->subEvents.find(event.eventId) == it.second->subEvents.end()) {
             continue;
         }
-        if (it.second->eventGroup == "auditGroup") {
-            eventTmp.userId = it.second->userId;
-            eventTmp.deviceId = deviceId_;
-        }
-        if (!IsFindFlag(eventTmp.eventSubscribes, eventTmp.eventId, it.second->clientId)) {
-            SGLOGW("IsFindFlag eventId=%{public}" PRId64, eventTmp.eventId);
+        if (!IsFindFlag(event.eventSubscribes, event.eventId, it.second->clientId)) {
+            SGLOGW("IsFindFlag eventId=%{public}" PRId64, event.eventId);
             continue;
         }
         if (!config.isBatchUpload) {
-            BatchUpload(it.second->callback, {eventTmp});
+            BatchUpload(it.second->callback, {event});
             continue;
         }
-        SGLOGD("publish eventid=%{public}" PRId64, eventTmp.eventId);
-        for (auto iter : eventTmp.eventSubscribes) {
+        SGLOGD("publish eventid=%{public}" PRId64, event.eventId);
+        for (auto iter : event.eventSubscribes) {
             SGLOGD("publish eventSubscribes =%{public}s", iter.c_str());
         }
-        it.second->events.emplace_back(eventTmp);
-        it.second->eventsBuffSize += GetSecurityCollectorEventBufSize(eventTmp);
+        it.second->events.emplace_back(event);
+        it.second->eventsBuffSize += GetSecurityCollectorEventBufSize(event);
         SGLOGD("cache batch upload event to subscribe %{public}zu", it.second->eventsBuffSize);
         if (it.second->eventsBuffSize >= MAX_CACHE_EVENT_SIZE) {
             BatchUpload(it.second->callback, it.second->events);
@@ -618,17 +614,7 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &e
 // LCOV_EXCL_START
 void AcquireDataSubscribeManager::DbListener::OnChange(uint32_t optType, const SecEvent &events,
     const std::set<std::string> &eventSubscribes)
-{
-    std::lock_guard<std::mutex> lock(g_mutex);
-    SecurityCollector::Event event {
-        .eventId = events.eventId,
-        .version = events.version,
-        .content = events.content,
-        .timestamp = events.date,
-        .eventSubscribes = eventSubscribes
-    };
-    AcquireDataSubscribeManager::GetInstance().BatchPublish(event);
-}
+{}
 
 void AcquireDataSubscribeManager::CollectorListener::OnNotify(const SecurityCollector::Event &event)
 {
@@ -829,10 +815,6 @@ int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, cons
     session->callback = cb;
     session->tokenId = callerToken;
     session->eventGroup = eventGroup;
-    if (accountSubscriber_ != nullptr) {
-        int32_t userId = accountSubscriber_->GetUserId();
-        session->userId = (userId == -1) ? userId_ : userId;
-    }
     {
         std::lock_guard<std::mutex> lock(g_mutex);
         sessionsMap_[clientId] = session;

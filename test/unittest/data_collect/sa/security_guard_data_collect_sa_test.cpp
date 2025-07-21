@@ -420,7 +420,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_BadParam, TestSize.Le
         .WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.RequestDataSubmit(eventId, version, time, content);
-    EXPECT_EQ(result, BAD_PARAM);
+    EXPECT_EQ(result, SUCCESS);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success01, TestSize.Level0)

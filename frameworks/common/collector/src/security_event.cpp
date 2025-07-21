@@ -30,6 +30,9 @@ bool SecurityEvent::Marshalling(Parcel& parcel) const
     if (!parcel.WriteString(timestamp_)) {
         return false;
     }
+    if (!parcel.WriteInt32(userId_)) {
+        return false;
+    }
     return true;
 };
 
@@ -45,6 +48,9 @@ bool SecurityEvent::ReadFromParcel(Parcel &parcel)
         return false;
     }
     if (!parcel.ReadString(timestamp_)) {
+        return false;
+    }
+    if (!parcel.ReadInt32(userId_)) {
         return false;
     }
     return true;
