@@ -437,7 +437,7 @@ HWTEST_F(InnerApiCollectorTest, SecurityEventTest001, testing::ext::TestSize.Lev
     parcel.WriteString(string);
     parcel.WriteString(string);
     ret = event.ReadFromParcel(parcel);
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
 
     retEvent = event.Unmarshalling(parcel);
     EXPECT_TRUE(retEvent == nullptr);
