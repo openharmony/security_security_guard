@@ -46,42 +46,39 @@ int DatabaseManager::InsertEvent(uint32_t source, const SecEvent& event,
     const std::set<std::string> &eventSubscribes)
 {
     EventCfg config;
-    SecEvent eventTmp = event;
     bool success = ConfigDataManager::GetInstance().GetEventConfig(event.eventId, config);
     if (!success) {
         SGLOGE("not found event, id=%{public}" PRId64, event.eventId);
         return NOT_FOUND;
     }
-    // change old id to new id
-    eventTmp.eventId = config.eventId;
     if (config.source == source) {
-        std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(eventTmp.eventId);
+        std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(event.eventId);
         SGLOGD("table=%{public}s, eventId=%{public}" PRId64, table.c_str(), config.eventId);
         if (table == AUDIT_TABLE || config.dataSensitivityLevel == SENSITIVITY_INFO) {
             SGLOGD("audit event insert");
-            DbChanged(IDbListener::INSERT, eventTmp, eventSubscribes);
+            DbChanged(IDbListener::INSERT, event, eventSubscribes);
             return SUCCESS;
         }
         if (table == FILE_SYSTEM) {
             SGLOGD("insert event to file system");
-            DbChanged(IDbListener::INSERT, eventTmp, eventSubscribes);
-            return FileSystemStoreHelper::GetInstance().InsertEvent(eventTmp);
+            DbChanged(IDbListener::INSERT, event, eventSubscribes);
+            return FileSystemStoreHelper::GetInstance().InsertEvent(event);
         }
-        SGLOGD("risk event insert, eventId=%{public}" PRId64, eventTmp.eventId);
+        SGLOGD("risk event insert, eventId=%{public}" PRId64, event.eventId);
         // notify changed
-        DbChanged(IDbListener::INSERT, eventTmp, eventSubscribes);
+        DbChanged(IDbListener::INSERT, event, eventSubscribes);
         std::lock_guard<std::mutex> lock(delMutex_);
         // Check whether the upper limit is reached.
-        int64_t count = RiskEventRdbHelper::GetInstance().CountEventByEventId(eventTmp.eventId);
+        int64_t count = RiskEventRdbHelper::GetInstance().CountEventByEventId(event.eventId);
         if (count >= config.storageRomNums) {
-            (void) RiskEventRdbHelper::GetInstance().DeleteOldEventByEventId(eventTmp.eventId,
+            (void) RiskEventRdbHelper::GetInstance().DeleteOldEventByEventId(event.eventId,
                 count + 1 - config.storageRomNums);
         }
-        return RiskEventRdbHelper::GetInstance().InsertEvent(eventTmp);
+        return RiskEventRdbHelper::GetInstance().InsertEvent(event);
     }
 
     // notify changed
-    DbChanged(IDbListener::INSERT, eventTmp);
+    DbChanged(IDbListener::INSERT, event);
     return SUCCESS;
 }
 

@@ -220,26 +220,15 @@ ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std:
         return ret;
     }
     // LCOV_EXCL_START
-    if (!DataFormat::CheckRiskContent(content)) {
-        SGLOGE("CheckRiskContent error");
-        return BAD_PARAM;
-    }
-    SGLOGD("eventId=%{public}" PRId64 ", version=%{public}s, date=%{public}s", eventId, version.c_str(), time.c_str());
-    SecEvent event {
-        .eventId = eventId,
-        .version = version,
-        .date = time,
-        .content = content
-    };
-    auto task = [&, event] () mutable {
-        taskCount_++;
-        int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, event, {});
-        if (code != SUCCESS) {
-            SGLOGE("insert event error, %{public}d", code);
-        }
-        SGLOGD("ffrt task num is %{public}u", taskCount_.load());
-        taskCount_--;
-    };
+    SecurityCollector::Event event {};
+    event.eventId = eventId;
+    event.version = version;
+    event.timestamp = time;
+    event.content = content;
+    taskCount_++;
+    AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
+    SGLOGD("ffrt task num is %{public}u", taskCount_.load());
+    taskCount_--;
     if (taskCount_.load() > FFRT_MAX_NUM) {
         discardedCount_++;
         SGLOGD("too much event reported, ffrt task num is %{public}u, eventid is %{public}" PRId64,
@@ -249,7 +238,6 @@ ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std:
     if (IsDiscardEventInThisHour(eventId)) {
         return SUCCESS;
     }
-    ffrt::submit(task);
     return SUCCESS;
     // LCOV_EXCL_STOP
 }

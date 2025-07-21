@@ -65,7 +65,6 @@ public:
         std::vector<SecurityCollector::Event> events {};
         size_t eventsBuffSize {};
         std::string eventGroup {};
-        int32_t userId {-1};
     };
     void BatchUpload(sptr<IRemoteObject> obj, const std::vector<SecurityCollector::Event> &events);
     void UploadEvent(const SecurityCollector::Event &event);
@@ -140,7 +139,7 @@ private:
     bool isStopClearCache_ = false;
     std::mutex clearCachemutex_ {};
     std::string deviceId_ {};
-    int32_t userId_ {};
+    int32_t userId_ {-1};
     std::shared_ptr<AccountSubscriber> accountSubscriber_ {};
 };
 } // namespace OHOS::Security::SecurityGuard

@@ -169,7 +169,8 @@ int32_t FileSystemStoreHelper::InsertEvent(const SecEvent& event)
         { EVENT_ID, event.eventId },
         { VERSION, event.version },
         { CONTENT, event.content },
-        { TIMESTAMP,  SecurityGuardUtils::GetDate() }
+        { TIMESTAMP,  SecurityGuardUtils::GetDate() },
+        { USER_ID,  event.userId }
     };
     std::string data = std::to_string(event.eventId) + "|" + event.date + "||" + eventJson.dump();
     // 检查文件是否存在，如果不存在则创建
@@ -234,11 +235,13 @@ SecurityCollector::SecurityEvent FileSystemStoreHelper::SecurityEventFromJson(nl
     std::string version;
     std::string content;
     std::string timestamp;
+    int32_t userId;
     SecurityGuard::JsonCfg::Unmarshal(eventId, jsonObj, EVENT_ID);
     SecurityGuard::JsonCfg::Unmarshal(version, jsonObj, VERSION);
     SecurityGuard::JsonCfg::Unmarshal(content, jsonObj, CONTENT);
     SecurityGuard::JsonCfg::Unmarshal(timestamp, jsonObj, TIMESTAMP);
-    return SecurityCollector::SecurityEvent{eventId, version, content, timestamp};
+    SecurityGuard::JsonCfg::Unmarshal(userId, jsonObj, USER_ID);
+    return SecurityCollector::SecurityEvent{eventId, version, content, timestamp, userId};
 }
 
 // LCOV_EXCL_START
