@@ -86,18 +86,18 @@ void DetectPluginManager::LoadPlugin(const PluginCfg &pluginCfg)
     for (const int64_t& eventId : pluginCfg.depEventIds) {
         size_t count = 0;
         {
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<ffrt::mutex> lock(mutex_);
             count = eventIdMap_.count(eventId);
         }
         if (count == 0) {
             SubscribeEvent(eventId);
         }
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         eventIdMap_[eventId].emplace_back(detectPluginAttrs);
     }
     if (pluginCfg.depEventIds.empty()) {
         const int64_t sepcialId = -1;
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         eventIdMap_[sepcialId].emplace_back(detectPluginAttrs);
     }
     SGLOGI("Load plugin success, pluginName: %{public}s", pluginCfg.pluginName.c_str());
@@ -231,7 +231,7 @@ bool DetectPluginManager::ParsePluginDepEventIds(const cJSON *plugin,
 void DetectPluginManager::DispatchEvent(const SecurityCollector::Event &event)
 {
     SGLOGD("Start distributing events, eventId: 0x%{public}" PRIx64, event.eventId);
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     auto it = eventIdMap_.find(event.eventId);
     if (it == eventIdMap_.end()) {
         SGLOGE("No Plugin is available to process th event, eventId: 0x%{public}" PRIx64,

@@ -67,7 +67,7 @@ int DatabaseManager::InsertEvent(uint32_t source, const SecEvent& event,
         SGLOGD("risk event insert, eventId=%{public}" PRId64, event.eventId);
         // notify changed
         DbChanged(IDbListener::INSERT, event, eventSubscribes);
-        std::lock_guard<std::mutex> lock(delMutex_);
+        std::lock_guard<ffrt::mutex> lock(delMutex_);
         // Check whether the upper limit is reached.
         int64_t count = RiskEventRdbHelper::GetInstance().CountEventByEventId(event.eventId);
         if (count >= config.storageRomNums) {
@@ -200,7 +200,7 @@ int32_t DatabaseManager::SubscribeDb(std::vector<int64_t> eventIds, std::shared_
         SGLOGE("listener is nullptr");
         return NULL_OBJECT;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     for (int64_t eventId : eventIds) {
         SGLOGI("SubscribeDb EVENTID %{public}" PRId64, eventId);
         listenerMap_[eventId].insert(listener);
@@ -213,7 +213,7 @@ int32_t DatabaseManager::UnSubscribeDb(std::vector<int64_t> eventIds, std::share
     if (listener == nullptr) {
         return NULL_OBJECT;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     for (int64_t eventId : eventIds) {
         if (listenerMap_.count(eventId) == 0) {
             continue;
@@ -229,7 +229,7 @@ int32_t DatabaseManager::UnSubscribeDb(std::vector<int64_t> eventIds, std::share
 
 void DatabaseManager::DbChanged(int32_t optType, const SecEvent &event, const std::set<std::string> &eventSubscribes)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     std::set<std::shared_ptr<IDbListener>> listeners = listenerMap_[event.eventId];
     if (listeners.empty()) {
         return;

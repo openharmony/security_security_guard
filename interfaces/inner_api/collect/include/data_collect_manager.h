@@ -17,7 +17,7 @@
 #define SECURITY_GUARD_DATA_COLLECT_MANAGER_H
 
 #include <map>
-#include <mutex>
+#include "ffrt.h"
 #include "i_collector_subscriber.h"
 #include "security_event_query_callback.h"
 #include "security_event_ruler.h"
@@ -50,7 +50,7 @@ private:
     ~DataCollectManager() = default;
     void HandleDecipient();
     bool IsCurrentSubscriberEventIdExist(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &sub);
-    std::mutex mutex_{};
+    ffrt::mutex mutex_{};
     sptr<AcquireDataManagerCallbackService> callback_{};
     std::string sdkFlag_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
