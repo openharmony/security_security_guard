@@ -69,13 +69,12 @@ public:
     };
     void BatchUpload(sptr<IRemoteObject> obj, const std::vector<SecurityCollector::Event> &events);
     void UploadEvent(const SecurityCollector::Event &event);
-    void InitUserId();
-    void DeInitUserId();
     void DeInitDeviceId();
-    void InitDeviceId();
-private:
+    private:
     AcquireDataSubscribeManager();
     ~AcquireDataSubscribeManager();
+    void InitUserId();
+    void InitDeviceId();
     int SubscribeSc(int64_t eventId);
     int UnSubscribeSc(int64_t eventId);
     int UnSubscribeScAndDb(int64_t eventId);
@@ -113,23 +112,6 @@ private:
         void OnNotify(const SecurityCollector::Event &event) override;
     private:
     };
-    class AccountSubscriber : public AccountSA::OsAccountSubscriber {
-    public:
-        ~AccountSubscriber() override = default;
-        int GetUserId()
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            return userId_;
-        }
-        void OnAccountsChanged(const int &id) override
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            userId_ = id;
-        }
-    private:
-        int userId_{-1};
-        std::mutex mutex_;
-    };
     std::shared_ptr<IDbListener> listener_{};
     std::shared_ptr<CollectorListener> collectorListener_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
@@ -141,8 +123,7 @@ private:
     bool isStopClearCache_ = false;
     std::mutex clearCachemutex_ {};
     std::string deviceId_ {};
-    int32_t userId_ {};
-    std::shared_ptr<AccountSubscriber> accountSubscriber_ {};
+    int32_t userId_ {-1};
 };
 } // namespace OHOS::Security::SecurityGuard
 
