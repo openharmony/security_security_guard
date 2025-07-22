@@ -122,15 +122,12 @@ void DataCollectManagerService::OnStart()
         return;
     }
     AcquireDataSubscribeManager::GetInstance().StartClearEventCache();
-    AcquireDataSubscribeManager::GetInstance().InitUserId();
-    AcquireDataSubscribeManager::GetInstance().InitDeviceId();
 }
 
 void DataCollectManagerService::OnStop()
 {
     SecurityCollector::DataCollection::GetInstance().CloseLib();
     AcquireDataSubscribeManager::GetInstance().StopClearEventCache();
-    AcquireDataSubscribeManager::GetInstance().DeInitUserId();
     AcquireDataSubscribeManager::GetInstance().DeInitDeviceId();
 }
 
