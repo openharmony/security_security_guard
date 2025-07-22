@@ -364,7 +364,7 @@ void AcquireDataSubscribeManager::StartClearEventCache()
         while (true) {
             this->ClearEventCache();
             {
-                std::lock_guard<std::mutex> lock(clearCachemutex_);
+                std::lock_guard<ffrt::mutex> lock(clearCachemutex_);
                 if (isStopClearCache_ == true) {
                     break;
                 }
@@ -403,7 +403,7 @@ std::string AcquireDataSubscribeManager::GetCurrentClientGroup(const std::string
 
 void AcquireDataSubscribeManager::StopClearEventCache()
 {
-    std::lock_guard<std::mutex> lock(clearCachemutex_);
+    std::lock_guard<ffrt::mutex> lock(clearCachemutex_);
     isStopClearCache_ = true;
 }
 
