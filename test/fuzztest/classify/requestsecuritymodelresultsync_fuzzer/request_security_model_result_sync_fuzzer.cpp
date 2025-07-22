@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,9 +25,7 @@
 
 extern "C" int32_t RequestSecurityModelResultSync(const DeviceIdentify *devId, uint32_t modelId,
     SecurityModelResult *result);
-namespace {
-    constexpr int MAX_STRING_SIZE = 1024;
-}
+
 namespace OHOS {
 bool RequestSecurityModelResultAsyncFuzzTest(const uint8_t* data, size_t size)
 {
@@ -40,17 +38,6 @@ bool RequestSecurityModelResultAsyncFuzzTest(const uint8_t* data, size_t size)
     RequestSecurityModelResultSync(&deviceIdentify, modelId, &result);
     return true;
 }
-
-bool StartSecurityModelFuzzTest(const uint8_t* data, size_t size)
-{
-    if (data == nullptr || size < sizeof(int64_t)) {
-        return true;
-    }
-    FuzzedDataProvider fdp(data, size);
-    OHOS::Security::SecurityGuard::StartSecurityModel(fdp.ConsumeIntegral<uint32_t>(),
-        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    return true;
-}
 }  // namespace OHOS
 
 /* Fuzzer entry point */
@@ -58,6 +45,5 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on date */
     OHOS::RequestSecurityModelResultAsyncFuzzTest(data, size);
-    OHOS::StartSecurityModelFuzzTest(data, size);
     return 0;
 }

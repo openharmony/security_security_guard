@@ -51,7 +51,6 @@ int DatabaseManager::InsertEvent(uint32_t source, const SecEvent& event,
         SGLOGE("not found event, id=%{public}" PRId64, event.eventId);
         return NOT_FOUND;
     }
-
     if (config.source == source) {
         std::string table = ConfigDataManager::GetInstance().GetTableFromEventId(event.eventId);
         SGLOGD("table=%{public}s, eventId=%{public}" PRId64, table.c_str(), config.eventId);

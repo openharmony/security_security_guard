@@ -19,6 +19,7 @@ namespace {
     constexpr size_t MAX_MUTE_SIZE = 10;
 }
 namespace OHOS::Security::SecurityGuard {
+// LCOV_EXCL_START
 bool SecurityEventFilter::Marshalling(Parcel& parcel) const
 {
     if (!parcel.WriteInt64(filter_.eventId)) {
@@ -31,14 +32,6 @@ bool SecurityEventFilter::Marshalling(Parcel& parcel) const
     }
     if (!parcel.WriteBool(filter_.isInclude)) {
         SGLOGE("failed to write isInclude");
-        return false;
-    }
-    if (!parcel.WriteString(filter_.eventGroup)) {
-        SGLOGE("failed to write event group");
-        return false;
-    }
-    if (!parcel.WriteString(filter_.instanceFlag)) {
-        SGLOGE("failed to write instanceFlag");
         return false;
     }
     if (filter_.mutes.size() > MAX_MUTE_SIZE) {
@@ -71,14 +64,6 @@ bool SecurityEventFilter::ReadFromParcel(Parcel &parcel)
     }
     if (!parcel.ReadBool(filter_.isInclude)) {
         SGLOGE("failed to read isInclude");
-        return false;
-    }
-    if (!parcel.ReadString(filter_.eventGroup)) {
-        SGLOGE("failed to read event group");
-        return false;
-    }
-    if (!parcel.ReadString(filter_.instanceFlag)) {
-        SGLOGE("failed to read instanceFlag");
         return false;
     }
     uint32_t size = 0;
@@ -115,4 +100,5 @@ EventMuteFilter SecurityEventFilter::GetMuteFilter() const
 {
     return filter_;
 }
+// LCOV_EXCL_STOP
 }

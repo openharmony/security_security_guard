@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#ifndef SECURITY_GUARD_DATA_COLLECT_FUZZER_H
-#define SECURITY_GUARD_DATA_COLLECT_FUZZER_H
+#ifndef SECURITY_GUARD_SECURITY_EVENT_QUERY_CALLBACK_PROXY_FUZZER_H
+#define SECURITY_GUARD_SECURITY_EVENT_QUERY_CALLBACK_PROXY_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "data_collect_fuzzer"
+#define FUZZ_PROJECT_NAME "security_event_query_callback_proxy_fuzzer"
 
 namespace OHOS {}  // namespace OHOS
 
-#endif  // SECURITY_GUARD_DATA_COLLECT_FUZZER_H
+#endif  // SECURITY_GUARD_SECURITY_EVENT_QUERY_CALLBACK_PROXY_FUZZER_H

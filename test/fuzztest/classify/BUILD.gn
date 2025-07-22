@@ -16,5 +16,6 @@ group("fuzztest") {
   deps = [
     "requestsecuritymodelresultasync_fuzzer:RequestSecurityModelResultAsyncFuzzTest",
     "requestsecuritymodelresultsync_fuzzer:RequestSecurityModelResultSyncFuzzTest",
+    "startsecuritymodel_fuzzer:StartSecurityModelFuzzTest"
   ]
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,7 +16,7 @@
 #include "config_manager_fuzzer.h"
 
 #include <string>
-
+#include <fuzzer/FuzzedDataProvider.h>
 #include "securec.h"
 
 #define private public
@@ -38,22 +38,19 @@
 #undef protected
 
 using namespace OHOS::Security::SecurityGuard;
-
+namespace {
+    constexpr int MAX_STRING_SIZE = 1024;
+}
 namespace OHOS {
 bool ConfigDataManagerFuzzTest(const uint8_t* data, size_t size)
 {
-    if (data == nullptr || size < sizeof(uint32_t) + sizeof(int64_t)) {
-        return false;
-    }
-    size_t offset = 0;
-    uint32_t modelId = *(reinterpret_cast<const uint32_t *>(data + offset));
-    offset += sizeof(uint32_t);
-    int64_t eventId = *(reinterpret_cast<const int64_t *>(data + offset));
-    offset += sizeof(int64_t);
+    FuzzedDataProvider fdp(data, size);
+    int64_t eventId = fdp.ConsumeIntegral<int64_t>();
+    uint32_t modelId = fdp.ConsumeIntegral<uint32_t>();
+    std::string table = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     std::set<int64_t> eventIds{eventId};
     ModelCfg modelCfg = {};
     EventCfg eventCfg = {};
-    std::string table(reinterpret_cast<const char*>(data + offset), size - offset);
     ConfigDataManager::GetInstance().InsertModelMap(modelId, modelCfg);
     ConfigDataManager::GetInstance().InsertEventMap(eventId, eventCfg);
     ConfigDataManager::GetInstance().InsertModelToEventMap(modelId, eventIds);
@@ -79,11 +76,9 @@ bool ConfigManagerFuzzTest(const uint8_t* data, size_t size)
 
 bool EventConfigFuzzTest(const uint8_t* data, size_t size)
 {
-    if (data == nullptr || size < sizeof(int)) {
-        return false;
-    }
+    FuzzedDataProvider fdp(data, size);
+    int mode = fdp.ConsumeIntegral<int32_t>();
     EventConfig config{};
-    int mode = *(reinterpret_cast<const int *>(data));
     nlohmann::json jsonObj;
     EventCfg cfg{};
     std::vector<EventCfg> cfgs{cfg};
@@ -98,11 +93,9 @@ bool EventConfigFuzzTest(const uint8_t* data, size_t size)
 
 bool ModelConfigFuzzTest(const uint8_t* data, size_t size)
 {
-    if (data == nullptr || size < sizeof(int)) {
-        return false;
-    }
+    FuzzedDataProvider fdp(data, size);
+    int mode = fdp.ConsumeIntegral<int32_t>();
     ModelConfig config{};
-    int mode = *(reinterpret_cast<const int *>(data));
     nlohmann::json jsonObj;
     ModelCfg cfg = {};
     std::vector<ModelCfg> cfgs{cfg};
@@ -117,12 +110,13 @@ bool ModelConfigFuzzTest(const uint8_t* data, size_t size)
 
 void JsonConfigFuzzTest(const uint8_t* data, size_t size)
 {
-    uint64_t uint64 = static_cast<uint64_t>(size);
-    int64_t int64 = static_cast<int64_t>(size);
-    int32_t int32 = static_cast<int32_t>(size);
+    FuzzedDataProvider fdp(data, size);
+    uint64_t uint64 = fdp.ConsumeIntegral<uint64_t>();
+    int64_t int64 = fdp.ConsumeIntegral<int64_t>();
+    int32_t int32 = fdp.ConsumeIntegral<int32_t>();
+    std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     std::vector<int32_t> vec32;
     std::vector<int64_t> vec64;
-    std::string string(reinterpret_cast<const char*>(data), size);
     nlohmann::json jsonObj {
         { string, uint64 }
     };
@@ -143,9 +137,10 @@ void JsonConfigFuzzTest(const uint8_t* data, size_t size)
 
 void SecurityGuardUtilsFuzzTest(const uint8_t* data, size_t size)
 {
-    int64_t int64 = static_cast<int64_t>(size);
-    uint32_t uint32 = static_cast<uint32_t>(size);
-    std::string string(reinterpret_cast<const char*>(data), size);
+    FuzzedDataProvider fdp(data, size);
+    int64_t int64 = fdp.ConsumeIntegral<int64_t>();
+    uint32_t uint32 = fdp.ConsumeIntegral<uint32_t>();
+    std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     unsigned long long value = 0;
     SecurityGuardUtils::StrToU32(string, uint32);
     SecurityGuardUtils::StrToI64(string, int64);
