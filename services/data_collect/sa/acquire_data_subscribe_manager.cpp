@@ -95,6 +95,8 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(int64_t eventId, const st
 {
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     // LCOV_EXCL_START
+    AcquireDataSubscribeManager::GetInstance().InitUserId();
+    AcquireDataSubscribeManager::GetInstance().InitDeviceId();
     std::lock_guard<std::mutex> lock(g_mutex);
     if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
         SGLOGI("not find current clientId");
@@ -125,6 +127,8 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
 {
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     int64_t eventId = subscribeInfo.GetEvent().eventId;
+    AcquireDataSubscribeManager::GetInstance().InitUserId();
+    AcquireDataSubscribeManager::GetInstance().InitDeviceId();
     std::lock_guard<std::mutex> lock(g_mutex);
     if (sessionsMap_.find(clientId) != sessionsMap_.end() && sessionsMap_.at(clientId) != nullptr &&
         sessionsMap_.at(clientId)->subEvents.find(eventId) != sessionsMap_.at(clientId)->subEvents.end()) {
@@ -409,25 +413,14 @@ void AcquireDataSubscribeManager::StopClearEventCache()
 
 void AcquireDataSubscribeManager::InitUserId()
 {
-    std::vector<int32_t> ids;
-    int32_t code = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
-    if (code == ERR_OK && !ids.empty()) {
-        SGLOGD("QueryActiveOsAccountIds success");
-        userId_ = ids[0];
-    }
-    accountSubscriber_ = std::make_shared<AccountSubscriber>();
-    code = AccountSA::OsAccountManager::SubscribeOsAccount(accountSubscriber_);
+    int32_t id = -1;
+    int32_t code = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(id);
     if (code != ERR_OK) {
-        SGLOGE("SubscribeOsAccount fail, code =%{public}d", code);
+        SGLOGE("GetForegroundOsAccountLocalId Fail");
+        return;
     }
-}
-
-void AcquireDataSubscribeManager::DeInitUserId()
-{
-    int ret = AccountSA::OsAccountManager::UnsubscribeOsAccount(accountSubscriber_);
-    if (ret != SUCCESS) {
-        SGLOGE("UnsubscribeOsAccount fail, code =%{public}d", ret);
-    }
+    std::lock_guard<std::mutex> lock(g_mutex);
+    userId_ = id;
 }
 
 void AcquireDataSubscribeManager::InitDeviceId()
@@ -436,12 +429,15 @@ void AcquireDataSubscribeManager::InitDeviceId()
     int32_t ret = DistributedHardware::DeviceManager::GetInstance().InitDeviceManager(PKG_NAME, callback);
     if (ret != SUCCESS) {
         SGLOGI("init device manager failed, result is %{public}d", ret);
+        return;
     }
     DistributedHardware::DmDeviceInfo deviceInfo;
     ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceInfo(PKG_NAME, deviceInfo);
     if (ret != SUCCESS) {
         SGLOGI("get local device into error, code=%{public}d", ret);
+        return;
     }
+    std::lock_guard<std::mutex> lock(g_mutex);
     deviceId_ = deviceInfo.deviceId;
 }
 
@@ -508,12 +504,11 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
     SecurityCollector::Event retEvent  = event;
     EventCfg config {};
     SecEvent secEvent {};
-    if (accountSubscriber_ != nullptr) {
-        int32_t userId = accountSubscriber_->GetUserId();
-        secEvent.userId = (userId == -1) ? userId_ : userId;
-        retEvent.userId = (userId == -1) ? userId_ : userId;
+    {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        retEvent.userId = userId_;
+        retEvent.deviceId = deviceId_;
     }
-    retEvent.deviceId = deviceId_;
     // LCOV_EXCL_START
     if (!ConfigDataManager::GetInstance().GetEventConfig(retEvent.eventId, config)) {
         SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
@@ -533,6 +528,7 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
     secEvent.version = retEvent.version;
     secEvent.date = retEvent.timestamp;
     secEvent.content = retEvent.content;
+    secEvent.userId = retEvent.userId;
     // upload to store
     auto task = [secEvent] () mutable {
         int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, secEvent, {});
