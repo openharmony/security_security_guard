@@ -27,6 +27,31 @@ namespace {
 
 }
 
+void EventSubscribeClient::Deleter(EventSubscribeClient *client)
+{
+    SGLOGI("enter EventSubscribeClient Deleter");
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return;
+    }
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return;
+    }
+    int32_t ret = proxy->DestoryClient(client->eventGroup_, client->clientId_);
+    if (ret != SUCCESS) {
+        SGLOGI("DeleteClient result, ret=%{public}d", ret);
+        return;
+    }
+    if (client->deathRecipient_ != nullptr) {
+        object->RemoveDeathRecipient(client->deathRecipient_);
+    }
+    delete client;
+}
+
 int32_t EventSubscribeClient::CreatClient(const std::string &eventGroup, EventCallback callback,
     std::shared_ptr<EventSubscribeClient> &client)
 {
@@ -35,10 +60,6 @@ int32_t EventSubscribeClient::CreatClient(const std::string &eventGroup, EventCa
     if (callback == nullptr) {
         SGLOGE("callback is nullptr");
         return NULL_OBJECT;
-    }
-    if (g_clients.find(client) != g_clients.end()) {
-        SGLOGE("current client already creat");
-        return BAD_PARAM;
     }
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
@@ -63,7 +84,7 @@ int32_t EventSubscribeClient::CreatClient(const std::string &eventGroup, EventCa
         SGLOGI("NewClient result, ret=%{public}d", ret);
         return ret;
     }
-    client = std::make_shared<EventSubscribeClient>();
+    client = std::shared_ptr<EventSubscribeClient>(new EventSubscribeClient(), Deleter);
     client->callback_ = serviceCallback;
     client->eventGroup_ = eventGroup;
     client->clientId_ = clientId;
@@ -72,8 +93,6 @@ int32_t EventSubscribeClient::CreatClient(const std::string &eventGroup, EventCa
         SGLOGE("SetDeathRecipient fail ret=%{public}d", ret);
         return ret;
     }
-    g_clients.insert(client);
-    SGLOGI("current client size %{public}zu", g_clients.size());
     return SUCCESS;
 }
 
@@ -101,45 +120,9 @@ int32_t EventSubscribeClient::SetDeathRecipient(std::shared_ptr<EventSubscribeCl
     return SUCCESS;
 }
 
-int32_t EventSubscribeClient::DestoryClient(const std::shared_ptr<EventSubscribeClient> &client)
-{
-    SGLOGI("enter EventSubscribeClient DestoryClient");
-    std::lock_guard<std::mutex> lock(g_clientMutex);
-    if (client == nullptr) {
-        SGLOGE("client is nullptr");
-        return NULL_OBJECT;
-    }
-    if (g_clients.find(client) == g_clients.end()) {
-        SGLOGE("current client not creat");
-        return NOT_FOUND;
-    }
-    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (registry == nullptr) {
-        SGLOGE("GetSystemAbilityManager error");
-        return NULL_OBJECT;
-    }
-    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerIdl>(object);
-    if (proxy == nullptr) {
-        SGLOGE("proxy is null");
-        return NULL_OBJECT;
-    }
-    int32_t ret = proxy->DestoryClient(client->eventGroup_, client->clientId_);
-    if (ret != SUCCESS) {
-        SGLOGI("DeleteClient result, ret=%{public}d", ret);
-        return ret;
-    }
-    if (client->deathRecipient_ != nullptr) {
-        object->RemoveDeathRecipient(client->deathRecipient_);
-    }
-    g_clients.erase(client);
-    SGLOGI("current client size %{public}zu", g_clients.size());
-    return SUCCESS;
-}
-
 int32_t EventSubscribeClient::Subscribe(int64_t eventId)
 {
-    SGLOGI("enter DataCollectManager Subscribe");
+    SGLOGI("enter EventSubscribeClient Subscribe");
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         SGLOGE("GetSystemAbilityManager error");
@@ -151,7 +134,7 @@ int32_t EventSubscribeClient::Subscribe(int64_t eventId)
         SGLOGE("proxy is null");
         return NULL_OBJECT;
     }
-    int32_t ret = proxy->Subscribe(eventId, eventGroup_, clientId_);
+    int32_t ret = proxy->Subscribe(eventId, clientId_);
     if (ret != SUCCESS) {
         SGLOGI("Subscribe result, ret=%{public}d", ret);
         return ret;
@@ -173,7 +156,7 @@ int32_t EventSubscribeClient::Unsubscribe(int64_t eventId)
         SGLOGE("proxy is null");
         return NULL_OBJECT;
     }
-    int32_t ret = proxy->Unsubscribe(eventId, eventGroup_, clientId_);
+    int32_t ret = proxy->Unsubscribe(eventId, clientId_);
     if (ret != SUCCESS) {
         SGLOGI("UnSubscribe result, ret=%{public}d", ret);
         return ret;
@@ -181,7 +164,7 @@ int32_t EventSubscribeClient::Unsubscribe(int64_t eventId)
     return SUCCESS;
 }
 
-int32_t EventSubscribeClient::AddFilter(const std::shared_ptr<EventMuteFilter> &subscribeMute)
+int32_t EventSubscribeClient::AddFilter(const std::shared_ptr<EventMuteFilter> &filter)
 {
     SGLOGI("enter EventSubscribeClient AddFilter");
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -195,19 +178,19 @@ int32_t EventSubscribeClient::AddFilter(const std::shared_ptr<EventMuteFilter> &
         SGLOGE("proxy is null");
         return NULL_OBJECT;
     }
-    if (subscribeMute == nullptr) {
+    if (filter == nullptr) {
         SGLOGE("subscribeMute is null");
         return NULL_OBJECT;
     }
-    SecurityEventFilter filter(*subscribeMute);
-    int32_t ret = proxy->AddFilter(filter, clientId_);
+    SecurityEventFilter innerFilter(*filter);
+    int32_t ret = proxy->AddFilter(innerFilter, clientId_);
     if (ret != SUCCESS) {
         SGLOGI("UnSubscribe result, ret=%{public}d", ret);
         return ret;
     }
     return SUCCESS;
 }
-int32_t EventSubscribeClient::RemoveFilter(const std::shared_ptr<EventMuteFilter> &subscribeMute)
+int32_t EventSubscribeClient::RemoveFilter(const std::shared_ptr<EventMuteFilter> &filter)
 {
     SGLOGI("enter EventSubscribeClient RemoveFilter");
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -221,12 +204,12 @@ int32_t EventSubscribeClient::RemoveFilter(const std::shared_ptr<EventMuteFilter
         SGLOGE("proxy is null");
         return NULL_OBJECT;
     }
-    if (subscribeMute == nullptr) {
+    if (filter == nullptr) {
         SGLOGE("subscribeMute is null");
         return NULL_OBJECT;
     }
-    SecurityEventFilter filter(*subscribeMute);
-    int32_t ret = proxy->RemoveFilter(filter, clientId_);
+    SecurityEventFilter innerFilter(*filter);
+    int32_t ret = proxy->RemoveFilter(innerFilter, clientId_);
     if (ret != SUCCESS) {
         SGLOGI("RemoveFilter result, ret=%{public}d", ret);
         return ret;

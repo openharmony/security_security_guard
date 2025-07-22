@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -15,10 +15,10 @@ import("//base/security/security_guard/security_guard.gni")
 import("//build/config/features.gni")
 import("//build/test.gni")
 
-ohos_fuzztest("DataCollectFuzzTest") {
+ohos_fuzztest("DatabaseManagerFuzzTest") {
   module_out_path = fuzz_test_output_path
   fuzz_config_file =
-      "${sg_root_dir}/test/fuzztest/data_collect/datacollect_fuzzer"
+      "${sg_root_dir}/test/fuzztest/data_collect/databasemanager_fuzzer"
 
   include_dirs = [
     "${sg_root_dir}/services/risk_classify/model_manager/include",
@@ -59,6 +59,7 @@ ohos_fuzztest("DataCollectFuzzTest") {
     "SECURITY_GUARD_CONFIG_UPDATE_TRUST_LIST_SOURCE = \"${security_guard_config_update_trust_list_source}\"",
     "SECURITY_GUARD_COLLECTOR_CFG_SOURCE = \"${security_guard_collector_cfg_source}\"",
     "SECURITY_GUARD_EVENT_FILTER_PATH = \"${security_guard_event_filter_path}\"",
+    "SECURITY_GUARD_EVENT_WRAPPER_PATH = \"${security_guard_event_wrapper_path}\"",
   ]
 
   sources = [
@@ -75,7 +76,7 @@ ohos_fuzztest("DataCollectFuzzTest") {
     "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
-    "data_collect_fuzzer.cpp",
+    "database_manager_fuzzer.cpp",
   ]
 
   deps = [
@@ -104,5 +105,7 @@ ohos_fuzztest("DataCollectFuzzTest") {
     "samgr:samgr_proxy",
     "sqlite:sqlite",
     "zlib:libz",
+    "os_account:os_account_innerkits",
+    "device_manager:devicemanagersdk",
   ]
 }

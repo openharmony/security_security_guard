@@ -22,75 +22,78 @@
 
 #include "iremote_object.h"
 #include "timer.h"
+#include "tokenid_kit.h"
+#include "accesstoken_kit.h"
 #include "i_db_listener.h"
 #include "security_collector_subscribe_info.h"
+#include "os_account_manager.h"
 #include "i_collector_subscriber.h"
 #include "i_collector_fwk.h"
 #include "i_event_filter.h"
+#include "i_event_wrapper.h"
 #include "security_event_filter.h"
 #include "security_event_info.h"
 namespace OHOS::Security::SecurityGuard {
 typedef SecurityCollector::IEventFilter* (*GetEventFilterFunc)();
+typedef SecurityCollector::IEventWrapper* (*GetEventWrapperFunc)();
 class AcquireDataSubscribeManager {
 public:
     static AcquireDataSubscribeManager& GetInstance();
     int InsertSubscribeRecord(const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo,
-        const sptr<IRemoteObject> &callback);
-    int RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback);
+        const sptr<IRemoteObject> &callback, const std::string &clientId);
+    int RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback, const std::string &clientId);
+    int InsertSubscribeRecord(int64_t eventId, const std::string &clientId);
+    int RemoveSubscribeRecord(int64_t eventId, const std::string &clientId);
     bool BatchPublish(const SecurityCollector::Event &event);
     void RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback);
-    int InsertSubscribeMute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
-        const std::string &sdkFlag);
-    int RemoveSubscribeMute(const SecurityEventFilter &subscribeMute, const sptr<IRemoteObject> &callback,
-        const std::string &sdkFlag);
+    int InsertSubscribeMute(const EventMuteFilter &filter, const std::string &clientId);
+    int RemoveSubscribeMute(const EventMuteFilter &filter, const std::string &clientId);
+    int CreatClient(const std::string &eventGroup, const std::string &clientId, const sptr<IRemoteObject> &cb);
+    int DestoryClient(const std::string &eventGroup, const std::string &clientId);
     void SubscriberEventOnSgStart();
-    class CleanupTimer {
+    void StartClearEventCache();
+    void StopClearEventCache();
+    sptr<IRemoteObject> GetCurrentClientCallback(const std::string &clientId);
+    std::string GetCurrentClientGroup(const std::string &clientId);
+    class ClientSession {
     public:
-        CleanupTimer() = default;
-        ~CleanupTimer() { Shutdown(); }
-        void ClearEventCache(const sptr<IRemoteObject> &remote);
-        void Start(const sptr<IRemoteObject> &remote, int64_t duration)
-        {
-            timer_.Setup();
-            timerId_ = timer_.Register([this, remote] { this->ClearEventCache(remote); }, duration);
-        }
-        void Shutdown()
-        {
-            if (timerId_ != 0) {
-                timer_.Unregister(timerId_);
-            }
-            timer_.Shutdown();
-            timerId_ = 0;
-        }
-        uint32_t GetTimeId()
-        {
-            return timerId_;
-        }
-    private:
-        Utils::Timer timer_{"cleanup_subscriber"};
-        uint32_t timerId_{};
-    };
-    using SubscriberInfo = struct {
-        std::shared_ptr<CleanupTimer> timer;
-        std::vector<SecurityCollector::Event> events;
-        size_t eventsBuffSize;
-        std::vector<SecurityCollector::SecurityCollectorSubscribeInfo> subscribe;
+        AccessToken::AccessTokenID tokenId {};
+        sptr<IRemoteObject> callback {};
+        std::string clientId {};
+        std::map<int64_t, std::vector<EventMuteFilter>> eventFilters {};
+        std::set<int64_t> subEvents{};
+        std::vector<SecurityCollector::Event> events {};
+        size_t eventsBuffSize {};
+        std::string eventGroup {};
+        int32_t userId {-1};
     };
     void BatchUpload(sptr<IRemoteObject> obj, const std::vector<SecurityCollector::Event> &events);
     void UploadEvent(const SecurityCollector::Event &event);
+    void InitUserId();
+    void DeInitUserId();
+    void DeInitDeviceId();
+    void InitDeviceId();
 private:
     AcquireDataSubscribeManager();
-    ~AcquireDataSubscribeManager() = default;
-    int SubscribeSc(int64_t eventId, const sptr<IRemoteObject> &callback);
+    ~AcquireDataSubscribeManager();
+    int SubscribeSc(int64_t eventId);
     int UnSubscribeSc(int64_t eventId);
     int UnSubscribeScAndDb(int64_t eventId);
-    int SubscribeScInSg(int64_t eventId, const sptr<IRemoteObject> &callback);
-    int SubscribeScInSc(int64_t eventId, const sptr<IRemoteObject> &callback);
+    int SubscribeScInSg(int64_t eventId);
+    int SubscribeScInSc(int64_t eventId);
     size_t GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event);
-    SecurityCollector::SecurityCollectorEventMuteFilter ConvertFilter(const SecurityGuard::EventMuteFilter &sgFilter);
-    bool FindSdkFlag(const std::set<std::string> &eventSubscribes, const std::vector<std::string> &sdkFlags);
+    SecurityCollector::SecurityCollectorEventMuteFilter ConvertFilter(const SecurityGuard::EventMuteFilter &sgFilter,
+        const std::string &clientId);
     int RemoveSubscribeMuteToSub(const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter,
-        const EventCfg &config, const std::string &sdkFlag);
+        const EventCfg &config);
+    int AddSubscribeMuteToSub(const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter,
+        const EventCfg &config);
+    int RemoveMute(const EventMuteFilter &filter, const std::string &clientId);
+    int InsertMute(const EventMuteFilter &filter, const std::string &clientId);
+    int CheckInsertMute(const EventMuteFilter &filter, const std::string &clientId);
+    int IsExceedLimited(const std::string &clientId, AccessToken::AccessTokenID callerToken);
+    bool IsFindFlag(const std::set<std::string> &eventSubscribes, int64_t eventId, const std::string &clientId);
+    void ClearEventCache();
     class DbListener : public IDbListener {
     public:
         DbListener() = default;
@@ -110,13 +113,36 @@ private:
         void OnNotify(const SecurityCollector::Event &event) override;
     private:
     };
+    class AccountSubscriber : public AccountSA::OsAccountSubscriber {
+    public:
+        ~AccountSubscriber() override = default;
+        int GetUserId()
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            return userId_;
+        }
+        void OnAccountsChanged(const int &id) override
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            userId_ = id;
+        }
+    private:
+        int userId_{-1};
+        std::mutex mutex_;
+    };
     std::shared_ptr<IDbListener> listener_{};
     std::shared_ptr<CollectorListener> collectorListener_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
-    std::map<sptr<IRemoteObject>, std::vector<std::string>> callbackHashMap_{};
     std::map<int64_t, std::shared_ptr<SecurityCollector::ICollectorFwk>> eventToListenner_;
     void *handle_ = nullptr;
+    void *wrapperHandle_ = nullptr;
     GetEventFilterFunc eventFilter_ = nullptr;
+    GetEventWrapperFunc eventWrapper_ = nullptr;
+    bool isStopClearCache_ = false;
+    std::mutex clearCachemutex_ {};
+    std::string deviceId_ {};
+    int32_t userId_ {};
+    std::shared_ptr<AccountSubscriber> accountSubscriber_ {};
 };
 } // namespace OHOS::Security::SecurityGuard
 

@@ -17,7 +17,8 @@
 
 #include <fstream>
 #include <mutex>
-
+#include <future>
+#include "ffrt.h"
 #include "directory_ex.h"
 #include "string_ex.h"
 
@@ -34,7 +35,9 @@
 #include "sg_collect_client.h"
 
 namespace OHOS::Security::SecurityGuard {
-
+namespace {
+    constexpr int32_t TIME_OUT_MS = 1000;
+}
 // LCOV_EXCL_START
 void ConfigSubscriber::GetUpdateFileDstPath(const std::string &fileName, std::string &dstPath)
 {
@@ -102,11 +105,15 @@ bool ConfigSubscriber::UpdateConfig(const std::string &file)
             name = dstPath.substr(lastSlashPos + 1);
         }
         std::string content = R"({"path":")" + dstPath + R"(", "name":")" + name + R"("})";
-        auto info = std::make_shared<EventInfo>(0xAB000004, "1.0", content);
-        int32_t ret = SecurityGuard::NativeDataCollectKit::ReportSecurityInfoAsync(info);
-        if (ret != SUCCESS) {
-            SGLOGE("ReportSecurityEvent Error %{public}d", ret);
-        }
+        auto task = [content] {
+            auto info = std::make_shared<EventInfo>(0xAB000004, "1.0", content);
+            int32_t ret = SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(info);
+            if (ret != SUCCESS) {
+                SGLOGE("ReportSecurityEvent Error %{public}d", ret);
+            }
+        };
+        auto thread = std::thread(task);
+        thread.join();
     }
     if (!RemoveFile(file)) {
         SGLOGE("remove file error, %{public}s", strerror(errno));

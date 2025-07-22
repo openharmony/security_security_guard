@@ -1,0 +1,111 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/security/security_guard/security_guard.gni")
+import("//build/config/features.gni")
+import("//build/test.gni")
+
+ohos_fuzztest("DatabaseHelperFuzzTest") {
+  module_out_path = fuzz_test_output_path
+  fuzz_config_file =
+      "${sg_root_dir}/test/fuzztest/data_collect/databasehelper_fuzzer"
+
+  include_dirs = [
+    "${sg_root_dir}/services/risk_classify/model_manager/include",
+    "${sg_root_dir}/services/config_manager/include",
+    "${sg_root_dir}/interfaces/inner_api/common/include",
+    "${sg_root_dir}/interfaces/inner_api/collect/include",
+    "${sg_root_dir}/frameworks/common/collect/include",
+    "${sg_root_dir}/interfaces/inner_api/collector/include",
+    "${sg_root_dir}/frameworks/common/collector/include",
+    "${sg_root_dir}/services/bigdata/include",
+    "${sg_root_dir}/services/config_manager/include",
+    "${sg_root_dir}/services/data_collect/sa/include",
+    "${sg_root_dir}/services/data_collect/store/include",
+    "${sg_root_dir}/services/risk_collect/include",
+    "${sg_root_dir}/frameworks/common/constants/include",
+    "${sg_root_dir}/frameworks/common/json/include",
+    "${sg_root_dir}/frameworks/common/task_handler/include",
+    "${sg_root_dir}/frameworks/common/database/include",
+    "${sg_root_dir}/frameworks/common/log/include",
+    "${sg_root_dir}/frameworks/common/utils/include",
+    "${sg_root_dir}/services/collector_manager/include",
+    "${sg_root_dir}/services/risk_classify/model_manager/include",
+    "${sg_root_dir}/interfaces/inner_api/classify/include",
+    "${sg_root_dir}/frameworks/common/classify/include",
+  ]
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+
+  defines = []
+  defines += [
+    "SECURITY_GUARD_EVENT_CFG_SOURCE = \"${security_guard_event_cfg_source}\"",
+    "SECURITY_GUARD_MODEL_CFG_SOURCE = \"${security_guard_model_cfg_source}\"",
+    "SECURITY_GUARD_EVENT_GROUP_CFG_SOURCE = \"${security_guard_event_group_cfg_source}\"",
+    "SECURITY_GUARD_CONFIG_UPDATE_TRUST_LIST_SOURCE = \"${security_guard_config_update_trust_list_source}\"",
+    "SECURITY_GUARD_COLLECTOR_CFG_SOURCE = \"${security_guard_collector_cfg_source}\"",
+    "SECURITY_GUARD_EVENT_FILTER_PATH = \"${security_guard_event_filter_path}\"",
+    "SECURITY_GUARD_EVENT_WRAPPER_PATH = \"${security_guard_event_wrapper_path}\"",
+  ]
+
+  sources = [
+    "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
+    "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
+    "${sg_root_dir}/services/data_collect/sa/acquire_data_callback_proxy.cpp",
+    "${sg_root_dir}/services/data_collect/sa/acquire_data_subscribe_manager.cpp",
+    "${sg_root_dir}/services/data_collect/sa/data_collect_manager_callback_proxy.cpp",
+    "${sg_root_dir}/services/data_collect/sa/data_collect_manager_service.cpp",
+    "${sg_root_dir}/services/data_collect/sa/data_format.cpp",
+    "${sg_root_dir}/services/data_collect/sa/security_event_query_callback_proxy.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
+    "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
+    "database_helper_fuzzer.cpp",
+  ]
+
+  deps = [
+    "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
+    "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
+    "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
+    "${sg_root_dir}/services/collector_manager:security_collector_manager",
+    "${sg_root_dir}/services/config_manager:sg_config_manager",
+    "${sg_root_dir}/services/data_collect:sg_collect_service_database",
+    "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_stub",
+    "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
+  ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "ffrt:libffrt",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hisysevent:libhisyseventmanager",
+    "ipc:ipc_core",
+    "json:nlohmann_json_static",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "sqlite:sqlite",
+    "zlib:libz",
+    "os_account:os_account_innerkits",
+    "device_manager:devicemanagersdk",
+  ]
+}

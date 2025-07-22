@@ -773,17 +773,12 @@ HWTEST_F(SecurityCollectorTest, RemoveFilter, TestSize.Level1)
 {
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_DENIED)).WillOnce(
-        Return(AccessToken::PermissionState::PERMISSION_GRANTED)).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(DataCollection::GetInstance(), RemoveFilter).WillOnce(Return(
-        SecurityCollector::ErrorCode::FAILED)).WillOnce(Return(SecurityCollector::ErrorCode::SUCCESS));
     SecurityCollectorEventMuteFilter fil {};
     SecurityCollectorEventFilter filter(fil);
-    int32_t ret = g_service.RemoveFilter(filter, "111");
+    int32_t ret = g_service.RemoveFilter(filter);
     EXPECT_EQ(ret, SecurityCollector::ErrorCode::NO_PERMISSION);
-    ret = g_service.RemoveFilter(filter, "111");
-    EXPECT_EQ(ret, SecurityCollector::ErrorCode::FAILED);
-    ret = g_service.RemoveFilter(filter, "111");
+    ret = g_service.RemoveFilter(filter);
     EXPECT_EQ(ret, SecurityCollector::ErrorCode::SUCCESS);
 }
 
@@ -791,17 +786,12 @@ HWTEST_F(SecurityCollectorTest, AddFilter, TestSize.Level1)
 {
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_DENIED)).WillOnce(
-        Return(AccessToken::PermissionState::PERMISSION_GRANTED)).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(DataCollection::GetInstance(), AddFilter).WillOnce(Return(
-        SecurityCollector::ErrorCode::FAILED)).WillOnce(Return(SecurityCollector::ErrorCode::SUCCESS));
     SecurityCollectorEventMuteFilter fil {};
     SecurityCollectorEventFilter filter(fil);
-    int32_t ret = g_service.AddFilter(filter, "111");
+    int32_t ret = g_service.AddFilter(filter);
     EXPECT_EQ(ret, SecurityCollector::ErrorCode::NO_PERMISSION);
-    ret = g_service.AddFilter(filter, "111");
-    EXPECT_EQ(ret, SecurityCollector::ErrorCode::FAILED);
-    ret = g_service.AddFilter(filter, "111");
+    ret = g_service.AddFilter(filter);
     EXPECT_EQ(ret, SecurityCollector::ErrorCode::SUCCESS);
 }
 }

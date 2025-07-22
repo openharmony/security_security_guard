@@ -37,6 +37,8 @@ int32_t AcquireDataCallbackProxy::OnNotify(const std::vector<SecurityCollector::
         data.WriteString(event.content);
         data.WriteString(event.extra);
         data.WriteString(event.timestamp);
+        data.WriteInt32(event.userId);
+        data.WriteString(event.deviceId);
         if (!data.WriteUint32(event.eventSubscribes.size())) {
             SGLOGE("failed to write eventSubscribes size");
             return WRITE_ERR;

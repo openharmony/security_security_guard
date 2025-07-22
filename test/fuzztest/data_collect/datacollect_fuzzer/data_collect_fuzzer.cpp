@@ -65,23 +65,32 @@ bool AcquireDataSubscribeManagerFuzzTest(const uint8_t* data, size_t size)
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE)};
     Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
-    AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj);
-    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj);
+    std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    Security::SecurityCollector::SecurityCollectorEventMuteFilter info{};
+    EventCfg cfg{};
+    AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj,
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj,
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    AcquireDataSubscribeManager::GetInstance().BatchPublish(event);
+    AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
+    AcquireDataSubscribeManager::GetInstance().GetSecurityCollectorEventBufSize(event);
     AcquireDataSubscribeManager::GetInstance().BatchPublish(event);
     AcquireDataSubscribeManager::GetInstance().SubscribeSc(fdp.ConsumeIntegral<int64_t>(), obj);
     AcquireDataSubscribeManager::GetInstance().UnSubscribeSc(fdp.ConsumeIntegral<int64_t>());
     AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(fdp.ConsumeIntegral<int64_t>(), obj);
     AcquireDataSubscribeManager::GetInstance().SubscribeScInSc(fdp.ConsumeIntegral<int64_t>(), obj);
-    SecurityEventFilter subscribeMute {};
-    subscribeMute.filter_.eventId = fdp.ConsumeIntegral<int64_t>();
-    subscribeMute.filter_.eventGroup = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    subscribeMute.filter_.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute, obj,
+    EventMuteFilter subscribeMute {};
+    subscribeMute.eventId = fdp.ConsumeIntegral<int64_t>();
+    subscribeMute.eventGroup = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    subscribeMute.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(subscribeMute,
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute, obj,
+    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute,
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     AcquireDataSubscribeManager::GetInstance().BatchUpload(obj, std::vector<Security::SecurityCollector::Event>{event});
     AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecordOnRemoteDied(obj);
+    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMuteToSub(info, cfg);
     return true;
 }
 
@@ -121,12 +130,10 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
     if (data == nullptr || size < sizeof(int32_t) + sizeof(int64_t)) {
         return false;
     }
-    size_t offset = 0;
-    int fd = static_cast<int32_t>(size);
-    offset += sizeof(int32_t);
-    int64_t eventId = *(reinterpret_cast<const int64_t *>(data));
-    offset += sizeof(int64_t);
-    std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
+    FuzzedDataProvider fdp(data, size);
+    int fd = fdp.ConsumeIntegral<int32_t>();
+    int64_t eventId = fdp.ConsumeIntegral<int64_t>();
+    std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     std::vector<std::u16string> args{Str8ToStr16(string)};
     Security::SecurityCollector::SecurityEventRuler ruler{eventId};
     Security::SecurityCollector::Event event{eventId, string, string, string};
@@ -136,9 +143,26 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
     auto proxy = iface_cast<ISecurityEventQueryCallback>(obj);
     sptr<IRemoteObject> callback(new (std::nothrow) MockRemoteObject());
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, false);
+    auto promise = std::make_shared<std::promise<int32_t>>();
+    std::vector<int64_t> eventIds{eventId};
+    SecurityEventFilter subscribeMute{};
+    SgSubscribeEvent sgSubscribeEvent{};
     service.Dump(fd, args);
+    service.DumpEventInfo(fd, eventId);
+    service.IsDiscardEventInThisHour(eventId);
     service.RequestDataSubmit(eventId, string, string, string);
     service.RequestDataSubmitAsync(eventId, string, string, string);
+    service.PushDataCollectTask(obj, string, string, promise);
+    service.Subscribe(subscribeInfo, callback, string);
+    service.Subscribe(eventId, string, string);
+    service.Unsubscribe(subscribeInfo, callback, string);
+    service.Unsubscribe(eventId, string, string);
+    service.IsEventGroupHasPermission(string, eventIds);
+    service.ParseTrustListFile(string);
+    service.QueryEventConfig(string);
+    service.AddFilter(subscribeMute, string);
+    service.RemoveFilter(subscribeMute, string);
+    service.SetDeathCallBack(sgSubscribeEvent, callback);
     service.OnAddSystemAbility(fd, string);
     service.OnRemoveSystemAbility(fd, string);
     service.QueryEventByRuler(proxy, ruler);

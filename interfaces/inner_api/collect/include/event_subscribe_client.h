@@ -23,17 +23,21 @@ namespace OHOS::Security::SecurityGuard {
 using EventCallback = std::function<void(const SecurityCollector::Event &event)>;
 class EventSubscribeClient {
 public:
-    int32_t Subscribe(int64_t eventid);
-    int32_t Unsubscribe(int64_t eventid);
-    int32_t AddFilter(const std::shared_ptr<EventMuteFilter> &subscribeMute);
-    int32_t RemoveFilter(const std::shared_ptr<EventMuteFilter> &subscribeMute);
+    int32_t Subscribe(int64_t eventId);
+    int32_t Unsubscribe(int64_t eventId);
+    int32_t AddFilter(const std::shared_ptr<EventMuteFilter> &filter);
+    int32_t RemoveFilter(const std::shared_ptr<EventMuteFilter> &filter);
     static int32_t CreatClient(const std::string &eventGroup, EventCallback callback,
         std::shared_ptr<EventSubscribeClient> &client);
-    static int32_t DestoryClient(const std::shared_ptr<EventSubscribeClient> &client);
 private:
+    EventSubscribeClient() = default;
+    ~EventSubscribeClient() = default;
+    EventSubscribeClient(const EventSubscribeClient&) = delete;
+    EventSubscribeClient& operator= (const EventSubscribeClient&) = delete;
     static std::string ConstructClientId(const AcquireDataManagerCallbackService *serviceCallback);
     static int32_t SetDeathRecipient(std::shared_ptr<EventSubscribeClient> client,
         const sptr<IRemoteObject> &remote);
+    static void Deleter(EventSubscribeClient *client);
     class DeathRecipient : public IRemoteObject::DeathRecipient {
     public:
         DeathRecipient() = default;

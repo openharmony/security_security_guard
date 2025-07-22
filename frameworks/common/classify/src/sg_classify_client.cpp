@@ -30,7 +30,7 @@
 
 #ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 namespace {
-    constexpr int32_t TIMEOUT_REPLY = 500;
+    constexpr int32_t TIMEOUT_REPLY = 15000;
 }
 
 using namespace OHOS;

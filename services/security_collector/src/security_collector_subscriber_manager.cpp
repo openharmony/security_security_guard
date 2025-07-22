@@ -38,6 +38,30 @@ std::string SecurityCollectorSubscriberManager::CollectorListenner::GetExtraInfo
     return {};
 }
 
+SecurityCollectorSubscriberManager::SecurityCollectorSubscriberManager()
+{
+    handle_ = dlopen(SECURITY_GUARD_EVENT_FILTER_PATH, RTLD_LAZY);
+    if (handle_ != nullptr) {
+        eventFilter_ = reinterpret_cast<GetEventFilterFunc>(dlsym(handle_, "GetEventFilter"));
+    }
+    wrapperHandle_ = dlopen(SECURITY_GUARD_EVENT_WRAPPER_PATH, RTLD_LAZY);
+    if (wrapperHandle_ != nullptr) {
+        eventWrapper_ = reinterpret_cast<GetEventWrapperFunc>(dlsym(handle_, "GetEventWrapper"));
+    }
+}
+
+SecurityCollectorSubscriberManager::~SecurityCollectorSubscriberManager()
+{
+    if (handle_ != nullptr) {
+        dlclose(handle_);
+        handle_ = nullptr;
+    }
+    if (wrapperHandle_ != nullptr) {
+        dlclose(wrapperHandle_);
+        wrapperHandle_ = nullptr;
+    }
+}
+
 int64_t SecurityCollectorSubscriberManager::CollectorListenner::GetEventId()
 {
     if (subscriber_) {
@@ -196,5 +220,43 @@ bool SecurityCollectorSubscriberManager::UnsubscribeCollector(const sptr<IRemote
     timers_.erase(remote);
     LOGI("erase timer after remoteObject");
     return true;
+}
+
+int32_t SecurityCollectorSubscriberManager::AddFilter(const SecurityCollectorEventFilter &subscribeMute)
+{
+    if (eventFilter_ == nullptr) {
+        LOGI("eventFilter_ is null");
+        return NULL_OBJECT;
+    }
+    int32_t ret = eventFilter_()->SetEventFilter(subscribeMute.GetMuteFilter());
+    if (ret != SUCCESS) {
+        LOGI("SetEventFilter failed, ret=%{public}d", ret);
+        return ret;
+    }
+    return SUCCESS;
+}
+
+
+int32_t SecurityCollectorSubscriberManager::RemoveFilter(const SecurityCollectorEventFilter &subscribeMute)
+{
+    if (eventFilter_ == nullptr) {
+        LOGI("eventFilter_ is null");
+        return NULL_OBJECT;
+    }
+    int32_t ret = eventFilter_()->RemoveEventFilter(subscribeMute.GetMuteFilter());
+    if (ret != SUCCESS) {
+        LOGI("RemoveFilter failed, ret=%{public}d", ret);
+        return ret;
+    }
+    return SUCCESS;
+}
+
+void SecurityCollectorSubscriberManager::RemoveAllFilter()
+{
+    if (eventFilter_ == nullptr) {
+        LOGI("eventFilter_ is null");
+        return;
+    }
+    eventFilter_()->RemoveAllEventFilter();
 }
 }

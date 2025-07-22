@@ -48,7 +48,13 @@
         VTT?for?OHOS::Security::SecurityGuard::SecurityEventFilter*;
         vtable?for?OHOS::Security::SecurityGuard::SecurityEventFilter;
         OHOS::Security::SecurityGuard::SecurityEventFilter::Unmarshalling*;
-
+        OHOS::Security::SecurityGuard::EventSubscribeClient::AddFilter*;
+        OHOS::Security::SecurityGuard::EventSubscribeClient::RemoveFilter*;
+        OHOS::Security::SecurityGuard::EventSubscribeClient::CreatClient*;
+        OHOS::Security::SecurityGuard::EventSubscribeClient::DestoryClient*;
+        OHOS::Security::SecurityGuard::EventSubscribeClient::Subscribe*;
+        OHOS::Security::SecurityGuard::EventSubscribeClient::Unsubscribe*;
+        
     };
   local:
     *;
