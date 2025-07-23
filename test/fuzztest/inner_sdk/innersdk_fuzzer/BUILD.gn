@@ -86,6 +86,5 @@ ohos_fuzztest("InnerSdkFuzzTest") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
     "security_guard:libsg_collector_sdk",
-    "ffrt:libffrt",
   ]
 }
