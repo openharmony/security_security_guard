@@ -42,7 +42,7 @@ DataCollectManager& DataCollectManager::GetInstance()
 DataCollectManager::DataCollectManager() : callback_(new (std::nothrow) AcquireDataManagerCallbackService())
 {
     auto func = [this](const SecurityCollector::Event &event) {
-        std::lock_guard<ffrt::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         for (const auto &iter : subscribers_) {
             if (iter->GetSubscribeInfo().GetEvent().eventId == event.eventId) {
                 iter->OnNotify(event);
@@ -139,7 +139,7 @@ void DataCollectManager::HandleDecipient()
 {
     std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> tmp {};
     {
-        std::lock_guard<ffrt::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         if (count_ >= MAX_RESUB_COUNTS) {
             SGLOGE("reSubscriber too many times");
             return;
@@ -174,7 +174,7 @@ void DataCollectManager::HandleDecipient()
         }
     }
     {
-        std::lock_guard<ffrt::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         count_++;
     }
 }
@@ -183,7 +183,7 @@ void DataCollectManager::HandleDecipient()
 int32_t DataCollectManager::Subscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
 {
     SGLOGI("enter DataCollectManager Subscribe");
-    std::lock_guard<ffrt::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     if (subscriber == nullptr) {
         SGLOGE("subscriber is nullptr");
         return NULL_OBJECT;
@@ -232,7 +232,7 @@ int32_t DataCollectManager::Subscribe(const std::shared_ptr<SecurityCollector::I
 int32_t DataCollectManager::Unsubscribe(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &subscriber)
 {
     SGLOGI("enter DataCollectManager UnSubscribe");
-    std::lock_guard<ffrt::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     if (subscriber == nullptr) {
         SGLOGE("subscriber is nullptr");
         return NULL_OBJECT;
