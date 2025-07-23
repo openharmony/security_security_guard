@@ -59,6 +59,7 @@ ohos_unittest("SecurityGuardModelManagerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "sqlite:sqlite",
+    "ffrt:libffrt",
   ]
 }
 

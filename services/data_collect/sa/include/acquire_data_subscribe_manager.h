@@ -20,6 +20,7 @@
 #include <mutex>
 #include <set>
 
+#include "ffrt.h"
 #include "iremote_object.h"
 #include "timer.h"
 #include "tokenid_kit.h"
@@ -121,7 +122,7 @@ public:
     GetEventFilterFunc eventFilter_ = nullptr;
     GetEventWrapperFunc eventWrapper_ = nullptr;
     bool isStopClearCache_ = false;
-    std::mutex clearCachemutex_ {};
+    ffrt::mutex clearCachemutex_ {};
     std::string deviceId_ {};
     int32_t userId_ {-1};
 };

@@ -22,6 +22,7 @@
 #include "tokenid_kit.h"
 #include "ipc_skeleton.h"
 #include "cJSON.h"
+#include "ffrt.h"
 
 #include "bigdata.h"
 #include "database_manager.h"
@@ -85,7 +86,7 @@ void RiskAnalysisManagerService::OnStart()
         SGLOGE("Publish error");
     }
     ffrt::submit([this] {
-        std::this_thread::sleep_for(std::chrono::milliseconds(DELAY_TIME));
+        ffrt::this_task::sleep_for(std::chrono::milliseconds(DELAY_TIME));
         DetectPluginManager::getInstance().LoadAllPlugins();
     });
 }

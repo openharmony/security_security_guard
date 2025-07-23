@@ -21,6 +21,7 @@
 #include "nocopyable.h"
 #include "system_ability.h"
 #include "data_collection.h"
+#include "ffrt.h"
 #include "i_db_listener.h"
 #include "i_model_info.h"
 #include "data_collect_manager_idl_stub.h"
@@ -91,7 +92,7 @@ private:
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
     std::atomic<uint32_t> taskCount_ = 0;
     std::atomic<uint32_t> discardedCount_ = 0;
-    std::mutex eventsMutex_{};
+    ffrt::mutex eventsMutex_{};
     std::map<int64_t, std::atomic<uint32_t>> reportedEventsMap_;
     std::map<std::string,  sptr<IRemoteObject>> clientCallBacks_ {};
     bool IsDiscardEventInThisHour(int64_t eventId);

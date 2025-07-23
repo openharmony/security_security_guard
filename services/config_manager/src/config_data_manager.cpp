@@ -33,7 +33,7 @@ void ConfigDataManager::InsertModelMap(uint32_t modelId, const ModelCfg &config)
 
 void ConfigDataManager::InsertEventMap(int64_t eventId, const EventCfg &config)
 {
-    std::lock_guard<std::mutex> lock(eventMutex_);
+    std::lock_guard<ffrt::mutex> lock(eventMutex_);
     eventMap_[eventId] = config;
 }
 
@@ -45,19 +45,19 @@ void ConfigDataManager::InsertModelToEventMap(uint32_t modelId, std::set<int64_t
 
 void ConfigDataManager::InsertEventToTableMap(int64_t eventId, std::string table)
 {
-    std::lock_guard<std::mutex> lock(eventToTableMutex_);
+    std::lock_guard<ffrt::mutex> lock(eventToTableMutex_);
     eventToTableMap_[eventId] = table;
 }
 
 void ConfigDataManager::InsertEventGroupMap(const std::unordered_map<std::string, EventGroupCfg> &eventGroupMap)
 {
-    std::lock_guard<std::mutex> lock(eventGroupMutex_);
+    std::lock_guard<ffrt::mutex> lock(eventGroupMutex_);
     eventGroupMap_ = eventGroupMap;
 }
 
 bool ConfigDataManager::GetEventGroupConfig(const std::string &groupName, EventGroupCfg &config)
 {
-    std::lock_guard<std::mutex> lock(eventGroupMutex_);
+    std::lock_guard<ffrt::mutex> lock(eventGroupMutex_);
     auto it = eventGroupMap_.find(groupName);
     if (it != eventGroupMap_.end()) {
         config = it->second;
@@ -68,7 +68,7 @@ bool ConfigDataManager::GetEventGroupConfig(const std::string &groupName, EventG
 
 bool ConfigDataManager::GetIsBatchUpload(const std::string &groupName)
 {
-    std::lock_guard<std::mutex> lock(eventGroupMutex_);
+    std::lock_guard<ffrt::mutex> lock(eventGroupMutex_);
     auto it = eventGroupMap_.find(groupName);
     if (it != eventGroupMap_.end()) {
         return it->second.isBatchUpload;
@@ -84,7 +84,7 @@ void ConfigDataManager::ResetModelMap()
 
 void ConfigDataManager::ResetEventMap()
 {
-    std::lock_guard<std::mutex> lock(eventMutex_);
+    std::lock_guard<ffrt::mutex> lock(eventMutex_);
     eventMap_.clear();
 }
 
@@ -96,7 +96,7 @@ void ConfigDataManager::ResetModelToEventMap()
 
 void ConfigDataManager::ResetEventToTableMap()
 {
-    std::lock_guard<std::mutex> lock(eventToTableMutex_);
+    std::lock_guard<ffrt::mutex> lock(eventToTableMutex_);
     eventToTableMap_.clear();
 }
 
@@ -114,7 +114,7 @@ std::vector<int64_t> ConfigDataManager::GetEventIds(uint32_t modelId)
 
 std::vector<int64_t> ConfigDataManager::GetAllEventIds()
 {
-    std::lock_guard<std::mutex> lock(eventMutex_);
+    std::lock_guard<ffrt::mutex> lock(eventMutex_);
     std::vector<int64_t> vector;
     for (const auto &entry : eventMap_) {
         SGLOGD("eventId=%{public}" PRId64, entry.first);
@@ -136,7 +136,7 @@ std::vector<uint32_t> ConfigDataManager::GetAllModelIds()
 
 std::vector<EventCfg> ConfigDataManager::GetAllEventConfigs()
 {
-    std::lock_guard<std::mutex> lock(eventMutex_);
+    std::lock_guard<ffrt::mutex> lock(eventMutex_);
     std::vector<EventCfg> vector;
     for (const auto &entry : eventMap_) {
         vector.emplace_back(entry.second);
@@ -157,7 +157,7 @@ bool ConfigDataManager::GetModelConfig(uint32_t modelId, ModelCfg &config)
 
 bool ConfigDataManager::GetEventConfig(int64_t eventId, EventCfg &config)
 {
-    std::lock_guard<std::mutex> lock(eventMutex_);
+    std::lock_guard<ffrt::mutex> lock(eventMutex_);
     auto it = eventMap_.find(eventId);
     if (it != eventMap_.end()) {
         config = it->second;
@@ -168,7 +168,7 @@ bool ConfigDataManager::GetEventConfig(int64_t eventId, EventCfg &config)
 
 std::string ConfigDataManager::GetTableFromEventId(int64_t eventId)
 {
-    std::lock_guard<std::mutex> lock(eventToTableMutex_);
+    std::lock_guard<ffrt::mutex> lock(eventToTableMutex_);
     if (eventToTableMap_.find(eventId) == eventToTableMap_.end()) {
         SGLOGE("eventToTableMap_ did not find eventId=%{public}" PRId64, eventId);
         return "";

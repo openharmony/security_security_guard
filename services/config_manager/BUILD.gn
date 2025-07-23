@@ -43,7 +43,10 @@ ohos_shared_library("sg_config_data_manager") {
   }
   branch_protector_ret = "pac_ret"
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "hilog:libhilog",
+    "ffrt:libffrt",
+  ]
 }
 
 ohos_shared_library("sg_config_manager") {

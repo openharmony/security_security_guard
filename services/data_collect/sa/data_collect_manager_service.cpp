@@ -174,11 +174,11 @@ void DataCollectManagerService::DumpEventInfo(int fd, int64_t eventId)
 
 bool DataCollectManagerService::IsDiscardEventInThisHour(int64_t eventId)
 {
-    std::lock_guard<std::mutex> lock(eventsMutex_);
+    std::lock_guard<ffrt::mutex> lock(eventsMutex_);
     {
         if (reportedEventsMap_.size() == 0) {
             auto clearTask = [&] () mutable {
-                std::lock_guard<std::mutex> lock(eventsMutex_);
+                std::lock_guard<ffrt::mutex> lock(eventsMutex_);
                 reportedEventsMap_.clear();
                 SGLOGI("clear reportedEventsMap_");
             };
