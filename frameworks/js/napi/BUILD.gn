@@ -52,6 +52,7 @@ ohos_shared_library("securityguard_napi") {
     "ipc:ipc_core",
     "napi:ace_napi",
     "samgr:samgr_proxy",
+    "ffrt:libffrt",
   ]
 
   relative_install_dir = "module/security"

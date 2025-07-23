@@ -20,7 +20,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
-#include <mutex>
+#include "ffrt.h"
 #include "cJSON.h"
 
 #include "i_collector_subscriber.h"
@@ -101,7 +101,7 @@ private:
     bool CheckPluginNameAndSize(PluginCfg &newPlugin);
     bool ParsePluginDepEventIds(const cJSON *plugin, std::unordered_set<int64_t> &depEventIds);
     std::string AssembleMetadata(const SecurityCollector::Event &event);
-    std::mutex mutex_;
+    ffrt::mutex mutex_;
 };
 }  // namespace OHOS::Security::SecurityGuard
 #endif

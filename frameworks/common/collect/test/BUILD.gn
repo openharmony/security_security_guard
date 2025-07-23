@@ -68,6 +68,7 @@ ohos_unittest("libsg_collect_sdk_test") {
     "ipc:ipc_core",
     "ipc:ipc_single",
     "samgr:samgr_proxy",
+    "ffrt:libffrt",
   ]
 }
 

@@ -16,10 +16,10 @@
 #ifndef SECURITY_GUARD_DATABASE_MANAGER_H
 #define SECURITY_GUARD_DATABASE_MANAGER_H
 
-#include <mutex>
 #include <set>
 #include <unordered_map>
 
+#include "ffrt.h"
 #include "i_model_info.h"
 #include "i_db_listener.h"
 
@@ -48,8 +48,8 @@ public:
     int32_t UnSubscribeDb(std::vector<int64_t> eventIds, std::shared_ptr<IDbListener> listener);
 
 private:
-    std::mutex mutex_;
-    std::mutex delMutex_;
+    ffrt::mutex mutex_;
+    ffrt::mutex delMutex_;
     std::unordered_map<int64_t, std::set<std::shared_ptr<IDbListener>>> listenerMap_;
     std::string deviceId_;
     void FillUserIdAndDeviceId(SecEvent& event);

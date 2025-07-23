@@ -20,6 +20,7 @@
 #include <set>
 #include <unordered_map>
 #include "security_event_info.h"
+#include "ffrt.h"
 #include "i_model_info.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -52,9 +53,9 @@ private:
     std::unordered_map<std::string, EventGroupCfg> eventGroupMap_;
     std::mutex modelToEventMutex_;
     std::mutex modelMutex_;
-    std::mutex eventMutex_;
-    std::mutex eventGroupMutex_;
-    std::mutex eventToTableMutex_;
+    ffrt::mutex eventMutex_;
+    ffrt::mutex eventGroupMutex_;
+    ffrt::mutex eventToTableMutex_;
 };
 } // OHOS::Security::SecurityGuard
 
