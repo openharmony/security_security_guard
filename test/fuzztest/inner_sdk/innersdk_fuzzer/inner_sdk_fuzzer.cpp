@@ -451,6 +451,17 @@ void SecurityEventRulerFuzzTest(const uint8_t* data, size_t size)
     ruler.Unmarshalling(parcel);
 }
 
+void EventSubscribeClientFuzzTest(const uint8_t* data, size_t size)
+{
+    FuzzedDataProvider fdp(data, size);
+    EventSubscribeClient client {};
+    std::shared_ptr<EventSubscribeClient> client1;
+    auto func = [] (const Security::SecurityCollector::Event &event) {
+    };
+    EventSubscribeClient::CreatClient(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), func, client1);
+    client.Subscribe(fdp.ConsumeIntegral<int64_t>());
+    client.Unsubscribe(fdp.ConsumeIntegral<int64_t>());
+}
 }  // namespace OHOS
 
 /* Fuzzer entry point */
@@ -472,5 +483,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::SecurityEventFuzzTest(data, size);
     OHOS::SecurityEventRulerFuzzTest(data, size);
     OHOS::DataCollectManagerFuzzTest(data, size);
+    OHOS::EventSubscribeClientFuzzTest(data, size);
     return 0;
 }
