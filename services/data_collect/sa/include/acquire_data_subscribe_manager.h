@@ -84,10 +84,6 @@ public:
     size_t GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event);
     SecurityCollector::SecurityCollectorEventMuteFilter ConvertFilter(const SecurityGuard::EventMuteFilter &sgFilter,
         const std::string &clientId);
-    int RemoveSubscribeMuteToSub(const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter,
-        const EventCfg &config);
-    int AddSubscribeMuteToSub(const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter,
-        const EventCfg &config);
     int RemoveMute(const EventMuteFilter &filter, const std::string &clientId);
     int InsertMute(const EventMuteFilter &filter, const std::string &clientId);
     int CheckInsertMute(const EventMuteFilter &filter, const std::string &clientId);

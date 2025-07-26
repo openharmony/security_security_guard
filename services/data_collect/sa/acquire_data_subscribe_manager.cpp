@@ -712,28 +712,6 @@ void AcquireDataSubscribeManager::SubscriberEventOnSgStart()
 }
 // LCOV_EXCL_STOP
 
-int AcquireDataSubscribeManager::RemoveSubscribeMuteToSub(
-    const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter, const EventCfg &config)
-{
-    int ret = SecurityCollector::CollectorManager::GetInstance().RemoveFilter(collectorFilter);
-    if (ret != SUCCESS) {
-        SGLOGE("RemoveSubscribeMute failed, ret=%{public}d", ret);
-        return ret;
-    }
-    return SUCCESS;
-}
-
-int AcquireDataSubscribeManager::AddSubscribeMuteToSub(
-    const SecurityCollector::SecurityCollectorEventMuteFilter &collectorFilter, const EventCfg &config)
-{
-    int32_t ret = SecurityCollector::CollectorManager::GetInstance().AddFilter(collectorFilter);
-    if (ret != SUCCESS) {
-        SGLOGE("InsertSubscribeMute failed, ret=%{public}d", ret);
-        return ret;
-    }
-    return SUCCESS;
-}
-
 int AcquireDataSubscribeManager::RemoveMute(const EventMuteFilter &filter, const std::string &clientId)
 {
     EventCfg config {};
@@ -748,7 +726,7 @@ int AcquireDataSubscribeManager::RemoveMute(const EventMuteFilter &filter, const
     }
     int ret = eventFilter_()->RemoveEventFilter(collectorFilter);
     if (ret != SUCCESS) {
-        SGLOGE("RemoveSubscribeMuteToSub failed, ret=%{public}d", ret);
+        SGLOGE("RemoveEventFilter failed, ret=%{public}d", ret);
         return ret;
     }
     return SUCCESS;
