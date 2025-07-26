@@ -155,25 +155,34 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
 int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback,
     const std::string &clientId)
 {
-    std::lock_guard<std::mutex> lock(g_mutex);
-    if (sessionsMap_.find(clientId) == sessionsMap_.end()) {
+    if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
         SGLOGI("not find current clientId");
         return SUCCESS;
     }
-    int ret = UnSubscribeScAndDb(eventId);
-    if (ret != SUCCESS) {
-        SGLOGE("UnSubscribeScAndDb fail");
-        return ret;
-    }
-    if (sessionsMap_.at(clientId) == nullptr) {
-        sessionsMap_.erase(clientId);
+    if (sessionsMap_.at(clientId)->subEvents.find(eventId) == sessionsMap_.at(clientId)->subEvents.end()) {
+        SGLOGI("not find current eventid");
         return SUCCESS;
     }
     sessionsMap_.at(clientId)->subEvents.erase(eventId);
+    bool isFind = false;
+    for (const auto &iter : sessionsMap_) {
+        if (iter.second != nullptr && iter.second->subEvents.find(eventId) != iter.second->subEvents.end()) {
+            isFind = true;
+            break;
+        }
+    }
+    if (!isFind) {
+        int ret = UnSubscribeSc(eventId);
+        if (ret != SUCCESS) {
+            SGLOGE("UnSubscribeSc fail");
+            sessionsMap_.at(clientId)->subEvents.insert(eventId);
+            return ret;
+        }
+    }
     if (sessionsMap_.at(clientId)->subEvents.empty()) {
         sessionsMap_.erase(clientId);
     }
-    return ret;
+    return SUCCESS;
 }
 
 int AcquireDataSubscribeManager::InsertMute(const EventMuteFilter &filter, const std::string &clientId)
@@ -325,12 +334,23 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const st
         SGLOGI("not find current eventid");
         return BAD_PARAM;
     }
-    int ret = UnSubscribeScAndDb(eventId);
-    if (ret != SUCCESS) {
-        SGLOGE("UnSubscribeScAndDb fail");
-        return ret;
+    sessionsMap_.at(clientId)->subEvents.erase(eventId);
+    bool isFind = false;
+    for (const auto &iter : sessionsMap_) {
+        if (iter.second != nullptr && iter.second->subEvents.find(eventId) != iter.second->subEvents.end()) {
+            isFind = true;
+            break;
+        }
     }
-    return ret;
+    if (!isFind) {
+        int ret = UnSubscribeSc(eventId);
+        if (ret != SUCCESS) {
+            SGLOGE("UnSubscribeSc fail");
+            sessionsMap_.at(clientId)->subEvents.insert(eventId);
+            return ret;
+        }
+    }
+    return SUCCESS;
 }
 
 void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback)
