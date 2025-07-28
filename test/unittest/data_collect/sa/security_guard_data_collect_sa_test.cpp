@@ -413,7 +413,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_BadParam, TestSize.Le
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(DataFormat::GetInterface()), CheckRiskContent).WillOnce(Return(false));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
@@ -436,7 +435,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success01, TestSize.L
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
-    EXPECT_CALL(*(DataFormat::GetInterface()), CheckRiskContent).WillOnce(Return(true));
     EXPECT_CALL(DatabaseManager::GetInstance(), InsertEvent).WillRepeatedly(Return(FAILED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.RequestDataSubmit(eventId, version, time, content);
@@ -1308,24 +1306,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSc01, TestSize.Level0)
     int ret = AcquireDataSubscribeManager::GetInstance().SubscribeScInSc(1);
     EXPECT_EQ(ret, SUCCESS);
     AcquireDataSubscribeManager::GetInstance().scSubscribeMap_.clear();
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, UnSubscribeScAndDb, TestSize.Level0)
-{
-    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb(_, _))
-        .WillOnce(Return(FAILED));
-    int ret = AcquireDataSubscribeManager::GetInstance().UnSubscribeScAndDb(111);
-    EXPECT_EQ(ret, FAILED);
-}
-
-HWTEST_F(SecurityGuardDataCollectSaTest, UnSubscribeScAndDb01, TestSize.Level0)
-{
-    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb(_, _)).WillOnce(Return(SUCCESS));
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(false));
-    int ret = AcquireDataSubscribeManager::GetInstance().UnSubscribeScAndDb(111);
-    EXPECT_EQ(ret, BAD_PARAM);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, IsEventGroupHasPermission, TestSize.Level0)
