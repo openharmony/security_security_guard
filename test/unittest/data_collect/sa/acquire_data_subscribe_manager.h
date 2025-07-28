@@ -77,7 +77,6 @@ public:
     void InitDeviceId();
     int SubscribeSc(int64_t eventId);
     int UnSubscribeSc(int64_t eventId);
-    int UnSubscribeScAndDb(int64_t eventId);
     int SubscribeScInSg(int64_t eventId);
     int SubscribeScInSc(int64_t eventId);
     SecurityCollector::SecurityCollectorEventMuteFilter ConvertFilter(const SecurityGuard::EventMuteFilter &sgFilter,
@@ -117,8 +116,11 @@ public:
     GetEventWrapperFunc eventWrapper_ = nullptr;
     bool isStopClearCache_ = false;
     ffrt::mutex clearCachemutex_ {};
+    std::mutex userIdMutex_ {};
     std::string deviceId_ {};
     int32_t userId_ {-1};
+    std::mutex sessionMutex_{};
+    std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> sessionsMap_ {};
 };
 } // namespace OHOS::Security::SecurityGuard
 
