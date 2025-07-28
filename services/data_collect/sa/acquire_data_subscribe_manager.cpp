@@ -42,8 +42,6 @@ namespace {
     constexpr size_t MAX_SUBS_SIZE = 10;
     constexpr size_t MAX_SESSION_SIZE = 16;
     constexpr size_t MAX_SESSION_SIZE_ONE_PROCESS = 2;
-    std::mutex g_mutex{};
-    std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> sessionsMap_ {};
     constexpr const char *PKG_NAME = "ohos.security.securityguard";
 }
 
@@ -97,7 +95,7 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(int64_t eventId, const st
     // LCOV_EXCL_START
     AcquireDataSubscribeManager::GetInstance().InitUserId();
     AcquireDataSubscribeManager::GetInstance().InitDeviceId();
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(sessionMutex_);
     if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
         SGLOGI("not find current clientId");
         return BAD_PARAM;
@@ -129,7 +127,7 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
     int64_t eventId = subscribeInfo.GetEvent().eventId;
     AcquireDataSubscribeManager::GetInstance().InitUserId();
     AcquireDataSubscribeManager::GetInstance().InitDeviceId();
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(sessionMutex_);
     if (sessionsMap_.find(clientId) != sessionsMap_.end() && sessionsMap_.at(clientId) != nullptr &&
         sessionsMap_.at(clientId)->subEvents.find(eventId) != sessionsMap_.at(clientId)->subEvents.end()) {
         SGLOGE("not need subscribe again");
@@ -306,26 +304,9 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
     // LCOV_EXCL_STOP
 }
 
-// LCOV_EXCL_START
-int AcquireDataSubscribeManager::UnSubscribeScAndDb(int64_t eventId)
-{
-    int ret = DatabaseManager::GetInstance().UnSubscribeDb({eventId}, listener_);
-    if (ret != SUCCESS) {
-        SGLOGE("UnSubscribeDb error");
-        return ret;
-    }
-    ret = UnSubscribeSc(eventId);
-    if (ret != SUCCESS) {
-        SGLOGE("UnSubscribeSc error");
-        return ret;
-    }
-    return ret;
-}
-// LCOV_EXCL_STOP
-
 int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const std::string &clientId)
 {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(sessionMutex_);
     if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
         SGLOGI("not find current clientId");
         return BAD_PARAM;
@@ -355,7 +336,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const st
 
 void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback)
 {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(sessionMutex_);
     std::set<int64_t> allSubEventId {};
     std::set<int64_t> currentEventId {};
     auto finder = [callback](std::pair<std::string, std::shared_ptr<ClientSession>> iter) {
@@ -377,7 +358,7 @@ void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<I
     for (const auto &iter : currentEventId) {
         // no one subscribed id
         if (allSubEventId.find(iter) == allSubEventId.end()) {
-            (void)UnSubscribeScAndDb(iter);
+            (void)UnSubscribeSc(iter);
         }
     }
 }
@@ -401,7 +382,7 @@ void AcquireDataSubscribeManager::StartClearEventCache()
 
 sptr<IRemoteObject> AcquireDataSubscribeManager::GetCurrentClientCallback(const std::string &clientId)
 {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(sessionMutex_);
     if (sessionsMap_.find(clientId) == sessionsMap_.end()) {
         return nullptr;
     }
@@ -414,7 +395,7 @@ sptr<IRemoteObject> AcquireDataSubscribeManager::GetCurrentClientCallback(const 
 
 std::string AcquireDataSubscribeManager::GetCurrentClientGroup(const std::string &clientId)
 {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(sessionMutex_);
     if (sessionsMap_.find(clientId) == sessionsMap_.end()) {
         return "";
     }
@@ -439,7 +420,7 @@ void AcquireDataSubscribeManager::InitUserId()
         SGLOGE("GetForegroundOsAccountLocalId Fail");
         return;
     }
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(userIdMutex_);
     userId_ = id;
 }
 
@@ -457,7 +438,7 @@ void AcquireDataSubscribeManager::InitDeviceId()
         SGLOGI("get local device into error, code=%{public}d", ret);
         return;
     }
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(userIdMutex_);
     deviceId_ = deviceInfo.deviceId;
 }
 
@@ -472,7 +453,7 @@ void AcquireDataSubscribeManager::DeInitDeviceId()
 // LCOV_EXCL_START
 void AcquireDataSubscribeManager::ClearEventCache()
 {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(sessionMutex_);
     SGLOGD("timer running");
     for (const auto &iter : sessionsMap_) {
         if (iter.second->callback == nullptr) {
@@ -525,7 +506,7 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
     EventCfg config {};
     SecEvent secEvent {};
     {
-        std::lock_guard<std::mutex> lock(g_mutex);
+        std::lock_guard<std::mutex> lock(userIdMutex_);
         retEvent.userId = userId_;
         retEvent.deviceId = deviceId_;
     }
@@ -591,7 +572,7 @@ bool AcquireDataSubscribeManager::IsFindFlag(const std::set<std::string> &eventS
 
 bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &event)
 {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(sessionMutex_);
     EventCfg config {};
     if (!ConfigDataManager::GetInstance().GetEventConfig(event.eventId, config)) {
         SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
@@ -666,7 +647,7 @@ int AcquireDataSubscribeManager::CheckInsertMute(const EventMuteFilter &filter, 
 int AcquireDataSubscribeManager::InsertSubscribeMute(const EventMuteFilter &filter, const std::string &clientId)
 {
     SGLOGI("in AcquireDataSubscribeManager InsertSubscribeMute, clientId %{public}s", clientId.c_str());
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(sessionMutex_);
     int ret = CheckInsertMute(filter, clientId);
     if (ret != SUCCESS) {
         SGLOGE("CheckInsertMute failed, ret=%{public}d", ret);
@@ -734,7 +715,7 @@ int AcquireDataSubscribeManager::RemoveMute(const EventMuteFilter &filter, const
 
 int AcquireDataSubscribeManager::RemoveSubscribeMute(const EventMuteFilter &filter, const std::string &clientId)
 {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(sessionMutex_);
     SGLOGI("in AcquireDataSubscribeManager RemoveSubscribeMute, clientId %{public}s", clientId.c_str());
     if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
         SGLOGE("clientId not creat");
@@ -798,7 +779,7 @@ int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, cons
         return ret;
     }
     {
-        std::lock_guard<std::mutex> lock(g_mutex);
+        std::lock_guard<std::mutex> lock(sessionMutex_);
         if (sessionsMap_.find(clientId) != sessionsMap_.end()) {
             SGLOGE("current clientId exist");
             return BAD_PARAM;
@@ -810,7 +791,7 @@ int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, cons
     session->tokenId = callerToken;
     session->eventGroup = eventGroup;
     {
-        std::lock_guard<std::mutex> lock(g_mutex);
+        std::lock_guard<std::mutex> lock(sessionMutex_);
         sessionsMap_[clientId] = session;
     }
     return SUCCESS;
@@ -818,14 +799,14 @@ int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, cons
 
 int AcquireDataSubscribeManager::DestoryClient(const std::string &eventGroup, const std::string &clientId)
 {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(sessionMutex_);
     auto iter = sessionsMap_.find(clientId);
     if (iter == sessionsMap_.end()) {
         SGLOGE("current clientId not exist");
         return BAD_PARAM;
     }
     for (auto iter : sessionsMap_.at(clientId)->subEvents) {
-        UnSubscribeScAndDb(iter);
+        UnSubscribeSc(iter);
     }
     for (auto iter : sessionsMap_.at(clientId)->eventFilters) {
         for (auto it : iter.second) {
@@ -843,7 +824,7 @@ int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, Ac
     if (clientId.find("sdk") != std::string::npos) {
         return SUCCESS;
     }
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(sessionMutex_);
     if (sessionsMap_.size() >= MAX_SESSION_SIZE) {
         SGLOGE("max instance limited");
         return CLIENT_EXCEED_GLOBAL_LIMIT;
