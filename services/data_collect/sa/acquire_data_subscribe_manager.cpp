@@ -92,7 +92,6 @@ AcquireDataSubscribeManager::~AcquireDataSubscribeManager()
 int AcquireDataSubscribeManager::InsertSubscribeRecord(int64_t eventId, const std::string &clientId)
 {
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    // LCOV_EXCL_START
     AcquireDataSubscribeManager::GetInstance().InitUserId();
     AcquireDataSubscribeManager::GetInstance().InitDeviceId();
     std::lock_guard<std::mutex> lock(sessionMutex_);
@@ -182,7 +181,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sp
     }
     return SUCCESS;
 }
-
+// LCOV_EXCL_START
 int AcquireDataSubscribeManager::InsertMute(const EventMuteFilter &filter, const std::string &clientId)
 {
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter = ConvertFilter(filter, clientId);
@@ -201,7 +200,6 @@ int AcquireDataSubscribeManager::InsertMute(const EventMuteFilter &filter, const
         return ret;
     }
     return SUCCESS;
-    // LCOV_EXCL_STOP
 }
 
 int AcquireDataSubscribeManager::SubscribeScInSg(int64_t eventId)
@@ -249,7 +247,6 @@ int AcquireDataSubscribeManager::SubscribeSc(int64_t eventId)
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
-    // LCOV_EXCL_START
     if (config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         return SUCCESS;
     }
@@ -269,7 +266,6 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
         SGLOGE("GetEventConfig error");
         return BAD_PARAM;
     }
-    // LCOV_EXCL_START
     if (config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         return SUCCESS;
     }
@@ -301,9 +297,8 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
     scSubscribeMap_.erase(it);
     SGLOGI("UnSubscribeSc scSubscribeMap_size  %{public}zu", scSubscribeMap_.size());
     return SUCCESS;
-    // LCOV_EXCL_STOP
 }
-
+// LCOV_EXCL_STOP
 int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const std::string &clientId)
 {
     std::lock_guard<std::mutex> lock(sessionMutex_);
@@ -333,7 +328,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const st
     }
     return SUCCESS;
 }
-
+// LCOV_EXCL_START
 void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback)
 {
     std::lock_guard<std::mutex> lock(sessionMutex_);
@@ -450,7 +445,6 @@ void AcquireDataSubscribeManager::DeInitDeviceId()
     }
 }
 
-// LCOV_EXCL_START
 void AcquireDataSubscribeManager::ClearEventCache()
 {
     std::lock_guard<std::mutex> lock(sessionMutex_);
@@ -477,7 +471,6 @@ void AcquireDataSubscribeManager::ClearEventCache()
         iter.second->eventsBuffSize = 0;
     }
 }
-// LCOV_EXCL_STOP
 
 void AcquireDataSubscribeManager::BatchUpload(sptr<IRemoteObject> obj,
     const std::vector<SecurityCollector::Event> &events)
@@ -510,7 +503,6 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
         retEvent.userId = userId_;
         retEvent.deviceId = deviceId_;
     }
-    // LCOV_EXCL_START
     if (!ConfigDataManager::GetInstance().GetEventConfig(retEvent.eventId, config)) {
         SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
         return;
@@ -538,7 +530,6 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
         }
     };
     ffrt::submit(task);
-    // LCOV_EXCL_STOP
 }
 
 size_t AcquireDataSubscribeManager::GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event)
@@ -604,11 +595,9 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &e
             it.second->eventsBuffSize = 0;
         }
     }
-    // LCOV_EXCL_STOP
     return true;
 }
 
-// LCOV_EXCL_START
 void AcquireDataSubscribeManager::DbListener::OnChange(uint32_t optType, const SecEvent &events,
     const std::set<std::string> &eventSubscribes)
 {}
@@ -643,7 +632,7 @@ int AcquireDataSubscribeManager::CheckInsertMute(const EventMuteFilter &filter, 
     }
     return SUCCESS;
 }
-
+// LCOV_EXCL_STOP
 int AcquireDataSubscribeManager::InsertSubscribeMute(const EventMuteFilter &filter, const std::string &clientId)
 {
     SGLOGI("in AcquireDataSubscribeManager InsertSubscribeMute, clientId %{public}s", clientId.c_str());
@@ -666,7 +655,7 @@ int AcquireDataSubscribeManager::InsertSubscribeMute(const EventMuteFilter &filt
     sessionsMap_.at(clientId)->eventFilters[filter.eventId].emplace_back(filter);
     return SUCCESS;
 }
-
+// LCOV_EXCL_START
 void AcquireDataSubscribeManager::SubscriberEventOnSgStart()
 {
     std::vector<int64_t> eventIds = ConfigDataManager::GetInstance().GetAllEventIds();
@@ -691,7 +680,6 @@ void AcquireDataSubscribeManager::SubscriberEventOnSgStart()
         SGLOGE("subscribe sg failed");
     }
 }
-// LCOV_EXCL_STOP
 
 int AcquireDataSubscribeManager::RemoveMute(const EventMuteFilter &filter, const std::string &clientId)
 {
@@ -712,7 +700,7 @@ int AcquireDataSubscribeManager::RemoveMute(const EventMuteFilter &filter, const
     }
     return SUCCESS;
 }
-
+// LCOV_EXCL_STOP
 int AcquireDataSubscribeManager::RemoveSubscribeMute(const EventMuteFilter &filter, const std::string &clientId)
 {
     std::lock_guard<std::mutex> lock(sessionMutex_);
@@ -753,9 +741,8 @@ int AcquireDataSubscribeManager::RemoveSubscribeMute(const EventMuteFilter &filt
         sessionsMap_.at(clientId)->eventFilters.erase(filter.eventId);
     }
     return SUCCESS;
-    // LCOV_EXCL_STOP
 }
-
+// LCOV_EXCL_START
 SecurityCollector::SecurityCollectorEventMuteFilter AcquireDataSubscribeManager::ConvertFilter(
     const SecurityGuard::EventMuteFilter &sgFilter, const std::string &clientId)
 {
@@ -768,7 +755,7 @@ SecurityCollector::SecurityCollectorEventMuteFilter AcquireDataSubscribeManager:
     collectorFilter.instanceFlag = clientId;
     return collectorFilter;
 }
-
+// LCOV_EXCL_STOP
 int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, const std::string &clientId,
     const sptr<IRemoteObject> &cb)
 {
@@ -817,7 +804,7 @@ int AcquireDataSubscribeManager::DestoryClient(const std::string &eventGroup, co
     return SUCCESS;
 }
 
-
+// LCOV_EXCL_START
 int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, AccessToken::AccessTokenID callerToken)
 {
     // old subscribe api no need to count
@@ -842,4 +829,5 @@ int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, Ac
     }
     return SUCCESS;
 }
+// LCOV_EXCL_STOP
 }
