@@ -563,12 +563,12 @@ bool AcquireDataSubscribeManager::IsFindFlag(const std::set<std::string> &eventS
 
 bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &event)
 {
-    std::lock_guard<std::mutex> lock(sessionMutex_);
     EventCfg config {};
     if (!ConfigDataManager::GetInstance().GetEventConfig(event.eventId, config)) {
         SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
         return false;
     }
+    std::lock_guard<std::mutex> lock(sessionMutex_);
     for (auto &it : sessionsMap_) {
         if (it.second->subEvents.find(event.eventId) == it.second->subEvents.end()) {
             continue;
@@ -604,12 +604,18 @@ void AcquireDataSubscribeManager::DbListener::OnChange(uint32_t optType, const S
 
 void AcquireDataSubscribeManager::CollectorListener::OnNotify(const SecurityCollector::Event &event)
 {
-    AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
+    auto task = [event] () {
+        AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
+    };
+    ffrt::submit(task);
 }
 
 int32_t AcquireDataSubscribeManager::SecurityCollectorSubscriber::OnNotify(const SecurityCollector::Event &event)
 {
-    AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
+    auto task = [event] () {
+        AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
+    };
+    ffrt::submit(task);
     return 0;
 }
 
