@@ -36,13 +36,16 @@
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
-    constexpr size_t MAX_CACHE_EVENT_SIZE = 64 * 1024;
+    constexpr size_t MAX_CACHE_EVENT_SIZE = 16 * 1024;
     constexpr int64_t MAX_DURATION_TEN_SECOND = 10 * 1000;
     constexpr int64_t MAX_FILTER_SIZE = 256;
     constexpr size_t MAX_SUBS_SIZE = 10;
     constexpr size_t MAX_SESSION_SIZE = 16;
     constexpr size_t MAX_SESSION_SIZE_ONE_PROCESS = 2;
     constexpr const char *PKG_NAME = "ohos.security.securityguard";
+    constexpr int UPLOAD_EVENT_THREAD_MAX_CONCURRENCY = 4;
+    constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 2048;
+    constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 64;
 }
 
 class InitCallback : public DistributedHardware::DmInitCallback {
@@ -152,6 +155,7 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
 int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback,
     const std::string &clientId)
 {
+    std::lock_guard<std::mutex> lock(sessionMutex_);
     if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
         SGLOGI("not find current clientId");
         return SUCCESS;
@@ -358,23 +362,6 @@ void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<I
     }
 }
 
-void AcquireDataSubscribeManager::StartClearEventCache()
-{
-    auto task = [this]() {
-        while (true) {
-            this->ClearEventCache();
-            {
-                std::lock_guard<ffrt::mutex> lock(clearCachemutex_);
-                if (isStopClearCache_ == true) {
-                    break;
-                }
-            }
-            ffrt::this_task::sleep_for(std::chrono::milliseconds(MAX_DURATION_TEN_SECOND));
-        }
-    };
-    ffrt::submit(task);
-}
-
 sptr<IRemoteObject> AcquireDataSubscribeManager::GetCurrentClientCallback(const std::string &clientId)
 {
     std::lock_guard<std::mutex> lock(sessionMutex_);
@@ -399,12 +386,6 @@ std::string AcquireDataSubscribeManager::GetCurrentClientGroup(const std::string
         return "";
     }
     return sessionsMap_.at(clientId)->eventGroup;
-}
-
-void AcquireDataSubscribeManager::StopClearEventCache()
-{
-    std::lock_guard<ffrt::mutex> lock(clearCachemutex_);
-    isStopClearCache_ = true;
 }
 
 void AcquireDataSubscribeManager::InitUserId()
@@ -445,35 +426,23 @@ void AcquireDataSubscribeManager::DeInitDeviceId()
     }
 }
 
-void AcquireDataSubscribeManager::ClearEventCache()
+void AcquireDataSubscribeManager::InitEventQueue()
 {
-    std::lock_guard<std::mutex> lock(sessionMutex_);
-    SGLOGD("timer running");
-    for (const auto &iter : sessionsMap_) {
-        if (iter.second->callback == nullptr) {
-            SGLOGW("SubscriberInfo is null");
-            continue;
-        }
-        auto proxy = iface_cast<IAcquireDataCallback>(iter.second->callback);
-        if (proxy == nullptr) {
-            SGLOGE("proxy is null");
-            return;
-        }
-        auto tmp = iter.second->events;
-        if (tmp.empty()) {
-            continue;
-        }
-        auto task = [proxy, tmp] () {
-            proxy->OnNotify(tmp);
-        };
-        ffrt::submit(task);
-        iter.second->events.clear();
-        iter.second->eventsBuffSize = 0;
+    if (queue_ != nullptr) {
+        SGLOGI("InitEventQueue queue_ already init");
+        return;
     }
+    if (dbQueue_ != nullptr) {
+        SGLOGI("InitEventQueue dbQueue already init");
+        return;
+    }
+    queue_ = std::make_shared<ffrt::queue>(ffrt::queue_concurrent, "UploadEvent",
+        ffrt::queue_attr().max_concurrency(UPLOAD_EVENT_THREAD_MAX_CONCURRENCY));
+    dbQueue_ = std::make_shared<ffrt::queue>(ffrt::queue_serial, "UploadDbEvent");
+    SGLOGI("InitEventQueue successed");
 }
 
-void AcquireDataSubscribeManager::BatchUpload(sptr<IRemoteObject> obj,
-    const std::vector<SecurityCollector::Event> &events)
+void AcquireDataSubscribeManager::UploadEventToSub(sptr<IRemoteObject> obj, const SecurityCollector::Event &events)
 {
     auto proxy = iface_cast<IAcquireDataCallback>(obj);
     if (proxy == nullptr) {
@@ -481,10 +450,46 @@ void AcquireDataSubscribeManager::BatchUpload(sptr<IRemoteObject> obj,
         return;
     }
     auto task = [proxy, events] () {
-        proxy->OnNotify(events);
+        proxy->OnNotify({events});
     };
     SGLOGD("upload event to subscribe");
-    ffrt::submit(task);
+    if (queue_ == nullptr) {
+        return;
+    }
+    if (queue_->get_task_cnt() > UPLOAD_EVENT_TASK_MAX_COUNT) {
+        SGLOGI("event be discarded id is %{public}" PRId64, events.eventId);
+        return;
+    }
+    queue_->submit(task);
+}
+
+void AcquireDataSubscribeManager::UploadEventToDb(const std::vector<SecurityCollector::Event> &events)
+{
+    // upload to store
+    auto task = [events] () mutable {
+        for (const auto &event : events) {
+            SecEvent secEvent {};
+            secEvent.eventId = event.eventId;
+            secEvent.version = event.version;
+            secEvent.date = event.timestamp;
+            secEvent.content = event.content;
+            secEvent.userId = event.userId;
+            int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, secEvent, {});
+            if (code != SUCCESS) {
+                SGLOGE("insert event error, %{public}d", code);
+            }
+        }
+    };
+    if (dbQueue_ == nullptr) {
+        return;
+    }
+    if (dbQueue_->get_task_cnt() > UPLOAD_EVENT_DB_TASK_MAX_COUNT) {
+        for (const auto &event : events) {
+            SGLOGI("db event be discarded id is %{public}" PRId64, event.eventId);
+        }
+        return;
+    }
+    dbQueue_->submit(task);
 }
 
 void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &event)
@@ -497,7 +502,6 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
     }
     SecurityCollector::Event retEvent  = event;
     EventCfg config {};
-    SecEvent secEvent {};
     {
         std::lock_guard<std::mutex> lock(userIdMutex_);
         retEvent.userId = userId_;
@@ -517,19 +521,6 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
     }
     // upload to subscriber
     AcquireDataSubscribeManager::GetInstance().BatchPublish(retEvent);
-    secEvent.eventId = retEvent.eventId;
-    secEvent.version = retEvent.version;
-    secEvent.date = retEvent.timestamp;
-    secEvent.content = retEvent.content;
-    secEvent.userId = retEvent.userId;
-    // upload to store
-    auto task = [secEvent] () mutable {
-        int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, secEvent, {});
-        if (code != SUCCESS) {
-            SGLOGE("insert event error, %{public}d", code);
-        }
-    };
-    ffrt::submit(task);
 }
 
 size_t AcquireDataSubscribeManager::GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event)
@@ -573,27 +564,24 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &e
         if (it.second->subEvents.find(event.eventId) == it.second->subEvents.end()) {
             continue;
         }
-        if (!IsFindFlag(event.eventSubscribes, event.eventId, it.second->clientId)) {
+        if (IsFindFlag(event.eventSubscribes, event.eventId, it.second->clientId)) {
             SGLOGW("IsFindFlag eventId=%{public}" PRId64, event.eventId);
             continue;
         }
-        if (!config.isBatchUpload) {
-            BatchUpload(it.second->callback, {event});
-            continue;
-        }
-        SGLOGD("publish eventid=%{public}" PRId64, event.eventId);
-        for (auto iter : event.eventSubscribes) {
-            SGLOGD("publish eventSubscribes =%{public}s", iter.c_str());
-        }
-        it.second->events.emplace_back(event);
-        it.second->eventsBuffSize += GetSecurityCollectorEventBufSize(event);
-        SGLOGD("cache batch upload event to subscribe %{public}zu", it.second->eventsBuffSize);
-        if (it.second->eventsBuffSize >= MAX_CACHE_EVENT_SIZE) {
-            BatchUpload(it.second->callback, it.second->events);
-            SGLOGI("upload events to batch subscribe, size is %{public}zu", it.second->eventsBuffSize);
-            it.second->events.clear();
-            it.second->eventsBuffSize = 0;
-        }
+        UploadEventToSub(it.second->callback, event);
+    }
+    SGLOGD("publish eventid=%{public}" PRId64, event.eventId);
+    for (auto iter : event.eventSubscribes) {
+        SGLOGD("publish eventSubscribes =%{public}s", iter.c_str());
+    }
+    events_.emplace_back(event);
+    eventsBuffSize_ += GetSecurityCollectorEventBufSize(event);
+    SGLOGD("cache batch upload event to subscribe %{public}zu", eventsBuffSize_);
+    if (eventsBuffSize_ >= MAX_CACHE_EVENT_SIZE) {
+        UploadEventToDb(events_);
+        SGLOGI("upload events to batch subscribe, size is %{public}zu", eventsBuffSize_);
+        events_.clear();
+        eventsBuffSize_ = 0;
     }
     return true;
 }
@@ -604,18 +592,12 @@ void AcquireDataSubscribeManager::DbListener::OnChange(uint32_t optType, const S
 
 void AcquireDataSubscribeManager::CollectorListener::OnNotify(const SecurityCollector::Event &event)
 {
-    auto task = [event] () {
-        AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
-    };
-    ffrt::submit(task);
+    AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
 }
 
 int32_t AcquireDataSubscribeManager::SecurityCollectorSubscriber::OnNotify(const SecurityCollector::Event &event)
 {
-    auto task = [event] () {
-        AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
-    };
-    ffrt::submit(task);
+    AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
     return 0;
 }
 

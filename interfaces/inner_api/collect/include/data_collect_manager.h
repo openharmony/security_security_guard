@@ -50,6 +50,7 @@ private:
     ~DataCollectManager() = default;
     void HandleDecipient();
     bool IsCurrentSubscriberEventIdExist(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &sub);
+    int32_t SetDeathRecipient(const sptr<IRemoteObject> &remote);
     std::mutex mutex_{};
     sptr<AcquireDataManagerCallbackService> callback_{};
     std::string sdkFlag_{};

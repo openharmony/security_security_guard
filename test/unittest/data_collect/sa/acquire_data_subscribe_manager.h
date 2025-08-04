@@ -52,8 +52,6 @@ public:
     int CreatClient(const std::string &eventGroup, const std::string &clientId, const sptr<IRemoteObject> &cb);
     int DestoryClient(const std::string &eventGroup, const std::string &clientId);
     void SubscriberEventOnSgStart();
-    void StartClearEventCache();
-    void StopClearEventCache();
     sptr<IRemoteObject> GetCurrentClientCallback(const std::string &clientId);
     std::string GetCurrentClientGroup(const std::string &clientId);
     class ClientSession {
@@ -63,13 +61,11 @@ public:
         std::string clientId {};
         std::map<int64_t, std::vector<EventMuteFilter>> eventFilters {};
         std::set<int64_t> subEvents{};
-        std::vector<SecurityCollector::Event> events {};
-        size_t eventsBuffSize {};
         std::string eventGroup {};
     };
-    void BatchUpload(sptr<IRemoteObject> obj, const std::vector<SecurityCollector::Event> &events);
     void UploadEvent(const SecurityCollector::Event &event);
     void DeInitDeviceId();
+    void InitEventQueue();
     private:
     AcquireDataSubscribeManager();
     ~AcquireDataSubscribeManager();
@@ -87,7 +83,8 @@ public:
     size_t GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event);
     int IsExceedLimited(const std::string &clientId, AccessToken::AccessTokenID callerToken);
     bool IsFindFlag(const std::set<std::string> &eventSubscribes, int64_t eventId, const std::string &clientId);
-    void ClearEventCache();
+    void UploadEventToSub(sptr<IRemoteObject> obj, const SecurityCollector::Event &events);
+    void UploadEventToDb(const std::vector<SecurityCollector::Event> &events);
     class DbListener : public IDbListener {
     public:
         DbListener() = default;
@@ -121,6 +118,10 @@ public:
     int32_t userId_ {-1};
     std::mutex sessionMutex_{};
     std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> sessionsMap_ {};
+    std::shared_ptr<ffrt::queue> queue_{};
+    std::shared_ptr<ffrt::queue> dbQueue_{};
+    std::vector<SecurityCollector::Event> events_ {};
+    size_t eventsBuffSize_ {};
 };
 } // namespace OHOS::Security::SecurityGuard
 

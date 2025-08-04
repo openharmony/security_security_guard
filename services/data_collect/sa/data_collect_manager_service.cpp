@@ -116,18 +116,17 @@ void DataCollectManagerService::OnStart()
         }
         dlclose(handle);
     }
+    AcquireDataSubscribeManager::GetInstance().InitEventQueue();
     AcquireDataSubscribeManager::GetInstance().SubscriberEventOnSgStart();
     if (!Publish(this)) {
         SGLOGE("Publish error");
         return;
     }
-    AcquireDataSubscribeManager::GetInstance().StartClearEventCache();
 }
 
 void DataCollectManagerService::OnStop()
 {
     SecurityCollector::DataCollection::GetInstance().CloseLib();
-    AcquireDataSubscribeManager::GetInstance().StopClearEventCache();
     AcquireDataSubscribeManager::GetInstance().DeInitDeviceId();
 }
 
@@ -222,12 +221,10 @@ ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std:
     event.version = version;
     event.timestamp = time;
     event.content = content;
-    auto task = [&, event] () mutable {
-        taskCount_++;
-        AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
-        SGLOGD("ffrt task num is %{public}u", taskCount_.load());
-        taskCount_--;
-    };
+    taskCount_++;
+    AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
+    SGLOGD("ffrt task num is %{public}u", taskCount_.load());
+    taskCount_--;
     if (taskCount_.load() > FFRT_MAX_NUM) {
         discardedCount_++;
         SGLOGD("too much event reported, ffrt task num is %{public}u, eventid is %{public}" PRId64,
@@ -237,7 +234,6 @@ ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std:
     if (IsDiscardEventInThisHour(eventId)) {
         return SUCCESS;
     }
-    ffrt::submit(task);
     return SUCCESS;
     // LCOV_EXCL_STOP
 }
