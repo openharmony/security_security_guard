@@ -169,7 +169,7 @@ int32_t FileSystemStoreHelper::InsertEvent(const SecEvent& event)
         { EVENT_ID, event.eventId },
         { VERSION, event.version },
         { CONTENT, event.content },
-        { TIMESTAMP,  SecurityGuardUtils::GetDate() },
+        { TIMESTAMP,  event.date },
         { USER_ID,  event.userId }
     };
     std::string data = std::to_string(event.eventId) + "|" + event.date + "||" + eventJson.dump();
