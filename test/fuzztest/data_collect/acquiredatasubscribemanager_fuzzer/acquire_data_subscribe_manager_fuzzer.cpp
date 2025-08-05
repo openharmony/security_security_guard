@@ -82,7 +82,7 @@ bool AcquireDataSubscribeManagerFuzzTest(const uint8_t* data, size_t size)
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute.GetMuteFilter(),
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    AcquireDataSubscribeManager::GetInstance().BatchUpload(obj, std::vector<Security::SecurityCollector::Event>{event});
+    AcquireDataSubscribeManager::GetInstance().UploadEventToSub(obj, event);
     AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecordOnRemoteDied(obj);
     AcquireDataSubscribeManager::GetInstance().CreatClient(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), obj);
