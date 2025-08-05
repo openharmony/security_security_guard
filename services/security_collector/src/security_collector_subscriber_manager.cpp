@@ -103,7 +103,7 @@ int32_t SecurityCollectorSubscriberManager::GetAppSubscribeCount(const std::stri
             return subscriber->GetAppName() == appName;
         });
     }
-    LOGI("subcirbipt count, appName=%{public}s, count=%{public}d", appName.c_str(), count);
+    LOGI("subcirbipt count, appName=%{private}s, count=%{public}d", appName.c_str(), count);
     return count;
 }
 
@@ -113,10 +113,10 @@ int32_t SecurityCollectorSubscriberManager::GetAppSubscribeCount(const std::stri
     if (std::any_of(subscribers.begin(), subscribers.end(), [appName] (const auto &subscriber) {
             return subscriber->GetAppName() == appName;
         })) {
-        LOGI("subcirbipt count 1, appName=%{public}s, eventId:%{public}" PRId64, appName.c_str(), eventId);
+        LOGI("subcirbipt count 1, appName=%{private}s, eventId:%{public}" PRId64, appName.c_str(), eventId);
         return 1;
     }
-    LOGI("subcirbipt count 0, appName=%{public}s, eventId:%{public}" PRId64, appName.c_str(), eventId);
+    LOGI("subcirbipt count 0, appName=%{private}s, eventId:%{public}" PRId64, appName.c_str(), eventId);
     return 0;
 }
 
@@ -128,7 +128,7 @@ std::set<int64_t> SecurityCollectorSubscriberManager::FindEventIds(const sptr<IR
         auto it = std::find_if(subscribers.begin(), subscribers.end(),
             [remote] (const auto &subscriber) { return subscriber->GetRemote() == remote; });
         if (it != subscribers.end()) {
-            LOGI("Find Event By Callback appName=%{public}s, eventId:%{public}" PRId64,
+            LOGI("Find Event By Callback appName=%{private}s, eventId:%{public}" PRId64,
                  (*it)->GetAppName().c_str(), element.first);
             eventIds.emplace(element.first);
         }
@@ -143,7 +143,7 @@ auto SecurityCollectorSubscriberManager::FindSecurityCollectorSubscribers(const 
         auto it = std::find_if(element.second.begin(), element.second.end(),
             [remote] (const auto &d) { return d->GetRemote() == remote; });
         if (it != element.second.end()) {
-            LOGI("Find Event Listenner appName=%{public}s, eventId:%{public}" PRId64,
+            LOGI("Find Event Listenner appName=%{private}s, eventId:%{public}" PRId64,
                 (*it)->GetAppName().c_str(), element.first);
             subscribers.emplace(*it);
         }
@@ -160,9 +160,9 @@ bool SecurityCollectorSubscriberManager::SubscribeCollector(
     }
     std::string appName = subscriber->GetAppName();
     int64_t eventId = subscriber->GetSecurityCollectorSubscribeInfo().GetEvent().eventId;
-    LOGI("appName:%{public}s, eventId:%{public}" PRId64, appName.c_str(), eventId);
+    LOGI("appName:%{private}s, eventId:%{public}" PRId64, appName.c_str(), eventId);
     if (GetAppSubscribeCount(appName) >= MAX_APP_SUBSCRIBE_COUNT) {
-        LOGE("Max count for app name:%{public}s", appName.c_str());
+        LOGE("Max count for app name:%{private}s", appName.c_str());
         return false;
     }
     if (GetAppSubscribeCount(appName, eventId) > 0) {
