@@ -122,11 +122,13 @@ void DataCollectManagerService::OnStart()
         SGLOGE("Publish error");
         return;
     }
+    AcquireDataSubscribeManager::GetInstance().StartClearEventCache();
 }
 
 void DataCollectManagerService::OnStop()
 {
     SecurityCollector::DataCollection::GetInstance().CloseLib();
+    AcquireDataSubscribeManager::GetInstance().StopClearEventCache();
     AcquireDataSubscribeManager::GetInstance().DeInitDeviceId();
 }
 

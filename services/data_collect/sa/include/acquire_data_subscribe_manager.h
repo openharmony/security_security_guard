@@ -45,13 +45,15 @@ public:
     int RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback, const std::string &clientId);
     int InsertSubscribeRecord(int64_t eventId, const std::string &clientId);
     int RemoveSubscribeRecord(int64_t eventId, const std::string &clientId);
-    bool BatchPublish(const SecurityCollector::Event &event);
+    bool PublishEventToSub(const SecurityCollector::Event &event);
     void RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback);
     int InsertSubscribeMute(const EventMuteFilter &filter, const std::string &clientId);
     int RemoveSubscribeMute(const EventMuteFilter &filter, const std::string &clientId);
     int CreatClient(const std::string &eventGroup, const std::string &clientId, const sptr<IRemoteObject> &cb);
     int DestoryClient(const std::string &eventGroup, const std::string &clientId);
     void SubscriberEventOnSgStart();
+    void StartClearEventCache();
+    void StopClearEventCache();
     sptr<IRemoteObject> GetCurrentClientCallback(const std::string &clientId);
     std::string GetCurrentClientGroup(const std::string &clientId);
     class ClientSession {
@@ -84,8 +86,10 @@ private:
     int CheckInsertMute(const EventMuteFilter &filter, const std::string &clientId);
     int IsExceedLimited(const std::string &clientId, AccessToken::AccessTokenID callerToken);
     bool IsFindFlag(const std::set<std::string> &eventSubscribes, int64_t eventId, const std::string &clientId);
-    void UploadEventToSub(sptr<IRemoteObject> obj, const SecurityCollector::Event &events);
-    void UploadEventToDb(const std::vector<SecurityCollector::Event> &events);
+    void NotifySub(sptr<IRemoteObject> obj, const SecurityCollector::Event &events);
+    void ClearEventCache();
+    void UploadEventToStore(const SecurityCollector::Event &event);
+    void UploadEventToSub(const SecurityCollector::Event &event);
     class DbListener : public IDbListener {
     public:
         DbListener() = default;
@@ -119,6 +123,8 @@ private:
     std::string deviceId_ {};
     int32_t userId_ {-1};
     std::mutex sessionMutex_{};
+    std::mutex eventsMutex_{};
+    std::mutex queueMutex_{};
     std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> sessionsMap_ {};
     std::shared_ptr<ffrt::queue> queue_{};
     std::shared_ptr<ffrt::queue> dbQueue_{};

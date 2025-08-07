@@ -70,7 +70,7 @@ bool AcquireDataSubscribeManagerFuzzTest(const uint8_t* data, size_t size)
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(fdp.ConsumeIntegral<int64_t>(),
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    AcquireDataSubscribeManager::GetInstance().BatchPublish(event);
+    AcquireDataSubscribeManager::GetInstance().PublishEventToSub(event);
     AcquireDataSubscribeManager::GetInstance().SubscribeSc(fdp.ConsumeIntegral<int64_t>());
     AcquireDataSubscribeManager::GetInstance().UnSubscribeSc(fdp.ConsumeIntegral<int64_t>());
     AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(fdp.ConsumeIntegral<int64_t>());
@@ -82,7 +82,7 @@ bool AcquireDataSubscribeManagerFuzzTest(const uint8_t* data, size_t size)
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(subscribeMute.GetMuteFilter(),
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    AcquireDataSubscribeManager::GetInstance().UploadEventToSub(obj, event);
+    AcquireDataSubscribeManager::GetInstance().NotifySub(obj, event);
     AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecordOnRemoteDied(obj);
     AcquireDataSubscribeManager::GetInstance().CreatClient(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), obj);
