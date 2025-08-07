@@ -569,8 +569,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Success, TestSize
 {
     SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{};
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(DatabaseManager::GetInstance(), SubscribeDb).WillOnce(Return(SUCCESS));
-    EXPECT_CALL(DatabaseManager::GetInstance(), UnSubscribeDb).WillRepeatedly(Return(SUCCESS));
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj, "111");
     EXPECT_EQ(result, SUCCESS);
@@ -894,7 +892,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent02, TestSize.Level0)
     std::vector<SecurityCollector::SecurityEventRuler> rules {};
     rules.emplace_back(rule);
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(Return(false));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
@@ -930,12 +927,14 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent04, TestSize.Level0)
     std::vector<SecurityCollector::SecurityEventRuler> rules {};
     rules.emplace_back(rule);
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillOnce(Return(true));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
+    EXPECT_CALL(*obj, SendRequest).Times(1);
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.QuerySecurityEvent(rules, obj, "");
     EXPECT_EQ(result, SUCCESS);
