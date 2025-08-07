@@ -43,8 +43,8 @@ namespace {
     constexpr size_t MAX_SESSION_SIZE = 16;
     constexpr size_t MAX_SESSION_SIZE_ONE_PROCESS = 2;
     constexpr const char *PKG_NAME = "ohos.security.securityguard";
-    constexpr int UPLOAD_EVENT_THREAD_MAX_CONCURRENCY = 4;
-    constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 2048;
+    constexpr int UPLOAD_EVENT_THREAD_MAX_CONCURRENCY = 16;
+    constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 5 * 4096;
     constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 64;
 }
 
@@ -565,10 +565,8 @@ bool AcquireDataSubscribeManager::BatchPublish(const SecurityCollector::Event &e
             continue;
         }
         if (IsFindFlag(event.eventSubscribes, event.eventId, it.second->clientId)) {
-            SGLOGW("IsFindFlag eventId=%{public}" PRId64, event.eventId);
-            continue;
+            UploadEventToSub(it.second->callback, event);
         }
-        UploadEventToSub(it.second->callback, event);
     }
     SGLOGD("publish eventid=%{public}" PRId64, event.eventId);
     for (auto iter : event.eventSubscribes) {
