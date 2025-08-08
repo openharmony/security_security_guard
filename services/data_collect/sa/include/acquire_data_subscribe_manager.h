@@ -119,12 +119,13 @@ private:
     GetEventWrapperFunc eventWrapper_ = nullptr;
     bool isStopClearCache_ = false;
     ffrt::mutex clearCachemutex_ {};
-    std::mutex userIdMutex_ {};
+    ffrt::mutex userIdMutex_ {};
+    ffrt::mutex queueMutex_ {};
+    ffrt::mutex dbQueueMutex_ {};
     std::string deviceId_ {};
     int32_t userId_ {-1};
-    std::mutex sessionMutex_{};
-    std::mutex eventsMutex_{};
-    std::mutex queueMutex_{};
+    ffrt::mutex sessionMutex_{};
+    ffrt::mutex eventsMutex_{};
     std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> sessionsMap_ {};
     std::shared_ptr<ffrt::queue> queue_{};
     std::shared_ptr<ffrt::queue> dbQueue_{};
