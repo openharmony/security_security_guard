@@ -97,7 +97,7 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(int64_t eventId, const st
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AcquireDataSubscribeManager::GetInstance().InitUserId();
     AcquireDataSubscribeManager::GetInstance().InitDeviceId();
-    std::lock_guard<std::mutex> lock(sessionMutex_);
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
         SGLOGI("not find current clientId");
         return BAD_PARAM;
@@ -129,7 +129,7 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
     int64_t eventId = subscribeInfo.GetEvent().eventId;
     AcquireDataSubscribeManager::GetInstance().InitUserId();
     AcquireDataSubscribeManager::GetInstance().InitDeviceId();
-    std::lock_guard<std::mutex> lock(sessionMutex_);
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     if (sessionsMap_.find(clientId) != sessionsMap_.end() && sessionsMap_.at(clientId) != nullptr &&
         sessionsMap_.at(clientId)->subEvents.find(eventId) != sessionsMap_.at(clientId)->subEvents.end()) {
         SGLOGE("not need subscribe again");
@@ -155,7 +155,7 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
 int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback,
     const std::string &clientId)
 {
-    std::lock_guard<std::mutex> lock(sessionMutex_);
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
         SGLOGI("not find current clientId");
         return SUCCESS;
@@ -305,7 +305,7 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
 // LCOV_EXCL_STOP
 int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const std::string &clientId)
 {
-    std::lock_guard<std::mutex> lock(sessionMutex_);
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
         SGLOGI("not find current clientId");
         return BAD_PARAM;
@@ -335,7 +335,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const st
 // LCOV_EXCL_START
 void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback)
 {
-    std::lock_guard<std::mutex> lock(sessionMutex_);
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     std::set<int64_t> allSubEventId {};
     std::set<int64_t> currentEventId {};
     auto finder = [callback](std::pair<std::string, std::shared_ptr<ClientSession>> iter) {
@@ -389,7 +389,7 @@ void AcquireDataSubscribeManager::ClearEventCache()
 {
     std::vector<SecurityCollector::Event> tmp {};
     {
-        std::lock_guard<std::mutex> lock(eventsMutex_);
+        std::lock_guard<ffrt::mutex> lock(eventsMutex_);
         tmp = events_;
     }
     for (const auto &event : tmp) {
@@ -405,7 +405,7 @@ void AcquireDataSubscribeManager::ClearEventCache()
         }
     }
     {
-        std::lock_guard<std::mutex> lock(eventsMutex_);
+        std::lock_guard<ffrt::mutex> lock(eventsMutex_);
         events_.clear();
         eventsBuffSize_ = 0;
     }
@@ -413,7 +413,7 @@ void AcquireDataSubscribeManager::ClearEventCache()
 
 sptr<IRemoteObject> AcquireDataSubscribeManager::GetCurrentClientCallback(const std::string &clientId)
 {
-    std::lock_guard<std::mutex> lock(sessionMutex_);
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     if (sessionsMap_.find(clientId) == sessionsMap_.end()) {
         return nullptr;
     }
@@ -426,7 +426,7 @@ sptr<IRemoteObject> AcquireDataSubscribeManager::GetCurrentClientCallback(const 
 
 std::string AcquireDataSubscribeManager::GetCurrentClientGroup(const std::string &clientId)
 {
-    std::lock_guard<std::mutex> lock(sessionMutex_);
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     if (sessionsMap_.find(clientId) == sessionsMap_.end()) {
         return "";
     }
@@ -445,7 +445,7 @@ void AcquireDataSubscribeManager::InitUserId()
         SGLOGE("GetForegroundOsAccountLocalId Fail");
         return;
     }
-    std::lock_guard<std::mutex> lock(userIdMutex_);
+    std::lock_guard<ffrt::mutex> lock(userIdMutex_);
     userId_ = id;
 }
 
@@ -463,7 +463,7 @@ void AcquireDataSubscribeManager::InitDeviceId()
         SGLOGI("get local device into error, code=%{public}d", ret);
         return;
     }
-    std::lock_guard<std::mutex> lock(userIdMutex_);
+    std::lock_guard<ffrt::mutex> lock(userIdMutex_);
     deviceId_ = deviceInfo.deviceId;
 }
 
@@ -509,7 +509,7 @@ void AcquireDataSubscribeManager::UploadEventToSub(const SecurityCollector::Even
         AcquireDataSubscribeManager::GetInstance().PublishEventToSub(event);
     };
     {
-        std::lock_guard<std::mutex> lock(queueMutex_);
+        std::lock_guard<ffrt::mutex> lock(queueMutex_);
         if (queue_ == nullptr) {
             return;
         }
@@ -526,7 +526,7 @@ void AcquireDataSubscribeManager::UploadEventToStore(const SecurityCollector::Ev
     // upload to store
     std::vector<SecurityCollector::Event> tmp {};
     {
-        std::lock_guard<std::mutex> lock(eventsMutex_);
+        std::lock_guard<ffrt::mutex> lock(eventsMutex_);
         events_.emplace_back(event);
         eventsBuffSize_ += GetSecurityCollectorEventBufSize(event);
         if (eventsBuffSize_ < MAX_CACHE_EVENT_SIZE) {
@@ -549,7 +549,7 @@ void AcquireDataSubscribeManager::UploadEventToStore(const SecurityCollector::Ev
         }
     };
     {
-        std::lock_guard<std::mutex> lock(queueMutex_);
+        std::lock_guard<ffrt::mutex> lock(dbQueueMutex_);
         if (dbQueue_ == nullptr) {
             return;
         }
@@ -562,7 +562,7 @@ void AcquireDataSubscribeManager::UploadEventToStore(const SecurityCollector::Ev
         dbQueue_->submit(task);
     }
     {
-        std::lock_guard<std::mutex> lock(eventsMutex_);
+        std::lock_guard<ffrt::mutex> lock(eventsMutex_);
         events_.clear();
         eventsBuffSize_ = 0;
     }
@@ -579,7 +579,7 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
     SecurityCollector::Event retEvent  = event;
     EventCfg config {};
     {
-        std::lock_guard<std::mutex> lock(userIdMutex_);
+        std::lock_guard<ffrt::mutex> lock(userIdMutex_);
         retEvent.userId = userId_;
         retEvent.deviceId = deviceId_;
     }
@@ -595,8 +595,8 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
     if (eventFilter_ != nullptr) {
         eventFilter_()->GetFlagsEventNeedToUpload(retEvent);
     }
-    UploadEventToSub(event);
-    UploadEventToStore(event);
+    UploadEventToSub(retEvent);
+    UploadEventToStore(retEvent);
 }
 
 size_t AcquireDataSubscribeManager::GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event)
@@ -635,7 +635,7 @@ bool AcquireDataSubscribeManager::PublishEventToSub(const SecurityCollector::Eve
         SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
         return false;
     }
-    std::lock_guard<std::mutex> lock(sessionMutex_);
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     for (auto &it : sessionsMap_) {
         if (it.second->subEvents.find(event.eventId) == it.second->subEvents.end()) {
             continue;
@@ -689,7 +689,7 @@ int AcquireDataSubscribeManager::CheckInsertMute(const EventMuteFilter &filter, 
 int AcquireDataSubscribeManager::InsertSubscribeMute(const EventMuteFilter &filter, const std::string &clientId)
 {
     SGLOGI("in AcquireDataSubscribeManager InsertSubscribeMute, clientId %{public}s", clientId.c_str());
-    std::lock_guard<std::mutex> lock(sessionMutex_);
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     int ret = CheckInsertMute(filter, clientId);
     if (ret != SUCCESS) {
         SGLOGE("CheckInsertMute failed, ret=%{public}d", ret);
@@ -756,7 +756,7 @@ int AcquireDataSubscribeManager::RemoveMute(const EventMuteFilter &filter, const
 // LCOV_EXCL_STOP
 int AcquireDataSubscribeManager::RemoveSubscribeMute(const EventMuteFilter &filter, const std::string &clientId)
 {
-    std::lock_guard<std::mutex> lock(sessionMutex_);
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     SGLOGI("in AcquireDataSubscribeManager RemoveSubscribeMute, clientId %{public}s", clientId.c_str());
     if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
         SGLOGE("clientId not creat");
@@ -819,7 +819,7 @@ int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, cons
         return ret;
     }
     {
-        std::lock_guard<std::mutex> lock(sessionMutex_);
+        std::lock_guard<ffrt::mutex> lock(sessionMutex_);
         if (sessionsMap_.find(clientId) != sessionsMap_.end()) {
             SGLOGE("current clientId exist");
             return BAD_PARAM;
@@ -831,7 +831,7 @@ int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, cons
     session->tokenId = callerToken;
     session->eventGroup = eventGroup;
     {
-        std::lock_guard<std::mutex> lock(sessionMutex_);
+        std::lock_guard<ffrt::mutex> lock(sessionMutex_);
         sessionsMap_[clientId] = session;
     }
     return SUCCESS;
@@ -839,7 +839,7 @@ int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, cons
 
 int AcquireDataSubscribeManager::DestoryClient(const std::string &eventGroup, const std::string &clientId)
 {
-    std::lock_guard<std::mutex> lock(sessionMutex_);
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     auto iter = sessionsMap_.find(clientId);
     if (iter == sessionsMap_.end()) {
         SGLOGE("current clientId not exist");
@@ -864,7 +864,7 @@ int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, Ac
     if (clientId.find("sdk") != std::string::npos) {
         return SUCCESS;
     }
-    std::lock_guard<std::mutex> lock(sessionMutex_);
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     if (sessionsMap_.size() >= MAX_SESSION_SIZE) {
         SGLOGE("max instance limited");
         return CLIENT_EXCEED_GLOBAL_LIMIT;
