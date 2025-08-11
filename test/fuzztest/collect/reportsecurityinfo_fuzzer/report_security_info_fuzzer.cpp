@@ -28,38 +28,37 @@ extern "C" int32_t ReportSecurityInfo(const struct EventInfoSt *info);
 
 namespace OHOS {
 namespace {
-    constexpr int MAX_STRING_SIZE = 1024;
+constexpr int MAX_STRING_SIZE = 1024;
 }
-bool ReportSecurityInfoFuzzTest(const uint8_t* data, size_t size)
+bool ReportSecurityInfoFuzzTest(const uint8_t *data, size_t size)
 {
     int64_t eventId = rand() % (size + 1);
     EventInfoSt info;
     info.eventId = eventId;
-    std::string version(reinterpret_cast<const char*>(data), size);
+    std::string version(reinterpret_cast<const char *>(data), size);
     info.version = version.c_str();
-    uint32_t cpyLen = size >= CONTENT_MAX_LEN ? CONTENT_MAX_LEN - 1: static_cast<uint32_t>(size);
-    (void) memcpy_s(info.content, CONTENT_MAX_LEN, data, cpyLen);
+    uint32_t cpyLen = size >= CONTENT_MAX_LEN ? CONTENT_MAX_LEN - 1 : static_cast<uint32_t>(size);
+    (void)memcpy_s(info.content, CONTENT_MAX_LEN, data, cpyLen);
     info.contentLen = cpyLen;
     ReportSecurityInfo(&info);
     return true;
 }
 
-bool ReportSecurityInfoAsyncFuzzTest(const uint8_t* data, size_t size)
+bool ReportSecurityInfoAsyncFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider &fdp)
 {
-    FuzzedDataProvider fdp(data, size);
     EventInfoSt info;
     info.eventId = fdp.ConsumeIntegral<int64_t>();
-    info.version = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE).c_str();
-    uint32_t cpyLen = size >= CONTENT_MAX_LEN ? CONTENT_MAX_LEN - 1: static_cast<uint32_t>(size);
-    (void) memcpy_s(info.content, CONTENT_MAX_LEN, data, cpyLen);
+    std::string str = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    info.version = str.c_str();
+    uint32_t cpyLen = size >= CONTENT_MAX_LEN ? CONTENT_MAX_LEN - 1 : static_cast<uint32_t>(size);
+    (void)memcpy_s(info.content, CONTENT_MAX_LEN, data, cpyLen);
     info.contentLen = cpyLen;
     ReportSecurityInfoAsync(&info);
     return true;
 }
 
-bool SecurityGuardConfigUpdateFuzzTest(const uint8_t* data, size_t size)
+bool SecurityGuardConfigUpdateFuzzTest(FuzzedDataProvider &fdp)
 {
-    FuzzedDataProvider fdp(data, size);
     int32_t fd = fdp.ConsumeIntegral<int32_t>();
     std::string name = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE).c_str();
     SecurityGuardConfigUpdate(fd, name.c_str());
@@ -68,11 +67,12 @@ bool SecurityGuardConfigUpdateFuzzTest(const uint8_t* data, size_t size)
 }  // namespace OHOS
 
 /* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+    FuzzedDataProvider fdp(data, size);
     /* Run your code on date */
     OHOS::ReportSecurityInfoFuzzTest(data, size);
-    OHOS::ReportSecurityInfoAsyncFuzzTest(data, size);
-    OHOS::SecurityGuardConfigUpdateFuzzTest(data, size);
+    OHOS::ReportSecurityInfoAsyncFuzzTest(data, size, fdp);
+    OHOS::SecurityGuardConfigUpdateFuzzTest(fdp);
     return 0;
 }
