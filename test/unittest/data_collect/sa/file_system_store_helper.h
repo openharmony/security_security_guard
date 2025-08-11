@@ -17,6 +17,7 @@
 #define SECURITY_GUARD_FILE_SYSTEM_STORE_HELPER_H
 
 #include <mutex>
+#include "ffrt.h"
 #include "i_model_info.h"
 #include "i_data_collect_manager.h"
 #include "json_cfg.h"
@@ -35,7 +36,7 @@ public:
 private:
     FileSystemStoreHelper() = default;
     ~FileSystemStoreHelper() = default;
-    std::mutex mutex_;
+    ffrt::mutex mutex_;
     bool IsGzFile(const std::string& filename);
     size_t GetFileSize(const std::string& filepath);
     int32_t GetStoreFileList(std::vector<std::string>& storeFiles);

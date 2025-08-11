@@ -176,7 +176,7 @@ int32_t FileSystemStoreHelper::InsertEvent(const SecEvent& event)
     // 检查文件是否存在，如果不存在则创建
     SGLOGD("CurrentEventFile:%{public}s", GetShortFileName(currentEventFile).c_str());
     // 如果当前日志文件为空，尝试加载最新的未写满的文件
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     if (currentEventFile.empty()) {
         currentEventFile = GetLatestStoreFile();
         if (!currentEventFile.empty()) {
