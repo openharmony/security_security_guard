@@ -218,24 +218,15 @@ ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std:
         return ret;
     }
     // LCOV_EXCL_START
+    if (IsDiscardEventInThisHour(eventId)) {
+        return SUCCESS;
+    }
     SecurityCollector::Event event {};
     event.eventId = eventId;
     event.version = version;
     event.timestamp = time;
     event.content = content;
-    taskCount_++;
     AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
-    SGLOGD("ffrt task num is %{public}u", taskCount_.load());
-    taskCount_--;
-    if (taskCount_.load() > FFRT_MAX_NUM) {
-        discardedCount_++;
-        SGLOGD("too much event reported, ffrt task num is %{public}u, eventid is %{public}" PRId64,
-            discardedCount_.load(), eventId);
-        return SUCCESS;
-    }
-    if (IsDiscardEventInThisHour(eventId)) {
-        return SUCCESS;
-    }
     return SUCCESS;
     // LCOV_EXCL_STOP
 }
