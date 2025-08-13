@@ -44,7 +44,6 @@ private:
         const std::string& startTime, const std::string& endTime);
     SecurityCollector::SecurityEvent IsWantDate(const std::string& filename, int64_t eventid,
         std::string startTime, std::string endTime);
-    SecurityCollector::SecurityEvent SecurityEventFromJson(nlohmann::json jsonObj);
     std::string GetTimestampFromFileName(const std::string& filename);
     std::string GetShortFileName(const std::string& filename);
     std::string CreateNewStoreFile(const std::string& startTime);

@@ -95,7 +95,7 @@ HWTEST_F(SecurityGuardFileSystemStoreHelperTest, QuerySecurityEventTest002, Test
     EXPECT_EQ(FileSystemStoreHelper::GetInstance().QuerySecurityEvent(ruler, proxy), SUCCESS);
 }
 
-HWTEST_F(SecurityGuardFileSystemStoreHelperTest, QuerySecurityEventCallBackTest001, TestSize.Level1)
+HWTEST_F(SecurityGuardFileSystemStoreHelperTest, InsertEventTest001, TestSize.Level1)
 {
     std::vector<SecurityCollector::SecurityEvent> events;
     for (size_t i = 0; i < 2; i++) {
@@ -112,19 +112,6 @@ HWTEST_F(SecurityGuardFileSystemStoreHelperTest, QuerySecurityEventCallBackTest0
         events.push_back(event);
     }
     FileSystemStoreHelper::GetInstance().QuerySecurityEventCallBack(proxy, events);
-    nlohmann::json jsonEvent {
-        {EVENT_ID, 111},
-        {VERSION, "1.0"},
-        {CONTENT, "{\"aaa\": \"111\"}"},
-        {TIMESTAMP, "20250228150000"}
-    };
-    SecurityCollector::SecurityEvent parseEvent =
-        FileSystemStoreHelper::GetInstance().SecurityEventFromJson(jsonEvent);
-    EXPECT_EQ(parseEvent.GetEventId(), 111);
-}
-
-HWTEST_F(SecurityGuardFileSystemStoreHelperTest, InsertEventTest001, TestSize.Level1)
-{
     SecEvent event {
         .eventId = 111,
         .version = "1.0",
