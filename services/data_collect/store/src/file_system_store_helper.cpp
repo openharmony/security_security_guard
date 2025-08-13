@@ -165,14 +165,12 @@ int32_t FileSystemStoreHelper::InsertEvent(const SecEvent& event)
     SGLOGD("Enter FileSystemStoreHelper InsertEvent");
     static std::string currentEventFile;
     static std::string eventStartTime;
-    nlohmann::json eventJson = nlohmann::json {
-        { EVENT_ID, event.eventId },
-        { VERSION, event.version },
-        { CONTENT, event.content },
-        { TIMESTAMP,  event.date },
-        { USER_ID,  event.userId }
-    };
-    std::string data = std::to_string(event.eventId) + "|" + event.date + "||" + eventJson.dump();
+    std::string date = event.date;
+    if (date.empty()) {
+        date = SecurityGuardUtils::GetDate();
+    }
+    std::string data = std::to_string(event.eventId) + "|" + date + "||" + std::to_string(event.userId) + "|||"
+        + event.content;
     // 检查文件是否存在，如果不存在则创建
     SGLOGD("CurrentEventFile:%{public}s", GetShortFileName(currentEventFile).c_str());
     // 如果当前日志文件为空，尝试加载最新的未写满的文件
@@ -229,28 +227,14 @@ std::string FileSystemStoreHelper::GetEndTimeFromFileName(const std::string& fil
     return fileTime.substr(startPos);
 }
 
-SecurityCollector::SecurityEvent FileSystemStoreHelper::SecurityEventFromJson(nlohmann::json jsonObj)
-{
-    int64_t eventId;
-    std::string version;
-    std::string content;
-    std::string timestamp;
-    int32_t userId;
-    SecurityGuard::JsonCfg::Unmarshal(eventId, jsonObj, EVENT_ID);
-    SecurityGuard::JsonCfg::Unmarshal(version, jsonObj, VERSION);
-    SecurityGuard::JsonCfg::Unmarshal(content, jsonObj, CONTENT);
-    SecurityGuard::JsonCfg::Unmarshal(timestamp, jsonObj, TIMESTAMP);
-    SecurityGuard::JsonCfg::Unmarshal(userId, jsonObj, USER_ID);
-    return SecurityCollector::SecurityEvent{eventId, version, content, timestamp, userId};
-}
-
 // LCOV_EXCL_START
 SecurityCollector::SecurityEvent FileSystemStoreHelper::IsWantDate(const std::string& fileEvent, int64_t eventid,
     std::string startTime, std::string endTime)
 {
     size_t firstPos = fileEvent.find(STORE_FILE_EVENT_FIRST_DELIMITER);
     size_t secondPos = fileEvent.find(STORE_FILE_EVENT_SECOND_DELIMITER);
-    if (firstPos == std::string::npos || secondPos == std::string::npos) {
+    size_t thirdPos = fileEvent.find(STORE_FILE_EVENT_THRID_DELIMITER);
+    if (firstPos == std::string::npos || secondPos == std::string::npos || thirdPos == std::string::npos) {
         return {};
     }
     std::string fileEventid = fileEvent.substr(0, firstPos);
@@ -261,13 +245,9 @@ SecurityCollector::SecurityEvent FileSystemStoreHelper::IsWantDate(const std::st
     if ((fileEventTime < startTime) || (fileEventTime > endTime)) {
         return {};
     }
-    std::string fileEventJson = fileEvent.substr(secondPos + STORE_FILE_EVENT_SECOND_DELIMITER.length());
-    nlohmann::json jsonObj = nlohmann::json::parse(fileEventJson, nullptr, false);
-    if (jsonObj.is_discarded()) {
-        SGLOGE("FileSystemStoreHelper json parse error");
-        return {};
-    }
-    return SecurityEventFromJson(jsonObj);
+    std::string userId = fileEvent.substr(secondPos + STORE_FILE_EVENT_SECOND_DELIMITER.length(), thirdPos);
+    std::string fileEventContent = fileEvent.substr(thirdPos + STORE_FILE_EVENT_THRID_DELIMITER.length());
+    return {eventid, "1.0", fileEventContent, fileEventTime, atoi(userId.c_str())};
 }
 // LCOV_EXCL_STOP
 

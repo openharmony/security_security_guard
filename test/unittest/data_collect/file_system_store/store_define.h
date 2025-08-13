@@ -55,6 +55,7 @@ const std::string STORE_FILE_NAME_PREFIX = "sgevent_";
 const std::string STORE_FILE_NAME_SUFFIX = ".gz";
 const std::string STORE_FILE_EVENT_FIRST_DELIMITER = "|";
 const std::string STORE_FILE_EVENT_SECOND_DELIMITER = "||";
+const std::string STORE_FILE_EVENT_THRID_DELIMITER = "|||";
 const std::string MIN_START_TIME = "19700101000000";
 
 using SecEventTableInfo = struct {
