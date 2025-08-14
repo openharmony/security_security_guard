@@ -23,7 +23,9 @@
 #include "security_guard_define.h"
 #include "security_collector_subscribe_info.h"
 #include "security_guard_log.h"
+#ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
 #include "device_manager.h"
+#endif
 #include "ffrt.h"
 #include "event_define.h"
 #include "i_model_info.h"
@@ -48,12 +50,13 @@ namespace {
     constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 64;
 }
 
+#ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
 class InitCallback : public DistributedHardware::DmInitCallback {
 public:
     ~InitCallback() override = default;
     void OnRemoteDied() override {};
 };
-
+#endif
 
 AcquireDataSubscribeManager& AcquireDataSubscribeManager::GetInstance()
 {
@@ -451,6 +454,7 @@ void AcquireDataSubscribeManager::InitUserId()
 
 void AcquireDataSubscribeManager::InitDeviceId()
 {
+#ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
     auto callback = std::make_shared<InitCallback>();
     int32_t ret = DistributedHardware::DeviceManager::GetInstance().InitDeviceManager(PKG_NAME, callback);
     if (ret != SUCCESS) {
@@ -465,14 +469,17 @@ void AcquireDataSubscribeManager::InitDeviceId()
     }
     std::lock_guard<ffrt::mutex> lock(userIdMutex_);
     deviceId_ = deviceInfo.deviceId;
+#endif
 }
 
 void AcquireDataSubscribeManager::DeInitDeviceId()
 {
+#ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
     int ret = DistributedHardware::DeviceManager::GetInstance().UnInitDeviceManager(PKG_NAME);
     if (ret != SUCCESS) {
         SGLOGE("UnInitDeviceManager fail, code =%{public}d", ret);
     }
+#endif
 }
 
 void AcquireDataSubscribeManager::InitEventQueue()
@@ -581,7 +588,9 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
     {
         std::lock_guard<ffrt::mutex> lock(userIdMutex_);
         retEvent.userId = userId_;
+#ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
         retEvent.deviceId = deviceId_;
+#endif
     }
     if (!ConfigDataManager::GetInstance().GetEventConfig(retEvent.eventId, config)) {
         SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);

@@ -22,7 +22,6 @@
 #define protected public
 #include "config_data_manager.h"
 #include "database_manager.h"
-#include "device_manager.h"
 #include "i_db_listener.h"
 #include "os_account_manager.h"
 #include "risk_event_rdb_helper.h"

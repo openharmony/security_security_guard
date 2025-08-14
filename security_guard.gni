@@ -17,6 +17,7 @@ declare_args() {
   security_guard_enable = true
   security_guard_enable_ext = false
   security_guard_trim_model_analysis = false
+  security_guard_enable_device_id = false
   security_guard_event_cfg_source = "security_guard_event.json"
   security_guard_model_cfg_source = "security_guard_model.cfg"
   security_guard_event_group_cfg_source = "security_guard_event_group.json"
