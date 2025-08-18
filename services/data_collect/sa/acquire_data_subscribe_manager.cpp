@@ -48,6 +48,7 @@ namespace {
     constexpr int UPLOAD_EVENT_THREAD_MAX_CONCURRENCY = 16;
     constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 10 * 4096;
     constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 64;
+    std::atomic<uint32_t> g_taskCount = 0;
 }
 
 #ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
@@ -514,18 +515,20 @@ void AcquireDataSubscribeManager::UploadEventToSub(const SecurityCollector::Even
     // upload to subscriber
     auto task = [event]() {
         AcquireDataSubscribeManager::GetInstance().PublishEventToSub(event);
+        g_taskCount.fetch_sub(1);
     };
+    if (g_taskCount.load() > UPLOAD_EVENT_TASK_MAX_COUNT) {
+        SGLOGI("subed event be discarded id is %{public}" PRId64, event.eventId);
+        return;
+    }
     {
         std::lock_guard<ffrt::mutex> lock(queueMutex_);
         if (queue_ == nullptr) {
             return;
         }
-        if (queue_->get_task_cnt() > UPLOAD_EVENT_TASK_MAX_COUNT) {
-            SGLOGI("subed event be discarded is id %{public}" PRId64, event.eventId);
-            return;
-        }
         queue_->submit(task);
     }
+    g_taskCount.fetch_add(1);
 }
 
 void AcquireDataSubscribeManager::UploadEventToStore(const SecurityCollector::Event &event)
