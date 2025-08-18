@@ -28,7 +28,6 @@
 #include "config_data_manager.h"
 #include "database.h"
 #include "database_manager.h"
-#include "device_manager.h"
 #include "os_account_manager.h"
 #include "preferences_helper.h"
 #include "risk_event_rdb_helper.h"
