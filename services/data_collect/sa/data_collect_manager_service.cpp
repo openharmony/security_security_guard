@@ -325,6 +325,8 @@ ErrCode DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     event.eventId = subscribeInfo.GetEvent().eventId;
     if (subscribeInfo.GetEventGroup() == "") {
         ret = IsApiHasPermission("Subscribe");
+    } else if (subscribeInfo.GetEventGroup() == "auditGroup") {
+        ret = IsEventGroupHasPublicPermission(subscribeInfo.GetEventGroup(), {});
     } else {
         ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(),
             std::vector<int64_t>{subscribeInfo.GetEvent().eventId});
@@ -353,7 +355,9 @@ ErrCode DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
     if (subscribeInfo.GetEventGroup() == "") {
-        ret = IsApiHasPermission("Subscribe");
+        ret = IsApiHasPermission("UnSubscribe");
+    } else if (subscribeInfo.GetEventGroup() == "auditGroup") {
+        ret = IsEventGroupHasPublicPermission(subscribeInfo.GetEventGroup(), {});
     } else {
         ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(),
             std::vector<int64_t>{subscribeInfo.GetEvent().eventId});
@@ -448,6 +452,8 @@ ErrCode DataCollectManagerService::QuerySecurityEvent(const std::vector<Security
     int32_t ret = 0;
     if (eventGroup == "") {
         ret = IsApiHasPermission("QuerySecurityEvent");
+    } else if (eventGroup == "auditGroup") {
+        ret = IsEventGroupHasPublicPermission(eventGroup, {});
     } else {
         ret = IsEventGroupHasPermission(eventGroup, std::vector<int64_t>{});
     }
