@@ -452,8 +452,6 @@ ErrCode DataCollectManagerService::QuerySecurityEvent(const std::vector<Security
     int32_t ret = 0;
     if (eventGroup == "") {
         ret = IsApiHasPermission("QuerySecurityEvent");
-    } else if (eventGroup == "auditGroup") {
-        ret = IsEventGroupHasPublicPermission(eventGroup, {});
     } else {
         ret = IsEventGroupHasPermission(eventGroup, std::vector<int64_t>{});
     }
