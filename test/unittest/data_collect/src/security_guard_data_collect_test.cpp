@@ -47,7 +47,6 @@ namespace OHOS {
 namespace OHOS::Security::SecurityGuardTest {
 namespace {
     constexpr int SUCCESS = 0;
-    constexpr int FAILED = -1;
 }
 
 void SecurityGuardDataCollectTest::SetUpTestCase()
