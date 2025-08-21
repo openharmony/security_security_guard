@@ -40,11 +40,11 @@ namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr size_t MAX_CACHE_EVENT_SIZE = 16 * 1024;
     constexpr int64_t MAX_DURATION_TEN_SECOND = 10 * 1000;
-    constexpr int64_t MAX_FILTER_SIZE = 256;
-    constexpr size_t MAX_SUBS_SIZE = 10;
     constexpr size_t MAX_SESSION_SIZE = 16;
     constexpr size_t MAX_SESSION_SIZE_ONE_PROCESS = 2;
+#ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
     constexpr const char *PKG_NAME = "ohos.security.securityguard";
+#endif
     constexpr int UPLOAD_EVENT_THREAD_MAX_CONCURRENCY = 16;
     constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 10 * 4096;
     constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 64;
@@ -98,7 +98,6 @@ AcquireDataSubscribeManager::~AcquireDataSubscribeManager()
 
 int AcquireDataSubscribeManager::InsertSubscribeRecord(int64_t eventId, const std::string &clientId)
 {
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AcquireDataSubscribeManager::GetInstance().InitUserId();
     AcquireDataSubscribeManager::GetInstance().InitDeviceId();
     std::lock_guard<ffrt::mutex> lock(sessionMutex_);
@@ -881,7 +880,6 @@ int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, Ac
         SGLOGE("max instance limited");
         return CLIENT_EXCEED_GLOBAL_LIMIT;
     }
-    size_t sessionSize = 0;
     std::set<std::string> clients {};
     for (auto iter : sessionsMap_) {
         if (iter.second != nullptr && iter.second->tokenId == callerToken) {
