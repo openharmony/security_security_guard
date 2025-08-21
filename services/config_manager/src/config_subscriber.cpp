@@ -35,9 +35,6 @@
 #include "sg_collect_client.h"
 
 namespace OHOS::Security::SecurityGuard {
-namespace {
-    constexpr int32_t TIME_OUT_MS = 1000;
-}
 // LCOV_EXCL_START
 void ConfigSubscriber::GetUpdateFileDstPath(const std::string &fileName, std::string &dstPath)
 {
