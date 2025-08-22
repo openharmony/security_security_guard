@@ -713,7 +713,7 @@ int AcquireDataSubscribeManager::InsertSubscribeMute(const EventMuteFilter &filt
     }
     ret = InsertMute(filter, clientId);
     if (ret != SUCCESS) {
-        SGLOGE("RemoveMute failed, ret=%{public}d", ret);
+        SGLOGE("InsertMute failed, ret=%{public}d", ret);
         return ret;
     }
     sessionsMap_.at(clientId)->eventFilters[filter.eventId].emplace_back(filter);
