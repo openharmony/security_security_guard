@@ -56,7 +56,7 @@ int32_t AcquireDataCallbackProxy::OnNotify(const std::vector<SecurityCollector::
         return NULL_OBJECT;
     }
 
-    MessageOption option = { MessageOption::TF_SYNC };
+    MessageOption option = { MessageOption::TF_ASYNC };
     SGLOGD("batch callback event num of records= %{public}zu", events.size());
     return remote->SendRequest(CMD_DATA_SUBSCRIBE_CALLBACK, data, reply, option);
 }
