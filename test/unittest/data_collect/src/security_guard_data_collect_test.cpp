@@ -28,7 +28,6 @@
 #include "config_data_manager.h"
 #include "database.h"
 #include "database_manager.h"
-#include "device_manager.h"
 #include "os_account_manager.h"
 #include "preferences_helper.h"
 #include "risk_event_rdb_helper.h"
@@ -48,7 +47,6 @@ namespace OHOS {
 namespace OHOS::Security::SecurityGuardTest {
 namespace {
     constexpr int SUCCESS = 0;
-    constexpr int FAILED = -1;
 }
 
 void SecurityGuardDataCollectTest::SetUpTestCase()

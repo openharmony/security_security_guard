@@ -114,8 +114,13 @@ ohos_shared_library("sg_collect_service") {
     "sqlite:sqlite",
     "zlib:libz",
     "os_account:os_account_innerkits",
-    "device_manager:devicemanagersdk",
   ]
+  if (security_guard_enable_device_id) {
+    defines += [ "SECURITY_GUARD_ENABLE_DEVICE_ID" ]
+    external_deps += [
+      "device_manager:devicemanagersdk",
+    ]
+  }
 }
 
 ohos_shared_library("sg_collect_service_database") {

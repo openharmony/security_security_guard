@@ -1430,7 +1430,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertMute001, TestSize.Level0)
         config.prog = "security_guard";
         return true;
     });
-    AcquireDataSubscribeManager::GetInstance().eventFilter_ == nullptr;
+    AcquireDataSubscribeManager::GetInstance().eventFilter_ = nullptr;
     EventMuteFilter filter {};
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertMute(filter, "111");
     EXPECT_EQ(result, NULL_OBJECT);
@@ -1442,7 +1442,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RemoveMute001, TestSize.Level0)
         config.prog = "security_guard";
         return true;
     });
-    AcquireDataSubscribeManager::GetInstance().eventFilter_ == nullptr;
+    AcquireDataSubscribeManager::GetInstance().eventFilter_ = nullptr;
     EventMuteFilter filter {};
     int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter, "111");
     EXPECT_EQ(result, NULL_OBJECT);

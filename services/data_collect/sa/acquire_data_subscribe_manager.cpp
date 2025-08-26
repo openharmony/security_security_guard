@@ -23,7 +23,9 @@
 #include "security_guard_define.h"
 #include "security_collector_subscribe_info.h"
 #include "security_guard_log.h"
+#ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
 #include "device_manager.h"
+#endif
 #include "ffrt.h"
 #include "event_define.h"
 #include "i_model_info.h"
@@ -38,22 +40,24 @@ namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr size_t MAX_CACHE_EVENT_SIZE = 16 * 1024;
     constexpr int64_t MAX_DURATION_TEN_SECOND = 10 * 1000;
-    constexpr int64_t MAX_FILTER_SIZE = 256;
-    constexpr size_t MAX_SUBS_SIZE = 10;
     constexpr size_t MAX_SESSION_SIZE = 16;
     constexpr size_t MAX_SESSION_SIZE_ONE_PROCESS = 2;
+#ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
     constexpr const char *PKG_NAME = "ohos.security.securityguard";
+#endif
     constexpr int UPLOAD_EVENT_THREAD_MAX_CONCURRENCY = 16;
     constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 10 * 4096;
     constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 64;
+    std::atomic<uint32_t> g_taskCount = 0;
 }
 
+#ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
 class InitCallback : public DistributedHardware::DmInitCallback {
 public:
     ~InitCallback() override = default;
     void OnRemoteDied() override {};
 };
-
+#endif
 
 AcquireDataSubscribeManager& AcquireDataSubscribeManager::GetInstance()
 {
@@ -94,7 +98,6 @@ AcquireDataSubscribeManager::~AcquireDataSubscribeManager()
 
 int AcquireDataSubscribeManager::InsertSubscribeRecord(int64_t eventId, const std::string &clientId)
 {
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AcquireDataSubscribeManager::GetInstance().InitUserId();
     AcquireDataSubscribeManager::GetInstance().InitDeviceId();
     std::lock_guard<ffrt::mutex> lock(sessionMutex_);
@@ -451,6 +454,7 @@ void AcquireDataSubscribeManager::InitUserId()
 
 void AcquireDataSubscribeManager::InitDeviceId()
 {
+#ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
     auto callback = std::make_shared<InitCallback>();
     int32_t ret = DistributedHardware::DeviceManager::GetInstance().InitDeviceManager(PKG_NAME, callback);
     if (ret != SUCCESS) {
@@ -465,14 +469,17 @@ void AcquireDataSubscribeManager::InitDeviceId()
     }
     std::lock_guard<ffrt::mutex> lock(userIdMutex_);
     deviceId_ = deviceInfo.deviceId;
+#endif
 }
 
 void AcquireDataSubscribeManager::DeInitDeviceId()
 {
+#ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
     int ret = DistributedHardware::DeviceManager::GetInstance().UnInitDeviceManager(PKG_NAME);
     if (ret != SUCCESS) {
         SGLOGE("UnInitDeviceManager fail, code =%{public}d", ret);
     }
+#endif
 }
 
 void AcquireDataSubscribeManager::InitEventQueue()
@@ -507,18 +514,20 @@ void AcquireDataSubscribeManager::UploadEventToSub(const SecurityCollector::Even
     // upload to subscriber
     auto task = [event]() {
         AcquireDataSubscribeManager::GetInstance().PublishEventToSub(event);
+        g_taskCount.fetch_sub(1);
     };
+    if (g_taskCount.load() > UPLOAD_EVENT_TASK_MAX_COUNT) {
+        SGLOGI("subed event be discarded id is %{public}" PRId64, event.eventId);
+        return;
+    }
     {
         std::lock_guard<ffrt::mutex> lock(queueMutex_);
         if (queue_ == nullptr) {
             return;
         }
-        if (queue_->get_task_cnt() > UPLOAD_EVENT_TASK_MAX_COUNT) {
-            SGLOGI("subed event be discarded is id %{public}" PRId64, event.eventId);
-            return;
-        }
         queue_->submit(task);
     }
+    g_taskCount.fetch_add(1);
 }
 
 void AcquireDataSubscribeManager::UploadEventToStore(const SecurityCollector::Event &event)
@@ -581,7 +590,9 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
     {
         std::lock_guard<ffrt::mutex> lock(userIdMutex_);
         retEvent.userId = userId_;
+#ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
         retEvent.deviceId = deviceId_;
+#endif
     }
     if (!ConfigDataManager::GetInstance().GetEventConfig(retEvent.eventId, config)) {
         SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
@@ -702,7 +713,7 @@ int AcquireDataSubscribeManager::InsertSubscribeMute(const EventMuteFilter &filt
     }
     ret = InsertMute(filter, clientId);
     if (ret != SUCCESS) {
-        SGLOGE("RemoveMute failed, ret=%{public}d", ret);
+        SGLOGE("InsertMute failed, ret=%{public}d", ret);
         return ret;
     }
     sessionsMap_.at(clientId)->eventFilters[filter.eventId].emplace_back(filter);
@@ -869,7 +880,6 @@ int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, Ac
         SGLOGE("max instance limited");
         return CLIENT_EXCEED_GLOBAL_LIMIT;
     }
-    size_t sessionSize = 0;
     std::set<std::string> clients {};
     for (auto iter : sessionsMap_) {
         if (iter.second != nullptr && iter.second->tokenId == callerToken) {

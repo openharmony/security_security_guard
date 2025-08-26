@@ -80,9 +80,6 @@ namespace {
     constexpr uint32_t FINISH = 0;
     constexpr uint32_t CONTINUE = 1;
     constexpr size_t MAX_DISTRIBUTE_LENS = 100;
-    constexpr uint64_t CLEAR_TIME = 3600000000;
-    constexpr uint32_t FFRT_MAX_NUM = 256;
-    constexpr uint32_t DISCARD_EVENT_WHITELIST = 1;
     std::string TRUST_LIST_FILE_PATH_PRE = "/system/etc/";
     const std::string TRUST_LIST_FILE_PATH = TRUST_LIST_FILE_PATH_PRE + SECURITY_GUARD_CONFIG_UPDATE_TRUST_LIST_SOURCE;
 }
@@ -173,40 +170,6 @@ void DataCollectManagerService::DumpEventInfo(int fd, int64_t eventId)
     dprintf(fd, "report version : %s\n", secEvent.version.c_str());
 }
 
-bool DataCollectManagerService::IsDiscardEventInThisHour(int64_t eventId)
-{
-    std::lock_guard<ffrt::mutex> lock(eventsMutex_);
-    {
-        if (reportedEventsMap_.size() == 0) {
-            auto clearTask = [&] () mutable {
-                std::lock_guard<ffrt::mutex> lock(eventsMutex_);
-                reportedEventsMap_.clear();
-                SGLOGI("clear reportedEventsMap_");
-            };
-            ffrt::submit(clearTask, {}, {}, ffrt::task_attr().delay(CLEAR_TIME));
-        }
-        if (reportedEventsMap_.count(eventId) != 0) {
-            EventCfg config;
-            bool success = ConfigDataManager::GetInstance().GetEventConfig(eventId, config);
-            if (!success) {
-                SGLOGE("not found event, id=%{public}" PRId64, eventId);
-                return true;
-            }
-            if (config.discardEventWhiteList == DISCARD_EVENT_WHITELIST) {
-                SGLOGD("event in whitelist, id=%{public}" PRId64, eventId);
-                return false;
-            }
-            if (reportedEventsMap_[eventId].load() >= config.storageRomNums) {
-                SGLOGD("event is reported too much in this hour, eventid is %{public}" PRId64, eventId);
-                return true;
-            }
-            reportedEventsMap_[eventId]++;
-        } else {
-            reportedEventsMap_[eventId] = 1;
-        }
-    }
-    return false;
-}
 // LCOV_EXCL_STOP
 
 ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std::string &version,
@@ -218,9 +181,6 @@ ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std:
         return ret;
     }
     // LCOV_EXCL_START
-    if (IsDiscardEventInThisHour(eventId)) {
-        return SUCCESS;
-    }
     SecurityCollector::Event event {};
     event.eventId = eventId;
     event.version = version;
@@ -365,6 +325,8 @@ ErrCode DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     event.eventId = subscribeInfo.GetEvent().eventId;
     if (subscribeInfo.GetEventGroup() == "") {
         ret = IsApiHasPermission("Subscribe");
+    } else if (subscribeInfo.GetEventGroup() == "auditGroup") {
+        ret = IsEventGroupHasPublicPermission(subscribeInfo.GetEventGroup(), {});
     } else {
         ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(),
             std::vector<int64_t>{subscribeInfo.GetEvent().eventId});
@@ -393,7 +355,9 @@ ErrCode DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
     if (subscribeInfo.GetEventGroup() == "") {
-        ret = IsApiHasPermission("Subscribe");
+        ret = IsApiHasPermission("UnSubscribe");
+    } else if (subscribeInfo.GetEventGroup() == "auditGroup") {
+        ret = IsEventGroupHasPublicPermission(subscribeInfo.GetEventGroup(), {});
     } else {
         ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(),
             std::vector<int64_t>{subscribeInfo.GetEvent().eventId});
