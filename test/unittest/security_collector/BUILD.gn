@@ -79,7 +79,6 @@ ohos_unittest("SecurityCollectorTest") {
     "${sg_root_dir}/test/unittest/mock/data_collect",
     "${sg_root_dir}/test/unittest/mock/data_collection",
     "${sg_root_dir}/test/unittest/mock/database_manager",
-    "${sg_root_dir}/test/unittest/mock/device_manager",
     "${sg_root_dir}/test/unittest/mock/preferences",
     "${sg_root_dir}/test/unittest/mock/preferences_wrapper",
     "${sg_root_dir}/test/unittest/mock/rdb",
@@ -99,7 +98,6 @@ ohos_unittest("SecurityCollectorTest") {
 
   external_deps = [
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "ffrt:libffrt",
     "googletest:gmock",
     "hilog:libhilog",
@@ -135,7 +133,6 @@ ohos_unittest("SecurityCollectorRunManagerTest") {
     "${sg_root_dir}/test/unittest/mock/data_collect",
     "${sg_root_dir}/test/unittest/mock/data_collection",
     "${sg_root_dir}/test/unittest/mock/database_manager",
-    "${sg_root_dir}/test/unittest/mock/device_manager",
     "${sg_root_dir}/test/unittest/mock/preferences",
     "${sg_root_dir}/test/unittest/mock/preferences_wrapper",
     "${sg_root_dir}/test/unittest/mock/rdb",
@@ -150,7 +147,6 @@ ohos_unittest("SecurityCollectorRunManagerTest") {
 
   external_deps = [
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "ffrt:libffrt",
     "googletest:gmock",
     "hilog:libhilog",
@@ -200,7 +196,6 @@ ohos_unittest("DataCollectionTest") {
 
   external_deps = [
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "googletest:gmock",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
