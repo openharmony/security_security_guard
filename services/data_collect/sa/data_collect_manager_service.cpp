@@ -191,7 +191,6 @@ ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std:
     // LCOV_EXCL_STOP
 }
 
-// LCOV_EXCL_START
 ErrCode DataCollectManagerService::RequestDataSubmitAsync(int64_t eventId, const std::string &version,
     const std::string &time, const std::string &content)
 {
@@ -877,7 +876,7 @@ int32_t DataCollectManagerService::SetDeathCallBack(SgSubscribeEvent event, cons
     callback->AddDeathRecipient(deathRecipient_);
     return SUCCESS;
 }
-
+// LCOV_EXCL_STOP
 ErrCode DataCollectManagerService::Subscribe(int64_t eventId, const std::string &clientId)
 {
     SGLOGI("DataCollectManagerService, start new subscribe");
