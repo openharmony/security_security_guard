@@ -550,7 +550,11 @@ static napi_value NapiGetModelResult(napi_env env, napi_callback_info info)
     context->modelId = modelId;
     context->param = modelRule.param;
     napi_value promise = nullptr;
-    NAPI_CALL(env, napi_create_promise(env, &context->deferred, &promise));
+    if (napi_create_promise(env, &context->deferred, &promise) != napi_ok) {
+        delete context;
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
+        return nullptr;
+    }
     napi_value resourceName = NapiCreateString(env, "NapiGetModelResult");
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, RequestSecurityModelResultExecute,
         RequestSecurityModelResultComplete, static_cast<void *>(context), &context->asyncWork));
@@ -639,7 +643,11 @@ static napi_value NapiUpdatePolicyFile(napi_env env, napi_callback_info info)
     }
 
     napi_value promise = nullptr;
-    NAPI_CALL(env, napi_create_promise(env, &context->deferred, &promise));
+    if (napi_create_promise(env, &context->deferred, &promise) != napi_ok) {
+        delete context;
+        napi_throw(env, GenerateBusinessError(env, BAD_PARAM));
+        return nullptr;
+    }
     napi_value resourceName = NapiCreateString(env, "NapiUpdatePolicyFile");
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, UpdatePolicyExecute,
         UpdatePolicyComplete, static_cast<void *>(context), &context->asyncWork));
