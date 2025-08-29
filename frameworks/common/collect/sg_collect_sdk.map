@@ -37,7 +37,7 @@
         OHOS::Security::SecurityGuard::DataCollectManager::RemoveFilter*;
         OHOS::Security::SecurityGuard::DataCollectManager::QuerySecurityEventConfig*;
         OHOS::Security::SecurityGuard::DataCollectManager::RequestSecurityEventInfo*;
-        OHOS::Security::SecurityGuard::DataCollectManager::QueryProcInfo*;
+        OHOS::Security::SecurityGuard::DataCollectManager::QuerySecurityEventById*;
         OHOS::Security::SecurityGuard::DataCollectManager::SecurityGuardConfigUpdate*;
         VTT?for?OHOS::Security::SecurityCollector::SecurityCollectorSubscribeInfo*;
         vtable?for?OHOS::Security::SecurityCollector::SecurityCollectorSubscribeInfo*;

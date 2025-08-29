@@ -46,6 +46,7 @@ public:
         CMD_SECURITY_EVENT_CONFIG_QUERY = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_EVENT_CONFIG_QUERY),
         CMD_SECURITY_EVENT_MUTE = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_EVENT_MUTE),
         CMD_SECURITY_EVENT_UNMUTE = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_EVENT_UNMUTE),
+        CMD_SECURITY_EVENT_QUERY_BY_ID = static_cast<uint32_t>(InterfaceCode::CMD_SECURITY_EVENT_QUERY_BY_ID),
     };
 
     virtual int32_t RequestDataSubmit(int64_t eventId, std::string &version, std::string &time,
@@ -68,6 +69,8 @@ public:
         const std::string &sdkFlag) = 0;
     virtual int32_t RemoveFilter(const SecurityEventFilter &subscribeMute,
         const sptr<IRemoteObject> &callback, const std::string &sdkFlag) = 0;
+    virtual int32_t QuerySecurityEventById(std::vector<SecurityCollector::SecurityEventRuler> rulers,
+        const sptr<IRemoteObject> &callback, const std::string &eventGroup) = 0;
 };
 
 class IDataCollectManagerCallback : public IRemoteBroker {
