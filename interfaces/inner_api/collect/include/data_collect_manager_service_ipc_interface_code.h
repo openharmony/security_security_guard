@@ -32,6 +32,7 @@ enum class DataCollectManagerInterfaceCode {
     CMD_SECURITY_EVENT_CONFIG_QUERY = 9,
     CMD_SECURITY_EVENT_MUTE = 10,
     CMD_SECURITY_EVENT_UNMUTE = 11,
+    CMD_SECURITY_EVENT_QUERY_BY_ID = 12,
 };
 
 enum class DataCollectManagerCallbackInterfaceCode {

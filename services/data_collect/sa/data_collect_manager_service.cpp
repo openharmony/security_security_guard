@@ -62,6 +62,7 @@ namespace {
     const std::string REQUEST_PERMISSION = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
     const std::string MANAGE_CONFIG_PERMISSION = "ohos.permission.MANAGE_SECURITY_GUARD_CONFIG";
     const std::string QUERY_SECURITY_EVENT_PERMISSION = "ohos.permission.QUERY_SECURITY_EVENT";
+    const std::string QUERY_AUDIT_EVENT_PERMISSION = "ohos.permission.QUERY_AUDIT_EVENT";
     constexpr int32_t CFG_FILE_MAX_SIZE = 1 * 1024 * 1024;
     constexpr int32_t CFG_FILE_BUFF_SIZE = 1 * 1024 * 1024 + 1;
     const std::unordered_map<std::string, std::vector<std::string>> g_apiPermissionsMap {
@@ -74,7 +75,8 @@ namespace {
         {"ConfigUpdate", {MANAGE_CONFIG_PERMISSION}},
         {"QuerySecurityEventConfig", {MANAGE_CONFIG_PERMISSION}},
         {"AddFilter", {QUERY_SECURITY_EVENT_PERMISSION}},
-        {"RemoveFilter", {QUERY_SECURITY_EVENT_PERMISSION}}
+        {"RemoveFilter", {QUERY_SECURITY_EVENT_PERMISSION}},
+        {"QuerySecurityEventById", {QUERY_AUDIT_EVENT_PERMISSION}}
     };
     std::unordered_set<std::string> g_configCacheFilesSet;
     constexpr uint32_t FINISH = 0;
@@ -490,6 +492,45 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
         QuerySecurityEventCallBack(proxy, replyEvents);
     }
     return true;
+}
+
+ErrCode DataCollectManagerService::QuerySecurityEventById(const std::vector<SecurityCollector::SecurityEventRuler>
+    &rulers, const sptr<IRemoteObject> &cb, const std::string &eventGroup)
+{
+    SGLOGI("enter DataCollectManagerService QuerySecurityEventById");
+    int32_t ret = IsEventGroupHasPublicPermission(eventGroup, std::vector<int64_t>{});
+    if (ret != SUCCESS) {
+        return ret;
+    }
+    auto proxy = iface_cast<ISecurityEventQueryCallback>(cb);
+    if (proxy == nullptr) {
+        SGLOGI("proxy is null");
+        return NULL_OBJECT;
+    }
+    const int64_t queryPorcInfoEventId = 1011015023;
+    std::unordered_set<int64_t> eventIds = {queryPorcInfoEventId};
+    auto task = [proxy, rulers, eventIds] {
+        std::string errEventIds;
+        for (auto &ruler : rulers) {
+            if (eventIds.count(ruler.GetEventId()) == 0) {
+                SGLOGE("eventid not in eventid list eventId=%{public}" PRId64, ruler.GetEventId());
+                errEventIds.append(std::to_string(ruler.GetEventId()) + " ");
+                continue;
+            }
+            if (!QueryEventByRuler(proxy, ruler)) {
+                errEventIds.append(std::to_string(ruler.GetEventId()) + " ");
+            }
+        }
+        if (!errEventIds.empty()) {
+            std::string message = "QuerySecurityEvent " + errEventIds + "failed";
+            SGLOGE("QuerySecurityEvent failed");
+            proxy->OnError(message);
+            return;
+        }
+        proxy->OnComplete();
+    };
+    ffrt::submit(task);
+    return SUCCESS;
 }
 
 ErrCode DataCollectManagerService::QuerySecurityEvent(const std::vector<SecurityCollector::SecurityEventRuler> &rulers,
