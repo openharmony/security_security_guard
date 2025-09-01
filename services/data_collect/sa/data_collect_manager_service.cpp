@@ -446,7 +446,6 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
     return true;
 }
 
-// LCOV_EXCL_START
 ErrCode DataCollectManagerService::QuerySecurityEventById(const std::vector<SecurityCollector::SecurityEventRuler>
     &rulers, const sptr<IRemoteObject> &cb, const std::string &eventGroup)
 {
@@ -485,7 +484,6 @@ ErrCode DataCollectManagerService::QuerySecurityEventById(const std::vector<Secu
     ffrt::submit(task);
     return SUCCESS;
 }
-// LCOV_EXCL_STOP
 
 ErrCode DataCollectManagerService::QuerySecurityEvent(const std::vector<SecurityCollector::SecurityEventRuler> &rulers,
     const sptr<IRemoteObject> &cb, const std::string &eventGroup)
