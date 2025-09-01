@@ -29,6 +29,8 @@ public:
     static DatabaseManager &GetInstance();
     void Init();
     int InsertEvent(uint32_t source, const SecEvent& event, const std::set<std::string> &eventSubscribes = {});
+    int InsertEvent(uint32_t source, const std::vector<SecEvent>& events,
+        const std::set<std::string> &eventSubscribes = {});
     int QueryAllEvent(std::string table, std::vector<SecEvent> &events);
     int QueryRecentEventByEventId(int64_t eventId, SecEvent &event);
     int QueryRecentEventByEventId(std::string table, const std::vector<int64_t> &eventId, std::vector<SecEvent> &event);
