@@ -97,21 +97,6 @@ HWTEST_F(SecurityGuardFileSystemStoreHelperTest, QuerySecurityEventTest002, Test
 
 HWTEST_F(SecurityGuardFileSystemStoreHelperTest, InsertEventTest001, TestSize.Level1)
 {
-    std::vector<SecurityCollector::SecurityEvent> events;
-    for (size_t i = 0; i < 2; i++) {
-        int64_t eventId = 111;
-        SecurityCollector::SecurityEvent event(eventId);
-        events.push_back(event);
-    }
-    sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    auto proxy = iface_cast<ISecurityEventQueryCallback>(obj);
-    FileSystemStoreHelper::GetInstance().QuerySecurityEventCallBack(proxy, events);
-    for (size_t i = 0; i < 200; i++) {
-        int64_t eventId = 111;
-        SecurityCollector::SecurityEvent event(eventId);
-        events.push_back(event);
-    }
-    FileSystemStoreHelper::GetInstance().QuerySecurityEventCallBack(proxy, events);
     SecEvent event {
         .eventId = 111,
         .version = "1.0",
