@@ -80,6 +80,7 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
     service.ConfigUpdate(fd, string);
     service.WriteRemoteFileToLocal(fd, string);
     DataCollectManagerService::GetSecEventsFromConditions(condition);
+    service.QuerySecurityEventById({ruler}, callback, "auditGroup");
     return true;
 }
 

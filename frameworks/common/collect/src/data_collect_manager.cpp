@@ -97,7 +97,7 @@ int32_t DataCollectManager::QuerySecurityEvent(std::vector<SecurityCollector::Se
     }
     return 0;
 }
-// LCOV_EXCL_START
+
 int32_t DataCollectManager::QuerySecurityEventById(std::vector<SecurityCollector::SecurityEventRuler> rulers,
     std::shared_ptr<SecurityEventQueryCallback> callback, const std::string &eventGroup)
 {
@@ -131,7 +131,7 @@ int32_t DataCollectManager::QuerySecurityEventById(std::vector<SecurityCollector
     }
     return 0;
 }
-// LCOV_EXCL_STOP
+
 int32_t DataCollectManager::QuerySecurityEventConfig(std::string &result)
 {
     SGLOGI("Start DataCollectManager QuerySecurityEventConfig");
