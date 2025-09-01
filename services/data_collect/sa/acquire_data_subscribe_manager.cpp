@@ -38,7 +38,7 @@
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
-    constexpr size_t MAX_CACHE_EVENT_SIZE = 16 * 1024;
+    constexpr size_t MAX_CACHE_EVENT_SIZE = 64;
     constexpr int64_t MAX_DURATION_TEN_SECOND = 10 * 1000;
     constexpr size_t MAX_SESSION_SIZE = 16;
     constexpr size_t MAX_SESSION_SIZE_ONE_PROCESS = 2;
@@ -47,7 +47,7 @@ namespace {
 #endif
     constexpr int UPLOAD_EVENT_THREAD_MAX_CONCURRENCY = 16;
     constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 10 * 4096;
-    constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 64;
+    constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 16;
     std::atomic<uint32_t> g_taskCount = 0;
 }
 
@@ -82,6 +82,7 @@ AcquireDataSubscribeManager::AcquireDataSubscribeManager() : listener_(std::make
     if (eventWrapper_ == nullptr) {
         SGLOGI("eventWrapper_ is nullptr");
     }
+    events_.reserve(MAX_CACHE_EVENT_SIZE);
 }
 
 AcquireDataSubscribeManager::~AcquireDataSubscribeManager()
@@ -390,27 +391,16 @@ void AcquireDataSubscribeManager::StopClearEventCache()
 
 void AcquireDataSubscribeManager::ClearEventCache()
 {
-    std::vector<SecurityCollector::Event> tmp {};
+    std::vector<SecEvent> tmp {};
     {
         std::lock_guard<ffrt::mutex> lock(eventsMutex_);
-        tmp = events_;
+        tmp.swap(events_);
+        events_.reserve(MAX_CACHE_EVENT_SIZE);
     }
-    for (const auto &event : tmp) {
-        SecEvent secEvent {};
-        secEvent.eventId = event.eventId;
-        secEvent.version = event.version;
-        secEvent.date = event.timestamp;
-        secEvent.content = event.content;
-        secEvent.userId = event.userId;
-        int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, secEvent, {});
-        if (code != SUCCESS) {
-            SGLOGE("insert event error, %{public}d", code);
-        }
-    }
-    {
-        std::lock_guard<ffrt::mutex> lock(eventsMutex_);
-        events_.clear();
-        eventsBuffSize_ = 0;
+
+    int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, tmp, {});
+    if (code != SUCCESS) {
+        SGLOGE("insert event error, %{public}d", code);
     }
 }
 
@@ -533,28 +523,26 @@ void AcquireDataSubscribeManager::UploadEventToSub(const SecurityCollector::Even
 void AcquireDataSubscribeManager::UploadEventToStore(const SecurityCollector::Event &event)
 {
     // upload to store
-    std::vector<SecurityCollector::Event> tmp {};
+    std::vector<SecEvent> tmp {};
     {
         std::lock_guard<ffrt::mutex> lock(eventsMutex_);
-        events_.emplace_back(event);
-        eventsBuffSize_ += GetSecurityCollectorEventBufSize(event);
-        if (eventsBuffSize_ < MAX_CACHE_EVENT_SIZE) {
+        SecEvent secEvent {};
+        secEvent.eventId = event.eventId;
+        secEvent.version = event.version;
+        secEvent.date = event.timestamp;
+        secEvent.content = event.content;
+        secEvent.userId = event.userId;
+        events_.emplace_back(secEvent);
+        if (events_.size() < MAX_CACHE_EVENT_SIZE) {
             return;
         }
-        tmp = events_;
+        tmp.swap(events_);
+        events_.reserve(MAX_CACHE_EVENT_SIZE);
     }
     auto task = [tmp] () {
-        for (const auto &event : tmp) {
-            SecEvent secEvent {};
-            secEvent.eventId = event.eventId;
-            secEvent.version = event.version;
-            secEvent.date = event.timestamp;
-            secEvent.content = event.content;
-            secEvent.userId = event.userId;
-            int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, secEvent, {});
-            if (code != SUCCESS) {
-                SGLOGE("insert event error, %{public}d", code);
-            }
+        int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, tmp, {});
+        if (code != SUCCESS) {
+            SGLOGE("insert event error, %{public}d", code);
         }
     };
     {
@@ -569,11 +557,6 @@ void AcquireDataSubscribeManager::UploadEventToStore(const SecurityCollector::Ev
             return;
         }
         dbQueue_->submit(task);
-    }
-    {
-        std::lock_guard<ffrt::mutex> lock(eventsMutex_);
-        events_.clear();
-        eventsBuffSize_ = 0;
     }
 }
 
@@ -608,19 +591,6 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
     }
     UploadEventToSub(retEvent);
     UploadEventToStore(retEvent);
-}
-
-size_t AcquireDataSubscribeManager::GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event)
-{
-    size_t res = sizeof(event.eventId);
-    res += event.version.length();
-    res += event.content.length();
-    res += event.extra.length();
-    res += event.timestamp.length();
-    for (const auto &i : event.eventSubscribes) {
-        res += i.length();
-    }
-    return res;
 }
 
 bool AcquireDataSubscribeManager::IsFindFlag(const std::set<std::string> &eventSubscribes, int64_t eventId,
