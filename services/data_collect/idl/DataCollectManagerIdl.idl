@@ -35,4 +35,5 @@ interface OHOS.Security.SecurityGuard.DataCollectManagerIdl {
     void DestoryClient([in] String eventGroup, [in] String clientId);
     void Subscribe([in] long eventId, [in] String clientId);
     void Unsubscribe([in] long eventId, [in] String clientId);
+    void QuerySecurityEventById([in] List<SecurityEventRuler> rulers, [in] IRemoteObject cb, [in] String eventGroup);
 }
