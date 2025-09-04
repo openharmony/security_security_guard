@@ -171,7 +171,6 @@ void DataCollectManagerService::DumpEventInfo(int fd, int64_t eventId)
     dprintf(fd, "report time : %s\n", secEvent.date.c_str());
     dprintf(fd, "report version : %s\n", secEvent.version.c_str());
 }
-
 // LCOV_EXCL_STOP
 
 ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std::string &version,
@@ -200,6 +199,7 @@ ErrCode DataCollectManagerService::RequestDataSubmitAsync(int64_t eventId, const
     return RequestDataSubmit(eventId, version, time, content);
 }
 
+// LCOV_EXCL_START
 ErrCode DataCollectManagerService::RequestRiskData(const std::string &devId, const std::string &eventList,
     const sptr<IRemoteObject> &cb)
 {
@@ -532,7 +532,6 @@ ErrCode DataCollectManagerService::QuerySecurityEvent(const std::vector<Security
     return SUCCESS;
 }
 
-// LCOV_EXCL_START
 void DataCollectManagerService::SubscriberDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
 {
     SGLOGI("enter OnRemoteDied");
@@ -917,7 +916,7 @@ int32_t DataCollectManagerService::SetDeathCallBack(SgSubscribeEvent event, cons
     callback->AddDeathRecipient(deathRecipient_);
     return SUCCESS;
 }
-// LCOV_EXCL_STOP
+
 ErrCode DataCollectManagerService::Subscribe(int64_t eventId, const std::string &clientId)
 {
     SGLOGI("DataCollectManagerService, start new subscribe");
@@ -1066,4 +1065,5 @@ ErrCode DataCollectManagerService::CreatClient(const std::string &eventGroup, co
     }
     return SUCCESS;
 }
+// LCOV_EXCL_STOP
 }
