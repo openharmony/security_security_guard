@@ -134,7 +134,6 @@ void AcquireDataManagerFuzzTest(const uint8_t* data, size_t size)
     std::vector<SecurityEventRuler> rulers{};
     DataCollectManager::GetInstance().QuerySecurityEvent(rulers, nullptr);
     DataCollectManager::GetInstance().SecurityGuardConfigUpdate(fd, string);
-    DataCollectManager::GetInstance().QuerySecurityEventById(rulers, nullptr, "auditGroup");
 }
 
 void DataCollectManagerFuzzTest(const uint8_t* data, size_t size)
