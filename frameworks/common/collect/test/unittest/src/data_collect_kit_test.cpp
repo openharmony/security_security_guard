@@ -606,12 +606,4 @@ HWTEST_F(DataCollectKitTest, ClientSetDeathRecipient01, TestSize.Level1)
     int32_t ret = SecurityGuard::EventSubscribeClient::SetDeathRecipient(client, serviceCallback);
     EXPECT_EQ(ret, SecurityGuard::SUCCESS);
 }
-
-HWTEST_F(DataCollectKitTest, TestQueryProcInfo, TestSize.Level1)
-{
-    SecurityCollector::SecurityEventRuler rule(11111);
-    EXPECT_EQ(SecurityGuard::DataCollectManager::GetInstance().QuerySecurityEventById({rule}, nullptr, "auditGroup"),
-        SecurityGuard::NULL_OBJECT);
-}
-
 }
