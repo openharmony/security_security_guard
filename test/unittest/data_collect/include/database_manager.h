@@ -30,6 +30,8 @@ public:
     void Init();
     int32_t SetAuditState(bool enable);
     int InsertEvent(uint32_t source, const SecEvent& event, const std::set<std::string> &eventSubscribes = {});
+    int InsertEvent(uint32_t source, const std::vector<SecEvent>& events,
+        const std::set<std::string> &eventSubscribes = {});
     int QueryAllEvent(std::string table, std::vector<SecEvent> &events);
     int QueryAllEventFromMem(std::vector<SecEvent> &events);
     int QueryRecentEventByEventId(int64_t eventId, SecEvent &event);
