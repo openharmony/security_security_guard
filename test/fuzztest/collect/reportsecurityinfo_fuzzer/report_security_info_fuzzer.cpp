@@ -44,7 +44,7 @@ bool ReportSecurityInfoFuzzTest(const uint8_t *data, size_t size)
     return true;
 }
 
-bool ReportSecurityInfoAsyncFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider &fdp)
+bool ReportSecurityInfoAsyncFuzzTest(const uint8_t *data, size_t size, FuzzedDataProvider &fdp)
 {
     EventInfoSt info;
     info.eventId = fdp.ConsumeIntegral<int64_t>();
