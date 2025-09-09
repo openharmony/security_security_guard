@@ -129,7 +129,7 @@ private:
     std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> sessionsMap_ {};
     std::shared_ptr<ffrt::queue> queue_{};
     std::shared_ptr<ffrt::queue> dbQueue_{};
-    std::vector<SecurityCollector::Event> events_ {};
+    std::vector<SecEvent> events_ {};
     size_t eventsBuffSize_ {};
 };
 } // namespace OHOS::Security::SecurityGuard

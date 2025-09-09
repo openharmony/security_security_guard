@@ -435,7 +435,8 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success01, TestSize.L
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
-    EXPECT_CALL(DatabaseManager::GetInstance(), InsertEvent).WillRepeatedly(Return(FAILED));
+    EXPECT_CALL(DatabaseManager::GetInstance(), InsertEvent(1, testing::A<const std::vector<SecEvent>&>(), _))
+        .WillRepeatedly(Return(FAILED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.RequestDataSubmit(eventId, version, time, content);
     EXPECT_EQ(result, SUCCESS);
@@ -455,7 +456,8 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success02, TestSize.L
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
     EXPECT_CALL(*(DataFormat::GetInterface()), CheckRiskContent).WillOnce(Return(true));
-    EXPECT_CALL(DatabaseManager::GetInstance(), InsertEvent).WillRepeatedly(Return(SUCCESS));
+    EXPECT_CALL(DatabaseManager::GetInstance(), InsertEvent(1, testing::A<const std::vector<SecEvent>&>(), _))
+        .WillRepeatedly(Return(SUCCESS));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.RequestDataSubmit(eventId, version, time, content);
     EXPECT_EQ(result, SUCCESS);
