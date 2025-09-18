@@ -32,6 +32,15 @@
 #include "security_guard_define.h"
 
 namespace OHOS::Security::SecurityGuard {
+FileSystemStoreHelper::FileSystemStoreHelper() : currentGzFile_(nullptr)
+{
+}
+
+FileSystemStoreHelper::~FileSystemStoreHelper()
+{
+    CloseGzFile();
+}
+
 FileSystemStoreHelper& FileSystemStoreHelper::GetInstance()
 {
     static FileSystemStoreHelper instance;
@@ -88,20 +97,6 @@ std::string FileSystemStoreHelper::GetShortFileName(const std::string& filename)
         return "";
     }
     return filename.substr(startPos, filename.size() - startPos);
-}
-
-void FileSystemStoreHelper::WriteEventToGzFile(const std::string& filepath, const std::string& data)
-{
-    gzFile file = gzopen(filepath.c_str(), "ab");
-    if (!file) {
-        std::string mesg = strerror(errno);
-        SGLOGE("Failed to open file::%{public}s, error msg:%{public}s",
-            GetShortFileName(filepath).c_str(), mesg.c_str());
-        BigData::ReportFileSystemStoreEvent({"write", GetShortFileName(filepath), mesg});
-        return;
-    }
-    gzprintf(file, "%s\n", data.c_str());
-    gzclose(file);
 }
 
 void FileSystemStoreHelper::RenameStoreFile(const std::string& oldFilepath, const std::string& startTime,
@@ -162,40 +157,62 @@ void FileSystemStoreHelper::DeleteOldestStoreFile()
 
 int32_t FileSystemStoreHelper::InsertEvent(const SecEvent& event)
 {
-    SGLOGD("Enter FileSystemStoreHelper InsertEvent");
-    static std::string currentEventFile;
-    static std::string eventStartTime;
-    std::string date = event.date;
-    if (date.empty()) {
-        date = SecurityGuardUtils::GetDate();
+    return InsertEvents({event});
+}
+
+int32_t FileSystemStoreHelper::InsertEvents(const std::vector<SecEvent>& events)
+{
+    SGLOGD("Enter FileSystemStoreHelper InsertEvents, size=%{public}zu", events.size());
+    if (events.empty()) {
+        return SUCCESS;
     }
-    std::string data = std::to_string(event.eventId) + "|" + date + "||" + std::to_string(event.userId) + "|||"
-        + event.content;
-    // 检查文件是否存在，如果不存在则创建
-    SGLOGD("CurrentEventFile:%{public}s", GetShortFileName(currentEventFile).c_str());
-    // 如果当前日志文件为空，尝试加载最新的未写满的文件
     std::lock_guard<ffrt::mutex> lock(mutex_);
-    if (currentEventFile.empty()) {
-        currentEventFile = GetLatestStoreFile();
-        if (!currentEventFile.empty()) {
+    
+    // 检查文件是否存在，如果不存在则创建
+    SGLOGD("CurrentEventFile:%{public}s", GetShortFileName(currentEventFile_).c_str());
+    
+    // 如果当前日志文件为空，尝试加载最新的未写满的文件
+    if (currentEventFile_.empty()) {
+        currentEventFile_ = GetLatestStoreFile();
+        if (!currentEventFile_.empty()) {
             // 从文件名中提取起始时间
-            eventStartTime = GetTimestampFromFileName(currentEventFile);
+            eventStartTime_ = GetTimestampFromFileName(currentEventFile_);
         } else {
             // 没有未写满的文件，创建新文件
-            eventStartTime = SecurityGuardUtils::GetDate();
-            currentEventFile = CreateNewStoreFile(eventStartTime);
+            eventStartTime_ = SecurityGuardUtils::GetDate();
         }
     }
-    // 如果当前文件大小超过限制，创建新文件
-    if (GetFileSize(currentEventFile) >= SINGLE_FILE_SIZE) {
+    size_t curFileSize = GetFileSize(currentEventFile_);
+    if (curFileSize == 0) {
+        currentEventFile_ = CreateNewStoreFile(eventStartTime_);
+        // 关闭旧文件句柄，新文件会在WriteEventToGzFile中打开
+        CloseGzFile();
+    } else if (curFileSize >= SINGLE_FILE_SIZE) {
+        // 如果当前文件大小超过限制，创建新文件
         std::string endTime = SecurityGuardUtils::GetDate();
-        RenameStoreFile(currentEventFile, eventStartTime, endTime);
+        RenameStoreFile(currentEventFile_, eventStartTime_, endTime);
         DeleteOldestStoreFile();
-        eventStartTime = SecurityGuardUtils::GetDate();
-        currentEventFile = CreateNewStoreFile(eventStartTime);
+        eventStartTime_ = SecurityGuardUtils::GetDate();
+        currentEventFile_ = CreateNewStoreFile(eventStartTime_);
+        // 关闭旧文件句柄，新文件会在WriteEventToGzFile中打开
+        CloseGzFile();
     }
-    WriteEventToGzFile(currentEventFile, data);
-    SGLOGD("Insert file done");
+
+    for (const auto& event : events) {
+        EnsureGzFileOpen(currentEventFile_);
+        if (currentGzFile_ == nullptr) {
+            continue;
+        }
+        std::string date = event.date;
+        if (date.empty()) {
+            date = SecurityGuardUtils::GetDate();
+        }
+        std::string data = std::to_string(event.eventId) + "|" + date + "||" + std::to_string(event.userId) + "|||"
+            + event.content;
+        gzprintf(currentGzFile_, "%s\n", data.c_str());
+    }
+    gzflush(currentGzFile_, Z_FINISH);
+    SGLOGD("InsertEvents file done");
     return SUCCESS;
 }
 
@@ -228,26 +245,30 @@ std::string FileSystemStoreHelper::GetEndTimeFromFileName(const std::string& fil
 }
 
 // LCOV_EXCL_START
-SecurityCollector::SecurityEvent FileSystemStoreHelper::IsWantDate(const std::string& fileEvent, int64_t eventid,
-    std::string startTime, std::string endTime)
+SecurityCollector::SecurityEvent FileSystemStoreHelper::IsWantDate(const std::string& fileEvent,
+    const QueryRange& range)
 {
+    // fileEvent = "eventId|date||userId|||content"
     size_t firstPos = fileEvent.find(STORE_FILE_EVENT_FIRST_DELIMITER);
     size_t secondPos = fileEvent.find(STORE_FILE_EVENT_SECOND_DELIMITER);
     size_t thirdPos = fileEvent.find(STORE_FILE_EVENT_THRID_DELIMITER);
-    if (firstPos == std::string::npos || secondPos == std::string::npos || thirdPos == std::string::npos) {
+    if (firstPos == std::string::npos || secondPos == std::string::npos || thirdPos == std::string::npos ||
+        firstPos >= secondPos || secondPos >= thirdPos) {
         return {};
     }
     std::string fileEventid = fileEvent.substr(0, firstPos);
-    if (fileEventid != std::to_string(eventid)) {
+    if (fileEventid != std::to_string(range.eventId)) {
         return {};
     }
-    std::string fileEventTime = fileEvent.substr(firstPos + STORE_FILE_EVENT_FIRST_DELIMITER.length(), secondPos);
-    if ((fileEventTime < startTime) || (fileEventTime > endTime)) {
+    std::string fileEventTime = fileEvent.substr(firstPos + STORE_FILE_EVENT_FIRST_DELIMITER.length(),
+        secondPos - (firstPos + STORE_FILE_EVENT_FIRST_DELIMITER.length()));
+    if ((fileEventTime < range.startTime) || (fileEventTime > range.endTime)) {
         return {};
     }
-    std::string userId = fileEvent.substr(secondPos + STORE_FILE_EVENT_SECOND_DELIMITER.length(), thirdPos);
+    std::string userId = fileEvent.substr(secondPos + STORE_FILE_EVENT_SECOND_DELIMITER.length(),
+        thirdPos - (secondPos + STORE_FILE_EVENT_SECOND_DELIMITER.length()));
     std::string fileEventContent = fileEvent.substr(thirdPos + STORE_FILE_EVENT_THRID_DELIMITER.length());
-    return {eventid, "1.0", fileEventContent, fileEventTime, atoi(userId.c_str())};
+    return {range.eventId, "1.0", fileEventContent, fileEventTime, atoi(userId.c_str())};
 }
 // LCOV_EXCL_STOP
 
@@ -276,27 +297,37 @@ int32_t FileSystemStoreHelper::GetQueryStoreFileList(std::vector<std::string>& s
     return SUCCESS;
 }
 
-void FileSystemStoreHelper::QuerySecurityEventCallBack(sptr<ISecurityEventQueryCallback> proxy,
-    std::vector<SecurityCollector::SecurityEvent> events)
+uint32_t FileSystemStoreHelper::ProcessStoreFile(const std::string& filepath, const QueryRange& range,
+    sptr<ISecurityEventQueryCallback> proxy, std::vector<SecurityCollector::SecurityEvent>& events)
 {
-    int32_t step = MAX_ON_QUERY_SIZE;
-    if (events.size() > 0 && events.size() <= static_cast<size_t>(MAX_ON_QUERY_SIZE)) {
-        proxy->OnQuery(events);
-    } else if (events.size() > static_cast<size_t>(MAX_ON_QUERY_SIZE)) {
-        std::vector<SecurityCollector::SecurityEvent>::iterator curPtr = events.begin();
-        std::vector<SecurityCollector::SecurityEvent>::iterator endPtr = events.end();
-        std::vector<SecurityCollector::SecurityEvent>::iterator end;
-        while (curPtr < endPtr) {
-            end = endPtr - curPtr > step ? step + curPtr : endPtr;
-            step = endPtr - curPtr > step ? step : endPtr - curPtr;
-            proxy->OnQuery(std::vector<SecurityCollector::SecurityEvent>(curPtr, end));
-            curPtr += step;
+    SGLOGD("Found store file:%{public}s", GetShortFileName(filepath).c_str());
+    gzFile file = gzopen(filepath.c_str(), "rb");
+    if (!file) {
+        std::string mesg = strerror(errno);
+        SGLOGE("Failed to open store file:%{public}s, error msg:%{public}s",
+            GetShortFileName(filepath).c_str(), mesg.c_str());
+        BigData::ReportFileSystemStoreEvent({"open", GetShortFileName(filepath), mesg});
+        return 0;
+    }
+    uint32_t batchCount = 0;
+    char buffer[BUF_LEN];
+    while (gzgets(file, buffer, sizeof(buffer))) {
+        auto event = IsWantDate(std::string(buffer), range);
+        if (event.GetEventId() == 0) {
+            continue;
+        }
+        events.push_back(event);
+        if (events.size() >= MAX_ON_QUERY_SIZE) {
+            proxy->OnQuery(events);
+            events.clear();
+            ++batchCount;
         }
     }
+    gzclose(file);
+    return batchCount;
 }
 
-
-int32_t FileSystemStoreHelper::QuerySecurityEvent(const SecurityCollector::SecurityEventRuler ruler,
+int32_t FileSystemStoreHelper::QuerySecurityEvent(const SecurityCollector::SecurityEventRuler& ruler,
     sptr<ISecurityEventQueryCallback> proxy)
 {
     SGLOGI("Enter FileSystemStoreHelper QuerySecurityEvent");
@@ -317,31 +348,55 @@ int32_t FileSystemStoreHelper::QuerySecurityEvent(const SecurityCollector::Secur
         return GetTimestampFromFileName(a) < GetTimestampFromFileName(b);
     });
     std::vector<SecurityCollector::SecurityEvent> events;
+    events.reserve(MAX_ON_QUERY_SIZE);
+    QueryRange range { eventid, startTime, endTime };
+    uint32_t eventCount = 0;
     for (const auto& filename : storeFiles) {
         std::string filepath = STORE_FILE_FOLDER_PATH + filename;
-        SGLOGD("Found store file:%{public}s", GetShortFileName(filepath).c_str());
-        gzFile file = gzopen(filepath.c_str(), "rb");
-        if (!file) {
-            std::string mesg = strerror(errno);
-            SGLOGE("Failed to open store file:%{public}s, error msg:%{public}s",
-                GetShortFileName(filepath).c_str(), mesg.c_str());
-            BigData::ReportFileSystemStoreEvent({"open", GetShortFileName(filepath), mesg});
-            continue;
-        }
-        char buffer[BUF_LEN];
-        while (gzgets(file, buffer, sizeof(buffer))) {
-            SecurityCollector::SecurityEvent event = IsWantDate(std::string(buffer), eventid, startTime, endTime);
-            if (event.GetEventId() == 0) {
-                continue;
-            }
-            events.push_back(event);
-        }
-        gzclose(file);
-        if (events.size() > MAX_QUERY_EVENTS_SIZE) {
+        eventCount += ProcessStoreFile(filepath, range, proxy, events);
+        if (eventCount > (MAX_QUERY_EVENTS_SIZE / MAX_ON_QUERY_SIZE)) {
             break;
         }
     }
-    QuerySecurityEventCallBack(proxy, events);
+    if (eventCount < (MAX_QUERY_EVENTS_SIZE / MAX_ON_QUERY_SIZE) && !events.empty()) {
+        proxy->OnQuery(events);
+    }
     return SUCCESS;
 }
+
+bool FileSystemStoreHelper::OpenGzFile(const std::string& filepath)
+{
+    if (currentGzFile_ != nullptr) {
+        CloseGzFile();
+    }
+    
+    currentGzFile_ = gzopen(filepath.c_str(), "ab");
+    if (currentGzFile_ == nullptr) {
+        std::string mesg = strerror(errno);
+        SGLOGE("Failed to open file:%{public}s, error msg:%{public}s",
+            GetShortFileName(filepath).c_str(), mesg.c_str());
+        BigData::ReportFileSystemStoreEvent({"open", GetShortFileName(filepath), mesg});
+        return false;
+    }
+    
+    currentFilePath_ = filepath;
+    return true;
+}
+
+void FileSystemStoreHelper::CloseGzFile()
+{
+    if (currentGzFile_ != nullptr) {
+        gzclose(currentGzFile_);
+        currentGzFile_ = nullptr;
+        currentFilePath_.clear();
+    }
+}
+
+void FileSystemStoreHelper::EnsureGzFileOpen(const std::string& filepath)
+{
+    if (currentFilePath_ != filepath || currentGzFile_ == nullptr) {
+        OpenGzFile(filepath);
+    }
+}
+
 } // namespace OHOS::Security::SecurityGuard
