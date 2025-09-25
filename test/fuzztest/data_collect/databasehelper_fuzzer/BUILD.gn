@@ -74,6 +74,7 @@ ohos_fuzztest("DatabaseHelperFuzzTest") {
     "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
     "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/data_statistics.cpp",
     "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
     "database_helper_fuzzer.cpp",
