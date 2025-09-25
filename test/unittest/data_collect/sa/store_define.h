@@ -53,6 +53,7 @@ const std::string STORE_FILE_FOLDER_PATH = "/data/service/el1/public/database/se
 const std::string STORE_FILE_NAME = "sgevent.gz";
 const std::string STORE_FILE_NAME_PREFIX = "sgevent_";
 const std::string STORE_FILE_NAME_SUFFIX = ".gz";
+const std::string STORE_FILE_NAME_DELIMITER = "_";
 const std::string STORE_FILE_EVENT_FIRST_DELIMITER = "|";
 const std::string STORE_FILE_EVENT_SECOND_DELIMITER = "||";
 const std::string STORE_FILE_EVENT_THRID_DELIMITER = "|||";
