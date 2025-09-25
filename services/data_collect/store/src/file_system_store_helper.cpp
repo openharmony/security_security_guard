@@ -30,6 +30,7 @@
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
 #include "security_guard_define.h"
+#include "data_statistics.h"
 
 namespace OHOS::Security::SecurityGuard {
 FileSystemStoreHelper::FileSystemStoreHelper() : currentGzFile_(nullptr)
@@ -143,14 +144,16 @@ void FileSystemStoreHelper::DeleteOldestStoreFile()
         return;
     }
     std::sort(storeFiles.begin(), storeFiles.end());
-    std::string oldestFile = STORE_FILE_FOLDER_PATH + storeFiles[0];
-    if (remove(oldestFile.c_str())) {
-        std::string mesg = strerror(errno);
-        SGLOGE("Failed to delete file:%{public}s, error msg:%{public}s",
-            GetShortFileName(oldestFile).c_str(), mesg.c_str());
-        BigData::ReportFileSystemStoreEvent({"delete", GetShortFileName(oldestFile), mesg});
-    } else {
-        SGLOGI("Deleted oldest log file:%{public}s", GetShortFileName(oldestFile).c_str());
+    for (size_t i = 0; i <= storeFiles.size() - MAX_STORE_FILE_COUNT; ++i) {
+        std::string oldestFile = STORE_FILE_FOLDER_PATH + storeFiles[i];
+        if (remove(oldestFile.c_str())) {
+            std::string mesg = strerror(errno);
+            SGLOGE("Failed to delete file:%{public}s, error msg:%{public}s",
+                GetShortFileName(oldestFile).c_str(), mesg.c_str());
+            BigData::ReportFileSystemStoreEvent({"delete", GetShortFileName(oldestFile), mesg});
+        } else {
+            SGLOGI("Deleted oldest log file:%{public}s", GetShortFileName(oldestFile).c_str());
+        }
     }
 }
 // LCOV_EXCL_STOP
@@ -163,6 +166,7 @@ int32_t FileSystemStoreHelper::InsertEvent(const SecEvent& event)
 int32_t FileSystemStoreHelper::InsertEvents(const std::vector<SecEvent>& events)
 {
     SGLOGD("Enter FileSystemStoreHelper InsertEvents, size=%{public}zu", events.size());
+    DataStatistics::GetInstance().IncrementInsertEvents(events.size());
     if (events.empty()) {
         return SUCCESS;
     }
@@ -235,13 +239,45 @@ std::string FileSystemStoreHelper::GetTimestampFromFileName(const std::string& f
     return filename.substr(startPos, endPos - startPos);
 }
 
-std::string FileSystemStoreHelper::GetEndTimeFromFileName(const std::string& fileTime)
+std::string FileSystemStoreHelper::GetBeginTimeFromFileName(const std::string& filename)
 {
-    size_t startPos = fileTime.find("_");
-    if (startPos == std::string::npos) {
+    if (filename.empty()) {
+        return "";
+    }
+    size_t firstSeparator = filename.find(STORE_FILE_NAME_DELIMITER);
+    if (firstSeparator == std::string::npos) {
+        return "";
+    }
+    size_t secondSeparator = filename.find(STORE_FILE_NAME_DELIMITER, firstSeparator + 1);
+    if (secondSeparator == std::string::npos) {
+        secondSeparator = filename.find(STORE_FILE_NAME_SUFFIX, firstSeparator + 1);
+        if (secondSeparator == std::string::npos) {
+            return "";
+        }
+    }
+
+    return filename.substr(firstSeparator + 1, secondSeparator - firstSeparator - 1);
+}
+
+std::string FileSystemStoreHelper::GetEndTimeFromFileName(const std::string& filename)
+{
+    if (filename.empty()) {
+        return "";
+    }
+    size_t firstSeparator = filename.find(STORE_FILE_NAME_DELIMITER);
+    if (firstSeparator == std::string::npos) {
+        return "";
+    }
+    size_t secondSeparator = filename.find(STORE_FILE_NAME_DELIMITER, firstSeparator + 1);
+    if (secondSeparator == std::string::npos) {
         return SecurityGuardUtils::GetDate();
     }
-    return fileTime.substr(startPos);
+
+    size_t dotGzPos = filename.find(STORE_FILE_NAME_SUFFIX, secondSeparator + 1);
+    if (dotGzPos == std::string::npos) {
+        return "";
+    }
+    return filename.substr(secondSeparator + 1, dotGzPos - secondSeparator - 1);
 }
 
 // LCOV_EXCL_START
@@ -284,8 +320,8 @@ int32_t FileSystemStoreHelper::GetQueryStoreFileList(std::vector<std::string>& s
     while ((ent = readdir(dir)) != nullptr) {
         std::string filename(ent->d_name);
         if (IsGzFile(filename)) {
-            std::string fileBeginTime = GetTimestampFromFileName(filename);
-            std::string fileEndTime = GetEndTimeFromFileName(fileBeginTime);
+            std::string fileBeginTime = GetBeginTimeFromFileName(filename);
+            std::string fileEndTime = GetEndTimeFromFileName(filename);
             if (fileBeginTime == "" || fileEndTime < startTime || fileBeginTime > endTime) {
                 continue;
             }
@@ -347,6 +383,7 @@ int32_t FileSystemStoreHelper::QuerySecurityEvent(const SecurityCollector::Secur
     std::sort(storeFiles.begin(), storeFiles.end(), [this](const std::string& a, const std::string& b) {
         return GetTimestampFromFileName(a) < GetTimestampFromFileName(b);
     });
+    SGLOGD("QuerySecurityEvent storeFiles size: %{public}zu", storeFiles.size());
     std::vector<SecurityCollector::SecurityEvent> events;
     events.reserve(MAX_ON_QUERY_SIZE);
     QueryRange range { eventid, startTime, endTime };
