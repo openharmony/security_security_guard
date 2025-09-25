@@ -45,7 +45,7 @@ namespace {
 #ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
     constexpr const char *PKG_NAME = "ohos.security.securityguard";
 #endif
-    constexpr int UPLOAD_EVENT_THREAD_MAX_CONCURRENCY = 16;
+    constexpr int UPLOAD_EVENT_THREAD_MAX_CONCURRENCY = 8;
     constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 10 * 4096;
     constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 16;
     std::atomic<uint32_t> g_taskCount = 0;

@@ -133,6 +133,7 @@ ohos_unittest("SecurityGuardDataCollectTest") {
     "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
     "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/data_statistics.cpp",
     "${sg_root_dir}/services/data_collect/store/src/generic_values.cpp",
     "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/sg_sqlite_helper.cpp",
@@ -193,6 +194,7 @@ ohos_unittest("SecurityGuardDatabaseManagerTest") {
     "${sg_root_dir}/services/data_collect/sa/data_format.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
     "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/data_statistics.cpp",
     "database_manager/security_guard_database_manager_test.cpp",
   ]
 
@@ -274,6 +276,7 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_service.cpp",
     "${sg_root_dir}/services/data_collect/sa/security_event_query_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/data_statistics.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/config_operate.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/db_operate.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager.cpp",
@@ -334,6 +337,7 @@ ohos_unittest("SecurityGuardFileSystemStoreHelperTest") {
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/services/data_collect/sa/security_event_query_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
+    "${sg_root_dir}/services/data_collect/store/src/data_statistics.cpp",
     "file_system_store/security_guard_file_system_store_helper_test.cpp",
   ]
 
