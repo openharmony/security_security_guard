@@ -93,6 +93,7 @@ private:
     std::mutex mutex_ {};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
     std::map<std::string,  sptr<IRemoteObject>> clientCallBacks_ {};
+    std::atomic<int32_t> tokenBucket_{};
 };
 } // namespace OHOS::Security::SecurityGuard
 #endif // SECURITY_GUARD_DATA_COLLECT_MANAGER_SERVICE_H
