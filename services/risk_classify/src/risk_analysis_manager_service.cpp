@@ -85,6 +85,7 @@ void RiskAnalysisManagerService::OnStart()
     if (!Publish(this)) {
         SGLOGE("Publish error");
     }
+
     ffrt::submit([this] {
         ffrt::this_task::sleep_for(std::chrono::milliseconds(DELAY_TIME));
         DetectPluginManager::getInstance().LoadAllPlugins();

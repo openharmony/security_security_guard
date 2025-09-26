@@ -262,7 +262,6 @@ HWTEST_F(SgSqliteHelperTest, ConditionDel, TestSize.Level1)
     cond.Put("event_LIKE", "%log%");
 
     int deleteCount = -1;
-
     EXPECT_EQ(helper_->Delete(deleteCount, "SecureLog", cond), SUCCESS);
 }
 
