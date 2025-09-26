@@ -383,7 +383,7 @@ int32_t FileSystemStoreHelper::QuerySecurityEvent(const SecurityCollector::Secur
     std::sort(storeFiles.begin(), storeFiles.end(), [this](const std::string& a, const std::string& b) {
         return GetTimestampFromFileName(a) < GetTimestampFromFileName(b);
     });
-    SGLOGD("QuerySecurityEvent storeFiles size: %{public}zu", storeFiles.size());
+    SGLOGI("QuerySecurityEvent storeFiles size: %{public}zu", storeFiles.size());
     std::vector<SecurityCollector::SecurityEvent> events;
     events.reserve(MAX_ON_QUERY_SIZE);
     QueryRange range { eventid, startTime, endTime };
