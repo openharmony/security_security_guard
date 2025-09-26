@@ -131,7 +131,7 @@ void DataCollectManagerService::OnStart()
             if (tokenBucket_.load() < TOKEN_BUCKET_MAX_SIZE) {
                 tokenBucket_.fetch_add(TOKEN_BUCKET_STEP_SIZE);
             }
-            ffrt::this_task::sleep_for(std::chrono::microseconds(TOKEN_BUCKET_INTERVAL_TIME));
+            ffrt::this_task::sleep_for(std::chrono::milliseconds(TOKEN_BUCKET_INTERVAL_TIME));
         }
     };
     ffrt::submit(tokenBucketTask);
