@@ -401,6 +401,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmitAsync_NoPermission, Te
         Return(AccessToken::PermissionState::PERMISSION_DENIED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     service.OnAddSystemAbility(RISK_ANALYSIS_MANAGER_SA_ID, "deviceId");
+    service.tokenBucket_.fetch_add(1);
     int32_t result = service.RequestDataSubmitAsync(eventId, version, time, content);
     EXPECT_EQ(result, NO_PERMISSION);
 }
