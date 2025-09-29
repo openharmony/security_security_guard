@@ -49,6 +49,7 @@
 #include "config_subscriber.h"
 #include "model_manager.h"
 #include "config_define.h"
+#include "data_statistics.h"
 #ifdef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 #include "event_group_config.h"
 #endif
@@ -84,6 +85,9 @@ namespace {
     constexpr size_t MAX_DISTRIBUTE_LENS = 100;
     std::string TRUST_LIST_FILE_PATH_PRE = "/system/etc/";
     const std::string TRUST_LIST_FILE_PATH = TRUST_LIST_FILE_PATH_PRE + SECURITY_GUARD_CONFIG_UPDATE_TRUST_LIST_SOURCE;
+    constexpr int32_t TOKEN_BUCKET_MAX_SIZE = 12000;
+    constexpr int32_t TOKEN_BUCKET_STEP_SIZE = 20;
+    constexpr int32_t TOKEN_BUCKET_INTERVAL_TIME = 1000;
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DataCollectManagerService, DATA_COLLECT_MANAGER_SA_ID, true);
@@ -122,6 +126,15 @@ void DataCollectManagerService::OnStart()
         return;
     }
     AcquireDataSubscribeManager::GetInstance().StartClearEventCache();
+    auto tokenBucketTask = [this]() {
+        while (true) {
+            if (tokenBucket_.load() < TOKEN_BUCKET_MAX_SIZE) {
+                tokenBucket_.fetch_add(TOKEN_BUCKET_STEP_SIZE);
+            }
+            ffrt::this_task::sleep_for(std::chrono::milliseconds(TOKEN_BUCKET_INTERVAL_TIME));
+        }
+    };
+    ffrt::submit(tokenBucketTask);
 }
 
 void DataCollectManagerService::OnStop()
@@ -177,6 +190,11 @@ void DataCollectManagerService::DumpEventInfo(int fd, int64_t eventId)
 ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std::string &version,
     const std::string &time, const std::string &content)
 {
+    if (tokenBucket_.load() <= 0) {
+        DataStatistics::GetInstance().IncrementRequestDataSubmit();
+        return FAILED;
+    }
+    tokenBucket_.fetch_sub(1);
     SGLOGD("enter DataCollectManagerService RequestDataSubmit");
     int32_t ret = IsApiHasPermission("RequestDataSubmit");
     if (ret != SUCCESS) {
