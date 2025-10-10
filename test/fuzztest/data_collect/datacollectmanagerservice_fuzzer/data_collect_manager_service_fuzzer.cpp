@@ -70,6 +70,7 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
     sptr<IRemoteObject> callback(new (std::nothrow) MockRemoteObject());
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, false);
     service.Dump(fd, args);
+    service.tokenBucket_.fetch_add(1);
     service.RequestDataSubmit(eventId, string, string, string);
     service.RequestDataSubmitAsync(eventId, string, string, string);
     service.OnAddSystemAbility(fd, string);
