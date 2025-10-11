@@ -73,7 +73,7 @@ int SgSqliteHelper::Insert(int64_t &outRowId, const std::string &table, const Ge
 
     Statement::State execRet = stmt.Step();
     if (execRet != Statement::DONE) {
-        SGLOGE("insert fail");
+        SGLOGE("insert value fail err %{public}d", execRet);
         return FAILED;
     }
 
@@ -145,10 +145,12 @@ int SgSqliteHelper::Count(int64_t &outValue, const std::string &table, const Gen
 {
     OHOS::Utils::UniqueWriteGuard<OHOS::Utils::RWLock> lock(rwLock_);
     Statement stmt = PrepareCountStmt(table, conditions, options);
-    if (stmt.Step() == Statement::ROW) {
+    Statement::State execRet = stmt.Step();
+    if (execRet == Statement::ROW) {
         outValue = stmt.GetColumnInt64(0);
         return SUCCESS;
     }
+    SGLOGE("Count value fail err %{public}d", execRet);
     return FAILED;
 }
 
