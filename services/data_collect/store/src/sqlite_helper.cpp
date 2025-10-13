@@ -20,7 +20,9 @@
 // LCOV_EXCL_START
 namespace OHOS {
 namespace Security::SecurityGuard {
-
+namespace {
+    constexpr int32_t DB_BUSY_TIMEOUT = 5 * 1000; //5秒
+}
 SqliteHelper::SqliteHelper(const std::string &dbName, const std::string &dbPath, int32_t version)
     : dbName_(dbName), dbPath_(dbPath), currentVersion_(version), db_(nullptr)
 {}
@@ -49,12 +51,13 @@ void SqliteHelper::Open() __attribute__ ((no_sanitize("cfi")))
     sqlite3_config(SQLITE_CONFIG_SMALL_MALLOC, 1);
 #endif
     std::string fileName = dbPath_ + dbName_;
-    int32_t res = sqlite3_open(fileName.c_str(), &db_);
+    int falg = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX;
+    int32_t res = sqlite3_open_v2(fileName.c_str(), &db_, falg, NULL);
     if (res != SQLITE_OK) {
         SGLOGE("Failed to open db: %{public}s", sqlite3_errmsg(db_));
         return;
     }
-
+    sqlite3_busy_timeout(db_, DB_BUSY_TIMEOUT);
     int32_t version = GetVersion();
     if (version == currentVersion_) {
         return;
