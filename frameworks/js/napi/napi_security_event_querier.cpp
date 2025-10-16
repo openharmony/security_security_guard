@@ -92,7 +92,7 @@ void NapiSecurityEventQuerier::RunCallback(QuerySecurityEventContext *context, C
             release(tmpContext->threadId);
         }
     };
-    napi_send_event(tmpContext->env, task, napi_eprio_high);
+    napi_send_event(tmpContext->env, task, napi_eprio_high, "NapiSecurityEventQuerier::RunCallback");
 }
 
 void NapiSecurityEventQuerier::OnQuery(const std::vector<SecurityCollector::SecurityEvent> &events)
