@@ -258,6 +258,7 @@ int AcquireDataSubscribeManager::SubscribeSc(int64_t eventId)
     if (config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         return SUCCESS;
     }
+    collectorListener_->callingUids_.insert(IPCSkeleton::GetCallingUid());
     // 订阅SG
     if (config.prog == "security_guard") {
         return SubscribeScInSg(eventId);
@@ -639,6 +640,18 @@ void AcquireDataSubscribeManager::DbListener::OnChange(uint32_t optType, const S
 void AcquireDataSubscribeManager::CollectorListener::OnNotify(const SecurityCollector::Event &event)
 {
     AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
+}
+
+std::string AcquireDataSubscribeManager::CollectorListener::GetExtraInfo()
+{
+    std::string uidStr = "";
+    for (auto uid : callingUids_) {
+        if (uid == getuid()) {
+            continue;
+        }
+        uidStr += std::to_string(uid);
+    }
+    return uidStr;
 }
 
 int32_t AcquireDataSubscribeManager::SecurityCollectorSubscriber::OnNotify(const SecurityCollector::Event &event)
