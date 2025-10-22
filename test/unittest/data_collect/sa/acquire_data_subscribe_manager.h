@@ -17,6 +17,7 @@
 #define SECURITY_GUARD_ACQUIRE_DATA_SUBSCIBEE_SUBSCRIBE_INFO_H
 
 #include <map>
+#include <unordered_set>
 #include <mutex>
 #include <set>
 
@@ -105,10 +106,12 @@ public:
     class CollectorListener : public SecurityCollector::ICollectorFwk {
     public:
         void OnNotify(const SecurityCollector::Event &event) override;
+        std::string GetExtraInfo() override;
+        std::unordered_set<int32_t> callingUids_;
     private:
     };
     std::shared_ptr<IDbListener> listener_{};
-    std::shared_ptr<SecurityCollector::ICollectorFwk> collectorListener_{};
+    std::shared_ptr<CollectorListener> collectorListener_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
     std::map<int64_t, std::shared_ptr<SecurityCollector::ICollectorFwk>> eventToListenner_;
     void *handle_ = nullptr;
