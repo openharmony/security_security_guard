@@ -258,7 +258,7 @@ int AcquireDataSubscribeManager::SubscribeSc(int64_t eventId)
     if (config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         return SUCCESS;
     }
-    collectorListener_->callingUids_.insert(IPCSkeleton::GetCallingUid());
+    collectorListener_->callingUids_.insert(static_cast<uint32_t>(IPCSkeleton::GetCallingUid()));
     // 订阅SG
     if (config.prog == "security_guard") {
         return SubscribeScInSg(eventId);
