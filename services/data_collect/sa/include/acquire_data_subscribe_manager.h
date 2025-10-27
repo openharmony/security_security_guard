@@ -109,7 +109,7 @@ private:
     public:
         void OnNotify(const SecurityCollector::Event &event) override;
         std::string GetExtraInfo() override;
-        std::unordered_set<int32_t> callingUids_;
+        std::unordered_set<uint32_t> callingUids_;
     private:
     };
     std::shared_ptr<IDbListener> listener_{};
