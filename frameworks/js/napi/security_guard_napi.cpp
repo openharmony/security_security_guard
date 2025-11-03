@@ -1200,7 +1200,8 @@ static void SendEventOnSecEventsChanged(const SubscriberOAWorker &subscriberOAWo
         }
         napi_close_handle_scope(subscriberOAWorkerData.env, scope);
     };
-    napi_send_event(subscriberOAWorkerData.env, task, napi_eprio_high);
+    napi_send_event(subscriberOAWorkerData.env, task, napi_eprio_high,
+        "SecurityGuardNapi::SendEventOnSecEventsChanged");
 }
 
 static int32_t OnNotifyEvent(const Event &event, napi_env env, napi_ref ref, SubscriberPtr *subscriber)
