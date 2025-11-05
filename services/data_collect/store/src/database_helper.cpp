@@ -247,7 +247,7 @@ int DatabaseHelper::QueryEventBase(const GenericValues &conditions, std::vector<
                 .eventId = row.GetInt64(EVENT_ID),
                 .date = row.GetString(DATE),
                 .content = row.GetString(CONTENT),
-                .userId = row.GetInt(USER_ID),
+                .userId = row.GetInt64(USER_ID),
                 .deviceId = row.GetString(DEVICE_ID)
             }
         );
