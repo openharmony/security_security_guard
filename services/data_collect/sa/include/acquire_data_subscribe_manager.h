@@ -67,7 +67,7 @@ public:
         std::string eventGroup {};
         int32_t userId {-1};
     };
-    void UploadEvent(const SecurityCollector::Event &event);
+    int UploadEvent(const SecurityCollector::Event &event);
     void DeInitDeviceId();
     void InitEventQueue();
 private:

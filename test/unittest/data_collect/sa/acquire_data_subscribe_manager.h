@@ -66,7 +66,7 @@ public:
         std::set<int64_t> subEvents{};
         std::string eventGroup {};
     };
-    void UploadEvent(const SecurityCollector::Event &event);
+    int UploadEvent(const SecurityCollector::Event &event);
     void DeInitDeviceId();
     void InitEventQueue();
     private:
