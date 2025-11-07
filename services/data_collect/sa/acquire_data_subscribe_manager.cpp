@@ -561,13 +561,13 @@ void AcquireDataSubscribeManager::UploadEventToStore(const SecurityCollector::Ev
     }
 }
 
-void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &event)
+int AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &event)
 {
     SGLOGD("UploadEvent eventid = %{public}" PRId64, event.eventId);
     SGLOGD("UploadEvent event conetnt = %{private}s", event.content.c_str());
     if (!DataFormat::CheckRiskContent(event.content)) {
         SGLOGE("CheckRiskContent error");
-        return;
+        return BAD_PARAM;
     }
     SecurityCollector::Event retEvent  = event;
     EventCfg config {};
@@ -580,7 +580,7 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
     }
     if (!ConfigDataManager::GetInstance().GetEventConfig(retEvent.eventId, config)) {
         SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
-        return;
+        return SUCCESS;
     }
     // change old event id to new eventid
     retEvent.eventId = config.eventId;
@@ -592,6 +592,7 @@ void AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &ev
     }
     UploadEventToSub(retEvent);
     UploadEventToStore(retEvent);
+    return SUCCESS;
 }
 
 bool AcquireDataSubscribeManager::IsFindFlag(const std::set<std::string> &eventSubscribes, int64_t eventId,

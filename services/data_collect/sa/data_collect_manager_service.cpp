@@ -205,8 +205,7 @@ ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std:
     event.version = version;
     event.timestamp = time;
     event.content = content;
-    AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
-    return SUCCESS;
+    return AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
     // LCOV_EXCL_STOP
 }
 
