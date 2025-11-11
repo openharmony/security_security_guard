@@ -121,6 +121,7 @@ void DataCollectManagerService::OnStart()
     }
     AcquireDataSubscribeManager::GetInstance().InitEventQueue();
     AcquireDataSubscribeManager::GetInstance().SubscriberEventOnSgStart();
+    AcquireDataSubscribeManager::GetInstance().StartTokenBucketTask();
     if (!Publish(this)) {
         SGLOGE("Publish error");
         return;
@@ -142,6 +143,7 @@ void DataCollectManagerService::OnStop()
     SecurityCollector::DataCollection::GetInstance().CloseLib();
     AcquireDataSubscribeManager::GetInstance().StopClearEventCache();
     AcquireDataSubscribeManager::GetInstance().DeInitDeviceId();
+    AcquireDataSubscribeManager::GetInstance().StopTokenBucketTask();
 }
 
 int DataCollectManagerService::Dump(int fd, const std::vector<std::u16string>& args)
