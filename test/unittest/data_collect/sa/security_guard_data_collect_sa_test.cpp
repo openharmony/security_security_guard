@@ -423,7 +423,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_BadParam, TestSize.Le
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     service.tokenBucket_.fetch_add(1);
     int32_t result = service.RequestDataSubmit(eventId, version, time, content);
-    EXPECT_EQ(result, SUCCESS);
+    EXPECT_EQ(result, BAD_PARAM);
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success01, TestSize.Level0)
