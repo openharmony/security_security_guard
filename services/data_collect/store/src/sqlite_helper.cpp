@@ -17,7 +17,7 @@
 #include <sys/types.h>
 #include "sqlite3ext.h"
 #include "security_guard_log.h"
-// LCOV_EXCL_START
+
 namespace OHOS {
 namespace Security::SecurityGuard {
 namespace {
@@ -198,4 +198,3 @@ std::string SqliteHelper::SpitError() const
 }
 } // namespace Security::SecurityGuard
 } // namespace OHOS
-// LCOV_EXCL_STOP

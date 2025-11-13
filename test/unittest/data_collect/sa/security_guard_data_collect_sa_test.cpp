@@ -441,8 +441,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success01, TestSize.L
         .WillOnce(Return(true));
     EXPECT_CALL(*(DataFormat::GetInterface()), CheckRiskContent).WillOnce(Return(true));
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
-    EXPECT_CALL(DatabaseManager::GetInstance(), InsertEvent(1, testing::A<const std::vector<SecEvent>&>(), _))
-        .WillRepeatedly(Return(FAILED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     service.tokenBucket_.fetch_add(1);
     int32_t result = service.RequestDataSubmit(eventId, version, time, content);
@@ -463,8 +461,6 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success02, TestSize.L
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
     EXPECT_CALL(*(DataFormat::GetInterface()), CheckRiskContent).WillOnce(Return(true));
-    EXPECT_CALL(DatabaseManager::GetInstance(), InsertEvent(1, testing::A<const std::vector<SecEvent>&>(), _))
-        .WillRepeatedly(Return(SUCCESS));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     service.tokenBucket_.fetch_add(1);
     int32_t result = service.RequestDataSubmit(eventId, version, time, content);
@@ -1448,12 +1444,15 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertMute001, TestSize.Level0)
 
 HWTEST_F(SecurityGuardDataCollectSaTest, RemoveMute001, TestSize.Level0)
 {
-    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillOnce([] (int64_t eventId, EventCfg &config) {
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
+        [] (int64_t eventId, EventCfg &config) {
         config.prog = "security_guard";
         return true;
     });
     AcquireDataSubscribeManager::GetInstance().eventFilter_ = nullptr;
     EventMuteFilter filter {};
+    AcquireDataSubscribeManager::GetInstance().ClearEventCache();
+    AcquireDataSubscribeManager::GetInstance().InitEventQueue();
     int32_t result = AcquireDataSubscribeManager::GetInstance().RemoveMute(filter, "111");
     EXPECT_EQ(result, NULL_OBJECT);
 }
@@ -1467,6 +1466,15 @@ HWTEST_F(SecurityGuardDataCollectSaTest, IsEventGroupHasPublicPermission001, Tes
         config.permissionList.insert("testPermission");
         return true;
     });
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetAllEventIds).WillOnce(
+        [] () {
+        std::vector<int64_t> eventIds {};
+        eventIds.emplace_back(11111);
+        return eventIds;
+    });
+    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), SubscribeCollectors).WillOnce(
+        Return(true));
+    AcquireDataSubscribeManager::GetInstance().SubscriberEventOnSgStart();
     int32_t result = service.IsEventGroupHasPermission("111", {222});
     EXPECT_EQ(result, BAD_PARAM);
 }
@@ -1597,4 +1605,127 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestQueryProcInfo06, TestSize.Level0)
     EXPECT_EQ(service.QuerySecurityEventById({rule}, obj, "auditGroup"), BAD_PARAM);
 }
 
+HWTEST_F(SecurityGuardDataCollectSaTest, AddFilter001, TestSize.Level0)
+{
+    SecurityGuard::EventMuteFilter info {};
+    info.eventId = 11111;
+    SecurityGuard::SecurityEventFilter filter(info);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(
+        [] (const std::string &groupName, EventGroupCfg &config) {
+        config.eventList.insert(11111);
+        config.permissionList.insert("testPermission");
+        return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+        Return(AccessToken::PermissionState::PERMISSION_DENIED));
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    EXPECT_EQ(service.AddFilter(info, "test_no_client"), NO_PERMISSION);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, AddFilter002, TestSize.Level0)
+{
+    SecurityGuard::EventMuteFilter info {};
+    info.eventId = 11111;
+    SecurityGuard::SecurityEventFilter filter(info);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(
+        [] (const std::string &groupName, EventGroupCfg &config) {
+        config.eventList.insert(11111);
+        config.permissionList.insert("testPermission");
+        return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+        Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    EXPECT_EQ(service.AddFilter(info, "test_no_client"), BAD_PARAM);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, RemoveFilter001, TestSize.Level0)
+{
+    SecurityGuard::EventMuteFilter info {};
+    info.eventId = 11111;
+    SecurityGuard::SecurityEventFilter filter(info);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(
+        [] (const std::string &groupName, EventGroupCfg &config) {
+        config.eventList.insert(11111);
+        config.permissionList.insert("testPermission");
+        return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+        Return(AccessToken::PermissionState::PERMISSION_DENIED));
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    EXPECT_EQ(service.RemoveFilter(info, "test_no_client"), NO_PERMISSION);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, RemoveFilter002, TestSize.Level0)
+{
+    SecurityGuard::EventMuteFilter info {};
+    info.eventId = 11111;
+    SecurityGuard::SecurityEventFilter filter(info);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(
+        [] (const std::string &groupName, EventGroupCfg &config) {
+        config.eventList.insert(11111);
+        config.permissionList.insert("testPermission");
+        return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+        Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    EXPECT_EQ(service.RemoveFilter(info, "test_no_client"), BAD_PARAM);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, NewSubscribe001, TestSize.Level0)
+{
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(
+        [] (const std::string &groupName, EventGroupCfg &config) {
+        config.eventList.insert(11111);
+        config.permissionList.insert("testPermission");
+        return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+        Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    EXPECT_EQ(service.Subscribe(11111, "test_no_client"), BAD_PARAM);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, NewSubscribe002, TestSize.Level0)
+{
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(
+        [] (const std::string &groupName, EventGroupCfg &config) {
+        config.eventList.insert(11111);
+        config.permissionList.insert("testPermission");
+        return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+        Return(AccessToken::PermissionState::PERMISSION_DENIED));
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    EXPECT_EQ(service.Subscribe(11111, "test_no_client"), NO_PERMISSION);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, NewUnsubscribe001, TestSize.Level0)
+{
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(
+        [] (const std::string &groupName, EventGroupCfg &config) {
+        config.eventList.insert(11111);
+        config.permissionList.insert("testPermission");
+        return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+        Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    EXPECT_EQ(service.Unsubscribe(11111, "test_no_client"), BAD_PARAM);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, NewUnsubscribe002, TestSize.Level0)
+{
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(
+        [] (const std::string &groupName, EventGroupCfg &config) {
+        config.eventList.insert(11111);
+        config.permissionList.insert("testPermission");
+        return true;
+    });
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
+        Return(AccessToken::PermissionState::PERMISSION_DENIED));
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    EXPECT_EQ(service.Unsubscribe(11111, "test_no_client"), NO_PERMISSION);
+}
 }

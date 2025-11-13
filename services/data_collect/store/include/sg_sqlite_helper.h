@@ -40,7 +40,6 @@ public:
         const QueryOptions &options = {});
     int Attach(const std::string &alias, const std::string &pathName,
         const std::vector<uint8_t> destEncryptKey);
-
     void OnCreate() override;
     void OnUpdate() override;
 

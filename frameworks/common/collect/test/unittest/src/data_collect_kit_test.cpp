@@ -254,6 +254,7 @@ HWTEST_F(DataCollectKitTest, Subscribe002, TestSize.Level1)
     auto sub = std::make_shared<MockSubscriberPtr>(g_event);
     ret = SecurityGuard::DataCollectManager::GetInstance().Subscribe(sub);
     EXPECT_EQ(ret, SecurityGuard::SUCCESS);
+    SecurityGuard::DataCollectManager::GetInstance().callback_->OnNotify({g_event});
     SecurityGuard::DataCollectManager::GetInstance().subscribers_.clear();
     ret = SecurityGuard::DataCollectManager::GetInstance().Subscribe(g_sub);
     EXPECT_EQ(ret, SecurityGuard::BAD_PARAM);
@@ -614,4 +615,11 @@ HWTEST_F(DataCollectKitTest, TestQueryProcInfo, TestSize.Level1)
         SecurityGuard::NULL_OBJECT);
 }
 
+HWTEST_F(DataCollectKitTest, TestQueryProcInfo01, TestSize.Level1)
+{
+    auto callback = std::make_shared<MockNapiSecurityEventQuerier>();
+    SecurityCollector::SecurityEventRuler rule(11111);
+    EXPECT_EQ(SecurityGuard::DataCollectManager::GetInstance().QuerySecurityEventById({rule}, callback, "auditGroup"),
+        SecurityGuard::BAD_PARAM);
+}
 }

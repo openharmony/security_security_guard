@@ -24,22 +24,6 @@
 #include "security_guard_define.h"
 #include "event_define.h"
 
-constexpr int CONDITIONS_MAX_LEN = 100;
-constexpr int VERSION_MAX_LEN = 50;
-constexpr int CONTENT_MAX_LEN = 10240;
-constexpr int EXTRA_MAX_LEN = 2000;
-constexpr int DEVICE_ID_MAX_LEN = 64;
-constexpr int FILE_NAME_MAX_LEN = 64;
-constexpr int MODEL_NAME_MAX_LEN = 64;
-constexpr int PARAM_MAX_LEN = 900;
-constexpr int ALL_PROPERTY_MAX_LEN = 2048;
-constexpr int NAPI_ON_RESULT_ARGS_CNT = 3;
-constexpr char NAPI_ON_RESULT_ATTR[] = "onResult";
-constexpr char NAPI_SECURITY_MODEL_RESULT_DEVICE_ID_ATTR[] = "deviceId";
-constexpr char NAPI_SECURITY_MODEL_RESULT_MODEL_ID_ATTR[] = "modelId";
-constexpr char NAPI_SECURITY_MODEL_RESULT_RESULT_ATTR[] = "result";
-constexpr int32_t TIMEOUT_REPLY = 15000;
-
 struct RequestSecurityEventInfoContext {
     napi_env env = nullptr;
     napi_ref ref = nullptr;

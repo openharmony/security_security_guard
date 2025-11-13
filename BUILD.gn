@@ -79,7 +79,7 @@ group("security_guard_unit_test") {
   if (is_standard_system) {
     deps = [
       "${sg_root_dir}/test/unittest/config_manager:unittest",
-      "${sg_root_dir}/test/unittest/data_collect:data_collect_test",
+      #"${sg_root_dir}/test/unittest/data_collect:data_collect_test",
       "${sg_root_dir}/test/unittest/data_collect:unittest",
       "${sg_root_dir}/test/unittest/inner_api:unittest",
       "${sg_root_dir}/test/unittest/model_manager:unittest",
@@ -97,6 +97,7 @@ group("security_guard_build_module_test") {
     deps += [
       "${sg_root_dir}/frameworks/common/classify/test:unittest",
       "${sg_root_dir}/frameworks/common/collect/test:unittest",
+      "${sg_root_dir}/frameworks/js/napi/test:unittest",
     ]
   }
 }

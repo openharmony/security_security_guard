@@ -34,7 +34,7 @@ public:
     static DetectPluginManager& getInstance();
     DetectPluginManager(const DetectPluginManager&) = delete;
     DetectPluginManager &operator=(const DetectPluginManager &) = delete;
-    void LoadAllPlugins();
+    void LoadAllPlugins(const std::string &fileName);
     void DispatchEvent(const SecurityCollector::Event &event);
 
 private:
