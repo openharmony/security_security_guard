@@ -112,7 +112,6 @@ private:
         std::unordered_set<uint32_t> callingUids_;
     private:
     };
-    std::shared_ptr<IDbListener> listener_{};
     std::shared_ptr<CollectorListener> collectorListener_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
     std::map<int64_t, std::shared_ptr<SecurityCollector::ICollectorFwk>> eventToListenner_;

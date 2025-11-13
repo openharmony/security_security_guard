@@ -39,11 +39,9 @@ DetectPluginManager& DetectPluginManager::getInstance()
     return instance;
 }
 
-// LCOV_EXCL_START
-void DetectPluginManager::LoadAllPlugins()
+void DetectPluginManager::LoadAllPlugins(const std::string &fileName)
 {
     SGLOGI("Start LoadAllPlugins.");
-    const std::string fileName = "/system/etc/detect_plugin.json";
     if (!ParsePluginConfig(fileName)) {
         return;
     }
@@ -102,7 +100,6 @@ void DetectPluginManager::LoadPlugin(const PluginCfg &pluginCfg)
     }
     SGLOGI("Load plugin success, pluginName: %{public}s", pluginCfg.pluginName.c_str());
 }
-// LCOV_EXCL_STOP
 
 void DetectPluginManager::SubscribeEvent(int64_t eventId)
 {
@@ -254,28 +251,25 @@ std::string DetectPluginManager::AssembleMetadata(const SecurityCollector::Event
         SGLOGE("cJSON_CreateObject nullptr");
         return metadata;
     }
-    if (!JsonUtil::AddString(jsonObj, "version", event.version)) {
-        SGLOGE("AddString version failed");
-        cJSON_Delete(jsonObj);
-        jsonObj = nullptr;
-        return metadata;
-    }
+    do {
+        if (!JsonUtil::AddString(jsonObj, "version", event.version)) {
+            SGLOGE("AddString version failed");
+            break;
+        }
         if (!JsonUtil::AddString(jsonObj, "timestamp", event.timestamp)) {
-        SGLOGE("AddString timestamp failed");
-        cJSON_Delete(jsonObj);
-        jsonObj = nullptr;
-        return metadata;
-    }
-    auto charPtr = cJSON_PrintUnformatted(jsonObj);
-    if (charPtr == nullptr) {
-        SGLOGE("cJSON_PrintUnformatted nullptr");
-        cJSON_Delete(jsonObj);
-        jsonObj = nullptr;
-        return metadata;
-    }
-    metadata = charPtr;
-    cJSON_free(charPtr);
-    charPtr= nullptr;
+            SGLOGE("AddString timestamp failed");
+            break;
+        }
+        auto charPtr = cJSON_PrintUnformatted(jsonObj);
+        if (charPtr == nullptr) {
+            SGLOGE("cJSON_PrintUnformatted nullptr");
+            break;
+        }
+        metadata = charPtr;
+        cJSON_free(charPtr);
+        charPtr= nullptr;
+    } while (0);
+
     cJSON_Delete(jsonObj);
     jsonObj = nullptr;
     return metadata;

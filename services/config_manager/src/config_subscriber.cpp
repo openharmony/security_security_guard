@@ -35,7 +35,6 @@
 #include "sg_collect_client.h"
 
 namespace OHOS::Security::SecurityGuard {
-// LCOV_EXCL_START
 void ConfigSubscriber::GetUpdateFileDstPath(const std::string &fileName, std::string &dstPath)
 {
     std::ios::pos_type maxSize = 1 * 1024 * 1024; // byte
@@ -69,7 +68,6 @@ void ConfigSubscriber::GetUpdateFileDstPath(const std::string &fileName, std::st
     cJSON_Delete(inJson);
     inJson = nullptr;
 }
-// LCOV_EXCL_STOP
 
 bool ConfigSubscriber::UpdateConfig(const std::string &file)
 {

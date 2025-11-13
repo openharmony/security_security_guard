@@ -150,6 +150,8 @@ HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInitModel001, TestSize.L
     std::unique_ptr<ModelAttrs> attr = std::make_unique<ModelAttrs>();
     attr->SetModelApi(model);
     ModelManager::GetInstance().modelIdApiMap_[8888] = std::move(attr);
+    ModelManager::GetInstance().modelIdApiMap_[9999] = nullptr;
+    ModelManager::GetInstance().Release(9999);
     EXPECT_TRUE(ModelManager::GetInstance().InitModel(8888) != SUCCESS);
 }
 
@@ -247,6 +249,28 @@ HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerGetResult003, TestSize.L
         return FAILED;
     });
     EXPECT_EQ(manager.GetResult(111, "test"), "unknown");
+}
+
+HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerGetResult004, TestSize.Level0)
+{
+    MockMyModelManager manager {};
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetModelConfig)
+    .WillOnce([](uint32_t modelId, ModelCfg &config) {
+        config.path = "/system/lib64/sg_test";
+        config.startMode = NOT_SUPPORT;
+        return true;
+    }).WillOnce([](uint32_t modelId, ModelCfg &config) {
+        config.path = "/system/lib64/sg_test";
+        config.startMode = NOT_SUPPORT;
+        return true;
+    });
+    MockModel *model = new MockModel();
+    EXPECT_CALL(*model, Release()).Times(1);
+    std::unique_ptr<ModelAttrs> attr = std::make_unique<ModelAttrs>();
+    attr->SetModelApi(model);
+    ModelManager::GetInstance().modelIdApiMap_[8888] = std::move(attr);
+    EXPECT_EQ(manager.GetResult(8888, "test"), "unknown");
+    EXPECT_TRUE(ModelManager::GetInstance().InitModel(8888) != SUCCESS);
 }
 
 HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerSubscribeResult002, TestSize.Level0)

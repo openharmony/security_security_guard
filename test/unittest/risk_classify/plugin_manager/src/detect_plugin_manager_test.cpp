@@ -48,14 +48,22 @@ public:
 };
 
 HWTEST_F(DetectPluginManagerTest, LoadPlugins001, TestSize.Level1) {
+    DetectPluginManager::getInstance().LoadAllPlugins("/data/test/unittest/resource/detect_plugin.json");
     std::unordered_set<int64_t> depEventIds;
     DetectPluginManager::PluginCfg pluginCfg = {
-        "test.z.so",
-        "/system/lib64/",
+        "libsg_collect_service_database.z.so",
+        "/system/lib64/libsg_collect_service_database.z.so",
+        depEventIds,
+        "6.0"
+    };
+    DetectPluginManager::PluginCfg pluginCfgOpen = {
+        "libsg_collect_service_database.z.so",
+        "/system/lib/libsg_collect_service_database.z.so",
         depEventIds,
         "6.0"
     };
     DetectPluginManager::getInstance().LoadPlugin(pluginCfg);
+    DetectPluginManager::getInstance().LoadPlugin(pluginCfgOpen);
     EXPECT_TRUE(DetectPluginManager::getInstance().eventIdMap_.count(-1) == 0);
 }
 
@@ -100,6 +108,11 @@ HWTEST_F(DetectPluginManagerTest, ParsePluginConfig001, TestSize.Level1) {
 
 HWTEST_F(DetectPluginManagerTest, ParsePluginConfig002, TestSize.Level1) {
     EXPECT_FALSE(DetectPluginManager::getInstance().ParsePluginConfig("test.json"));
+}
+
+HWTEST_F(DetectPluginManagerTest, ParsePluginConfig003, TestSize.Level1) {
+    EXPECT_TRUE(DetectPluginManager::getInstance().ParsePluginConfig(
+        "/data/test/unittest/resource/detect_plugin.json"));
 }
 
 HWTEST_F(DetectPluginManagerTest, ParsePluginDepEventIds001, TestSize.Level1) {

@@ -54,7 +54,6 @@ SecurityCollectorManagerService::SecurityCollectorManagerService(int32_t saId, b
     LOGW("%{public}s", __func__);
 }
 
-// LCOV_EXCL_START
 void SecurityCollectorManagerService::OnStart()
 {
     LOGI("%{public}s", __func__);
@@ -85,7 +84,6 @@ void SecurityCollectorManagerService::OnStart()
 
 void SecurityCollectorManagerService::OnStop()
 {}
-// LCOV_EXCL_STOP
 
 int SecurityCollectorManagerService::Dump(int fd, const std::vector<std::u16string>& args)
 {
@@ -262,7 +260,6 @@ void SecurityCollectorManagerService::CleanSubscriber(const sptr<IRemoteObject> 
     SecurityCollectorSubscriberManager::GetInstance().RemoveAllFilter();
 }
 
-// LCOV_EXCL_START
 bool SecurityCollectorManagerService::SetDeathRecipient(const sptr<IRemoteObject> &remote)
 {
     std::lock_guard<std::mutex> lock(deathRecipientMutex_);
@@ -306,7 +303,6 @@ void SecurityCollectorManagerService::SubscriberDeathRecipient::OnRemoteDied(con
     service->CleanSubscriber(object);
     LOGD("SecurityCollectorManagerService out");
 }
-// LCOV_EXCL_STOP
 
 void SecurityCollectorManagerService::ReportScSubscribeEvent(const ScSubscribeEvent &event)
 {

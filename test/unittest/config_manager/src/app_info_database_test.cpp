@@ -120,6 +120,7 @@ HWTEST_F(AppInfoDataBaseTest, DatabaseTest, TestSize.Level1)
     EXPECT_EQ(database.Count(int64, string, value), FAILED);
     EXPECT_EQ(database.BeginTransaction(), FAILED);
     EXPECT_EQ(database.RollBack(), FAILED);
+    database.Attach("test", "test", {1});
     EXPECT_EQ(database.Commit(), FAILED);
 }
 
@@ -262,7 +263,7 @@ HWTEST_F(SgSqliteHelperTest, ConditionDel, TestSize.Level1)
     cond.Put("event_LIKE", "%log%");
 
     int deleteCount = -1;
-
+    helper_->Open();
     EXPECT_EQ(helper_->Delete(deleteCount, "SecureLog", cond), SUCCESS);
 }
 
@@ -357,6 +358,22 @@ HWTEST_F(SgSqliteHelperTest, TestBuild, TestSize.Level1)
     options.orderBy = "Id DESC";
     options.limit = 2;
     EXPECT_FALSE(helper_->BuildSelectSql("SecureLog", val, options).empty());
+    helper_->Close();
+}
+
+HWTEST_F(SgSqliteHelperTest, TestBuildErr, TestSize.Level1)
+{
+    std::vector<std::string> sql{};
+    sql.emplace_back("test");
+    auto helper = std::make_shared<SgSqliteHelper>("test", "test", -1, sql);
+    EXPECT_EQ(helper->BeginTransaction(), -1);
+    EXPECT_EQ(helper->CommitTransaction(), -1);
+    EXPECT_EQ(helper->RollbackTransaction(), -1);
+    EXPECT_EQ(helper->ExecuteSql("test"), -1);
+    EXPECT_EQ(helper->SpitError(), "");
+    helper->SetVersion();
+    EXPECT_EQ(helper->GetVersion(), -1);
+    helper->Close();
 }
 
 HWTEST_F(SgSqliteHelperTest, TestStatement, TestSize.Level1)

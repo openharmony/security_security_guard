@@ -90,12 +90,6 @@ public:
     void UploadEventToStore(const SecurityCollector::Event &event);
     void UploadEventToSub(const SecurityCollector::Event &event);
     void ClearEventCache();
-    class DbListener : public IDbListener {
-    public:
-        DbListener() = default;
-        ~DbListener() override = default;
-        void OnChange(uint32_t optType, const SecEvent &events, const std::set<std::string> &eventSubscribes) override;
-    };
     class SecurityCollectorSubscriber : public SecurityCollector::ICollectorSubscriber {
     public:
         explicit SecurityCollectorSubscriber(
@@ -110,7 +104,6 @@ public:
         std::unordered_set<uint32_t> callingUids_;
     private:
     };
-    std::shared_ptr<IDbListener> listener_{};
     std::shared_ptr<CollectorListener> collectorListener_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
     std::map<int64_t, std::shared_ptr<SecurityCollector::ICollectorFwk>> eventToListenner_;

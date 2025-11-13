@@ -7,6 +7,16 @@
                 "0x003000000"
             ],
             "version": "6.0"
+        },
+        {
+            "pluginName": "libsg_detect_security_event_plugin.z.so",
+            "depEventIds":[
+                "0x022000000",
+                "0x027000001",
+                "0x027000002",
+                "0xAB7000004"
+            ],
+            "version": "6.0"
         }
     ]
 }

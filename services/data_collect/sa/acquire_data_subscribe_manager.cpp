@@ -65,8 +65,7 @@ AcquireDataSubscribeManager& AcquireDataSubscribeManager::GetInstance()
     return instance;
 }
 
-AcquireDataSubscribeManager::AcquireDataSubscribeManager() : listener_(std::make_shared<DbListener>()),
-    collectorListener_(std::make_shared<CollectorListener>())
+AcquireDataSubscribeManager::AcquireDataSubscribeManager() : collectorListener_(std::make_shared<CollectorListener>())
 {
     handle_ = dlopen(SECURITY_GUARD_EVENT_FILTER_PATH, RTLD_LAZY);
     if (handle_ != nullptr) {
@@ -189,7 +188,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sp
     }
     return SUCCESS;
 }
-// LCOV_EXCL_START
+
 int AcquireDataSubscribeManager::InsertMute(const EventMuteFilter &filter, const std::string &clientId)
 {
     SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter = ConvertFilter(filter, clientId);
@@ -307,7 +306,7 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
     SGLOGI("UnSubscribeSc scSubscribeMap_size  %{public}zu", scSubscribeMap_.size());
     return SUCCESS;
 }
-// LCOV_EXCL_STOP
+
 int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const std::string &clientId)
 {
     std::lock_guard<ffrt::mutex> lock(sessionMutex_);
@@ -337,7 +336,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const st
     }
     return SUCCESS;
 }
-// LCOV_EXCL_START
+
 void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback)
 {
     std::lock_guard<ffrt::mutex> lock(sessionMutex_);
@@ -634,10 +633,6 @@ bool AcquireDataSubscribeManager::PublishEventToSub(const SecurityCollector::Eve
     return true;
 }
 
-void AcquireDataSubscribeManager::DbListener::OnChange(uint32_t optType, const SecEvent &events,
-    const std::set<std::string> &eventSubscribes)
-{}
-
 void AcquireDataSubscribeManager::CollectorListener::OnNotify(const SecurityCollector::Event &event)
 {
     AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
@@ -680,7 +675,7 @@ int AcquireDataSubscribeManager::CheckInsertMute(const EventMuteFilter &filter, 
     }
     return SUCCESS;
 }
-// LCOV_EXCL_STOP
+
 int AcquireDataSubscribeManager::InsertSubscribeMute(const EventMuteFilter &filter, const std::string &clientId)
 {
     SGLOGI("in AcquireDataSubscribeManager InsertSubscribeMute, clientId %{public}s", clientId.c_str());
@@ -703,7 +698,7 @@ int AcquireDataSubscribeManager::InsertSubscribeMute(const EventMuteFilter &filt
     sessionsMap_.at(clientId)->eventFilters[filter.eventId].emplace_back(filter);
     return SUCCESS;
 }
-// LCOV_EXCL_START
+
 void AcquireDataSubscribeManager::SubscriberEventOnSgStart()
 {
     std::vector<int64_t> eventIds = ConfigDataManager::GetInstance().GetAllEventIds();
@@ -717,12 +712,9 @@ void AcquireDataSubscribeManager::SubscriberEventOnSgStart()
             onStartEventList.push_back(eventId);
         }
     }
-    if (listener_ == nullptr || collectorListener_ == nullptr) {
+    if (collectorListener_ == nullptr) {
         SGLOGI("listener or collectorListener is nullptr");
         return;
-    }
-    if (DatabaseManager::GetInstance().SubscribeDb(onStartEventList, listener_) != SUCCESS) {
-        SGLOGE("SubscribeDb error");
     }
     if (!SecurityCollector::DataCollection::GetInstance().SubscribeCollectors(onStartEventList, collectorListener_)) {
         SGLOGE("subscribe sg failed");
@@ -748,7 +740,7 @@ int AcquireDataSubscribeManager::RemoveMute(const EventMuteFilter &filter, const
     }
     return SUCCESS;
 }
-// LCOV_EXCL_STOP
+
 int AcquireDataSubscribeManager::RemoveSubscribeMute(const EventMuteFilter &filter, const std::string &clientId)
 {
     std::lock_guard<ffrt::mutex> lock(sessionMutex_);
@@ -790,7 +782,7 @@ int AcquireDataSubscribeManager::RemoveSubscribeMute(const EventMuteFilter &filt
     }
     return SUCCESS;
 }
-// LCOV_EXCL_START
+
 SecurityCollector::SecurityCollectorEventMuteFilter AcquireDataSubscribeManager::ConvertFilter(
     const SecurityGuard::EventMuteFilter &sgFilter, const std::string &clientId)
 {
@@ -803,7 +795,7 @@ SecurityCollector::SecurityCollectorEventMuteFilter AcquireDataSubscribeManager:
     collectorFilter.instanceFlag = clientId;
     return collectorFilter;
 }
-// LCOV_EXCL_STOP
+
 int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, const std::string &clientId,
     const sptr<IRemoteObject> &cb)
 {
@@ -852,7 +844,6 @@ int AcquireDataSubscribeManager::DestoryClient(const std::string &eventGroup, co
     return SUCCESS;
 }
 
-// LCOV_EXCL_START
 int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, AccessToken::AccessTokenID callerToken)
 {
     // old subscribe api no need to count
@@ -876,5 +867,4 @@ int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, Ac
     }
     return SUCCESS;
 }
-// LCOV_EXCL_STOP
 }
