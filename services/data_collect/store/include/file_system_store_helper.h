@@ -64,7 +64,6 @@ private:
     std::string GetLatestStoreFile();
     std::string GetBeginTimeFromFileName(const std::string& filename);
     std::string GetEndTimeFromFileName(const std::string& filename);
-    void WriteEventToGzFile(const std::string& filepath, const std::string& data);
     void RenameStoreFile(const std::string& oldFilepath, const std::string& startTime, const std::string& endTime);
     void DeleteOldestStoreFile();
     uint32_t ProcessStoreFile(const std::string& filepath, const QueryRange& range,

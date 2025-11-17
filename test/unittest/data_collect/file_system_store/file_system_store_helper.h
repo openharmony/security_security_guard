@@ -35,9 +35,9 @@ struct QueryRange {
 class FileSystemStoreHelper {
 public:
     static FileSystemStoreHelper &GetInstance();
-    int32_t InsertEvent(const SecEvent& event);
-    int32_t InsertEvents(const std::vector<SecEvent>& events);
-    int32_t QuerySecurityEvent(const SecurityCollector::SecurityEventRuler& ruler,
+    virtual int32_t InsertEvent(const SecEvent& event);
+    virtual int32_t InsertEvents(const std::vector<SecEvent>& events);
+    virtual int32_t QuerySecurityEvent(const SecurityCollector::SecurityEventRuler& ruler,
         sptr<ISecurityEventQueryCallback> proxy);
 
 private:
@@ -52,27 +52,27 @@ private:
     std::string currentEventFile_;    // 当前事件文件名
     std::string eventStartTime_;      // 事件开始时间
     
-    bool IsGzFile(const std::string& filename);
-    size_t GetFileSize(const std::string& filepath);
-    int32_t GetStoreFileList(std::vector<std::string>& storeFiles);
-    int32_t GetQueryStoreFileList(std::vector<std::string>& storeFiles,
+    virtual bool IsGzFile(const std::string& filename);
+    virtual size_t GetFileSize(const std::string& filepath);
+    virtual int32_t GetStoreFileList(std::vector<std::string>& storeFiles);
+    virtual int32_t GetQueryStoreFileList(std::vector<std::string>& storeFiles,
         const std::string& startTime, const std::string& endTime);
-    SecurityCollector::SecurityEvent IsWantDate(const std::string& filename, const QueryRange& range);
-    std::string GetTimestampFromFileName(const std::string& filename);
-    std::string GetShortFileName(const std::string& filename);
-    std::string CreateNewStoreFile(const std::string& startTime);
-    std::string GetLatestStoreFile();
-    std::string GetBeginTimeFromFileName(const std::string& filename);
-    std::string GetEndTimeFromFileName(const std::string& filename);
-    void WriteEventToGzFile(const std::string& filepath, const std::string& data);
-    void RenameStoreFile(const std::string& oldFilepath, const std::string& startTime, const std::string& endTime);
-    void DeleteOldestStoreFile();
-    uint32_t ProcessStoreFile(const std::string& filepath, const QueryRange& range,
+    virtual SecurityCollector::SecurityEvent IsWantDate(const std::string& filename, const QueryRange& range);
+    virtual std::string GetTimestampFromFileName(const std::string& filename);
+    virtual std::string GetShortFileName(const std::string& filename);
+    virtual std::string CreateNewStoreFile(const std::string& startTime);
+    virtual std::string GetLatestStoreFile();
+    virtual std::string GetBeginTimeFromFileName(const std::string& filename);
+    virtual std::string GetEndTimeFromFileName(const std::string& filename);
+    virtual void RenameStoreFile(const std::string& oldFilepath, const std::string& startTime,
+        const std::string& endTime);
+    virtual void DeleteOldestStoreFile();
+    virtual uint32_t ProcessStoreFile(const std::string& filepath, const QueryRange& range,
         sptr<ISecurityEventQueryCallback> proxy, std::vector<SecurityCollector::SecurityEvent>& events);
 
-    bool OpenGzFile(const std::string& filepath);
-    void CloseGzFile();
-    void EnsureGzFileOpen(const std::string& filepath);
+    virtual bool OpenGzFile(const std::string& filepath);
+    virtual void CloseGzFile();
+    virtual void EnsureGzFileOpen(const std::string& filepath);
 };
 } // namespace OHOS::Security::SecurityGuard
 #endif // SECURITY_GUARD_FILE_SYSTEM_STORE_HELPER_H

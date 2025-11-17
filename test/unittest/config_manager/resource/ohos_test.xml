@@ -32,6 +32,7 @@
     <target name="SecurityGuardRiskAnalysisTest">
         <preparer>
             <option name="push" value="detect_plugin.json -> /data/test/unittest/resource/" src="res"/>
+            <option name="push" value="detect_plugin_err.json -> /data/test/unittest/resource/" src="res"/>
         </preparer>
     </target>
 </configuration>

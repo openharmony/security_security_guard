@@ -41,7 +41,6 @@ int Database::Insert(int64_t &outRowId, const std::string &table, const GenericV
     return ret;
 }
 
-// LCOV_EXCL_START
 int Database::BatchInsert(int64_t &outInsertNum, const std::string &table,
     const std::vector<GenericValues> &initialBatchValues)
 {
@@ -60,7 +59,6 @@ int Database::Update(int &changedRows, const std::string &table, const GenericVa
     }
     return ret;
 }
-// LCOV_EXCL_STOP
 
 int Database::Delete(int &deletedRows, const std::string &table, const GenericValues &conditions)
 {
@@ -81,7 +79,6 @@ int Database::Query(const std::string &table, const GenericValues &conditions,
     return ret;
 }
 
-// LCOV_EXCL_START
 int Database::ExecuteSql(const std::string &sql)
 {
     int ret = IsExistStore();
@@ -99,7 +96,6 @@ int Database::ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const
     }
     return ret;
 }
-// LCOV_EXCL_STOP
 
 int Database::Count(int64_t &outValue, const std::string &table, const GenericValues &conditions,
     const QueryOptions &options)
@@ -111,7 +107,6 @@ int Database::Count(int64_t &outValue, const std::string &table, const GenericVa
     return ret;
 }
 
-// LCOV_EXCL_START
 int Database::BeginTransaction()
 {
     int ret = IsExistStore();
@@ -148,7 +143,6 @@ int Database::Attach(const std::string &alias, const std::string &pathName,
     }
     return ret;
 }
-// LCOV_EXCL_STOP
 
 int Database::IsExistStore()
 {

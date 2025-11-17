@@ -20,7 +20,6 @@
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
-// LCOV_EXCL_START
 int32_t SecurityGuardSdkAdaptor::RequestSecurityEventInfo(std::string &devId, std::string &eventList,
     RequestRiskDataCallback callback)
 {
@@ -78,5 +77,4 @@ int32_t SecurityGuardSdkAdaptor::ConfigUpdate(const SecurityGuard::SecurityConfi
     SGLOGI("enter SecurityGuardSdkAdaptor ConfigUpdate");
     return DataCollectManager::GetInstance().SecurityGuardConfigUpdate(updateInfo.GetFd(), updateInfo.GetFileName());
 }
-// LCOV_EXCL_STOP
 } // OHOS::Security::SecurityGuard

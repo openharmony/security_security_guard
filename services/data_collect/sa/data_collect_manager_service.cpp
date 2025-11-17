@@ -100,7 +100,7 @@ DataCollectManagerService::DataCollectManagerService(int32_t saId, bool runOnCre
 
 typedef void (*InitAllConfigFunc)();
 typedef bool (*UpdateConfigFunc)(const std::string &);
-// LCOV_EXCL_START
+
 void DataCollectManagerService::OnStart()
 {
     SGLOGI("%{public}s", __func__);
@@ -186,7 +186,6 @@ void DataCollectManagerService::DumpEventInfo(int fd, int64_t eventId)
     dprintf(fd, "report time : %s\n", secEvent.date.c_str());
     dprintf(fd, "report version : %s\n", secEvent.version.c_str());
 }
-// LCOV_EXCL_STOP
 
 ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std::string &version,
     const std::string &time, const std::string &content)
@@ -201,14 +200,12 @@ ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std:
     if (ret != SUCCESS) {
         return ret;
     }
-    // LCOV_EXCL_START
     SecurityCollector::Event event {};
     event.eventId = eventId;
     event.version = version;
     event.timestamp = time;
     event.content = content;
     return AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
-    // LCOV_EXCL_STOP
 }
 
 ErrCode DataCollectManagerService::RequestDataSubmitAsync(int64_t eventId, const std::string &version,
@@ -218,7 +215,6 @@ ErrCode DataCollectManagerService::RequestDataSubmitAsync(int64_t eventId, const
     return RequestDataSubmit(eventId, version, time, content);
 }
 
-// LCOV_EXCL_START
 ErrCode DataCollectManagerService::RequestRiskData(const std::string &devId, const std::string &eventList,
     const sptr<IRemoteObject> &cb)
 {
@@ -1084,5 +1080,4 @@ ErrCode DataCollectManagerService::CreatClient(const std::string &eventGroup, co
     }
     return SUCCESS;
 }
-// LCOV_EXCL_STOP
 }
