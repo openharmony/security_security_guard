@@ -47,19 +47,19 @@ constexpr char NAPI_EVENT_CONTENT_ATTR[] = "content";
 constexpr int VERSION_MAX_LEN = 50;
 constexpr int EXTRA_MAX_LEN = 2000;
 constexpr int FILE_NAME_MAX_LEN = 64;
-constexpr int MODEL_NAME_MAX_LEN = 64;
-constexpr int PARAM_MAX_LEN = 900;
 constexpr int ALL_PROPERTY_MAX_LEN = 2048;
-constexpr char NAPI_SECURITY_MODEL_RESULT_DEVICE_ID_ATTR[] = "deviceId";
-constexpr char NAPI_SECURITY_MODEL_RESULT_MODEL_ID_ATTR[] = "modelId";
-constexpr char NAPI_SECURITY_MODEL_RESULT_RESULT_ATTR[] = "result";
-constexpr int32_t TIMEOUT_REPLY = 15000;
 
 constexpr int NAPI_START_COLLECTOR_ARGS_CNT = 2;
 constexpr int NAPI_STOP_COLLECTOR_ARGS_CNT = 1;
 constexpr int NAPI_REPORT_EVENT_INFO_ARGS_CNT = 1;
 constexpr int NAPI_UPDATE_POLICY_FILE_ARGS_CNT = 1;
 #ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
+constexpr int MODEL_NAME_MAX_LEN = 64;
+constexpr int PARAM_MAX_LEN = 900;
+constexpr int32_t TIMEOUT_REPLY = 15000;
+constexpr char NAPI_SECURITY_MODEL_RESULT_DEVICE_ID_ATTR[] = "deviceId";
+constexpr char NAPI_SECURITY_MODEL_RESULT_MODEL_ID_ATTR[] = "modelId";
+constexpr char NAPI_SECURITY_MODEL_RESULT_RESULT_ATTR[] = "result";
 constexpr int NAPI_GET_MODEL_RESULT_ARGS_CNT = 1;
 #endif
 constexpr int NAPI_QUERY_SECURITY_EVENT_ARGS_CNT = 2;
