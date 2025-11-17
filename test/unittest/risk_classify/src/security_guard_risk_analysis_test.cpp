@@ -121,11 +121,23 @@ HWTEST_F(SecurityGuardRiskAnalysisTest, RequestSecurityModelResult01, TestSize.L
     ASSERT_EQ(result, NULL_OBJECT);
 }
 
+HWTEST_F(SecurityGuardRiskAnalysisTest, RequestSecurityModelResult02, TestSize.Level1) {
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+        .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_NATIVE));
+    sptr<IRemoteObject> obj(new(std::nothrow) MockRemoteObject());
+    int32_t result = riskAnalysisManagerService.RequestSecurityModelResult("111", 3001000000, "test", obj);
+    ASSERT_EQ(result, SUCCESS);
+}
+
 HWTEST_F(SecurityGuardRiskAnalysisTest, StartSecurityModel, TestSize.Level1) {
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_NATIVE));
+    riskAnalysisManagerService.OnAddSystemAbility(11, "test");
+    riskAnalysisManagerService.OnRemoveSystemAbility(11, "test");
     int32_t result = riskAnalysisManagerService.StartSecurityModel(222, "test");
     ASSERT_EQ(result, NOT_FOUND);
 }

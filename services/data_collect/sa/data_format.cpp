@@ -43,7 +43,6 @@ bool DataFormat::CheckRiskContent(std::string content)
     return true;
 }
 
-// LCOV_EXCL_START
 void DataFormat::ParseConditions(std::string conditions, RequestCondition &reqCondition)
 {
     nlohmann::json jsonObj = nlohmann::json::parse(conditions, nullptr, false);
@@ -82,5 +81,4 @@ void DataFormat::ParseConditions(std::string conditions, RequestCondition &reqCo
         reqCondition.endTime = *iter;
     }
 }
-// LCOV_EXCL_STOP
 }

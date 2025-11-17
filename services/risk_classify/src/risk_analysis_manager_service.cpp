@@ -64,7 +64,6 @@ RiskAnalysisManagerService::RiskAnalysisManagerService(int32_t saId, bool runOnC
     SGLOGW("%{public}s", __func__);
 }
 
-// LCOV_EXCL_START
 void RiskAnalysisManagerService::OnStart()
 {
     SGLOGI("RiskAnalysisManagerService %{public}s", __func__);
@@ -87,14 +86,14 @@ void RiskAnalysisManagerService::OnStart()
     }
     ffrt::submit([this] {
         ffrt::this_task::sleep_for(std::chrono::milliseconds(DELAY_TIME));
-        DetectPluginManager::getInstance().LoadAllPlugins();
+        const std::string fileName = "/system/etc/detect_plugin.json";
+        DetectPluginManager::getInstance().LoadAllPlugins(fileName);
     });
 }
 
 void RiskAnalysisManagerService::OnStop()
 {
 }
-// LCOV_EXCL_STOP
 
 int32_t RiskAnalysisManagerService::IsApiHasPermission(const std::string &api)
 {
@@ -189,7 +188,6 @@ ErrCode RiskAnalysisManagerService::StartSecurityModel(uint32_t modelId, const s
     return ModelManager::GetInstance().StartSecurityModel(modelId, param);
 }
 
-// LCOV_EXCL_START
 void RiskAnalysisManagerService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     SGLOGI("OnAddSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
@@ -199,5 +197,4 @@ void RiskAnalysisManagerService::OnRemoveSystemAbility(int32_t systemAbilityId, 
 {
     SGLOGW("OnRemoveSystemAbility, systemAbilityId=%{public}d", systemAbilityId);
 }
-// LCOV_EXCL_STOP
 }
