@@ -23,6 +23,7 @@ public:
     virtual int32_t RemoveSdkAllEventFilter(const std::string &clientId) = 0;
     virtual void RemoveAllEventFilter() = 0;
     virtual int32_t GetFlagsEventNeedToUpload(Event &event) = 0;
+    virtual bool SetSubscriberUids(const std::string &subscriberUids) = 0;
 };
 }
 #endif

@@ -35,6 +35,7 @@
 #include "security_event_filter.h"
 #include "security_event_info.h"
 #include "data_format.h"
+#include "data_statistics.h"
 
 namespace OHOS::Security::SecurityGuard {
 namespace {
@@ -49,6 +50,10 @@ namespace {
     constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 10 * 4096;
     constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 16;
     std::atomic<uint32_t> g_taskCount = 0;
+    constexpr int32_t TOKEN_BUCKET_MAX_SIZE = 120000;
+    constexpr int32_t TOKEN_BUCKET_STEP_SIZE = 200;
+    constexpr int32_t TOKEN_BUCKET_INTERVAL_TIME = 1000;
+    constexpr int64_t FILE_EVENT_ID = 0x01C000007;
 }
 
 #ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
@@ -489,6 +494,24 @@ void AcquireDataSubscribeManager::InitEventQueue()
     SGLOGI("InitEventQueue successed");
 }
 
+void AcquireDataSubscribeManager::StartTokenBucketTask()
+{
+    auto task = [this]() {
+        while (!isStopTokenBucketTask_) {
+            if (tokenBucket_.load() < TOKEN_BUCKET_MAX_SIZE) {
+                tokenBucket_.fetch_add(TOKEN_BUCKET_STEP_SIZE);
+            }
+            ffrt::this_task::sleep_for(std::chrono::milliseconds(TOKEN_BUCKET_INTERVAL_TIME));
+        }
+    };
+    ffrt::submit(task);
+}
+
+void AcquireDataSubscribeManager::StopTokenBucketTask()
+{
+    isStopTokenBucketTask_ = true;
+}
+
 void AcquireDataSubscribeManager::NotifySub(sptr<IRemoteObject> obj, const SecurityCollector::Event &events)
 {
     auto proxy = iface_cast<IAcquireDataCallback>(obj);
@@ -618,6 +641,16 @@ bool AcquireDataSubscribeManager::PublishEventToSub(const SecurityCollector::Eve
         SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
         return false;
     }
+
+    bool setCallingUidsSuccess = false;
+    if (eventFilter_ != nullptr) {
+        setCallingUidsSuccess = eventFilter_()->SetSubscriberUids(collectorListener_->GetExtraInfo());
+    }
+    if (setCallingUidsSuccess && tokenBucket_.load() <= 0 && event.eventId == FILE_EVENT_ID) {
+        DataStatistics::GetInstance().IncrementPublishEvents();
+        return false;
+    }
+    bool flag = false;
     std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     for (auto &it : sessionsMap_) {
         if (it.second->subEvents.find(event.eventId) == it.second->subEvents.end()) {
@@ -625,7 +658,11 @@ bool AcquireDataSubscribeManager::PublishEventToSub(const SecurityCollector::Eve
         }
         if (IsFindFlag(event.eventSubscribes, event.eventId, it.second->clientId)) {
             NotifySub(it.second->callback, event);
+            flag = true;
         }
+    }
+    if (flag && setCallingUidsSuccess && event.eventId == FILE_EVENT_ID) {
+        tokenBucket_.fetch_sub(1);
     }
     SGLOGD("publish eventid=%{public}" PRId64, event.eventId);
     for (auto iter : event.eventSubscribes) {
