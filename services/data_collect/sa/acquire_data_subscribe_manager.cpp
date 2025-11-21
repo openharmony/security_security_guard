@@ -41,7 +41,7 @@ namespace {
     constexpr size_t MAX_CACHE_EVENT_SIZE = 64;
     constexpr int64_t MAX_DURATION_TEN_SECOND = 10 * 1000;
     constexpr size_t MAX_SESSION_SIZE = 16;
-    constexpr size_t MAX_SESSION_SIZE_ONE_PROCESS = 2;
+    constexpr size_t MAX_SESSION_SIZE_ONE_PROCESS = 4;
 #ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
     constexpr const char *PKG_NAME = "ohos.security.securityguard";
 #endif
