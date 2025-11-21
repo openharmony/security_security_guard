@@ -280,7 +280,7 @@ void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &o
     std::string conditions, std::string devId, std::shared_ptr<std::promise<int32_t>> promise)
 {
     auto task = [object, conditions, devId, promise] () mutable {
-        auto proxy = iface_cast<DataCollectManagerCallbackProxy>(object);
+        auto proxy = iface_cast<IDataCollectManagerCallback>(object);
         if (proxy == nullptr) {
             promise->set_value(0);
             return;
