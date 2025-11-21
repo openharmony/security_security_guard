@@ -147,7 +147,7 @@ ErrCode RiskAnalysisManagerService::RequestSecurityModelResult(const std::string
     SGLOGI("ReportClassifyEvent");
     event.status = result;
     BigData::ReportClassifyEvent(event);
-    auto proxy = iface_cast<RiskAnalysisManagerCallbackProxy>(cb);
+    auto proxy = iface_cast<IRiskAnalysisManagerCallback>(cb);
     if (proxy == nullptr) {
         return NULL_OBJECT;
     }
