@@ -133,7 +133,7 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
     const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &callback,
     const std::string &clientId)
 {
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    pid_t callerPid = IPCSkeleton::GetCallingPid();
     int64_t eventId = subscribeInfo.GetEvent().eventId;
     AcquireDataSubscribeManager::GetInstance().InitUserId();
     AcquireDataSubscribeManager::GetInstance().InitDeviceId();
@@ -152,7 +152,7 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
         auto session = std::make_shared<ClientSession>();
         session->clientId = clientId;
         session->callback = callback;
-        session->tokenId = callerToken;
+        session->pid = callerPid;
         session->eventGroup = subscribeInfo.GetEventGroup();
         sessionsMap_[clientId] = session;
     }
@@ -836,8 +836,8 @@ SecurityCollector::SecurityCollectorEventMuteFilter AcquireDataSubscribeManager:
 int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, const std::string &clientId,
     const sptr<IRemoteObject> &cb)
 {
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int ret = IsExceedLimited(clientId, callerToken);
+    pid_t callerPid = IPCSkeleton::GetCallingPid();
+    int ret = IsExceedLimited(clientId, callerPid);
     if (ret != SUCCESS) {
         SGLOGE("IsExceedLimited error");
         return ret;
@@ -852,7 +852,7 @@ int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, cons
     auto session = std::make_shared<ClientSession>();
     session->clientId = clientId;
     session->callback = cb;
-    session->tokenId = callerToken;
+    session->pid = callerPid;
     session->eventGroup = eventGroup;
     {
         std::lock_guard<ffrt::mutex> lock(sessionMutex_);
@@ -881,7 +881,7 @@ int AcquireDataSubscribeManager::DestoryClient(const std::string &eventGroup, co
     return SUCCESS;
 }
 
-int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, AccessToken::AccessTokenID callerToken)
+int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, pid_t callerPid)
 {
     // old subscribe api no need to count
     if (clientId.find("sdk") != std::string::npos) {
@@ -894,7 +894,7 @@ int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, Ac
     }
     std::set<std::string> clients {};
     for (auto iter : sessionsMap_) {
-        if (iter.second != nullptr && iter.second->tokenId == callerToken) {
+        if (iter.second != nullptr && iter.second->pid == callerPid) {
             clients.insert(iter.first);
         }
     }
