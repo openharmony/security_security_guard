@@ -64,7 +64,7 @@ bool AcquireDataSubscribeManagerFuzzTest(const uint8_t* data, size_t size)
     Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
     AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj,
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId,
+    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj,
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(fdp.ConsumeIntegral<int64_t>(),
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
@@ -88,6 +88,13 @@ bool AcquireDataSubscribeManagerFuzzTest(const uint8_t* data, size_t size)
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), obj);
     AcquireDataSubscribeManager::GetInstance().DestoryClient(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    AcquireDataSubscribeManager::GetInstance().InsertMute(subscribeMute.GetMuteFilter(),
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    AcquireDataSubscribeManager::GetInstance().RemoveMute(subscribeMute.GetMuteFilter(),
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    AcquireDataSubscribeManager::GetInstance().StartClearEventCache();
+    AcquireDataSubscribeManager::GetInstance().StopClearEventCache();
+    AcquireDataSubscribeManager::GetInstance().GetCurrentClientGroup(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     return true;
 }
 }  // namespace OHOS

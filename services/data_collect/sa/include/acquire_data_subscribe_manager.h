@@ -55,7 +55,6 @@ public:
     void SubscriberEventOnSgStart();
     void StartClearEventCache();
     void StopClearEventCache();
-    sptr<IRemoteObject> GetCurrentClientCallback(const std::string &clientId);
     std::string GetCurrentClientGroup(const std::string &clientId);
     class ClientSession {
     public:

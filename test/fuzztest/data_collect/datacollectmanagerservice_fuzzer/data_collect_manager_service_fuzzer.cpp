@@ -58,12 +58,18 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
     int64_t eventId = fdp.ConsumeIntegral<int64_t>();
+    int64_t type = fdp.ConsumeIntegral<int64_t>();
     std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     int fd = fdp.ConsumeIntegral<int32_t>();
     std::vector<std::u16string> args{Str8ToStr16(string)};
     Security::SecurityCollector::SecurityEventRuler ruler{eventId};
     Security::SecurityCollector::Event event{eventId, string, string, string};
     Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
+    Security::SecurityGuard::EventMuteFilter info {};
+    info.eventId = eventId;
+    info.type = type;
+    info.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    Security::SecurityGuard::SecurityEventFilter filter(info);
     RequestCondition condition;
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     auto proxy = iface_cast<ISecurityEventQueryCallback>(obj);
@@ -76,10 +82,31 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
     service.OnAddSystemAbility(fd, string);
     service.OnRemoveSystemAbility(fd, string);
     service.QueryEventByRuler(proxy, ruler);
+    std::vector<Security::SecurityCollector::SecurityEventRuler> rulers;
+    rulers.emplace_back(ruler);
+    service.QuerySecurityEventById(rulers, callback, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    service.QuerySecurityEvent(rulers, callback, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     service.CollectorStart(subscribeInfo, callback);
     service.CollectorStop(subscribeInfo, callback);
-    service.ConfigUpdate(fd, string);
-    service.WriteRemoteFileToLocal(fd, string);
+    service.Subscribe(subscribeInfo, callback, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    service.Unsubscribe(subscribeInfo, callback, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    service.Subscribe(eventId, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    service.Unsubscribe(eventId, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    service.CreatClient(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), 
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), callback);
+    service.DestoryClient(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    service.AddFilter(filter, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    service.RemoveFilter(filter, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    service.ConfigUpdate(fd, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    service.WriteRemoteFileToLocal(fd, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    std::string result = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    service.QueryEventConfig(result);
+    service.QuerySecurityEventConfig(result);
+    service.ParseTrustListFile(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    std::vector<int64_t> eventIds {};
+    eventIds.emplace_back(fdp.ConsumeIntegral<int64_t>());
+    service.IsEventGroupHasPermission(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), eventIds);
     DataCollectManagerService::GetSecEventsFromConditions(condition);
     service.QuerySecurityEventById({ruler}, callback, "auditGroup");
     return true;
