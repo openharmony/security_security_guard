@@ -90,9 +90,7 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
     service.CollectorStop(subscribeInfo, callback);
     service.Subscribe(subscribeInfo, callback, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     service.Unsubscribe(subscribeInfo, callback, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    service.Subscribe(eventId, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    service.Unsubscribe(eventId, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    service.CreatClient(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), 
+    service.CreatClient(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), callback);
     service.DestoryClient(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
@@ -100,18 +98,27 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
     service.RemoveFilter(filter, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     service.ConfigUpdate(fd, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     service.WriteRemoteFileToLocal(fd, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    std::string result = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    service.QueryEventConfig(result);
-    service.QuerySecurityEventConfig(result);
-    service.ParseTrustListFile(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    std::vector<int64_t> eventIds {};
-    eventIds.emplace_back(fdp.ConsumeIntegral<int64_t>());
-    service.IsEventGroupHasPermission(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), eventIds);
     DataCollectManagerService::GetSecEventsFromConditions(condition);
     service.QuerySecurityEventById({ruler}, callback, "auditGroup");
     return true;
 }
 
+bool DataCollectManagerServiceFuzzTest1(const uint8_t* data, size_t size)
+{
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, false);
+    FuzzedDataProvider fdp(data, size);
+    service.ParseTrustListFile(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    std::string result = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    service.QueryEventConfig(result);
+    service.QuerySecurityEventConfig(result);
+    std::vector<int64_t> eventIds {};
+    eventIds.emplace_back(fdp.ConsumeIntegral<int64_t>());
+    service.IsEventGroupHasPermission(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), eventIds);
+    int64_t eventId = fdp.ConsumeIntegral<int64_t>();
+    service.Subscribe(eventId, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    service.Unsubscribe(eventId, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    return true;
+}
 }  // namespace OHOS
 
 /* Fuzzer entry point */
@@ -119,5 +126,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on date */
     OHOS::DataCollectManagerServiceFuzzTest(data, size);
+    OHOS::DataCollectManagerServiceFuzzTest1(data, size);
     return 0;
 }
