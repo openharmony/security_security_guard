@@ -409,19 +409,6 @@ void AcquireDataSubscribeManager::ClearEventCache()
     }
 }
 
-sptr<IRemoteObject> AcquireDataSubscribeManager::GetCurrentClientCallback(const std::string &clientId)
-{
-    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
-    if (sessionsMap_.find(clientId) == sessionsMap_.end()) {
-        return nullptr;
-    }
-    auto session = sessionsMap_.at(clientId);
-    if (session == nullptr) {
-        return nullptr;
-    }
-    return sessionsMap_.at(clientId)->callback;
-}
-
 std::string AcquireDataSubscribeManager::GetCurrentClientGroup(const std::string &clientId)
 {
     std::lock_guard<ffrt::mutex> lock(sessionMutex_);
