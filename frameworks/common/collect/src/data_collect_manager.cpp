@@ -407,7 +407,7 @@ int32_t DataCollectManager::StartCollector(const SecurityCollector::Event &event
     }
 
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerIdlProxy>(object);
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
@@ -436,7 +436,7 @@ int32_t DataCollectManager::StopCollector(const SecurityCollector::Event &event)
     }
 
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerIdlProxy>(object);
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;
@@ -465,7 +465,7 @@ int32_t DataCollectManager::RequestSecurityEventInfo(std::string &devId, std::st
     }
 
     auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerIdlProxy>(object);
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
     if (proxy == nullptr) {
         SGLOGE("proxy is null");
         return NULL_OBJECT;

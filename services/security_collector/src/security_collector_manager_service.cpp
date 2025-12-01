@@ -319,7 +319,7 @@ void SecurityCollectorManagerService::ReportScUnsubscribeEvent(const ScUnsubscri
 
 void SecurityCollectorManagerService::ExecuteOnNotifyByTask(const sptr<IRemoteObject> &remote, const Event &event)
 {
-    auto proxy = iface_cast<SecurityCollectorManagerCallbackProxy>(remote);
+    auto proxy = iface_cast<ISecurityCollectorManagerCallback>(remote);
     if (proxy != nullptr) {
         LOGD("report to proxy");
         auto task = [proxy, event] () {

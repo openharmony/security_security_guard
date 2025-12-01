@@ -68,7 +68,9 @@ public:
     int UploadEvent(const SecurityCollector::Event &event);
     void DeInitDeviceId();
     void InitEventQueue();
-    private:
+    void StartTokenBucketTask();
+    void StopTokenBucketTask();
+private:
     AcquireDataSubscribeManager();
     ~AcquireDataSubscribeManager();
     void InitUserId();
@@ -124,6 +126,8 @@ public:
     std::shared_ptr<ffrt::queue> dbQueue_{};
     std::vector<SecEvent> events_ {};
     size_t eventsBuffSize_ {};
+    std::atomic<int32_t> tokenBucket_{};
+    bool isStopTokenBucketTask_ = false;
 };
 } // namespace OHOS::Security::SecurityGuard
 
