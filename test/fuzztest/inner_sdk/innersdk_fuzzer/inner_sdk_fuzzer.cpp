@@ -48,6 +48,7 @@ using namespace OHOS::Security::SecurityGuard;
 using namespace OHOS::Security::SecurityCollector;
 namespace {
     constexpr int MAX_STRING_SIZE = 1024;
+    OHOS::sptr<OHOS::IPCObjectProxy::DeathRecipient> ret {};
 }
 namespace OHOS {
 class MockCollectorSubscriber : public ICollectorSubscriber {
@@ -63,7 +64,11 @@ public:
     }
     int32_t GetObjectRefCount() { return 0; };
     int SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) { return 0; };
-    bool AddDeathRecipient(const sptr<DeathRecipient> &recipient) { return true; };
+    bool AddDeathRecipient(const sptr<DeathRecipient> &recipient)
+    {
+        ret = recipient;
+        return true;
+    };
     bool RemoveDeathRecipient(const sptr<DeathRecipient> &recipient) { return true; };
     int Dump(int fd, const std::vector<std::u16string> &args) { return 0; };
 };
@@ -103,6 +108,15 @@ public:
         const std::string& errMsg = "") override { return 0; };
 };
 
+class MockSecurityEventQueryCallback : public SecurityEventQueryCallback {
+public:
+    MockSecurityEventQueryCallback() = default;
+    ~MockSecurityEventQueryCallback() override = default;
+    void OnQuery(const std::vector<SecurityEvent> &events) override {};
+    void OnComplete() override {};
+    void OnError(const std::string &message) override {};
+};
+
 int32_t TestRequestRiskDataCallback(std::string &, std::string &, uint32_t, const std::string &)
 {
     return 0;
@@ -125,6 +139,7 @@ void AcquireDataManagerFuzzTest(const uint8_t* data, size_t size)
     std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     Security::SecurityCollector::Event event{eventId, string, string, string};
     auto subscriber = std::make_shared<MockCollectorSubscriber>(event);
+    auto callback = std::make_shared<MockSecurityEventQueryCallback>();
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     DataCollectManager::GetInstance().Subscribe(subscriber);
     DataCollectManager::GetInstance().Unsubscribe(subscriber);
@@ -132,9 +147,9 @@ void AcquireDataManagerFuzzTest(const uint8_t* data, size_t size)
     DataCollectManager::GetInstance().StopCollector(event);
     DataCollectManager::GetInstance().QuerySecurityEventConfig(string);
     std::vector<SecurityEventRuler> rulers{};
-    DataCollectManager::GetInstance().QuerySecurityEvent(rulers, nullptr);
+    DataCollectManager::GetInstance().QuerySecurityEvent(rulers, callback);
     DataCollectManager::GetInstance().SecurityGuardConfigUpdate(fd, string);
-    DataCollectManager::GetInstance().QuerySecurityEventById(rulers, nullptr, "auditGroup");
+    DataCollectManager::GetInstance().QuerySecurityEventById(rulers, callback, "auditGroup");
 }
 
 void DataCollectManagerFuzzTest(const uint8_t* data, size_t size)

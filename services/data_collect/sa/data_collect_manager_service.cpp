@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <cinttypes>
+#include <fstream>
 #include <unistd.h>
 #include <unordered_set>
 #include "accesstoken_kit.h"
@@ -43,10 +44,8 @@
 #include "security_guard_utils.h"
 #include "system_ability_definition.h"
 #include "ffrt.h"
-#include "config_manager.h"
 #include "risk_event_rdb_helper.h"
 #include "file_system_store_helper.h"
-#include "config_subscriber.h"
 #include "model_manager.h"
 #include "config_define.h"
 #include "data_statistics.h"
