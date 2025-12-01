@@ -40,6 +40,11 @@ void DataStatistics::IncrementInsertEvents(uint64_t count)
     insertEventsCounters_.fetch_add(count);
 }
 
+void DataStatistics::IncrementPublishEvents(uint64_t count)
+{
+    publishEventsDropCounters_.fetch_add(count);
+}
+
 DataStatistics::DataStatistics()
 {
     running_ = true;
@@ -60,7 +65,9 @@ void DataStatistics::RunLoop()
         ss << "DataStatistics requestDataSubmitDropCounters = "
            << requestDataSubmitDropCounters_.load()
            << ", insertEventsCounters = "
-           << insertEventsCounters_.load();
+           << insertEventsCounters_.load()
+           << ", publishEventsDropCounters = "
+           << publishEventsDropCounters_.load();
         SGLOGI("%{public}s", ss.str().c_str());
     }
 }

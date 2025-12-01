@@ -28,6 +28,7 @@ public:
     static DataStatistics &GetInstance();
     void IncrementRequestDataSubmit(uint64_t count = 1);
     void IncrementInsertEvents(uint64_t count = 1);
+    void IncrementPublishEvents(uint64_t count = 1);
 
 private:
     DataStatistics();
@@ -39,6 +40,7 @@ private:
 
     std::atomic<uint64_t> requestDataSubmitDropCounters_;
     std::atomic<uint64_t> insertEventsCounters_;
+    std::atomic<uint64_t> publishEventsDropCounters_;
     bool running_ { false };
 };
 } // namespace OHOS::Security::SecurityGuard

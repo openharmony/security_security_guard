@@ -120,6 +120,7 @@ void DataCollectManagerService::OnStart()
     }
     AcquireDataSubscribeManager::GetInstance().InitEventQueue();
     AcquireDataSubscribeManager::GetInstance().SubscriberEventOnSgStart();
+    AcquireDataSubscribeManager::GetInstance().StartTokenBucketTask();
     if (!Publish(this)) {
         SGLOGE("Publish error");
         return;
@@ -141,6 +142,7 @@ void DataCollectManagerService::OnStop()
     SecurityCollector::DataCollection::GetInstance().CloseLib();
     AcquireDataSubscribeManager::GetInstance().StopClearEventCache();
     AcquireDataSubscribeManager::GetInstance().DeInitDeviceId();
+    AcquireDataSubscribeManager::GetInstance().StopTokenBucketTask();
 }
 
 int DataCollectManagerService::Dump(int fd, const std::vector<std::u16string>& args)
@@ -277,7 +279,7 @@ void DataCollectManagerService::PushDataCollectTask(const sptr<IRemoteObject> &o
     std::string conditions, std::string devId, std::shared_ptr<std::promise<int32_t>> promise)
 {
     auto task = [object, conditions, devId, promise] () mutable {
-        auto proxy = iface_cast<DataCollectManagerCallbackProxy>(object);
+        auto proxy = iface_cast<IDataCollectManagerCallback>(object);
         if (proxy == nullptr) {
             promise->set_value(0);
             return;
