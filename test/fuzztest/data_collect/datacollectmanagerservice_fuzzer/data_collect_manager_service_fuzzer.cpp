@@ -40,6 +40,7 @@
 using namespace OHOS::Security::SecurityGuard;
 namespace {
     constexpr int MAX_STRING_SIZE = 1024;
+    OHOS::sptr<OHOS::IPCObjectProxy::DeathRecipient> ret {};
 }
 namespace OHOS {
 class MockRemoteObject final : public IRemoteObject {
@@ -49,14 +50,17 @@ public:
     }
     int32_t GetObjectRefCount() { return 0; };
     int SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) { return 0; };
-    bool AddDeathRecipient(const sptr<DeathRecipient> &recipient) { return true; };
+    bool AddDeathRecipient(const sptr<DeathRecipient> &recipient)
+    {
+        ret = recipient;
+        return true;
+    };
     bool RemoveDeathRecipient(const sptr<DeathRecipient> &recipient) { return true; };
     int Dump(int fd, const std::vector<std::u16string> &args) { return 0; };
 };
 
-bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
+bool DataCollectManagerServiceFuzzTest(FuzzedDataProvider &fdp)
 {
-    FuzzedDataProvider fdp(data, size);
     int64_t eventId = fdp.ConsumeIntegral<int64_t>();
     int64_t type = fdp.ConsumeIntegral<int64_t>();
     std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
@@ -103,10 +107,10 @@ bool DataCollectManagerServiceFuzzTest(const uint8_t* data, size_t size)
     return true;
 }
 
-bool DataCollectManagerServiceFuzzTest1(const uint8_t* data, size_t size)
+bool DataCollectManagerServiceFuzzTest1(FuzzedDataProvider &fdp)
 {
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, false);
-    FuzzedDataProvider fdp(data, size);
+    sptr<IRemoteObject> callback(new (std::nothrow) MockRemoteObject());
     service.ParseTrustListFile(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     std::string result = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     service.QueryEventConfig(result);
@@ -117,6 +121,8 @@ bool DataCollectManagerServiceFuzzTest1(const uint8_t* data, size_t size)
     int64_t eventId = fdp.ConsumeIntegral<int64_t>();
     service.Subscribe(eventId, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     service.Unsubscribe(eventId, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    service.RequestRiskData(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), callback);
     return true;
 }
 }  // namespace OHOS
@@ -125,7 +131,8 @@ bool DataCollectManagerServiceFuzzTest1(const uint8_t* data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on date */
-    OHOS::DataCollectManagerServiceFuzzTest(data, size);
-    OHOS::DataCollectManagerServiceFuzzTest1(data, size);
+    FuzzedDataProvider fdp(data, size);
+    OHOS::DataCollectManagerServiceFuzzTest(fdp);
+    OHOS::DataCollectManagerServiceFuzzTest1(fdp);
     return 0;
 }
