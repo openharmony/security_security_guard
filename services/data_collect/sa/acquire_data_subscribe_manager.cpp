@@ -46,14 +46,15 @@ namespace {
 #ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
     constexpr const char *PKG_NAME = "ohos.security.securityguard";
 #endif
-    constexpr int UPLOAD_EVENT_THREAD_MAX_CONCURRENCY = 8;
-    constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 10 * 4096;
+    constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 60000;
     constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 16;
     std::atomic<uint32_t> g_taskCount = 0;
-    constexpr int32_t TOKEN_BUCKET_MAX_SIZE = 120000;
-    constexpr int32_t TOKEN_BUCKET_STEP_SIZE = 200;
+    constexpr int32_t TOKEN_BUCKET_STEP_SIZE = 500;
+    constexpr int32_t TOKEN_BUCKET_MAX_SIZE = TOKEN_BUCKET_STEP_SIZE * 10 * 60;
     constexpr int32_t TOKEN_BUCKET_INTERVAL_TIME = 1000;
     constexpr int64_t FILE_EVENT_ID = 0x01C000007;
+    constexpr uint32_t PUBLISH_EVENT_TO_SUB_STEP_COUNT = 100;
+    constexpr int64_t PUBLISH_EVENT_TO_SUB_STEP_TIME = 100;
 }
 
 #ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
@@ -474,8 +475,7 @@ void AcquireDataSubscribeManager::InitEventQueue()
         SGLOGI("InitEventQueue dbQueue already init");
         return;
     }
-    queue_ = std::make_shared<ffrt::queue>(ffrt::queue_concurrent, "UploadEvent",
-        ffrt::queue_attr().max_concurrency(UPLOAD_EVENT_THREAD_MAX_CONCURRENCY));
+    queue_ = std::make_shared<ffrt::queue>(ffrt::queue_serial, "UploadEvent");
     dbQueue_ = std::make_shared<ffrt::queue>(ffrt::queue_serial, "UploadDbEvent");
     SGLOGI("InitEventQueue successed");
 }
@@ -622,6 +622,12 @@ bool AcquireDataSubscribeManager::IsFindFlag(const std::set<std::string> &eventS
 
 bool AcquireDataSubscribeManager::PublishEventToSub(const SecurityCollector::Event &event)
 {
+    static uint32_t eventCount = 0;
+    ++eventCount;
+    if (eventCount >= PUBLISH_EVENT_TO_SUB_STEP_COUNT) {
+        ffrt::this_task::sleep_for(std::chrono::milliseconds(PUBLISH_EVENT_TO_SUB_STEP_TIME));
+        eventCount = 0;
+    }
     EventCfg config {};
     if (!ConfigDataManager::GetInstance().GetEventConfig(event.eventId, config)) {
         SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
