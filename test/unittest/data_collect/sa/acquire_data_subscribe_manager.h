@@ -58,7 +58,7 @@ public:
     std::string GetCurrentClientGroup(const std::string &clientId);
     class ClientSession {
     public:
-        AccessToken::AccessTokenID tokenId {};
+        pid_t pid {};
         sptr<IRemoteObject> callback {};
         std::string clientId {};
         std::map<int64_t, std::vector<EventMuteFilter>> eventFilters {};
@@ -83,7 +83,7 @@ public:
     int InsertMute(const EventMuteFilter &filter, const std::string &clientId);
     int CheckInsertMute(const EventMuteFilter &filter, const std::string &clientId);
     size_t GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event);
-    int IsExceedLimited(const std::string &clientId, AccessToken::AccessTokenID callerToken);
+    int IsExceedLimited(const std::string &clientId, pid_t callerPid);
     bool IsFindFlag(const std::set<std::string> &eventSubscribes, int64_t eventId, const std::string &clientId);
     void NotifySub(sptr<IRemoteObject> obj, const SecurityCollector::Event &events);
     void UploadEventToStore(const SecurityCollector::Event &event);
