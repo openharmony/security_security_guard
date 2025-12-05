@@ -26,6 +26,10 @@ SgSqliteHelper::SgSqliteHelper(const std::string &dbName, const std::string &dbP
     Open();
 }
 
+SgSqliteHelper::~SgSqliteHelper()
+{
+    Close();
+}
 void SgSqliteHelper::OnCreate()
 {
     SGLOGI("db create");
