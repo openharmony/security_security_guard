@@ -27,6 +27,7 @@ class SgSqliteHelper : public SqliteHelper {
 public:
     explicit SgSqliteHelper(const std::string &dbName, const std::string &dbPath, int version,
                         const std::vector<std::string> &createSqls);
+    ~SgSqliteHelper();
     int Insert(int64_t &outRowId, const std::string &table, const GenericValues &values);
     int BatchInsert(int64_t &outInsertNum, const std::string &table,
         const std::vector<GenericValues> &initialBatchValues);
