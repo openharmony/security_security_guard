@@ -512,22 +512,7 @@ void AcquireDataSubscribeManager::NotifySub(sptr<IRemoteObject> obj, const Secur
 void AcquireDataSubscribeManager::UploadEventToSub(const SecurityCollector::Event &event)
 {
     // upload to subscriber
-    auto task = [event]() {
-        AcquireDataSubscribeManager::GetInstance().PublishEventToSub(event);
-        g_taskCount.fetch_sub(1);
-    };
-    if (g_taskCount.load() > UPLOAD_EVENT_TASK_MAX_COUNT) {
-        SGLOGI("subed event be discarded id is %{public}" PRId64, event.eventId);
-        return;
-    }
-    {
-        std::lock_guard<ffrt::mutex> lock(queueMutex_);
-        if (queue_ == nullptr) {
-            return;
-        }
-        queue_->submit(task);
-    }
-    g_taskCount.fetch_add(1);
+    PublishEventToSub(event);
 }
 
 void AcquireDataSubscribeManager::UploadEventToStore(const SecurityCollector::Event &event)
@@ -578,6 +563,28 @@ int AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &eve
         SGLOGE("CheckRiskContent error");
         return BAD_PARAM;
     }
+
+    auto task = [event]() {
+        AcquireDataSubscribeManager::GetInstance().UploadEventTask(event);
+        g_taskCount.fetch_sub(1);
+    };
+    if (g_taskCount.load() > UPLOAD_EVENT_TASK_MAX_COUNT) {
+        SGLOGI("subed event be discarded id is %{public}" PRId64, event.eventId);
+        return SUCCESS;
+    }
+    {
+        std::lock_guard<ffrt::mutex> lock(queueMutex_);
+        if (queue_ == nullptr) {
+            return SUCCESS;
+        }
+        queue_->submit(task);
+    }
+    g_taskCount.fetch_add(1);
+    return SUCCESS;
+}
+
+void AcquireDataSubscribeManager::UploadEventTask(const SecurityCollector::Event &event)
+{
     SecurityCollector::Event retEvent  = event;
     EventCfg config {};
     {
@@ -589,7 +596,7 @@ int AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &eve
     }
     if (!ConfigDataManager::GetInstance().GetEventConfig(retEvent.eventId, config)) {
         SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
-        return SUCCESS;
+        return;
     }
     // change old event id to new eventid
     retEvent.eventId = config.eventId;
@@ -599,9 +606,8 @@ int AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &eve
     if (eventFilter_ != nullptr) {
         eventFilter_()->GetFlagsEventNeedToUpload(retEvent);
     }
-    UploadEventToSub(retEvent);
     UploadEventToStore(retEvent);
-    return SUCCESS;
+    UploadEventToSub(retEvent);
 }
 
 bool AcquireDataSubscribeManager::IsFindFlag(const std::set<std::string> &eventSubscribes, int64_t eventId,
