@@ -93,8 +93,8 @@ bool AcquireDataSubscribeManagerFuzzTest(FuzzedDataProvider &fdp)
     AcquireDataSubscribeManager::GetInstance().StartClearEventCache();
     AcquireDataSubscribeManager::GetInstance().StopClearEventCache();
     AcquireDataSubscribeManager::GetInstance().GetCurrentClientGroup(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    AcquireDataSubscribeManager::GetInstance().InitEventQueue();
     AcquireDataSubscribeManager::GetInstance().DeInitDeviceId();
+    AcquireDataSubscribeManager::GetInstance().UploadEventToSub(event);
     AcquireDataSubscribeManager::GetInstance().UploadEventToStore(event);
     AcquireDataSubscribeManager::GetInstance().SubscriberEventOnSgStart();
     return true;
