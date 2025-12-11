@@ -92,6 +92,7 @@ private:
     void ClearEventCache();
     void UploadEventToStore(const SecurityCollector::Event &event);
     void UploadEventToSub(const SecurityCollector::Event &event);
+    void UploadEventTask(const SecurityCollector::Event &event);
     class DbListener : public IDbListener {
     public:
         DbListener() = default;
