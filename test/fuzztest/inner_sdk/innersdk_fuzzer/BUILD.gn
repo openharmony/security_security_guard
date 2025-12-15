@@ -78,6 +78,7 @@ ohos_fuzztest("InnerSdkFuzzTest") {
   deps = [
     "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_proxy",
     "${sg_root_dir}/services/risk_classify/idl:risk_analysis_manager_idl_sa_proxy",
+    "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
   ]
 
   external_deps = [
@@ -85,6 +86,5 @@ ohos_fuzztest("InnerSdkFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
-    "security_guard:libsg_collector_sdk",
   ]
 }
