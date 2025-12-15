@@ -35,13 +35,15 @@ ohos_fuzztest("RequestSecurityModelResultAsyncFuzzTest") {
 
   sources = [ "request_security_model_result_async_fuzzer.cpp" ]
 
-  deps = [ "${sg_root_dir}/services/risk_classify:sg_classify_service" ]
+  deps = [ 
+    "${sg_root_dir}/services/risk_classify:sg_classify_service",
+    "${sg_root_dir}/frameworks/common/classify:libsg_classify_sdk",
+  ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
-    "security_guard:libsg_classify_sdk",
   ]
 }
