@@ -35,13 +35,15 @@ ohos_fuzztest("ReportSecurityInfoFuzzTest") {
 
   sources = [ "report_security_info_fuzzer.cpp" ]
 
-  deps = [ "${sg_root_dir}/services/data_collect:sg_collect_service" ]
+  deps = [
+    "${sg_root_dir}/services/data_collect:sg_collect_service",
+    "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
+  ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
-    "security_guard:libsg_collect_sdk",
   ]
 }
