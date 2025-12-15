@@ -192,7 +192,9 @@ ohos_unittest("DataCollectionTest") {
     "data_collection/src/data_collection_test.cpp",
   ]
 
-  deps = []
+  deps = [
+    "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
+  ]
 
   external_deps = [
     "c_utils:utils",
@@ -204,7 +206,6 @@ ohos_unittest("DataCollectionTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "security_guard:libsg_collector_sdk",
   ]
 }
 group("unittest") {
