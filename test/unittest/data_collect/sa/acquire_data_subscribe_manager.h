@@ -90,6 +90,7 @@ private:
     void NotifySub(sptr<IRemoteObject> obj, const SecurityCollector::Event &events);
     void UploadEventToStore(const SecurityCollector::Event &event);
     void UploadEventToSub(const SecurityCollector::Event &event);
+    void UploadEventTask(const SecurityCollector::Event &event);
     void ClearEventCache();
     class SecurityCollectorSubscriber : public SecurityCollector::ICollectorSubscriber {
     public:
