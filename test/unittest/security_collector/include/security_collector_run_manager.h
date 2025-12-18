@@ -33,6 +33,7 @@ public:
     virtual ~BaseSecurityCollectorRunManager() = default;
     virtual bool StartCollector(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber) = 0;
     virtual bool StopCollector(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber) = 0;
+    virtual void NotifySubscriber(const Event &event) = 0;
 };
 
 class SecurityCollectorRunManager : public BaseSecurityCollectorRunManager {
@@ -46,7 +47,7 @@ public:
     ~SecurityCollectorRunManager() override = default;
     MOCK_METHOD1(StartCollector, bool(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber));
     MOCK_METHOD1(StopCollector, bool (const std::shared_ptr<SecurityCollectorSubscriber> &subscriber));
-
+    MOCK_METHOD1(NotifySubscriber, void (const Event &event));
     class CollectorListenner : public ICollectorFwk {
     public:
         CollectorListenner(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber) : subscriber_(subscriber) {}
@@ -61,6 +62,9 @@ public:
     private:
         std::shared_ptr<SecurityCollectorSubscriber> subscriber_;
     };
+private:
+    std::mutex collectorRunMutex_{};
+    std::map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> collectorRunManager_{};
 };
 }
 #endif // SECURITY_GUARD_SECURITY_COLLECTOR_RUN_MANAGER_MOCK_H
