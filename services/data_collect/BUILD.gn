@@ -59,6 +59,7 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/frameworks/common/utils/include",
     "${sg_root_dir}/services/collector_manager/include",
     "${sg_root_dir}/services/risk_classify/model_manager/include",
+    "${sg_root_dir}/services/security_collector/include",
   ]
 
   sources = [
@@ -78,6 +79,7 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/data_statistics.cpp",
     "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
+    "${sg_root_dir}/services/security_collector/src/security_collector_run_manager.cpp",
   ]
 
   sanitize = {
@@ -98,6 +100,7 @@ ohos_shared_library("sg_collect_service") {
     "${sg_root_dir}/services/data_collect:sg_collect_service_database",
     "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_stub",
     "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
+    "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
   ]
 
   external_deps = [

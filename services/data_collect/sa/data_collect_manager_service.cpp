@@ -37,6 +37,9 @@
 #include "data_collect_manager_callback_proxy.h"
 #include "data_collect_manager.h"
 #include "data_format.h"
+#include "sg_collect_client.h"
+#include "security_collector_subscriber.h"
+#include "security_collector_run_manager.h"
 #include "database_manager.h"
 #include "data_collection.h"
 #include "security_guard_define.h"
@@ -579,10 +582,34 @@ ErrCode DataCollectManagerService::CollectorStart(
     if (code != SUCCESS) {
         return code;
     }
-    code = SecurityCollector::CollectorManager::GetInstance().CollectorStart(subscribeInfo);
-    if (code != SUCCESS) {
-        SGLOGI("CollectorStart failed, code=%{public}d", code);
-        return code;
+    EventCfg config;
+    if (!ConfigDataManager::GetInstance().GetEventConfig(subscribeInfo.GetEvent().eventId, config)) {
+        SGLOGE("GetEventConfig error, eventId is 0x%{public}" PRIx64, subscribeInfo.GetEvent().eventId);
+        return BAD_PARAM;
+    }
+    auto eventHandler = [this] (const std::string &appName, const sptr<IRemoteObject> &remote,
+        const SecurityCollector::Event &event) {
+        SGLOGD("eventid:%{public}" PRId64 " callback default", event.eventId);
+        auto reportEvent = [event] () {
+            auto info = std::make_shared<SecurityGuard::EventInfo>(event.eventId, event.version, event.content);
+            SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(info);
+        };
+        reportEvent();
+        return;
+    };
+    if (config.prog == "security_guard") {
+        auto subscriber = std::make_shared<SecurityCollector::SecurityCollectorSubscriber>("security_guard",
+            subscribeInfo, nullptr, eventHandler);
+        if (!SecurityCollector::SecurityCollectorRunManager::GetInstance().StartCollector(subscriber)) {
+            return BAD_PARAM;
+        }
+        return SUCCESS;
+    } else {
+        code = SecurityCollector::CollectorManager::GetInstance().CollectorStart(subscribeInfo);
+        if (code != SUCCESS) {
+            SGLOGI("CollectorStart failed, code=%{public}d", code);
+            return code;
+        }
     }
     return SUCCESS;
 }
@@ -595,10 +622,28 @@ ErrCode DataCollectManagerService::CollectorStop(const SecurityCollector::Securi
     if (code != SUCCESS) {
         return code;
     }
-    code = SecurityCollector::CollectorManager::GetInstance().CollectorStop(subscribeInfo);
-    if (code != SUCCESS) {
-        SGLOGI("CollectorStop failed, code=%{public}d", code);
-        return code;
+    EventCfg config;
+    if (!ConfigDataManager::GetInstance().GetEventConfig(subscribeInfo.GetEvent().eventId, config)) {
+        SGLOGE("GetEventConfig error, eventId is 0x%{public}" PRIx64, subscribeInfo.GetEvent().eventId);
+        return BAD_PARAM;
+    }
+    auto eventHandler = [this] (const std::string &appName, const sptr<IRemoteObject> &remote,
+        const SecurityCollector::Event &event) {
+        return;
+    };
+    if (config.prog == "security_guard") {
+        auto subscriber = std::make_shared<SecurityCollector::SecurityCollectorSubscriber>("security_guard",
+            subscribeInfo, nullptr, eventHandler);
+        if (!SecurityCollector::SecurityCollectorRunManager::GetInstance().StopCollector(subscriber)) {
+            return BAD_PARAM;
+        }
+        return SUCCESS;
+    } else {
+        code = SecurityCollector::CollectorManager::GetInstance().CollectorStop(subscribeInfo);
+        if (code != SUCCESS) {
+            SGLOGI("CollectorStop failed, code=%{public}d", code);
+            return code;
+        }
     }
     return SUCCESS;
 }

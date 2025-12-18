@@ -37,6 +37,7 @@ ohos_fuzztest("DataCollectManagerFuzzTest") {
     "${sg_root_dir}/services/collector_manager/include",
     "${sg_root_dir}/services/bigdata/include",
     "${sg_root_dir}/frameworks/common/utils/include",
+    "${sg_root_dir}/services/security_collector/include",
   ]
 
   defines = []
@@ -78,6 +79,7 @@ ohos_fuzztest("DataCollectManagerFuzzTest") {
 
     "${sg_root_dir}/frameworks/common/collect/src/data_collect_manager_callback_service.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/data_collect_manager_callback_stub.cpp",
+    "${sg_root_dir}/services/security_collector/src/security_collector_run_manager.cpp",
 
   ]
 
