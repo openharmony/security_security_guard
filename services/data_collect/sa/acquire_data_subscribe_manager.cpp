@@ -46,14 +46,15 @@ namespace {
 #ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
     constexpr const char *PKG_NAME = "ohos.security.securityguard";
 #endif
-    constexpr int UPLOAD_EVENT_THREAD_MAX_CONCURRENCY = 8;
-    constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 10 * 4096;
+    constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 60000;
     constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 16;
     std::atomic<uint32_t> g_taskCount = 0;
-    constexpr int32_t TOKEN_BUCKET_MAX_SIZE = 120000;
-    constexpr int32_t TOKEN_BUCKET_STEP_SIZE = 200;
+    constexpr int32_t TOKEN_BUCKET_STEP_SIZE = 500;
+    constexpr int32_t TOKEN_BUCKET_MAX_SIZE = TOKEN_BUCKET_STEP_SIZE * 10 * 60;
     constexpr int32_t TOKEN_BUCKET_INTERVAL_TIME = 1000;
     constexpr int64_t FILE_EVENT_ID = 0x01C000007;
+    constexpr uint32_t PUBLISH_EVENT_TO_SUB_STEP_COUNT = 100;
+    constexpr int64_t PUBLISH_EVENT_TO_SUB_STEP_TIME = 100;
 }
 
 #ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
@@ -474,8 +475,7 @@ void AcquireDataSubscribeManager::InitEventQueue()
         SGLOGI("InitEventQueue dbQueue already init");
         return;
     }
-    queue_ = std::make_shared<ffrt::queue>(ffrt::queue_concurrent, "UploadEvent",
-        ffrt::queue_attr().max_concurrency(UPLOAD_EVENT_THREAD_MAX_CONCURRENCY));
+    queue_ = std::make_shared<ffrt::queue>(ffrt::queue_serial, "UploadEvent");
     dbQueue_ = std::make_shared<ffrt::queue>(ffrt::queue_serial, "UploadDbEvent");
     SGLOGI("InitEventQueue successed");
 }
@@ -512,22 +512,7 @@ void AcquireDataSubscribeManager::NotifySub(sptr<IRemoteObject> obj, const Secur
 void AcquireDataSubscribeManager::UploadEventToSub(const SecurityCollector::Event &event)
 {
     // upload to subscriber
-    auto task = [event]() {
-        AcquireDataSubscribeManager::GetInstance().PublishEventToSub(event);
-        g_taskCount.fetch_sub(1);
-    };
-    if (g_taskCount.load() > UPLOAD_EVENT_TASK_MAX_COUNT) {
-        SGLOGI("subed event be discarded id is %{public}" PRId64, event.eventId);
-        return;
-    }
-    {
-        std::lock_guard<ffrt::mutex> lock(queueMutex_);
-        if (queue_ == nullptr) {
-            return;
-        }
-        queue_->submit(task);
-    }
-    g_taskCount.fetch_add(1);
+    PublishEventToSub(event);
 }
 
 void AcquireDataSubscribeManager::UploadEventToStore(const SecurityCollector::Event &event)
@@ -578,6 +563,28 @@ int AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &eve
         SGLOGE("CheckRiskContent error");
         return BAD_PARAM;
     }
+
+    auto task = [event]() {
+        AcquireDataSubscribeManager::GetInstance().UploadEventTask(event);
+        g_taskCount.fetch_sub(1);
+    };
+    if (g_taskCount.load() > UPLOAD_EVENT_TASK_MAX_COUNT) {
+        SGLOGI("subed event be discarded id is %{public}" PRId64, event.eventId);
+        return SUCCESS;
+    }
+    {
+        std::lock_guard<ffrt::mutex> lock(queueMutex_);
+        if (queue_ == nullptr) {
+            return SUCCESS;
+        }
+        queue_->submit(task);
+    }
+    g_taskCount.fetch_add(1);
+    return SUCCESS;
+}
+
+void AcquireDataSubscribeManager::UploadEventTask(const SecurityCollector::Event &event)
+{
     SecurityCollector::Event retEvent  = event;
     EventCfg config {};
     {
@@ -589,7 +596,7 @@ int AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &eve
     }
     if (!ConfigDataManager::GetInstance().GetEventConfig(retEvent.eventId, config)) {
         SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
-        return SUCCESS;
+        return;
     }
     // change old event id to new eventid
     retEvent.eventId = config.eventId;
@@ -599,9 +606,8 @@ int AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &eve
     if (eventFilter_ != nullptr) {
         eventFilter_()->GetFlagsEventNeedToUpload(retEvent);
     }
-    UploadEventToSub(retEvent);
     UploadEventToStore(retEvent);
-    return SUCCESS;
+    UploadEventToSub(retEvent);
 }
 
 bool AcquireDataSubscribeManager::IsFindFlag(const std::set<std::string> &eventSubscribes, int64_t eventId,
@@ -622,6 +628,12 @@ bool AcquireDataSubscribeManager::IsFindFlag(const std::set<std::string> &eventS
 
 bool AcquireDataSubscribeManager::PublishEventToSub(const SecurityCollector::Event &event)
 {
+    static uint32_t eventCount = 0;
+    ++eventCount;
+    if (eventCount >= PUBLISH_EVENT_TO_SUB_STEP_COUNT) {
+        ffrt::this_task::sleep_for(std::chrono::milliseconds(PUBLISH_EVENT_TO_SUB_STEP_TIME));
+        eventCount = 0;
+    }
     EventCfg config {};
     if (!ConfigDataManager::GetInstance().GetEventConfig(event.eventId, config)) {
         SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
