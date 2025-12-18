@@ -31,7 +31,7 @@ namespace OHOS::Security::SecurityCollector {
 
 class SecurityCollectorRunManager : public Singleton<SecurityCollectorRunManager> {
 public:
-    SecurityCollectorRunManager();
+    SecurityCollectorRunManager() = default;
     bool StartCollector(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber);
     bool StopCollector(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber);
     void NotifySubscriber(const Event &event);
@@ -39,7 +39,13 @@ private:
     class CollectorListenner : public ICollectorFwk {
     public:
         CollectorListenner(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber) : subscriber_(subscriber) {}
-        std::string GetExtraInfo() override;
+        std::string GetExtraInfo() override
+        {
+            if (subscriber_) {
+                return subscriber_->GetSecurityCollectorSubscribeInfo().GetEvent().extra;
+            }
+            return {};
+        }
         void OnNotify(const Event &event) override;
     private:
         std::shared_ptr<SecurityCollectorSubscriber> subscriber_;

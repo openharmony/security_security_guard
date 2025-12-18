@@ -36,6 +36,7 @@
 #define protected public
 #include "accesstoken_kit.h"
 #include "acquire_data_subscribe_manager.h"
+#include "security_collector_run_manager.h"
 #include "collector_manager.h"
 #include "config_data_manager.h"
 #include "data_collect_manager.h"
@@ -1025,6 +1026,12 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart03, TestSize.Level0)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
+        [] (int64_t eventId, EventCfg &config) {
+        config.dbTable = "risk_event";
+        config.eventType = 3;
+        return true;
+    });
     EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), CollectorStart(_)).WillOnce(Return(FAILED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.CollectorStart(subscribeInfo, obj);
@@ -1042,7 +1049,15 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart04, TestSize.Level0)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
-    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), CollectorStart(_)).WillOnce(Return(SUCCESS));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
+        [] (int64_t eventId, EventCfg &config) {
+        config.dbTable = "risk_event";
+        config.eventType = 3;
+        config.prog = "security_guard";
+        return true;
+    });
+    EXPECT_CALL(SecurityCollector::SecurityCollectorRunManager::GetInstance(),
+        StartCollector(_)).WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.CollectorStart(subscribeInfo, obj);
     EXPECT_EQ(result, SUCCESS);
@@ -1087,6 +1102,12 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop03, TestSize.Level0)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
+        [] (int64_t eventId, EventCfg &config) {
+        config.dbTable = "risk_event";
+        config.eventType = 3;
+        return true;
+    });
     EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), CollectorStop(_)).WillOnce(Return(FAILED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.CollectorStop(subscribeInfo, obj);
@@ -1104,7 +1125,15 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop04, TestSize.Level0)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true));
-    EXPECT_CALL(SecurityCollector::CollectorManager::GetInstance(), CollectorStop(_)).WillOnce(Return(SUCCESS));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(
+        [] (int64_t eventId, EventCfg &config) {
+        config.dbTable = "risk_event";
+        config.eventType = 3;
+        config.prog = "security_guard";
+        return true;
+    });
+    EXPECT_CALL(SecurityCollector::SecurityCollectorRunManager::GetInstance(),
+        StopCollector(_)).WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     int32_t result = service.CollectorStop(subscribeInfo, obj);
     EXPECT_EQ(result, SUCCESS);
