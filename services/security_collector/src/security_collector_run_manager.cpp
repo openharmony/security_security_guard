@@ -20,18 +20,6 @@
 #include "data_collection.h"
 
 namespace OHOS::Security::SecurityCollector {
-SecurityCollectorRunManager::SecurityCollectorRunManager()
-{
-}
-
-std::string SecurityCollectorRunManager::CollectorListenner::GetExtraInfo()
-{
-    if (subscriber_) {
-        return subscriber_->GetSecurityCollectorSubscribeInfo().GetEvent().extra;
-    }
-    return {};
-}
-
 void SecurityCollectorRunManager::NotifySubscriber(const Event &event)
 {
     LOGI("eventid:%{public}" PRId64 " report by collector, store to db", event.eventId);
