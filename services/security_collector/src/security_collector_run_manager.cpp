@@ -23,7 +23,7 @@ namespace OHOS::Security::SecurityCollector {
 void SecurityCollectorRunManager::NotifySubscriber(const Event &event)
 {
     LOGI("eventid:%{public}" PRId64 " report by collector, store to db", event.eventId);
-    std::lock_guard<std::mutex> lock(collectorRunMutex_);
+    std::lock_guard<ffrt::mutex> lock(collectorRunMutex_);
     const auto it = collectorRunManager_.find(event.eventId);
     if (it == collectorRunManager_.end()) {
         return;
@@ -35,12 +35,15 @@ void SecurityCollectorRunManager::NotifySubscriber(const Event &event)
 
 void SecurityCollectorRunManager::CollectorListenner::OnNotify(const Event &event)
 {
-    SecurityCollectorRunManager::GetInstance().NotifySubscriber(event);
+    auto task = [event] () {
+        SecurityCollectorRunManager::GetInstance().NotifySubscriber(event);
+    };
+    ffrt::submit(task);
 }
 
 bool SecurityCollectorRunManager::StartCollector(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber)
 {
-    std::lock_guard<std::mutex> lock(collectorRunMutex_);
+    std::lock_guard<ffrt::mutex> lock(collectorRunMutex_);
     if (subscriber == nullptr) {
         LOGE("subscriber is null");
         return false;
@@ -65,7 +68,7 @@ bool SecurityCollectorRunManager::StartCollector(const std::shared_ptr<SecurityC
 
 bool SecurityCollectorRunManager::StopCollector(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber)
 {
-    std::lock_guard<std::mutex> lock(collectorRunMutex_);
+    std::lock_guard<ffrt::mutex> lock(collectorRunMutex_);
     if (subscriber == nullptr) {
         LOGE("subscriber is null");
         return false;
