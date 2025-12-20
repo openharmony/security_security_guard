@@ -15,6 +15,7 @@
 
 #include "security_collector_subscriber_manager.h"
 #include <cinttypes>
+#include "ffrt.h"
 #include "security_collector_define.h"
 #include "security_collector_log.h"
 #include "data_collection.h"
@@ -72,12 +73,15 @@ int64_t SecurityCollectorSubscriberManager::CollectorListenner::GetEventId()
 
 void SecurityCollectorSubscriberManager::CollectorListenner::OnNotify(const Event &event)
 {
-    SecurityCollectorSubscriberManager::GetInstance().NotifySubscriber(event);
+    auto task = [event] () {
+        SecurityCollectorSubscriberManager::GetInstance().NotifySubscriber(event);
+    };
+    ffrt::submit(task);
 }
 
 void SecurityCollectorSubscriberManager::NotifySubscriber(const Event &event)
 {
-    std::lock_guard<std::mutex> lock(collectorMutex_);
+    std::lock_guard<ffrt::mutex> lock(collectorMutex_);
     LOGD("publish event: eventid:%{public}" PRId64 ", version:%{public}s, extra:%{public}s",
         event.eventId, event.version.c_str(), event.extra.c_str());
     for (auto iter : event.eventSubscribes) {
@@ -153,7 +157,7 @@ auto SecurityCollectorSubscriberManager::FindSecurityCollectorSubscribers(const 
 bool SecurityCollectorSubscriberManager::SubscribeCollector(
     const std::shared_ptr<SecurityCollectorSubscriber> &subscriber)
 {
-    std::lock_guard<std::mutex> lock(collectorMutex_);
+    std::lock_guard<ffrt::mutex> lock(collectorMutex_);
     if (subscriber == nullptr) {
         LOGE("subscriber is null");
         return false;
@@ -191,7 +195,7 @@ bool SecurityCollectorSubscriberManager::SubscribeCollector(
 
 bool SecurityCollectorSubscriberManager::UnsubscribeCollector(const sptr<IRemoteObject> &remote)
 {
-    std::lock_guard<std::mutex> lock(collectorMutex_);
+    std::lock_guard<ffrt::mutex> lock(collectorMutex_);
     std::set<int64_t> eventIds = FindEventIds(remote);
     for (int64_t eventId : eventIds) {
         LOGI("Remove collecctor, eventId:%{public}" PRId64, eventId);

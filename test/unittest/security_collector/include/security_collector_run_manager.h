@@ -22,7 +22,7 @@
 #include <memory>
 
 #include "gmock/gmock.h"
-
+#include "ffrt.h"
 #include "i_collector_fwk.h"
 #include "security_collector_subscriber.h"
 
@@ -63,7 +63,7 @@ public:
         std::shared_ptr<SecurityCollectorSubscriber> subscriber_;
     };
 private:
-    std::mutex collectorRunMutex_{};
+    ffrt::mutex collectorRunMutex_{};
     std::map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> collectorRunManager_{};
 };
 }

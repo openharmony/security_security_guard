@@ -21,7 +21,7 @@
 #include <mutex>
 #include <memory>
 #include "timer.h"
-
+#include "ffrt.h"
 #include "i_collector_fwk.h"
 #include "i_event_filter.h"
 #include "i_event_wrapper.h"
@@ -92,7 +92,7 @@ private:
     };
 
     UnsubscribeHandler unsubscribeHandler_{};
-    std::mutex collectorMutex_{};
+    ffrt::mutex collectorMutex_{};
     std::map<int64_t, std::set<std::shared_ptr<SecurityCollectorSubscriber>>> eventToSubscribers_{};
     std::map<sptr<IRemoteObject>, std::shared_ptr<CleanupTimer>> timers_{};
     std::map<int64_t, std::shared_ptr<ICollectorFwk>> eventToListenner_;
