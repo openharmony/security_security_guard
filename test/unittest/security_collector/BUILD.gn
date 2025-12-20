@@ -48,6 +48,7 @@ ohos_unittest("security_collector_test") {
 
   external_deps = [
     "c_utils:utils",
+    "ffrt:libffrt",
     "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
