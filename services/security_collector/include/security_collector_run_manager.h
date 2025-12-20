@@ -22,7 +22,7 @@
 #include <memory>
 #include "singleton.h"
 #include "timer.h"
-
+#include "ffrt.h"
 #include "i_collector_fwk.h"
 #include "security_collector_subscriber.h"
 
@@ -50,7 +50,7 @@ private:
     private:
         std::shared_ptr<SecurityCollectorSubscriber> subscriber_;
     };
-    std::mutex collectorRunMutex_{};
+    ffrt::mutex collectorRunMutex_{};
     std::map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> collectorRunManager_{};
 };
 }
