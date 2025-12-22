@@ -62,7 +62,6 @@ private:
                 instance_ = nullptr;
             }
             if (handle_ != nullptr) {
-                dlclose(handle_);
                 handle_ = nullptr;
             }
         };
