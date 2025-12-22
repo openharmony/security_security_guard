@@ -81,6 +81,7 @@ namespace {
         {"RemoveFilter", {QUERY_SECURITY_EVENT_PERMISSION}},
         {"QuerySecurityEventById", {QUERY_AUDIT_EVENT_PERMISSION}}
     };
+    std::mutex g_configCacheMutex;
     std::unordered_set<std::string> g_configCacheFilesSet;
     constexpr uint32_t FINISH = 0;
     constexpr uint32_t CONTINUE = 1;
@@ -818,12 +819,16 @@ ErrCode DataCollectManagerService::ConfigUpdate(int fd, const std::string& name)
     if (code != SUCCESS) {
         return code;
     }
-    if (!ParseTrustListFile(TRUST_LIST_FILE_PATH)) {
-        return BAD_PARAM;
+    {
+        std::lock_guard<std::mutex> lock(g_configCacheMutex);
+        if (!ParseTrustListFile(TRUST_LIST_FILE_PATH)) {
+            return BAD_PARAM;
+        }
+        if (g_configCacheFilesSet.empty() || !g_configCacheFilesSet.count(name)) {
+            return BAD_PARAM;
+        }
     }
-    if (g_configCacheFilesSet.empty() || !g_configCacheFilesSet.count(name)) {
-        return BAD_PARAM;
-    }
+    
     const std::string &realPath = CONFIG_ROOT_PATH + "tmp/" + name;
     SGLOGI("config file is %{public}s, fd is %{public}d", realPath.c_str(), fd);
     std::string tmpPath = realPath + ".t";
