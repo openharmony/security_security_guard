@@ -107,13 +107,13 @@ bool AcquireDataSubscribeManagerFuzzTest1(FuzzedDataProvider &fdp)
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE)};
     AcquireDataSubscribeManager::CollectorListener listener {};
     listener.GetExtraInfo();
+    listener.OnNotify(event);
     Security::SecurityCollector::Event eventTmp {};
     eventTmp.content = R"({"test":1})";
     AcquireDataSubscribeManager::GetInstance().UploadEvent(eventTmp);
     AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
     AcquireDataSubscribeManager::GetInstance().StartTokenBucketTask();
     AcquireDataSubscribeManager::GetInstance().StopTokenBucketTask();
-    listener.OnNotify(event);
     return true;
 }
 }  // namespace OHOS

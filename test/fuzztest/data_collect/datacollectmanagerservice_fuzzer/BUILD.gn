@@ -75,10 +75,10 @@ ohos_fuzztest("DataCollectManagerServiceFuzzTest") {
     "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
     "${sg_root_dir}/services/data_collect/store/src/file_system_store_helper.cpp",
-    "${sg_root_dir}/services/data_collect/store/src/data_statistics.cpp",
     "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_run_manager.cpp",
+    "${sg_root_dir}/test/fuzztest/mock/data_statistics/data_statistics.cpp",
     "data_collect_manager_service_fuzzer.cpp",
   ]
 
