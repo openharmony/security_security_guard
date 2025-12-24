@@ -203,7 +203,6 @@ void SecurityCollectorSubscriberManagerFuzzTest(const uint8_t* data, size_t size
     SecurityCollectorSubscriberManager::GetInstance().FindEventIds(obj);
     SecurityCollectorSubscriberManager::CollectorListenner listener{subscriber};
     listener.GetExtraInfo();
-    listener.OnNotify(event);
     SecurityCollectorSubscriberManager::GetInstance().GetAppSubscribeCount(string);
     SecurityCollectorSubscriberManager::GetInstance().GetAppSubscribeCount(string, eventId);
     SecurityCollectorSubscriberManager::GetInstance().NotifySubscriber(event);

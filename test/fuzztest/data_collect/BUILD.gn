@@ -20,6 +20,7 @@ group("fuzztest") {
     "databasemanager_fuzzer:DatabaseManagerFuzzTest" ,
     "datacollectmanagercallbackproxy_fuzzer:DataCollectManagerCallbackProxyFuzzTest" ,
     "datacollectmanagerservice_fuzzer:DataCollectManagerServiceFuzzTest" ,
-    "securityeventquerycallbackproxy_fuzzer:SecurityEventQueryCallbackProxyFuzzTest" 
+    "securityeventquerycallbackproxy_fuzzer:SecurityEventQueryCallbackProxyFuzzTest",
+    "datacollectmanagerserviceclib_fuzzer:DataCollectManagerServiceClibFuzzTest"
   ]
 }
