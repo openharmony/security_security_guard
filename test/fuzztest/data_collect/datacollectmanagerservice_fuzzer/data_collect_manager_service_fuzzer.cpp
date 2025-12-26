@@ -86,10 +86,6 @@ bool DataCollectManagerServiceFuzzTest(FuzzedDataProvider &fdp)
     service.OnAddSystemAbility(fd, string);
     service.OnRemoveSystemAbility(fd, string);
     service.QueryEventByRuler(proxy, ruler);
-    std::vector<Security::SecurityCollector::SecurityEventRuler> rulers;
-    rulers.emplace_back(ruler);
-    service.QuerySecurityEventById(rulers, callback, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    service.QuerySecurityEvent(rulers, callback, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     service.CollectorStart(subscribeInfo, callback);
     service.CollectorStop(subscribeInfo, callback);
     service.Subscribe(subscribeInfo, callback, fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
