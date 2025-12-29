@@ -480,6 +480,12 @@ void AcquireDataSubscribeManager::InitEventQueue()
     SGLOGI("InitEventQueue successed");
 }
 
+void AcquireDataSubscribeManager::DeInitEventQueue()
+{
+    std::lock_guard<ffrt::mutex> lock(queueMutex_);
+    queue_ = nullptr;
+    dbQueue_ = nullptr;
+}
 void AcquireDataSubscribeManager::StartTokenBucketTask()
 {
     auto task = [this]() {

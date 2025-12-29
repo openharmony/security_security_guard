@@ -30,6 +30,7 @@
 #include "security_collector_run_manager.h"
 #include "security_collector_manager_callback_proxy.h"
 #include "ffrt.h"
+#include "ffrt_inner.h"
 #include "event_define.h"
 #include "tokenid_kit.h"
 
@@ -44,6 +45,8 @@ namespace {
     constexpr const char* UNSUB_RET = "UNSUB_RET";
     constexpr const int SLEEP_INTERVAL = 5000;
     std::atomic<uint32_t> g_refCount = 0;
+    ffrt::thread g_mainThread {};
+    std::atomic<bool> g_flag = true;
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(SecurityCollectorManagerService, SECURITY_COLLECTOR_MANAGER_SA_ID, true);
@@ -60,7 +63,7 @@ void SecurityCollectorManagerService::OnStart()
     auto handler = [this] (const sptr<IRemoteObject> &remote) { CleanSubscriber(remote); };
     SecurityCollectorSubscriberManager::GetInstance().SetUnsubscribeHandler(handler);
     auto task = []() {
-        while (true) {
+        while (g_flag) {
             ffrt::this_task::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL));
             if (g_refCount.load() != 0) {
                 continue;
@@ -76,14 +79,17 @@ void SecurityCollectorManagerService::OnStart()
             break;
         }
     };
-    ffrt::submit(task);
+    g_mainThread = ffrt::thread(task);
     if (!Publish(this)) {
         LOGE("Publish error");
     }
 }
 
 void SecurityCollectorManagerService::OnStop()
-{}
+{
+    g_flag = false;
+    g_mainThread.join();
+}
 
 int SecurityCollectorManagerService::Dump(int fd, const std::vector<std::u16string>& args)
 {
