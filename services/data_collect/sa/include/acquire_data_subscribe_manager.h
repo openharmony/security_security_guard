@@ -69,6 +69,7 @@ public:
     int UploadEvent(const SecurityCollector::Event &event);
     void DeInitDeviceId();
     void InitEventQueue();
+    void DeInitEventQueue();
     void StartTokenBucketTask();
     void StopTokenBucketTask();
 private:
