@@ -145,6 +145,7 @@ void DataCollectManagerService::OnStop()
     SecurityCollector::DataCollection::GetInstance().CloseLib();
     AcquireDataSubscribeManager::GetInstance().StopClearEventCache();
     AcquireDataSubscribeManager::GetInstance().DeInitDeviceId();
+    AcquireDataSubscribeManager::GetInstance().DeInitEventQueue();
     AcquireDataSubscribeManager::GetInstance().StopTokenBucketTask();
 }
 
