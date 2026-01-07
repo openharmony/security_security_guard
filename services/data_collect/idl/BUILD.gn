@@ -54,6 +54,14 @@ ohos_source_set("data_collect_manager_idl_sa_stub") {
     debug = false
   }
   branch_protector_ret = "pac_ret"
+  cflags = [
+    "-D_FORITFY_SOURCE=2",
+    "-Os",
+  ]
+  cflags_cc = [
+    "-D_FORITFY_SOURCE=2",
+    "-Os",
+  ]
 
   subsystem_name = "security"
   part_name = "security_guard"
@@ -81,6 +89,14 @@ ohos_source_set("data_collect_manager_idl_sa_proxy") {
     debug = false
   }
   branch_protector_ret = "pac_ret"
+  cflags = [
+    "-D_FORITFY_SOURCE=2",
+    "-Os",
+  ]
+  cflags_cc = [
+    "-D_FORITFY_SOURCE=2",
+    "-Os",
+  ]
 
   subsystem_name = "security"
   part_name = "security_guard"
