@@ -69,6 +69,14 @@ ohos_shared_library("libsg_collector_sdk") {
     debug = false
   }
   branch_protector_ret = "pac_ret"
+  cflags = [
+    "-D_FORITFY_SOURCE=2",
+    "-Os",
+  ]
+  cflags_cc = [
+    "-D_FORITFY_SOURCE=2",
+    "-Os",
+  ]
 
   external_deps = [
     "c_utils:utils",

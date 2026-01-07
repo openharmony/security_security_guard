@@ -42,6 +42,14 @@ ohos_shared_library("sg_config_data_manager") {
     debug = false
   }
   branch_protector_ret = "pac_ret"
+  cflags = [
+    "-D_FORITFY_SOURCE=2",
+    "-Os",
+  ]
+  cflags_cc = [
+    "-D_FORITFY_SOURCE=2",
+    "-Os",
+  ]
 
   external_deps = [
     "hilog:libhilog",
@@ -103,6 +111,14 @@ ohos_shared_library("sg_config_manager") {
     debug = false
   }
   branch_protector_ret = "pac_ret"
+  cflags = [
+    "-D_FORITFY_SOURCE=2",
+    "-Os",
+  ]
+  cflags_cc = [
+    "-D_FORITFY_SOURCE=2",
+    "-Os",
+  ]
 
   deps = [
     "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",

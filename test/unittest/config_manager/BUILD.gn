@@ -146,6 +146,14 @@ ohos_unittest("AppInfoDatabseTest") {
     blocklist = "${sg_root_dir}/cfi_blocklist.txt"
   }
   branch_protector_ret = "pac_ret"
+  cflags = [
+    "-D_FORITFY_SOURCE=2",
+    "-Os",
+  ]
+  cflags_cc = [
+    "-D_FORITFY_SOURCE=2",
+    "-Os",
+  ]
 }
 
 group("unittest") {
