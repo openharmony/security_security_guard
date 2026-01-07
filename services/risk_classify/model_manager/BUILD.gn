@@ -55,6 +55,14 @@ ohos_source_set("sg_model_manager_stamp") {
     debug = false
   }
   branch_protector_ret = "pac_ret"
+  cflags = [
+    "-D_FORITFY_SOURCE=2",
+    "-Os",
+  ]
+  cflags_cc = [
+    "-D_FORITFY_SOURCE=2",
+    "-Os",
+  ]
 
   deps = [ "${sg_root_dir}/services/config_manager:sg_config_data_manager" ]
 
