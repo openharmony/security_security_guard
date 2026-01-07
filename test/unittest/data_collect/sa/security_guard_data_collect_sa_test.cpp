@@ -579,6 +579,10 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Success, TestSize
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     AcquireDataSubscribeManager::GetInstance().StartClearEventCache();
     AcquireDataSubscribeManager::GetInstance().StopClearEventCache();
+    AcquireDataSubscribeManager::GetInstance().DeInitDeviceId();
+    AcquireDataSubscribeManager::GetInstance().DeInitEventQueue();
+    AcquireDataSubscribeManager::GetInstance().StartTokenBucketTask();
+    AcquireDataSubscribeManager::GetInstance().StopTokenBucketTask();
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj, "111");
     EXPECT_EQ(result, SUCCESS);
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj,
@@ -597,11 +601,22 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Publish_WithSubscribers, TestSize.Level
         [] (int64_t eventId, EventCfg &config) {
         return true;
     });
-    EXPECT_CALL(*(DataFormat::GetInterface()), CheckRiskContent).WillOnce(Return(true));
+    EXPECT_CALL(*(DataFormat::GetInterface()), CheckRiskContent).WillOnce(Return(true)).WillOnce(Return(true));
     AcquireDataSubscribeManager::GetInstance().UploadEventTask(event);
     AcquireDataSubscribeManager::CollectorListener listener {};
     listener.OnNotify(event);
     listener.GetExtraInfo();
+    constexpr size_t cacheSize = 64;
+    SecurityGuard::SecEvent eve {
+        .eventId = 1,
+        .version = "version",
+        .content = "content"
+    };
+    AcquireDataSubscribeManager::SecurityCollectorSubscriber sub(event);
+    for (size_t i = 0; i < cacheSize + 1; i++) {
+        AcquireDataSubscribeManager::GetInstance().events_.emplace_back(eve);
+    }
+    sub.OnNotify(event);
     EXPECT_TRUE(AcquireDataSubscribeManager::GetInstance().PublishEventToSub(event));
 }
 
