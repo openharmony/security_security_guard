@@ -58,6 +58,9 @@ void SqliteHelper::Open() __attribute__ ((no_sanitize("cfi")))
         return;
     }
     sqlite3_busy_timeout(db_, DB_BUSY_TIMEOUT);
+    SetWalMode();
+    SetPersistWal();
+    SetWalSyncMode();
     int32_t version = GetVersion();
     if (version == currentVersion_) {
         return;
@@ -121,6 +124,7 @@ int32_t SqliteHelper::CommitTransaction() const
     }
     sqlite3_free(errorMessage);
     sqlite3_db_cacheflush(db_);
+    PerformTruncateCheckpoint();
     return result;
 }
 
@@ -186,6 +190,64 @@ void SqliteHelper::SetVersion() const
     }
     auto statement = Prepare(PRAGMA_VERSION_COMMAND + " = " + std::to_string(currentVersion_));
     statement.Step();
+}
+
+void SqliteHelper::SetPersistWal() const
+{
+    if (db_ == nullptr) {
+        SGLOGW("do open data base first!");
+        return;
+    }
+    int opcode = 1;
+    int errCode = sqlite3_file_control(db_, "main", SQLITE_FCNTL_PERSIST_WAL, &opcode);
+    if (errCode != SQLITE_OK) {
+        SGLOGE("set persist wal failed!");
+    }
+}
+
+void SqliteHelper::SetWalMode() const
+{
+    if (db_ == nullptr) {
+        SGLOGW("do open data base first!");
+        return;
+    }
+    const char *sql = "PRAGMA journal_mode = WAL";
+    char* errorMessage = nullptr;
+    int32_t ret = sqlite3_exec(db_, sql, nullptr, nullptr, &errorMessage);
+    if (ret != SQLITE_OK) {
+        SGLOGE("failed set wal mode, errorMsg: %{public}s", errorMessage);
+    }
+    sqlite3_free(errorMessage);
+}
+
+void SqliteHelper::SetWalSyncMode() const
+{
+    if (db_ == nullptr) {
+        SGLOGW("do open data base first!");
+        return;
+    }
+    const char *sql = "PRAGMA synchronous = FULL";
+    char* errorMessage = nullptr;
+    int32_t ret = sqlite3_exec(db_, sql, nullptr, nullptr, &errorMessage);
+    if (ret != SQLITE_OK) {
+        SGLOGE("failed set wal sync mode, errorMsg: %{public}s", errorMessage);
+    }
+    sqlite3_free(errorMessage);
+}
+
+void SqliteHelper::PerformTruncateCheckpoint() const
+{
+    if (db_ == nullptr) {
+        SGLOGW("do open data base first!");
+        return;
+    }
+    const char *sql = "PRAGMA wal_checkpoint = TRUNCATE";
+    char* errorMessage = nullptr;
+    int32_t ret = sqlite3_exec(db_, sql, nullptr, nullptr, &errorMessage);
+    if (ret != SQLITE_OK) {
+        SGLOGE("failed perform truncate checkpoint, errorMsg: %{public}s", errorMessage);
+    }
+    sqlite3_free(errorMessage);
 }
 
 std::string SqliteHelper::SpitError() const
