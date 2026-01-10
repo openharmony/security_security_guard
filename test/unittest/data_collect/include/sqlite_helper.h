@@ -66,6 +66,10 @@ private:
 
     int32_t GetVersion() const;
     void SetVersion() const;
+    void SetPersistWal() const;
+    void SetWalMode() const;
+    void SetWalSyncMode() const;
+    void PerformTruncateCheckpoint() const;
 };
 
 } // namespace Security::SecurityGuard

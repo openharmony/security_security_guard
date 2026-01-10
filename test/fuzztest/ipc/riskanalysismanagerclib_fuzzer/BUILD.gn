@@ -54,5 +54,6 @@ ohos_fuzztest("RiskAnalysisManagerClibFuzzTest") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "selinux_adapter:librestorecon",
   ]
 }
