@@ -135,6 +135,7 @@ ohos_unittest("AppInfoDatabseTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "sqlite:sqlite",
+    "selinux_adapter:librestorecon",
   ]
 
   sanitize = {

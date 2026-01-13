@@ -109,6 +109,7 @@ ohos_fuzztest("DataCollectManagerServiceClibFuzzTest") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "selinux_adapter:librestorecon",
   ]
   if (security_guard_enable_device_id) {
     defines += [ "SECURITY_GUARD_ENABLE_DEVICE_ID" ]
