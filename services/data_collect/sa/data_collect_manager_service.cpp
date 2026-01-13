@@ -52,6 +52,7 @@
 #include "model_manager.h"
 #include "config_define.h"
 #include "data_statistics.h"
+#include "fdsan_fd.h"
 #ifdef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 #include "event_group_config.h"
 #endif
@@ -737,37 +738,37 @@ int32_t DataCollectManagerService::IsEventGroupHasPermission(const std::string &
 
 int32_t DataCollectManagerService::WriteRemoteFileToLocal(int fd, const std::string &realPath)
 {
-    int32_t outputFd = dup(fd);
+    FdsanFd outputFd(dup(fd));
     close(fd);
-    if (outputFd == -1) {
+    if (outputFd.Get() < 0) {
         SGLOGE("dup fd fail reason %{public}s", strerror(errno));
         return FAILED;
     }
-    int32_t inputFd = open(realPath.c_str(), O_WRONLY | O_NOFOLLOW | O_CLOEXEC | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-    if (inputFd < 0) {
-        close(outputFd);
+    FdsanFd inputFd(open(realPath.c_str(), O_WRONLY | O_NOFOLLOW | O_CLOEXEC | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR));
+    if (inputFd.Get() < 0) {
+        outputFd.Reset();
         SGLOGE("open file fail reason %{public}s", strerror(errno));
         return FAILED;
     }
     auto buffer = std::make_unique<char[]> (CFG_FILE_BUFF_SIZE);
     int offset = -1;
-    while ((offset = read(outputFd, buffer.get(), CFG_FILE_BUFF_SIZE)) > 0) {
+    while ((offset = read(outputFd.Get(), buffer.get(), CFG_FILE_BUFF_SIZE)) > 0) {
         if (offset > CFG_FILE_MAX_SIZE) {
-            close(outputFd);
-            close(inputFd);
+            outputFd.Reset();
+            inputFd.Reset();
             SGLOGE("file is empty or too large, len = %{public}d", offset);
             return BAD_PARAM;
         }
-        if (write(inputFd, buffer.get(), offset) < 0) {
-            close(inputFd);
-            close(outputFd);
+        if (write(inputFd.Get(), buffer.get(), offset) < 0) {
+            inputFd.Reset();
+            outputFd.Reset();
             SGLOGE("write file to the tmp dir failed");
             return FAILED;
         }
     }
-    close(inputFd);
-    fsync(outputFd);
-    close(outputFd);
+    inputFd.Reset();
+    fsync(outputFd.Get());
+    outputFd.Reset();
     return SUCCESS;
 }
 
