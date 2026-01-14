@@ -249,7 +249,7 @@ extern "C" int FuzzDataCollectManagerService(FuzzedDataProvider &fdp)
 
 }
 
-extern "C" int LLVMFuzzerInitialize(const uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
     SetPermission();
     g_service.OnStart();
