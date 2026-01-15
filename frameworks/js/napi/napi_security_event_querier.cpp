@@ -24,7 +24,6 @@
 namespace OHOS::Security::SecurityGuard {
 NapiSecurityEventQuerier::NapiSecurityEventQuerier(QuerySecurityEventContext *context, ON_COMPLETE_FUNC handler)
     : callbackContext_(context), onCompleteHandler_(handler) {};
-// LCOV_EXCL_START
 NapiSecurityEventQuerier::~NapiSecurityEventQuerier()
 {
     if (callbackContext_ != nullptr) {
@@ -196,5 +195,4 @@ void NapiSecurityEventQuerier::OnError(const std::string &message)
         }
     });
 };
-// LCOV_EXCL_STOP
 } // OHOS::Security::SecurityGuard
