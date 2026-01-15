@@ -739,7 +739,7 @@ int32_t DataCollectManagerService::IsEventGroupHasPermission(const std::string &
 int32_t DataCollectManagerService::WriteRemoteFileToLocal(int fd, const std::string &realPath)
 {
     FdsanFd currentFd(fd);
-    FdsanFd outputFd(currentFd.Get());
+    FdsanFd outputFd(dup(currentFd.Get()));
     currentFd.Reset();
     if (outputFd.Get() < 0) {
         SGLOGE("dup fd fail reason %{public}s", strerror(errno));
