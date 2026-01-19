@@ -79,7 +79,6 @@ static const std::unordered_map<int32_t, std::pair<int32_t, std::string>> g_erro
     { NO_SYSTEMCALL, { JS_ERR_NO_SYSTEMCALL, "non-system application uses the system API"} },
 };
 
-// LCOV_EXCL_START
 static std::string ConvertToJsErrMsg(int32_t code)
 {
     auto iter = g_errorStringMap.find(code);
@@ -1401,4 +1400,3 @@ extern "C" __attribute__((constructor)) void RegisterModule(void)
 {
     napi_module_register(&g_module);
 }
-// LCOV_EXCL_STOP
