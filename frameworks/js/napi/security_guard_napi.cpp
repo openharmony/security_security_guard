@@ -77,6 +77,7 @@ static const std::unordered_map<int32_t, std::pair<int32_t, std::string>> g_erro
     { NO_PERMISSION, { JS_ERR_NO_PERMISSION, "check permission fail"} },
     { BAD_PARAM, { JS_ERR_BAD_PARAM, "Parameter error, please make sure using the correct value"} },
     { NO_SYSTEMCALL, { JS_ERR_NO_SYSTEMCALL, "non-system application uses the system API"} },
+    { API_SUPPORT_ERROR, { JS_ERR_API_SUPPORT_ERROR, "API is not supported"} },
 };
 
 static std::string ConvertToJsErrMsg(int32_t code)
@@ -571,7 +572,9 @@ static napi_value NapiGetModelResult(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_queue_async_work(env, context->asyncWork));
     return promise;
 #else
-    return NapiCreateInt32(env, SUCCESS);
+    napi_throw(env, GenerateBusinessError(env, API_SUPPORT_ERROR));
+    SGLOGE("API is not supported.");
+    return nullptr;
 #endif
 }
 
