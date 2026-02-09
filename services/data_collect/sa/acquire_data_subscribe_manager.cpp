@@ -264,7 +264,7 @@ int AcquireDataSubscribeManager::SubscribeSc(int64_t eventId)
     if (config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         return SUCCESS;
     }
-    collectorListener_->callingUids_.insert(static_cast<uint32_t>(IPCSkeleton::GetCallingUid()));
+    collectorListener_->InsertCallingUids(static_cast<uint32_t>(IPCSkeleton::GetCallingUid()));
     // 订阅SG
     if (config.prog == "security_guard") {
         return SubscribeScInSg(eventId);
@@ -686,6 +686,7 @@ void AcquireDataSubscribeManager::CollectorListener::OnNotify(const SecurityColl
 
 std::string AcquireDataSubscribeManager::CollectorListener::GetExtraInfo()
 {
+    std::lock_guard<ffrt::mutex> lock(callingUidsMutex_);
     std::string uidStr = "";
     for (auto uid : callingUids_) {
         if (uid == getuid()) {
@@ -694,6 +695,12 @@ std::string AcquireDataSubscribeManager::CollectorListener::GetExtraInfo()
         uidStr += std::to_string(uid);
     }
     return uidStr;
+}
+
+void AcquireDataSubscribeManager::CollectorListener::InsertCallingUids(uint32_t callingUid)
+{
+    std::lock_guard<ffrt::mutex> lock(callingUidsMutex_);
+    callingUids_.insert(callingUid);
 }
 
 int32_t AcquireDataSubscribeManager::SecurityCollectorSubscriber::OnNotify(const SecurityCollector::Event &event)
