@@ -104,8 +104,10 @@ private:
     public:
         void OnNotify(const SecurityCollector::Event &event) override;
         std::string GetExtraInfo() override;
-        std::unordered_set<uint32_t> callingUids_;
+        void InsertCallingUids(uint32_t callingUid);
     private:
+        ffrt::mutex callingUidsMutex_{};
+        std::unordered_set<uint32_t> callingUids_;
     };
     std::shared_ptr<CollectorListener> collectorListener_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
