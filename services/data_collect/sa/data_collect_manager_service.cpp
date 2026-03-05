@@ -819,7 +819,7 @@ ErrCode DataCollectManagerService::ConfigUpdate(int fd, const std::string& name)
             return BAD_PARAM;
         }
     }
-    
+
     const std::string &realPath = CONFIG_ROOT_PATH + "tmp/" + name;
     SGLOGI("config file is %{public}s, fd is %{public}d", realPath.c_str(), fd);
     std::string tmpPath = realPath + ".t";
@@ -1142,6 +1142,33 @@ ErrCode DataCollectManagerService::QueryCodeSignInfoByPath(const int fd, const i
         return FAILED;
     }
     resStr = replyEvents[0].GetContent();
+    return SUCCESS;
+}
+
+ErrCode DataCollectManagerService::QueryAllClientsInfo(std::string &resStr)
+{
+    SGLOGI("enter DataCollectManagerService QueryAllClientsInfo");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int32_t code = IsCallerHasPublicPermissions(callerToken, {QUERY_AUDIT_EVENT_PERMISSION});
+    if (code != SUCCESS) {
+        return code;
+    }
+
+    std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> clientSessionMap =
+        AcquireDataSubscribeManager::GetInstance().GetAuditClientSessionMap();
+    nlohmann::json resultObj = nlohmann::json::array();
+    for (const auto&[key, session] : clientSessionMap) {
+        nlohmann::json item;
+        if (session->eventGroup != "auditGroup") {
+            continue;
+        }
+        item["procName"] = session->procName;
+        item["pid"] = static_cast<int64_t>(session->pid);
+        item["uid"] = session->uid;
+        resultObj.push_back(item);
+    }
+
+    resStr = resultObj.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
     return SUCCESS;
 }
 }

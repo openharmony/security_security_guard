@@ -583,6 +583,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Success, TestSize
     AcquireDataSubscribeManager::GetInstance().DeInitEventQueue();
     AcquireDataSubscribeManager::GetInstance().StartTokenBucketTask();
     AcquireDataSubscribeManager::GetInstance().StopTokenBucketTask();
+    AcquireDataSubscribeManager::GetInstance().GetAuditClientSessionMap();
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj, "111");
     EXPECT_EQ(result, SUCCESS);
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj,
@@ -1842,5 +1843,15 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestQueryCodeSign02, TestSize.Level0)
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     std::string result {};
     EXPECT_EQ(service.QueryCodeSignInfoByPath(1, 1, result), SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, TestQueryAllClientsInfo, TestSize.Level0)
+{
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_DENIED));
+
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    std::string result {};
+    EXPECT_EQ(service.QueryAllClientsInfo(result), NO_PERMISSION);
 }
 }
