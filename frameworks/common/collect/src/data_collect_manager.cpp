@@ -517,4 +517,25 @@ int32_t DataCollectManager::QueryCodeSignInfoByPath(const std::string &filePath,
     }
     return proxy->QueryCodeSignInfoByPath(fdsan->Get(), pid, result);
 }
+
+int32_t DataCollectManager::QueryAllClientsInfo(std::string &result)
+{
+    SGLOGI("Start DataCollectManager QueryAllClientsInfo");
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return FAILED;
+    }
+    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    if (object == nullptr) {
+        SGLOGE("object is nullptr");
+        return FAILED;
+    }
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
+    if (proxy == nullptr) {
+        SGLOGE("proxy is null");
+        return FAILED;
+    }
+    return proxy->QueryAllClientsInfo(result);
+}
 }

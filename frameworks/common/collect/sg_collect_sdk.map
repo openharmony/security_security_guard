@@ -57,6 +57,7 @@
         OHOS::Security::SecurityGuard::EventSubscribeClient::Subscribe*;
         OHOS::Security::SecurityGuard::EventSubscribeClient::Unsubscribe*;
         OHOS::Security::SecurityGuard::DataCollectManager::QueryCodeSignInfoByPath*;
+        OHOS::Security::SecurityGuard::DataCollectManager::QueryAllClientsInfo*;
     };
   local:
     *;
