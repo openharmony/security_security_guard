@@ -637,4 +637,11 @@ HWTEST_F(DataCollectKitTest, TestQueryCodeSignInfoByPath02, TestSize.Level1)
     EXPECT_EQ(SecurityGuard::DataCollectManager::GetInstance().QueryCodeSignInfoByPath(path, result),
         SecurityGuard::NO_PERMISSION);
 }
+
+HWTEST_F(DataCollectKitTest, TestQueryAllClientsInfo, TestSize.Level1)
+{
+    std::string result {};
+    EXPECT_EQ(SecurityGuard::DataCollectManager::GetInstance().QueryAllClientsInfo(result),
+        SecurityGuard::NO_PERMISSION);
+}
 }

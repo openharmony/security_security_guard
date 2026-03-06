@@ -64,7 +64,8 @@ public:
         std::map<int64_t, std::vector<EventMuteFilter>> eventFilters {};
         std::set<int64_t> subEvents{};
         std::string eventGroup {};
-        int32_t userId {-1};
+        int64_t uid {-1};
+        std::string procName {};
     };
     int UploadEvent(const SecurityCollector::Event &event);
     void DeInitDeviceId();
@@ -72,6 +73,7 @@ public:
     void DeInitEventQueue();
     void StartTokenBucketTask();
     void StopTokenBucketTask();
+    const std::map<std::string, std::shared_ptr<ClientSession>> &GetAuditClientSessionMap();
 private:
     AcquireDataSubscribeManager();
     ~AcquireDataSubscribeManager();

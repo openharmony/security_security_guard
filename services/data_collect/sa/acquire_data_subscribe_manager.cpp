@@ -920,4 +920,10 @@ int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, pi
     }
     return SUCCESS;
 }
+
+const std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> &
+    AcquireDataSubscribeManager::GetAuditClientSessionMap()
+{
+    return sessionsMap_;
+}
 }
