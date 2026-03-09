@@ -30,29 +30,29 @@ namespace OHOS {
 namespace {
 constexpr int MAX_STRING_SIZE = 1024;
 }
-bool ReportSecurityInfoFuzzTest(const uint8_t *data, size_t size)
+bool ReportSecurityInfoFuzzTest(FuzzedDataProvider &fdp)
 {
-    int64_t eventId = rand() % (size + 1);
+    int64_t eventId = fdp.ConsumeIntegral<int64_t>();
     EventInfoSt info;
     info.eventId = eventId;
-    std::string version(reinterpret_cast<const char *>(data), size);
+    std::string version(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     info.version = version.c_str();
-    uint32_t cpyLen = size >= CONTENT_MAX_LEN ? CONTENT_MAX_LEN - 1 : static_cast<uint32_t>(size);
-    (void)memcpy_s(info.content, CONTENT_MAX_LEN, data, cpyLen);
-    info.contentLen = cpyLen;
+    std::string content(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    (void)memcpy_s(info.content, CONTENT_MAX_LEN, content.c_str(), content.size());
+    info.contentLen = content.size();
     ReportSecurityInfo(&info);
     return true;
 }
 
-bool ReportSecurityInfoAsyncFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider &fdp)
+bool ReportSecurityInfoAsyncFuzzTest(FuzzedDataProvider &fdp)
 {
     EventInfoSt info;
     info.eventId = fdp.ConsumeIntegral<int64_t>();
     std::string str = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     info.version = str.c_str();
-    uint32_t cpyLen = size >= CONTENT_MAX_LEN ? CONTENT_MAX_LEN - 1 : static_cast<uint32_t>(size);
-    (void)memcpy_s(info.content, CONTENT_MAX_LEN, data, cpyLen);
-    info.contentLen = cpyLen;
+    std::string content(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    (void)memcpy_s(info.content, CONTENT_MAX_LEN, content.c_str(), content.size());
+    info.contentLen = content.size();
     ReportSecurityInfoAsync(&info);
     return true;
 }
@@ -71,8 +71,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
     /* Run your code on date */
-    OHOS::ReportSecurityInfoFuzzTest(data, size);
-    OHOS::ReportSecurityInfoAsyncFuzzTest(data, size, fdp);
+    OHOS::ReportSecurityInfoFuzzTest(fdp);
+    OHOS::ReportSecurityInfoAsyncFuzzTest(fdp);
     OHOS::SecurityGuardConfigUpdateFuzzTest(fdp);
     return 0;
 }

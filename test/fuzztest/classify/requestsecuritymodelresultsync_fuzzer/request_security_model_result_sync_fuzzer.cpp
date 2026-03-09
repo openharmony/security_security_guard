@@ -27,13 +27,17 @@ extern "C" int32_t RequestSecurityModelResultSync(const DeviceIdentify *devId, u
     SecurityModelResult *result);
 
 namespace OHOS {
+namespace {
+    constexpr int MAX_STRING_SIZE = 1024;
+}
 bool RequestSecurityModelResultAsyncFuzzTest(const uint8_t* data, size_t size)
 {
+    FuzzedDataProvider fdp(data, size);
     DeviceIdentify deviceIdentify = {};
-    uint32_t cpyLen = size > DEVICE_ID_MAX_LEN ? DEVICE_ID_MAX_LEN : static_cast<uint32_t>(size);
-    (void) memcpy_s(deviceIdentify.identity, DEVICE_ID_MAX_LEN, data, cpyLen);
-    deviceIdentify.length = cpyLen;
-    uint32_t modelId = rand() % (size + 1);
+    std::string str = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    (void) memcpy_s(deviceIdentify.identity, DEVICE_ID_MAX_LEN, str.c_str(), str.size());
+    deviceIdentify.length = str.size();
+    uint32_t modelId = fdp.ConsumeIntegral<uint32_t>();
     SecurityModelResult result = {};
     RequestSecurityModelResultSync(&deviceIdentify, modelId, &result);
     return true;
