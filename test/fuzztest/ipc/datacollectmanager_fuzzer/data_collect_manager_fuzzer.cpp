@@ -16,13 +16,16 @@
 #include "data_collect_manager_fuzzer.h"
 #include "data_collect_manager_idl.h"
 #include <string>
-
+#include <fuzzer/FuzzedDataProvider.h>
 #include "data_collect_manager_callback_service.h"
 #include "data_collect_manager_service.h"
 #include "security_guard_log.h"
 
 
 namespace OHOS::Security::SecurityGuard {
+namespace {
+    constexpr int MAX_STRING_SIZE = 1024;
+}
 DataCollectManagerService g_service(DATA_COLLECT_MANAGER_SA_ID, true);
 constexpr int32_t REMAINDER_VALUE = 9;
 constexpr int32_t CMD_DATA_COLLECT_VALUE = 0;
@@ -286,8 +289,9 @@ void OnRemoteStop(const uint8_t* data, size_t size, MessageParcel* datas,
 void OnRemoteConfigUpdate(const uint8_t* data, size_t size, MessageParcel* datas,
     MessageParcel* reply, MessageOption* option)
 {
-    int32_t fd = static_cast<int32_t>(size);
-    std::string fileName(reinterpret_cast<const char *>(data), size);
+    FuzzedDataProvider fdp(data, size);
+    int32_t fd = fdp.ConsumeIntegral<int32_t>();
+    std::string fileName(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     datas->WriteFileDescriptor(fd);
     datas->WriteString(fileName);
     g_service.OnRemoteRequest(
