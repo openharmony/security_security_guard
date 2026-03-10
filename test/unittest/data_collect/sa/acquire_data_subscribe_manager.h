@@ -127,6 +127,7 @@ private:
     std::shared_ptr<ffrt::queue> queue_{};
     std::shared_ptr<ffrt::queue> dbQueue_{};
     std::vector<SecEvent> events_ {};
+    std::vector<SecurityCollector::Event> notifyEvents_ {};
     size_t eventsBuffSize_ {};
     std::atomic<int32_t> tokenBucket_{};
     bool isStopTokenBucketTask_ = false;
