@@ -69,7 +69,7 @@ namespace {
     const std::string QUERY_AUDIT_EVENT_PERMISSION = "ohos.permission.QUERY_AUDIT_EVENT";
     constexpr int32_t CFG_FILE_MAX_SIZE = 1 * 1024 * 1024;
     constexpr int32_t CFG_FILE_BUFF_SIZE = 1 * 1024 * 1024 + 1;
-    const std::unordered_map<std::string, std::vector<std::string>> g_apiPermissionsMap {
+    const std::unordered_map<std::string, std::set<std::string>> g_apiPermissionsMap {
         {"RequestDataSubmit", {REPORT_PERMISSION, REPORT_PERMISSION_NEW}},
         {"QuerySecurityEvent", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
         {"CollectorStart", {REQUEST_PERMISSION, QUERY_SECURITY_EVENT_PERMISSION}},
@@ -82,6 +82,7 @@ namespace {
         {"RemoveFilter", {QUERY_SECURITY_EVENT_PERMISSION}},
         {"QuerySecurityEventById", {QUERY_AUDIT_EVENT_PERMISSION}}
     };
+    std::mutex g_configCacheMutex;
     std::unordered_set<std::string> g_configCacheFilesSet;
     constexpr uint32_t FINISH = 0;
     constexpr uint32_t CONTINUE = 1;
@@ -200,7 +201,7 @@ ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std:
     }
     tokenBucket_.fetch_sub(1);
     SGLOGD("enter DataCollectManagerService RequestDataSubmit");
-    int32_t ret = IsApiHasPermission("RequestDataSubmit");
+    int32_t ret = IsCallerHasApiPermission("RequestDataSubmit");
     if (ret != SUCCESS) {
         return ret;
     }
@@ -344,7 +345,7 @@ ErrCode DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     event.time = SecurityGuardUtils::GetDate();
     event.eventId = subscribeInfo.GetEvent().eventId;
     if (subscribeInfo.GetEventGroup() == "") {
-        ret = IsApiHasPermission("Subscribe");
+        ret = IsCallerHasApiPermission("Subscribe");
     } else if (subscribeInfo.GetEventGroup() == "auditGroup") {
         ret = IsEventGroupHasPublicPermission(subscribeInfo.GetEventGroup(), {});
     } else {
@@ -375,7 +376,7 @@ ErrCode DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
     event.pid = IPCSkeleton::GetCallingPid();
     event.time = SecurityGuardUtils::GetDate();
     if (subscribeInfo.GetEventGroup() == "") {
-        ret = IsApiHasPermission("UnSubscribe");
+        ret = IsCallerHasApiPermission("UnSubscribe");
     } else if (subscribeInfo.GetEventGroup() == "auditGroup") {
         ret = IsEventGroupHasPublicPermission(subscribeInfo.GetEventGroup(), {});
     } else {
@@ -510,7 +511,7 @@ ErrCode DataCollectManagerService::QuerySecurityEvent(const std::vector<Security
     SGLOGI("enter DataCollectManagerService QuerySecurityEvent");
     int32_t ret = 0;
     if (eventGroup == "") {
-        ret = IsApiHasPermission("QuerySecurityEvent");
+        ret = IsCallerHasApiPermission("QuerySecurityEvent");
     } else {
         ret = IsEventGroupHasPermission(eventGroup, std::vector<int64_t>{});
     }
@@ -580,7 +581,7 @@ ErrCode DataCollectManagerService::CollectorStart(
     const SecurityCollector::SecurityCollectorSubscribeInfo &subscribeInfo, const sptr<IRemoteObject> &cb)
 {
     SGLOGI("enter DataCollectManagerService CollectorStart.");
-    int32_t code = IsApiHasPermission("CollectorStart");
+    int32_t code = IsCallerHasApiPermission("CollectorStart");
     if (code != SUCCESS) {
         return code;
     }
@@ -620,7 +621,7 @@ ErrCode DataCollectManagerService::CollectorStop(const SecurityCollector::Securi
     const sptr<IRemoteObject> &cb)
 {
     SGLOGI("enter DataCollectManagerService CollectorStop.");
-    int32_t code = IsApiHasPermission("CollectorStop");
+    int32_t code = IsCallerHasApiPermission("CollectorStop");
     if (code != SUCCESS) {
         return code;
     }
@@ -650,34 +651,53 @@ ErrCode DataCollectManagerService::CollectorStop(const SecurityCollector::Securi
     return SUCCESS;
 }
 
-int32_t DataCollectManagerService::IsApiHasPermission(const std::string &api)
+int32_t DataCollectManagerService::IsCallerHasPublicPermissions(
+    const AccessToken::AccessTokenID &callerToken, const std::set<std::string> &permissions)
+{
+    if (std::any_of(permissions.cbegin(), permissions.cend(),
+        [callerToken](const std::string &per) {
+        int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, per);
+        return code == AccessToken::PermissionState::PERMISSION_GRANTED;
+    })) {
+        return SUCCESS;
+    }
+    SGLOGE("caller no permission");
+    return NO_PERMISSION;
+}
+
+int32_t DataCollectManagerService::IsCallerHasSystemPermission(const AccessToken::AccessTokenID &callerToken)
+{
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+    if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+        if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+            SGLOGE("not system app no permission");
+            return NO_SYSTEMCALL;
+        }
+    }
+    return SUCCESS;
+}
+
+int32_t DataCollectManagerService::IsCallerHasApiPermission(const std::string &api)
 {
     if (g_apiPermissionsMap.count(api) == 0) {
         SGLOGE("api not in map");
         return FAILED;
     }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    if (std::any_of(g_apiPermissionsMap.at(api).cbegin(), g_apiPermissionsMap.at(api).cend(),
-        [callerToken](const std::string &per) {
-        int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, per);
-        return code == AccessToken::PermissionState::PERMISSION_GRANTED;
-    })) {
-        AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
-        if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-            uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
-            if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
-                SGLOGE("not system app no permission");
-                return NO_SYSTEMCALL;
-            }
-        }
-        return SUCCESS;
+    int32_t code = IsCallerHasPublicPermissions(callerToken, g_apiPermissionsMap.at(api));
+    if (code != SUCCESS) {
+        return code;
     }
-    SGLOGE("caller no permission");
-    return NO_PERMISSION;
+    code = IsCallerHasSystemPermission(callerToken);
+    if (code != SUCCESS) {
+        return code;
+    }
+    return SUCCESS;
 }
 
 int32_t DataCollectManagerService::IsEventGroupHasPublicPermission(const std::string &eventGroup,
-    std::vector<int64_t> eventIds)
+    const std::vector<int64_t> &eventIds)
 {
     EventGroupCfg config {};
     if (!ConfigDataManager::GetInstance().GetEventGroupConfig(eventGroup, config)) {
@@ -691,49 +711,18 @@ int32_t DataCollectManagerService::IsEventGroupHasPublicPermission(const std::st
         }
     }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    if (std::any_of(config.permissionList.cbegin(), config.permissionList.cend(),
-        [callerToken](const std::string &per) {
-        int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, per);
-        return code == AccessToken::PermissionState::PERMISSION_GRANTED;
-    })) {
-        return SUCCESS;
-    }
-    SGLOGE("caller no permission");
-    return NO_PERMISSION;
+    return IsCallerHasPublicPermissions(callerToken, config.permissionList);
 }
 
 int32_t DataCollectManagerService::IsEventGroupHasPermission(const std::string &eventGroup,
-    std::vector<int64_t> eventIds)
+    const std::vector<int64_t> &eventIds)
 {
-    EventGroupCfg config {};
-    if (!ConfigDataManager::GetInstance().GetEventGroupConfig(eventGroup, config)) {
-        SGLOGE("get event group config fail group = %{public}s", eventGroup.c_str());
-        return BAD_PARAM;
-    }
-    for (int64_t eventId : eventIds) {
-        if (config.eventList.count(eventId) == 0) {
-            SGLOGE("eventid not in eventid list");
-            return BAD_PARAM;
-        }
+    int32_t code = IsEventGroupHasPublicPermission(eventGroup, eventIds);
+    if (code != SUCCESS) {
+        return code;
     }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    if (std::any_of(config.permissionList.cbegin(), config.permissionList.cend(),
-        [callerToken](const std::string &per) {
-        int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, per);
-        return code == AccessToken::PermissionState::PERMISSION_GRANTED;
-    })) {
-        AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
-        if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-            uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
-            if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
-                SGLOGE("not system app no permission");
-                return NO_SYSTEMCALL;
-            }
-        }
-        return SUCCESS;
-    }
-    SGLOGE("caller no permission");
-    return NO_PERMISSION;
+    return IsCallerHasSystemPermission(callerToken);
 }
 
 int32_t DataCollectManagerService::WriteRemoteFileToLocal(int fd, const std::string &realPath)
@@ -817,16 +806,20 @@ bool DataCollectManagerService::ParseTrustListFile(const std::string &trustListF
 ErrCode DataCollectManagerService::ConfigUpdate(int fd, const std::string& name)
 {
     SGLOGI("enter DataCollectManagerService ConfigUpdate.");
-    int32_t code = IsApiHasPermission("ConfigUpdate");
+    int32_t code = IsCallerHasApiPermission("ConfigUpdate");
     if (code != SUCCESS) {
         return code;
     }
-    if (!ParseTrustListFile(TRUST_LIST_FILE_PATH)) {
-        return BAD_PARAM;
+    {
+        std::lock_guard<std::mutex> lock(g_configCacheMutex);
+        if (!ParseTrustListFile(TRUST_LIST_FILE_PATH)) {
+            return BAD_PARAM;
+        }
+        if (g_configCacheFilesSet.empty() || !g_configCacheFilesSet.count(name)) {
+            return BAD_PARAM;
+        }
     }
-    if (g_configCacheFilesSet.empty() || !g_configCacheFilesSet.count(name)) {
-        return BAD_PARAM;
-    }
+
     const std::string &realPath = CONFIG_ROOT_PATH + "tmp/" + name;
     SGLOGI("config file is %{public}s, fd is %{public}d", realPath.c_str(), fd);
     std::string tmpPath = realPath + ".t";
@@ -892,7 +885,7 @@ int32_t DataCollectManagerService::QueryEventConfig(std::string &result)
 ErrCode DataCollectManagerService::QuerySecurityEventConfig(std::string &result)
 {
     SGLOGI("enter QuerySecurityEventConfig");
-    int32_t ret = IsApiHasPermission("QuerySecurityEventConfig");
+    int32_t ret = IsCallerHasApiPermission("QuerySecurityEventConfig");
     if (ret != SUCCESS) {
         return ret;
     }
@@ -1125,6 +1118,57 @@ ErrCode DataCollectManagerService::CreatClient(const std::string &eventGroup, co
         std::lock_guard<std::mutex> lock(mutex_);
         clientCallBacks_[clientId] = cb;
     }
+    return SUCCESS;
+}
+
+ErrCode DataCollectManagerService::QueryCodeSignInfoByPath(const int fd, const int pid, std::string &resStr)
+{
+    SGLOGI("enter DataCollectManagerService QueryCodeSignInfoByPath");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int32_t code = IsCallerHasPublicPermissions(callerToken, {QUERY_AUDIT_EVENT_PERMISSION});
+    if (code != SUCCESS) {
+        return code;
+    }
+    std::string param = "fd=" + std::to_string(fd) + ",pid=" + std::to_string(pid);
+    SecurityCollector::SecurityEventRuler ruler(0xffffffff06, "", "", param);
+    std::vector<SecurityCollector::SecurityEvent> replyEvents {};
+    int ret = SecurityCollector::DataCollection::GetInstance().QuerySecurityEvent({ruler}, replyEvents);
+    if (ret != SUCCESS) {
+        SGLOGE("CodeSign QuerySecurityEvent fail ret=%{public}d", ret);
+        return ret;
+    }
+    if (replyEvents.empty()) {
+        SGLOGE("CodeSign QuerySecurityEvent replyEvents empty");
+        return FAILED;
+    }
+    resStr = replyEvents[0].GetContent();
+    return SUCCESS;
+}
+
+ErrCode DataCollectManagerService::QueryAllClientsInfo(std::string &resStr)
+{
+    SGLOGI("enter DataCollectManagerService QueryAllClientsInfo");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    int32_t code = IsCallerHasPublicPermissions(callerToken, {QUERY_AUDIT_EVENT_PERMISSION});
+    if (code != SUCCESS) {
+        return code;
+    }
+
+    std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> clientSessionMap =
+        AcquireDataSubscribeManager::GetInstance().GetAuditClientSessionMap();
+    nlohmann::json resultObj = nlohmann::json::array();
+    for (const auto&[key, session] : clientSessionMap) {
+        nlohmann::json item;
+        if (session->eventGroup != "auditGroup") {
+            continue;
+        }
+        item["procName"] = session->procName;
+        item["pid"] = static_cast<int64_t>(session->pid);
+        item["uid"] = session->uid;
+        resultObj.push_back(item);
+    }
+
+    resStr = resultObj.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
     return SUCCESS;
 }
 }

@@ -105,12 +105,14 @@ extern "C" int FuzzRiskAnalysisFuzzService(FuzzedDataProvider &fdp)
             g_service.OnRemoveSystemAbility(systemAbilityId, deviceId);
             break;
         }
+        default:
+            break;
     }
     return 0;
 }
 
 
-extern "C" int LLVMFuzzerInitialize(const uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
     SetPermission();
     g_service.OnStart();

@@ -64,6 +64,8 @@ public:
         std::map<int64_t, std::vector<EventMuteFilter>> eventFilters {};
         std::set<int64_t> subEvents{};
         std::string eventGroup {};
+        int64_t uid {-1};
+        std::string procName {};
     };
     int UploadEvent(const SecurityCollector::Event &event);
     void DeInitDeviceId();
@@ -71,6 +73,7 @@ public:
     void DeInitEventQueue();
     void StartTokenBucketTask();
     void StopTokenBucketTask();
+    const std::map<std::string, std::shared_ptr<ClientSession>> &GetAuditClientSessionMap();
 private:
     AcquireDataSubscribeManager();
     ~AcquireDataSubscribeManager();
@@ -104,8 +107,10 @@ private:
     public:
         void OnNotify(const SecurityCollector::Event &event) override;
         std::string GetExtraInfo() override;
-        std::unordered_set<uint32_t> callingUids_;
+        void InsertCallingUids(uint32_t callingUid);
     private:
+        ffrt::mutex callingUidsMutex_{};
+        std::unordered_set<uint32_t> callingUids_;
     };
     std::shared_ptr<CollectorListener> collectorListener_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
@@ -127,6 +132,7 @@ private:
     std::shared_ptr<ffrt::queue> queue_{};
     std::shared_ptr<ffrt::queue> dbQueue_{};
     std::vector<SecEvent> events_ {};
+    std::vector<SecurityCollector::Event> notifyEvents_ {};
     size_t eventsBuffSize_ {};
     std::atomic<int32_t> tokenBucket_{};
     bool isStopTokenBucketTask_ = false;

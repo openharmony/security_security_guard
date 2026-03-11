@@ -47,6 +47,8 @@ public:
     int32_t RequestSecurityEventInfo(std::string &devId, std::string &eventList, RequestRiskDataCallback callback);
     int32_t QuerySecurityEventById(std::vector<SecurityCollector::SecurityEventRuler> rulers,
         std::shared_ptr<SecurityEventQueryCallback> callback, const std::string &eventGroup);
+    int32_t QueryCodeSignInfoByPath(const std::string &filePath, std::string &result);
+    int32_t QueryAllClientsInfo(std::string &result);
 private:
     DataCollectManager();
     ~DataCollectManager() = default;

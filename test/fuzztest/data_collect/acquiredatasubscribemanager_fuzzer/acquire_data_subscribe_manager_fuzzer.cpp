@@ -61,18 +61,20 @@ bool AcquireDataSubscribeManagerFuzzTest(FuzzedDataProvider &fdp)
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE)};
     Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
+    AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj,
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj,
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     std::string clientId = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj, clientId);
-    AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj, clientId);
     int64_t eventId = fdp.ConsumeIntegral<int64_t>();
     AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(eventId, clientId);
     AcquireDataSubscribeManager::GetInstance().IsFindFlag({clientId}, eventId, clientId);
     AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(eventId, clientId);
     AcquireDataSubscribeManager::GetInstance().PublishEventToSub(event);
-    AcquireDataSubscribeManager::GetInstance().SubscribeSc(eventId);
-    AcquireDataSubscribeManager::GetInstance().UnSubscribeSc(eventId);
-    AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(eventId);
-    AcquireDataSubscribeManager::GetInstance().SubscribeScInSc(eventId);
+    AcquireDataSubscribeManager::GetInstance().SubscribeSc(fdp.ConsumeIntegral<int64_t>());
+    AcquireDataSubscribeManager::GetInstance().UnSubscribeSc(fdp.ConsumeIntegral<int64_t>());
+    AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(fdp.ConsumeIntegral<int64_t>());
+    AcquireDataSubscribeManager::GetInstance().SubscribeScInSc(fdp.ConsumeIntegral<int64_t>());
     SecurityEventFilter subscribeMute {};
     subscribeMute.filter_.eventId = fdp.ConsumeIntegral<int64_t>();
     subscribeMute.filter_.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
@@ -94,6 +96,7 @@ bool AcquireDataSubscribeManagerFuzzTest(FuzzedDataProvider &fdp)
     AcquireDataSubscribeManager::GetInstance().StopClearEventCache();
     AcquireDataSubscribeManager::GetInstance().GetCurrentClientGroup(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     AcquireDataSubscribeManager::GetInstance().DeInitDeviceId();
+    AcquireDataSubscribeManager::GetInstance().UploadEventToSub(event);
     AcquireDataSubscribeManager::GetInstance().UploadEventToStore(event);
     AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
     AcquireDataSubscribeManager::GetInstance().UploadEventTask(event);

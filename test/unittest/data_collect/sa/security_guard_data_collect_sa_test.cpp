@@ -583,6 +583,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, InsertSubscribeRecord_Success, TestSize
     AcquireDataSubscribeManager::GetInstance().DeInitEventQueue();
     AcquireDataSubscribeManager::GetInstance().StartTokenBucketTask();
     AcquireDataSubscribeManager::GetInstance().StopTokenBucketTask();
+    AcquireDataSubscribeManager::GetInstance().GetAuditClientSessionMap();
     int32_t result = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj, "111");
     EXPECT_EQ(result, SUCCESS);
     result = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, obj,
@@ -1169,7 +1170,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, IsApiHasPermission01, TestSize.Level0)
 {
     const std::string api = "testString";
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
-    int32_t result = service.IsApiHasPermission(api);
+    int32_t result = service.IsCallerHasApiPermission(api);
     EXPECT_EQ(result, FAILED);
 }
 
@@ -1805,5 +1806,52 @@ HWTEST_F(SecurityGuardDataCollectSaTest, NewUnsubscribe002, TestSize.Level0)
         Return(AccessToken::PermissionState::PERMISSION_DENIED));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     EXPECT_EQ(service.Unsubscribe(11111, "test_no_client"), NO_PERMISSION);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, TestQueryCodeSign, TestSize.Level0)
+{
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_DENIED));
+
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    std::string result {};
+    EXPECT_EQ(service.QueryCodeSignInfoByPath(1, 1, result), NO_PERMISSION);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, TestQueryCodeSign01, TestSize.Level0)
+{
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), QuerySecurityEvent).WillOnce(Return(
+        OHOS::Security::SecurityGuard::SUCCESS));
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    std::string result {};
+    EXPECT_EQ(service.QueryCodeSignInfoByPath(1, 1, result), FAILED);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, TestQueryCodeSign02, TestSize.Level0)
+{
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+    EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), QuerySecurityEvent).WillOnce(
+        [] (const std::vector<SecurityEventRuler> rulers,
+            std::vector<SecurityCollector::SecurityEvent> &events) {
+            SecurityCollector::SecurityEvent event(111, "1.0", "test");
+            events.emplace_back(event);
+            return SUCCESS;
+        });
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    std::string result {};
+    EXPECT_EQ(service.QueryCodeSignInfoByPath(1, 1, result), SUCCESS);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, TestQueryAllClientsInfo, TestSize.Level0)
+{
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_DENIED));
+
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    std::string result {};
+    EXPECT_EQ(service.QueryAllClientsInfo(result), NO_PERMISSION);
 }
 }
