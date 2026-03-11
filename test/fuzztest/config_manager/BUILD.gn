@@ -13,5 +13,7 @@
 
 group("fuzztest") {
   testonly = true
-  deps = [ "configmanager_fuzzer:ConfigManagerFuzzTest" ]
+  deps = [
+    "configmanager_fuzzer:ConfigManagerFuzzTest",
+    "configdatamanager_fuzzer:ConfigDataManagerFuzzTest", ]
 }

@@ -150,6 +150,9 @@ void AcquireDataManagerFuzzTest(const uint8_t* data, size_t size)
     DataCollectManager::GetInstance().QuerySecurityEvent(rulers, callback);
     DataCollectManager::GetInstance().SecurityGuardConfigUpdate(fd, string);
     DataCollectManager::GetInstance().QuerySecurityEventById(rulers, callback, "auditGroup");
+    std::string result {};
+    DataCollectManager::GetInstance().QueryCodeSignInfoByPath(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), result);
+    DataCollectManager::GetInstance().QueryAllClientsInfo(result);
 }
 
 void DataCollectManagerFuzzTest(const uint8_t* data, size_t size)
@@ -367,8 +370,9 @@ void SecurityCollectorManagerProxyFuzzTest(const uint8_t* data, size_t size)
 
 void SecurityCollectorSubscribeInfoFuzzTest(const uint8_t* data, size_t size)
 {
-    std::string string(reinterpret_cast<const char*>(data), size);
-    int64_t int64 = static_cast<int64_t>(size);
+    FuzzedDataProvider fdp(data, size);
+    std::string string(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    int64_t int64 = fdp.ConsumeIntegral<int64_t>();
     SecurityCollectorSubscribeInfo info;
     Parcel parcel;
     info.Marshalling(parcel);
@@ -413,8 +417,9 @@ void SecurityCollectorSubscribeInfoFuzzTest(const uint8_t* data, size_t size)
 
 void SecurityEventFuzzTest(const uint8_t* data, size_t size)
 {
-    std::string string(reinterpret_cast<const char*>(data), size);
-    int64_t int64 = static_cast<int64_t>(size);
+    FuzzedDataProvider fdp(data, size);
+    std::string string(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    int64_t int64 = fdp.ConsumeIntegral<int64_t>();
     SecurityEvent event;
     Parcel parcel;
     event.Marshalling(parcel);
@@ -438,8 +443,9 @@ void SecurityEventFuzzTest(const uint8_t* data, size_t size)
 
 void SecurityEventRulerFuzzTest(const uint8_t* data, size_t size)
 {
-    std::string string(reinterpret_cast<const char*>(data), size);
-    int64_t int64 = static_cast<int64_t>(size);
+    FuzzedDataProvider fdp(data, size);
+    std::string string(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    int64_t int64 = fdp.ConsumeIntegral<int64_t>();
     SecurityEventRuler ruler;
     Parcel parcel;
     ruler.Marshalling(parcel);

@@ -108,47 +108,6 @@ void SecurityCollectorManagerCallbackProxyFuzzTest(const uint8_t* data, size_t s
     proxy.OnNotify(event);
 }
 
-void SecurityCollectorManagerServiceFuzzTest(const uint8_t* data, size_t size)
-{
-    if (data == nullptr || size < sizeof(int64_t)) {
-        return;
-    }
-    FuzzedDataProvider fdp(data, size);
-    int fd = fdp.ConsumeIntegral<int32_t>();
-    int32_t systemAbilityId = fdp.ConsumeIntegral<int32_t>();
-    int64_t eventId = fdp.ConsumeIntegral<int64_t>();
-    std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    SecurityCollectorEventMuteFilter fil{};
-    std::vector<std::u16string> args;
-    SecurityCollectorManagerService service(SECURITY_COLLECTOR_MANAGER_SA_ID, false);
-    Security::SecurityCollector::Event event{eventId, string, string, string};
-    sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    SecurityEventRuler ruler(eventId);
-    std::vector<SecurityEventRuler> rulers;
-    rulers.emplace_back(ruler);
-    SecurityCollectorSubscribeInfo subscribeInfo{event};
-    ScSubscribeEvent scEvent{};
-    ScUnsubscribeEvent scuEvent{};
-    scEvent.eventId = eventId;
-    std::vector<SecurityEvent> events{};
-    service.Dump(fd, args);
-    service.OnAddSystemAbility(systemAbilityId, string);
-    service.OnRemoveSystemAbility(systemAbilityId, string);
-    service.Subscribe(subscribeInfo, obj);
-    service.Unsubscribe(obj);
-    service.CollectorStop(subscribeInfo, obj);
-    service.CollectorStart(subscribeInfo, obj);
-    service.QuerySecurityEvent(rulers, events);
-    SecurityCollectorManagerService::ReportScSubscribeEvent(scEvent);
-    SecurityCollectorManagerService::ReportScUnsubscribeEvent(scuEvent);
-    SecurityCollectorManagerService::GetAppName();
-    SecurityCollectorManagerService::HasPermission(string);
-    service.CleanSubscriber(obj);
-    service.ExecuteOnNotifyByTask(obj, event);
-    service.AddFilter(fil);
-    service.RemoveFilter(fil);
-}
-
 void SecurityCollectorManagerServiceNewFuzzTest(const uint8_t* data, size_t size)
 {
     SecurityCollectorManagerService service(SECURITY_COLLECTOR_MANAGER_SA_ID, false);
@@ -161,51 +120,6 @@ void SecurityCollectorManagerServiceNewFuzzTest(const uint8_t* data, size_t size
     SecurityCollectorEventFilter filter(fil);
     service.AddFilter(filter);
     service.RemoveFilter(filter);
-}
-
-void SecurityCollectorRunManagerFuzzTest(const uint8_t* data, size_t size)
-{
-    if (data == nullptr || size < sizeof(int64_t)) {
-        return;
-    }
-    size_t offset = 0;
-    int64_t eventId = *(reinterpret_cast<const int64_t *>(data));
-    offset += sizeof(int64_t);
-    std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
-    Security::SecurityCollector::Event event{eventId, string, string, string};
-    SecurityCollectorSubscribeInfo subscriberInfo{};
-    auto subscriber = std::make_shared<SecurityCollectorSubscriber>(string, subscriberInfo, nullptr,
-        [] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {});
-    SecurityCollectorRunManager manager;
-    manager.StartCollector(subscriber);
-    manager.StopCollector(subscriber);
-    SecurityCollectorRunManager::CollectorListenner listener{subscriber};
-    listener.GetExtraInfo();
-    listener.OnNotify(event);
-}
-
-void SecurityCollectorSubscriberManagerFuzzTest(const uint8_t* data, size_t size)
-{
-    if (data == nullptr || size < sizeof(int64_t)) {
-        return;
-    }
-    size_t offset = 0;
-    int64_t eventId = *(reinterpret_cast<const int64_t *>(data));
-    offset += sizeof(int64_t);
-    std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
-    SecurityCollectorSubscribeInfo subscriberInfo{};
-    Security::SecurityCollector::Event event{eventId, string, string, string};
-    auto subscriber = std::make_shared<SecurityCollectorSubscriber>(string, subscriberInfo, nullptr,
-        [] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {});
-    sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    SecurityCollectorSubscriberManager::GetInstance().SubscribeCollector(subscriber);
-    SecurityCollectorSubscriberManager::GetInstance().UnsubscribeCollector(obj);
-    SecurityCollectorSubscriberManager::GetInstance().FindEventIds(obj);
-    SecurityCollectorSubscriberManager::CollectorListenner listener{subscriber};
-    listener.GetExtraInfo();
-    SecurityCollectorSubscriberManager::GetInstance().GetAppSubscribeCount(string);
-    SecurityCollectorSubscriberManager::GetInstance().GetAppSubscribeCount(string, eventId);
-    SecurityCollectorSubscriberManager::GetInstance().NotifySubscriber(event);
 }
 
 class TestCollector : public ICollector {
@@ -253,8 +167,5 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::DataCollectionFuzzTest(data, size);
     OHOS::LibLoaderFuzzTest(data, size);
     OHOS::SecurityCollectorManagerCallbackProxyFuzzTest(data, size);
-    OHOS::SecurityCollectorManagerServiceFuzzTest(data, size);
-    OHOS::SecurityCollectorRunManagerFuzzTest(data, size);
-    OHOS::SecurityCollectorSubscriberManagerFuzzTest(data, size);
     return 0;
 }

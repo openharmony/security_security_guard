@@ -39,10 +39,12 @@ using ErrorCode = enum {
     DB_OPT_ERR,
     DB_INFO_ERR,
     DUPLICATE,
+    API_SUPPORT_ERROR = 801,
     FILTER_UNSUPPORTED = 1005,
     FILTER_EXCEED_LIMIT = 1006,
     CLIENT_EXCEED_PROCESS_LIMIT = 1007,
-    CLIENT_EXCEED_GLOBAL_LIMIT = 1008
+    CLIENT_EXCEED_GLOBAL_LIMIT = 1008,
+    FILE_NOT_FOUND = 1011,      // same as ext
 };
 
 using SecurityModel = struct {

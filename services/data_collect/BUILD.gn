@@ -133,6 +133,9 @@ ohos_shared_library("sg_collect_service") {
       "device_manager:devicemanagersdk",
     ]
   }
+  if (security_guard_device_type == "pc") {
+    defines += [ "SECURITY_GUARD_DEVICE_TYPE_PC" ]
+  }
 }
 
 ohos_shared_library("sg_collect_service_database") {

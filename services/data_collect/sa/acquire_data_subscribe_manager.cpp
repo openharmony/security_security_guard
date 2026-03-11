@@ -44,10 +44,16 @@ namespace {
     constexpr int64_t MAX_DURATION_TEN_SECOND = 10 * 1000;
     constexpr size_t MAX_SESSION_SIZE = 16;
     constexpr size_t MAX_SESSION_SIZE_ONE_PROCESS = 2;
+    constexpr size_t MAX_CACHE_NOTIFY_EVENT_SIZE = 10;
 #ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
     constexpr const char *PKG_NAME = "ohos.security.securityguard";
 #endif
-    constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 60000;
+#ifdef SECURITY_GUARD_DEVICE_TYPE_PC
+    constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 6000;
+#else
+    constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 500;
+#endif 
+
     constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 16;
     std::atomic<uint32_t> g_taskCount = 0;
     constexpr int32_t TOKEN_BUCKET_STEP_SIZE = 500;
@@ -264,7 +270,7 @@ int AcquireDataSubscribeManager::SubscribeSc(int64_t eventId)
     if (config.eventType != static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL)) {
         return SUCCESS;
     }
-    collectorListener_->callingUids_.insert(static_cast<uint32_t>(IPCSkeleton::GetCallingUid()));
+    collectorListener_->InsertCallingUids(static_cast<uint32_t>(IPCSkeleton::GetCallingUid()));
     // 订阅SG
     if (config.prog == "security_guard") {
         return SubscribeScInSg(eventId);
@@ -408,6 +414,15 @@ void AcquireDataSubscribeManager::ClearEventCache()
     int code = DatabaseManager::GetInstance().InsertEvent(USER_SOURCE, tmp, {});
     if (code != SUCCESS) {
         SGLOGE("insert event error, %{public}d", code);
+    }
+    std::vector<SecurityCollector::Event> notifyTmp {};
+    {
+        std::lock_guard<ffrt::mutex> lock(eventsMutex_);
+        notifyTmp.swap(notifyEvents_);
+        notifyEvents_.reserve(MAX_CACHE_NOTIFY_EVENT_SIZE);
+    }
+    for (const auto &iter : notifyTmp) {
+        AcquireDataSubscribeManager::GetInstance().UploadEventTask(iter);
     }
 }
 
@@ -570,9 +585,20 @@ int AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &eve
         SGLOGE("CheckRiskContent error");
         return BAD_PARAM;
     }
-
-    auto task = [event]() {
-        AcquireDataSubscribeManager::GetInstance().UploadEventTask(event);
+    std::vector<SecurityCollector::Event> tmp {};
+    {
+        std::lock_guard<ffrt::mutex> lock(eventsMutex_);
+        notifyEvents_.emplace_back(event);
+        if (notifyEvents_.size() < MAX_CACHE_NOTIFY_EVENT_SIZE) {
+            return SUCCESS;
+        }
+        tmp.swap(notifyEvents_);
+        notifyEvents_.reserve(MAX_CACHE_NOTIFY_EVENT_SIZE);
+    }
+    auto task = [tmp]() {
+        for (const auto &iter : tmp) {
+            AcquireDataSubscribeManager::GetInstance().UploadEventTask(iter);
+        }
         g_taskCount.fetch_sub(1);
     };
     if (g_taskCount.load() > UPLOAD_EVENT_TASK_MAX_COUNT) {
@@ -686,6 +712,7 @@ void AcquireDataSubscribeManager::CollectorListener::OnNotify(const SecurityColl
 
 std::string AcquireDataSubscribeManager::CollectorListener::GetExtraInfo()
 {
+    std::lock_guard<ffrt::mutex> lock(callingUidsMutex_);
     std::string uidStr = "";
     for (auto uid : callingUids_) {
         if (uid == getuid()) {
@@ -694,6 +721,12 @@ std::string AcquireDataSubscribeManager::CollectorListener::GetExtraInfo()
         uidStr += std::to_string(uid);
     }
     return uidStr;
+}
+
+void AcquireDataSubscribeManager::CollectorListener::InsertCallingUids(uint32_t callingUid)
+{
+    std::lock_guard<ffrt::mutex> lock(callingUidsMutex_);
+    callingUids_.insert(callingUid);
 }
 
 int32_t AcquireDataSubscribeManager::SecurityCollectorSubscriber::OnNotify(const SecurityCollector::Event &event)
@@ -912,5 +945,11 @@ int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, pi
         return CLIENT_EXCEED_PROCESS_LIMIT;
     }
     return SUCCESS;
+}
+
+const std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> &
+    AcquireDataSubscribeManager::GetAuditClientSessionMap()
+{
+    return sessionsMap_;
 }
 }

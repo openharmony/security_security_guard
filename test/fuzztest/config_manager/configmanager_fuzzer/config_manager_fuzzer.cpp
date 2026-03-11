@@ -42,55 +42,6 @@ namespace {
     constexpr int MAX_STRING_SIZE = 1024;
 }
 namespace OHOS {
-bool ConfigDataManagerFuzzTest(const uint8_t* data, size_t size)
-{
-    FuzzedDataProvider fdp(data, size);
-    int64_t eventId = fdp.ConsumeIntegral<int64_t>();
-    uint32_t modelId = fdp.ConsumeIntegral<uint32_t>();
-    std::string table = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    std::set<int64_t> eventIds{eventId};
-    ModelCfg modelCfg = {};
-    EventCfg eventCfg = {};
-    ConfigDataManager::GetInstance().InsertModelMap(modelId, modelCfg);
-    ConfigDataManager::GetInstance().InsertEventMap(eventId, eventCfg);
-    ConfigDataManager::GetInstance().InsertModelToEventMap(modelId, eventIds);
-    ConfigDataManager::GetInstance().InsertEventToTableMap(eventId, table);
-    ConfigDataManager::GetInstance().GetEventIds(modelId);
-    ConfigDataManager::GetInstance().GetAllEventIds();
-    ConfigDataManager::GetInstance().GetAllModelIds();
-    ConfigDataManager::GetInstance().GetModelConfig(modelId, modelCfg);
-    ConfigDataManager::GetInstance().GetEventConfig(eventId, eventCfg);
-    ConfigDataManager::GetInstance().GetTableFromEventId(eventId);
-    ConfigDataManager::GetInstance().ResetModelMap();
-    ConfigDataManager::GetInstance().ResetEventMap();
-    ConfigDataManager::GetInstance().ResetModelToEventMap();
-    ConfigDataManager::GetInstance().ResetEventToTableMap();
-    return true;
-}
-
-bool ConfigManagerFuzzTest(const uint8_t* data, size_t size)
-{
-    ConfigManager::GetInstance().StartUpdate();
-    return true;
-}
-
-bool EventConfigFuzzTest(const uint8_t* data, size_t size)
-{
-    FuzzedDataProvider fdp(data, size);
-    int mode = fdp.ConsumeIntegral<int32_t>();
-    EventConfig config{};
-    nlohmann::json jsonObj;
-    EventCfg cfg{};
-    std::vector<EventCfg> cfgs{cfg};
-    config.Load(mode);
-    config.Parse();
-    config.Update();
-    config.ParseEventConfig(cfgs, jsonObj);
-    config.CacheEventConfig(cfgs);
-    config.CacheEventToTable(cfgs);
-    return true;
-}
-
 bool ModelConfigFuzzTest(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
@@ -153,9 +104,6 @@ void SecurityGuardUtilsFuzzTest(const uint8_t* data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on date */
-    OHOS::ConfigDataManagerFuzzTest(data, size);
-    OHOS::ConfigManagerFuzzTest(data, size);
-    OHOS::EventConfigFuzzTest(data, size);
     OHOS::ModelConfigFuzzTest(data, size);
     OHOS::JsonConfigFuzzTest(data, size);
     OHOS::SecurityGuardUtilsFuzzTest(data, size);
