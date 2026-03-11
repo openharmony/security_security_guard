@@ -37,7 +37,7 @@ bool ReportSecurityInfoFuzzTest(FuzzedDataProvider &fdp)
     info.eventId = eventId;
     std::string version(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     info.version = version.c_str();
-    std::string content(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    std::string content(fdp.ConsumeRandomLengthString(CONTENT_MAX_LEN - 1));
     (void)memcpy_s(info.content, CONTENT_MAX_LEN, content.c_str(), content.size());
     info.contentLen = content.size();
     ReportSecurityInfo(&info);
@@ -50,7 +50,7 @@ bool ReportSecurityInfoAsyncFuzzTest(FuzzedDataProvider &fdp)
     info.eventId = fdp.ConsumeIntegral<int64_t>();
     std::string str = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     info.version = str.c_str();
-    std::string content(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    std::string content(fdp.ConsumeRandomLengthString(CONTENT_MAX_LEN - 1));
     (void)memcpy_s(info.content, CONTENT_MAX_LEN, content.c_str(), content.size());
     info.contentLen = content.size();
     ReportSecurityInfoAsync(&info);

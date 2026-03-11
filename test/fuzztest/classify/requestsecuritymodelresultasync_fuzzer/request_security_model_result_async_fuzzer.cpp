@@ -27,9 +27,6 @@ extern "C" int32_t RequestSecurityEventInfoAsync(const DeviceIdentify *devId, co
     RequestSecurityEventInfoCallBack callback);
 
 namespace OHOS {
-namespace {
-    constexpr int MAX_STRING_SIZE = 1024;
-}
 static void SecurityGuardRiskCallbackFunc(SecurityModelResult *result)
 {
     (void)result;
@@ -39,7 +36,7 @@ bool RequestSecurityModelResultAsyncFuzzTest(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
     DeviceIdentify deviceIdentify = {};
-    std::string str = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    std::string str = fdp.ConsumeRandomLengthString(DEVICE_ID_MAX_LEN - 1);
     (void) memcpy_s(deviceIdentify.identity, DEVICE_ID_MAX_LEN, str.c_str(), str.size());
     deviceIdentify.length = str.size();
     uint32_t modelId = fdp.ConsumeIntegral<uint32_t>();
