@@ -52,7 +52,7 @@ namespace {
     constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 6000;
 #else
     constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 500;
-#endif 
+#endif
 
     constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 16;
     std::atomic<uint32_t> g_taskCount = 0;
@@ -879,7 +879,7 @@ int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, cons
     const sptr<IRemoteObject> &cb)
 {
     pid_t callerPid = IPCSkeleton::GetCallingPid();
-    int ret = IsExceedLimited(clientId, callerPid);
+    int ret = IsExceedLimited(clientId, eventGroup, callerPid);
     if (ret != SUCCESS) {
         SGLOGE("IsExceedLimited error");
         return ret;
@@ -923,14 +923,22 @@ int AcquireDataSubscribeManager::DestoryClient(const std::string &eventGroup, co
     return SUCCESS;
 }
 
-int AcquireDataSubscribeManager::IsExceedLimited(const std::string &clientId, pid_t callerPid)
+int AcquireDataSubscribeManager::IsExceedLimited(
+    const std::string &clientId, const std::string &eventGroup, pid_t callerPid)
 {
     // old subscribe api no need to count
     if (clientId.find("sdk") != std::string::npos) {
         return SUCCESS;
     }
     std::lock_guard<ffrt::mutex> lock(sessionMutex_);
-    if (sessionsMap_.size() >= MAX_SESSION_SIZE) {
+    size_t auditGroupSessionCount = 0;
+    for (auto iter : sessionsMap_) {
+        if (iter.second != nullptr && iter.second->eventGroup == eventGroup) {
+            ++auditGroupSessionCount;
+        }
+    }
+
+    if (auditGroupSessionCount >= MAX_SESSION_SIZE) {
         SGLOGE("max instance limited");
         return CLIENT_EXCEED_GLOBAL_LIMIT;
     }
