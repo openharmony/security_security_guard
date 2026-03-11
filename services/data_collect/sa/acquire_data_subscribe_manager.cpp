@@ -52,7 +52,7 @@ namespace {
     constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 6000;
 #else
     constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 500;
-#endif 
+#endif
 
     constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 16;
     std::atomic<uint32_t> g_taskCount = 0;
