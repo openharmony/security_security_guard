@@ -68,15 +68,10 @@ bool ConfigDataManagerFuzzTest(const uint8_t* data, size_t size)
     return true;
 }
 
-bool ConfigManagerFuzzTest(const uint8_t* data, size_t size)
-{
-    ConfigManager::GetInstance().StartUpdate();
-    return true;
-}
-
 bool EventConfigFuzzTest(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
+    ConfigManager::GetInstance().StartUpdate();
     int mode = fdp.ConsumeIntegral<int32_t>();
     EventConfig config{};
     nlohmann::json jsonObj;
@@ -98,7 +93,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on date */
     OHOS::ConfigDataManagerFuzzTest(data, size);
-    OHOS::ConfigManagerFuzzTest(data, size);
     OHOS::EventConfigFuzzTest(data, size);
     return 0;
 }

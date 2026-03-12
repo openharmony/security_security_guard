@@ -14,7 +14,7 @@
  */
 
 #include "request_security_event_info_async_fuzzer.h"
-
+#include <fuzzer/FuzzedDataProvider.h>
 #include <string>
 
 #include "securec.h"
@@ -27,6 +27,9 @@ extern "C" int32_t RequestSecurityEventInfoAsync(const DeviceIdentify *devId, co
     RequestSecurityEventInfoCallBack callback);
 
 namespace OHOS {
+namespace {
+constexpr int MAX_STRING_SIZE = 1024;
+}
 static void RequestSecurityEventInfoCallBackFunc(const DeviceIdentify *devId, const char *eventBuffList,
     uint32_t status)
 {
@@ -37,10 +40,11 @@ static void RequestSecurityEventInfoCallBackFunc(const DeviceIdentify *devId, co
 bool RequestSecurityEventInfoAsyncFuzzTest(const uint8_t* data, size_t size)
 {
     DeviceIdentify deviceIdentify = {};
-    uint32_t cpyLen = size > DEVICE_ID_MAX_LEN ? DEVICE_ID_MAX_LEN : static_cast<uint32_t>(size);
-    (void) memcpy_s(deviceIdentify.identity, DEVICE_ID_MAX_LEN, data, cpyLen);
-    deviceIdentify.length = cpyLen;
-    std::string eventJson(reinterpret_cast<const char*>(data), size);
+    FuzzedDataProvider fdp(data, size);
+    std::string identity(fdp.ConsumeRandomLengthString(DEVICE_ID_MAX_LEN - 1));
+    (void) memcpy_s(deviceIdentify.identity, DEVICE_ID_MAX_LEN, identity.c_str(), identity.size());
+    deviceIdentify.length = identity.size();
+    std::string eventJson(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     RequestSecurityEventInfoAsync(&deviceIdentify, eventJson.c_str(), RequestSecurityEventInfoCallBackFunc);
     return true;
 }
