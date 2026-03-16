@@ -496,7 +496,7 @@ int32_t DataCollectManager::QueryCodeSignInfoByPath(const std::string &filePath,
     }
     auto fdsan = std::make_shared<FdsanFd>(open(realPath.c_str(), O_RDONLY));
     if (fdsan->Get() < 0) {
-        SGLOGE("open file fail! reason %{publics}s", strerror(errno));
+        SGLOGE("open file fail! reason %{public}s", strerror(errno));
         return FILE_NOT_FOUND;
     }
     auto pid = getpid();

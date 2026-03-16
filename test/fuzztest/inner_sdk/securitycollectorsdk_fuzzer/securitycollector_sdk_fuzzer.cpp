@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "inner_sdk_fuzzer.h"
+#include "securitycollector_sdk_fuzzer.h"
 
 #include <string>
 #include <fuzzer/FuzzedDataProvider.h>
@@ -28,12 +28,6 @@
 #include "data_collect_manager_callback_service.h"
 #include "data_collect_manager_callback_stub.h"
 #include "data_collect_manager_idl_proxy.h"
-#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-#include "risk_analysis_manager_callback_service.h"
-#include "risk_analysis_manager_callback_stub.h"
-#include "risk_analysis_manager_callback.h"
-#include "risk_analysis_manager_proxy.h"
-#endif
 #include "collector_manager.h"
 #include "security_collector_manager_callback_stub.h"
 #include "security_collector_manager_proxy.h"
@@ -80,17 +74,7 @@ public:
     int32_t OnNotify(const std::vector<Security::SecurityCollector::Event> &events) override { return 0; };
 };
 
-#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-class MockRiskAnalysisManagerCallbackStub : public RiskAnalysisManagerCallbackStub {
-public:
-    MockRiskAnalysisManagerCallbackStub() = default;
-    ~MockRiskAnalysisManagerCallbackStub() override = default;
-    int32_t ResponseSecurityModelResult(const std::string &devId, uint32_t modelId, std::string &result) override
-    {
-        return 0;
-    };
-};
-#endif
+
 class MockSecurityCollectorManagerCallbackStub : public SecurityCollectorManagerCallbackStub {
 public:
     MockSecurityCollectorManagerCallbackStub() = default;
@@ -127,77 +111,104 @@ int32_t TestResultCallback(const std::string &devId, uint32_t modelId, const std
     return 0;
 }
 
+void SecurityCollectorManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)
+{
+    if (data == nullptr || size < sizeof(uint32_t) + sizeof(uint32_t)) {
+        return;
+    }
+    size_t offset = 0;
+    MockSecurityCollectorManagerCallbackStub stub;
+    MessageParcel datas;
+    MessageParcel reply;
+    MessageOption option;
+    uint32_t code = *(reinterpret_cast<const uint32_t *>(data + offset));
+    offset += sizeof(uint32_t);
+    uint32_t uint32 = *(reinterpret_cast<const uint32_t *>(data + offset));
+    offset += sizeof(uint32_t);
+    std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
+    datas.WriteInterfaceToken(ISecurityCollectorManagerCallback::GetDescriptor());
+    datas.WriteUint32(uint32);
+    datas.WriteString(string);
+    datas.WriteString(string);
+    datas.WriteString(string);
+    stub.OnRemoteRequest(code, datas, reply, option);
+}
 
-void DataCollectManagerFuzzTest(const uint8_t* data, size_t size)
+void SecurityCollectorManagerProxyFuzzTest(const uint8_t* data, size_t size)
 {
     if (data == nullptr || size < sizeof(int64_t)) {
         return;
     }
-    FuzzedDataProvider fdp(data, size);
-    EventSubscribeClient client {};
-    auto mute = std::make_shared<Security::SecurityGuard::EventMuteFilter>();
-    mute->eventId = fdp.ConsumeIntegral<int64_t>();
-    mute->type = fdp.ConsumeIntegral<int64_t>();
-    mute->isInclude = fdp.ConsumeIntegral<bool>();
-    mute->mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    client.AddFilter(mute);
-    client.RemoveFilter(mute);
-    auto func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg)-> int32_t {
-        return 0;
-    };
-    std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    std::string string1 = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    DataCollectManager::GetInstance().RequestSecurityEventInfo(string, string1, func);
-}
-
-#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-void RiskAnalysisManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)
-{
-    FuzzedDataProvider fdp(data, size);
-    MockRiskAnalysisManagerCallbackStub stub;
-    MessageParcel datas;
-    MessageParcel reply;
-    MessageOption option;
-    uint32_t code = fdp.ConsumeIntegral<uint32_t>();
-    std::string string(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    datas.WriteInterfaceToken(IRiskAnalysisManagerCallback::GetDescriptor());
-    datas.WriteUint32(fdp.ConsumeIntegral<uint32_t>());
-    datas.WriteString(string);
-    datas.WriteString(string);
-    stub.OnRemoteRequest(code, datas, reply, option);
-
-    ResultCallback callback;
-    RiskAnalysisManagerCallbackService service(callback);
-    service.ResponseSecurityModelResult(string, code, string);
-    service.callback_ = TestResultCallback;
-    service.ResponseSecurityModelResult(string, code, string);
-}
-
-void RiskAnalysisManagerProxyFuzzTest(const uint8_t* data, size_t size)
-{
-    FuzzedDataProvider fdp(data, size);
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    ResultCallback func = [] (const std::string &devId, uint32_t modelId, const std::string &result) -> int32_t {
-        return 0;
-    };
-    sptr<RiskAnalysisManagerCallbackService> callback = new (std::nothrow) RiskAnalysisManagerCallbackService(func);
-    uint32_t uint32 = fdp.ConsumeIntegral<uint32_t>();
-    std::string string(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    RiskAnalysisManagerProxy proxy{obj};
-    proxy.RequestSecurityModelResult(string, uint32, string, callback);
-    proxy.SetModelState(uint32, true);
+    sptr<Security::SecurityCollector::SecurityCollectorManagerCallbackService> callback =
+        new (std::nothrow) Security::SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
+    std::string string(reinterpret_cast<const char *>(data), size);
+    int64_t int64 = *(reinterpret_cast<const int64_t *>(data));
+    SecurityCollectorSubscribeInfo subscribeInfo({int64, string, string, string});
+    SecurityCollectorManagerProxy proxy{obj};
+    std::vector<SecurityEventRuler> rulers{};
+    std::vector<SecurityEvent> events{};
+    proxy.Subscribe(subscribeInfo, callback);
+    proxy.Unsubscribe(callback);
+    proxy.CollectorStart(subscribeInfo, callback);
+    proxy.CollectorStop(subscribeInfo, callback);
+    proxy.QuerySecurityEvent(rulers, events);
 }
-#endif
+
+void SecurityCollectorSubscribeInfoFuzzTest(const uint8_t* data, size_t size)
+{
+    FuzzedDataProvider fdp(data, size);
+    std::string string(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    int64_t int64 = fdp.ConsumeIntegral<int64_t>();
+    SecurityCollectorSubscribeInfo info;
+    Parcel parcel;
+    info.Marshalling(parcel);
+    info.Unmarshalling(parcel);
+    info.ReadFromParcel(parcel);
+
+    parcel.WriteInt64(int64);
+    info.ReadFromParcel(parcel);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteBool(true);
+    info.ReadFromParcel(parcel);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteBool(true);
+    parcel.WriteInt64(int64);
+    info.ReadFromParcel(parcel);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteBool(true);
+    parcel.WriteInt64(int64);
+    parcel.WriteString(string);
+    info.ReadFromParcel(parcel);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteBool(true);
+    parcel.WriteInt64(int64);
+    parcel.WriteString(string);
+    parcel.WriteString(string);
+    info.ReadFromParcel(parcel);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteBool(true);
+    parcel.WriteInt64(int64);
+    parcel.WriteString(string);
+    parcel.WriteString(string);
+    parcel.WriteString(string);
+    info.ReadFromParcel(parcel);
+
+    info.Unmarshalling(parcel);
+}
 }  // namespace OHOS
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on date */
-#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-    OHOS::RiskAnalysisManagerCallbackStubFuzzTest(data, size);
-    OHOS::RiskAnalysisManagerProxyFuzzTest(data, size);
-#endif
+    OHOS::SecurityCollectorManagerCallbackStubFuzzTest(data, size);
+    OHOS::SecurityCollectorManagerProxyFuzzTest(data, size);
+    OHOS::SecurityCollectorSubscribeInfoFuzzTest(data, size);
     return 0;
 }
