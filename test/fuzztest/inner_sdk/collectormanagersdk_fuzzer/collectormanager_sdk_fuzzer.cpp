@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "inner_sdk_fuzzer.h"
+#include "collectormanager_sdk_fuzzer.h"
 
 #include <string>
 #include <fuzzer/FuzzedDataProvider.h>
@@ -28,12 +28,6 @@
 #include "data_collect_manager_callback_service.h"
 #include "data_collect_manager_callback_stub.h"
 #include "data_collect_manager_idl_proxy.h"
-#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-#include "risk_analysis_manager_callback_service.h"
-#include "risk_analysis_manager_callback_stub.h"
-#include "risk_analysis_manager_callback.h"
-#include "risk_analysis_manager_proxy.h"
-#endif
 #include "collector_manager.h"
 #include "security_collector_manager_callback_stub.h"
 #include "security_collector_manager_proxy.h"
@@ -80,17 +74,6 @@ public:
     int32_t OnNotify(const std::vector<Security::SecurityCollector::Event> &events) override { return 0; };
 };
 
-#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-class MockRiskAnalysisManagerCallbackStub : public RiskAnalysisManagerCallbackStub {
-public:
-    MockRiskAnalysisManagerCallbackStub() = default;
-    ~MockRiskAnalysisManagerCallbackStub() override = default;
-    int32_t ResponseSecurityModelResult(const std::string &devId, uint32_t modelId, std::string &result) override
-    {
-        return 0;
-    };
-};
-#endif
 class MockSecurityCollectorManagerCallbackStub : public SecurityCollectorManagerCallbackStub {
 public:
     MockSecurityCollectorManagerCallbackStub() = default;
@@ -127,77 +110,112 @@ int32_t TestResultCallback(const std::string &devId, uint32_t modelId, const std
     return 0;
 }
 
-
-void DataCollectManagerFuzzTest(const uint8_t* data, size_t size)
+void CollectorManagerFuzzTest(const uint8_t* data, size_t size)
 {
     if (data == nullptr || size < sizeof(int64_t)) {
         return;
     }
     FuzzedDataProvider fdp(data, size);
-    EventSubscribeClient client {};
-    auto mute = std::make_shared<Security::SecurityGuard::EventMuteFilter>();
-    mute->eventId = fdp.ConsumeIntegral<int64_t>();
-    mute->type = fdp.ConsumeIntegral<int64_t>();
-    mute->isInclude = fdp.ConsumeIntegral<bool>();
-    mute->mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    client.AddFilter(mute);
-    client.RemoveFilter(mute);
-    auto func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg)-> int32_t {
-        return 0;
-    };
-    std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    std::string string1 = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    DataCollectManager::GetInstance().RequestSecurityEventInfo(string, string1, func);
+    Security::SecurityCollector::Event event{fdp.ConsumeIntegral<int64_t>(),
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
+        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE)};
+    auto subscriber = std::make_shared<MockCollectorSubscriber>(event);
+    std::vector<SecurityEventRuler> rulers{};
+    std::vector<SecurityEvent> events{};
+    SecurityCollectorSubscribeInfo subscribeInfo{};
+    CollectorManager::GetInstance().Subscribe(subscriber);
+    CollectorManager::GetInstance().Unsubscribe(subscriber);
+    CollectorManager::GetInstance().QuerySecurityEvent(rulers, events);
+    CollectorManager::GetInstance().CollectorStart(subscribeInfo);
+    CollectorManager::GetInstance().CollectorStop(subscribeInfo);
+
+    CollectorManager manager;
+    sptr<Security::SecurityCollector::SecurityCollectorManagerCallbackService> callback =
+        new (std::nothrow) Security::SecurityCollector::SecurityCollectorManagerCallbackService(nullptr);
+    manager.eventListeners_[subscriber] = callback;
+    manager.Subscribe(nullptr);
+    manager.Subscribe(subscriber);
+    manager.Unsubscribe(nullptr);
+    manager.Unsubscribe(subscriber);
+    SecurityCollectorEventMuteFilter filter {};
+    filter.eventId = fdp.ConsumeIntegral<int64_t>();
+    filter.type = fdp.ConsumeIntegral<int64_t>();
+    filter.isSetMute = static_cast<bool>(fdp.ConsumeBool());
+    filter.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
+    SecurityCollectorEventFilter subscribeMute(filter);
+    CollectorManager::GetInstance().AddFilter(subscribeMute);
+    CollectorManager::GetInstance().RemoveFilter(subscribeMute);
+    Parcel parcel;
+    subscribeMute.ReadFromParcel(parcel);
+    subscribeMute.Marshalling(parcel);
+    subscribeMute.Unmarshalling(parcel);
 }
 
-#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-void RiskAnalysisManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)
+void SecurityEventFuzzTest(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
-    MockRiskAnalysisManagerCallbackStub stub;
-    MessageParcel datas;
-    MessageParcel reply;
-    MessageOption option;
-    uint32_t code = fdp.ConsumeIntegral<uint32_t>();
     std::string string(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    datas.WriteInterfaceToken(IRiskAnalysisManagerCallback::GetDescriptor());
-    datas.WriteUint32(fdp.ConsumeIntegral<uint32_t>());
-    datas.WriteString(string);
-    datas.WriteString(string);
-    stub.OnRemoteRequest(code, datas, reply, option);
+    int64_t int64 = fdp.ConsumeIntegral<int64_t>();
+    SecurityEvent event;
+    Parcel parcel;
+    event.Marshalling(parcel);
+    event.Unmarshalling(parcel);
+    event.ReadFromParcel(parcel);
 
-    ResultCallback callback;
-    RiskAnalysisManagerCallbackService service(callback);
-    service.ResponseSecurityModelResult(string, code, string);
-    service.callback_ = TestResultCallback;
-    service.ResponseSecurityModelResult(string, code, string);
+    parcel.WriteInt64(int64);
+    event.ReadFromParcel(parcel);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteString(string);
+    event.ReadFromParcel(parcel);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteString(string);
+    parcel.WriteString(string);
+    event.ReadFromParcel(parcel);
+
+    event.Unmarshalling(parcel);
 }
 
-void RiskAnalysisManagerProxyFuzzTest(const uint8_t* data, size_t size)
+void SecurityEventRulerFuzzTest(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
-    sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    ResultCallback func = [] (const std::string &devId, uint32_t modelId, const std::string &result) -> int32_t {
-        return 0;
-    };
-    sptr<RiskAnalysisManagerCallbackService> callback = new (std::nothrow) RiskAnalysisManagerCallbackService(func);
-    uint32_t uint32 = fdp.ConsumeIntegral<uint32_t>();
     std::string string(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    RiskAnalysisManagerProxy proxy{obj};
-    proxy.RequestSecurityModelResult(string, uint32, string, callback);
-    proxy.SetModelState(uint32, true);
+    int64_t int64 = fdp.ConsumeIntegral<int64_t>();
+    SecurityEventRuler ruler;
+    Parcel parcel;
+    ruler.Marshalling(parcel);
+    ruler.Unmarshalling(parcel);
+    ruler.ReadFromParcel(parcel);
+
+    parcel.WriteInt64(int64);
+    ruler.ReadFromParcel(parcel);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteString(string);
+    ruler.ReadFromParcel(parcel);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteString(string);
+    parcel.WriteString(string);
+    ruler.ReadFromParcel(parcel);
+
+    parcel.WriteInt64(int64);
+    parcel.WriteString(string);
+    parcel.WriteString(string);
+    parcel.WriteString(string);
+    ruler.ReadFromParcel(parcel);
+
+    ruler.Unmarshalling(parcel);
 }
-#endif
 }  // namespace OHOS
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on date */
-#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-    OHOS::RiskAnalysisManagerCallbackStubFuzzTest(data, size);
-    OHOS::RiskAnalysisManagerProxyFuzzTest(data, size);
-#endif
+    OHOS::CollectorManagerFuzzTest(data, size);
+    OHOS::SecurityEventFuzzTest(data, size);
+    OHOS::SecurityEventRulerFuzzTest(data, size);
     return 0;
 }

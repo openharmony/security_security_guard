@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "inner_sdk_fuzzer.h"
+#include "acquiredatamanager_sdk_fuzzer.h"
 
 #include <string>
 #include <fuzzer/FuzzedDataProvider.h>
@@ -28,12 +28,6 @@
 #include "data_collect_manager_callback_service.h"
 #include "data_collect_manager_callback_stub.h"
 #include "data_collect_manager_idl_proxy.h"
-#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-#include "risk_analysis_manager_callback_service.h"
-#include "risk_analysis_manager_callback_stub.h"
-#include "risk_analysis_manager_callback.h"
-#include "risk_analysis_manager_proxy.h"
-#endif
 #include "collector_manager.h"
 #include "security_collector_manager_callback_stub.h"
 #include "security_collector_manager_proxy.h"
@@ -80,17 +74,6 @@ public:
     int32_t OnNotify(const std::vector<Security::SecurityCollector::Event> &events) override { return 0; };
 };
 
-#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-class MockRiskAnalysisManagerCallbackStub : public RiskAnalysisManagerCallbackStub {
-public:
-    MockRiskAnalysisManagerCallbackStub() = default;
-    ~MockRiskAnalysisManagerCallbackStub() override = default;
-    int32_t ResponseSecurityModelResult(const std::string &devId, uint32_t modelId, std::string &result) override
-    {
-        return 0;
-    };
-};
-#endif
 class MockSecurityCollectorManagerCallbackStub : public SecurityCollectorManagerCallbackStub {
 public:
     MockSecurityCollectorManagerCallbackStub() = default;
@@ -128,76 +111,67 @@ int32_t TestResultCallback(const std::string &devId, uint32_t modelId, const std
 }
 
 
-void DataCollectManagerFuzzTest(const uint8_t* data, size_t size)
+void AcquireDataManagerFuzzTest(const uint8_t* data, size_t size)
 {
     if (data == nullptr || size < sizeof(int64_t)) {
         return;
     }
     FuzzedDataProvider fdp(data, size);
-    EventSubscribeClient client {};
-    auto mute = std::make_shared<Security::SecurityGuard::EventMuteFilter>();
-    mute->eventId = fdp.ConsumeIntegral<int64_t>();
-    mute->type = fdp.ConsumeIntegral<int64_t>();
-    mute->isInclude = fdp.ConsumeIntegral<bool>();
-    mute->mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    client.AddFilter(mute);
-    client.RemoveFilter(mute);
-    auto func = [] (std::string &devId, std::string &riskData, uint32_t status,
-        const std::string &errMsg)-> int32_t {
-        return 0;
-    };
+    int fd = fdp.ConsumeIntegral<int32_t>();
+    int64_t eventId = fdp.ConsumeIntegral<int64_t>();
     std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    std::string string1 = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    DataCollectManager::GetInstance().RequestSecurityEventInfo(string, string1, func);
+    Security::SecurityCollector::Event event{eventId, string, string, string};
+    auto subscriber = std::make_shared<MockCollectorSubscriber>(event);
+    auto callback = std::make_shared<MockSecurityEventQueryCallback>();
+    sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    DataCollectManager::GetInstance().Subscribe(subscriber);
+    DataCollectManager::GetInstance().Unsubscribe(subscriber);
+    DataCollectManager::GetInstance().StartCollector(event, eventId);
+    DataCollectManager::GetInstance().StopCollector(event);
+    DataCollectManager::GetInstance().QuerySecurityEventConfig(string);
+    std::vector<SecurityEventRuler> rulers{};
+    DataCollectManager::GetInstance().QuerySecurityEvent(rulers, callback);
+    DataCollectManager::GetInstance().SecurityGuardConfigUpdate(fd, string);
+    DataCollectManager::GetInstance().QuerySecurityEventById(rulers, callback, "auditGroup");
+    std::string result {};
+    DataCollectManager::GetInstance().QueryCodeSignInfoByPath(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), result);
+    DataCollectManager::GetInstance().QueryAllClientsInfo(result);
 }
 
-#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-void RiskAnalysisManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)
+void AcquireDataManagerCallbackServiceFuzzTest(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
-    MockRiskAnalysisManagerCallbackStub stub;
+    int64_t eventId = fdp.ConsumeIntegral<int64_t>();
+    std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    Security::SecurityCollector::Event event{eventId, string, string, string};
+    AcquireDataManagerCallbackService service;
+    service.OnNotify({event});
+}
+
+void AcquireDataManagerCallbackStubFuzzTest(const uint8_t* data, size_t size)
+{
+    MockAcquireDataManagerCallbackStub stub;
     MessageParcel datas;
     MessageParcel reply;
     MessageOption option;
-    uint32_t code = fdp.ConsumeIntegral<uint32_t>();
-    std::string string(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    datas.WriteInterfaceToken(IRiskAnalysisManagerCallback::GetDescriptor());
-    datas.WriteUint32(fdp.ConsumeIntegral<uint32_t>());
-    datas.WriteString(string);
-    datas.WriteString(string);
-    stub.OnRemoteRequest(code, datas, reply, option);
-
-    ResultCallback callback;
-    RiskAnalysisManagerCallbackService service(callback);
-    service.ResponseSecurityModelResult(string, code, string);
-    service.callback_ = TestResultCallback;
-    service.ResponseSecurityModelResult(string, code, string);
-}
-
-void RiskAnalysisManagerProxyFuzzTest(const uint8_t* data, size_t size)
-{
     FuzzedDataProvider fdp(data, size);
-    sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    ResultCallback func = [] (const std::string &devId, uint32_t modelId, const std::string &result) -> int32_t {
-        return 0;
-    };
-    sptr<RiskAnalysisManagerCallbackService> callback = new (std::nothrow) RiskAnalysisManagerCallbackService(func);
-    uint32_t uint32 = fdp.ConsumeIntegral<uint32_t>();
-    std::string string(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    RiskAnalysisManagerProxy proxy{obj};
-    proxy.RequestSecurityModelResult(string, uint32, string, callback);
-    proxy.SetModelState(uint32, true);
+    int64_t int64 = fdp.ConsumeIntegral<int64_t>();
+    std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    datas.WriteInterfaceToken(AcquireDataManagerCallbackStub::GetDescriptor());
+    datas.WriteInt64(int64);
+    datas.WriteString(string);
+    datas.WriteString(string);
+    datas.WriteString(string);
+    stub.OnRemoteRequest(AcquireDataManagerCallbackStub::CMD_DATA_SUBSCRIBE_CALLBACK, datas, reply, option);
 }
-#endif
 }  // namespace OHOS
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on date */
-#ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-    OHOS::RiskAnalysisManagerCallbackStubFuzzTest(data, size);
-    OHOS::RiskAnalysisManagerProxyFuzzTest(data, size);
-#endif
+    OHOS::AcquireDataManagerFuzzTest(data, size);
+    OHOS::AcquireDataManagerCallbackServiceFuzzTest(data, size);
+    OHOS::AcquireDataManagerCallbackStubFuzzTest(data, size);
     return 0;
 }
