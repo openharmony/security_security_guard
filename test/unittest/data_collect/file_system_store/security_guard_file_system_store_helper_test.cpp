@@ -104,6 +104,13 @@ HWTEST_F(SecurityGuardFileSystemStoreHelperTest, InsertEventTest001, TestSize.Le
         .content = "{\"aaa\": \"111\"}"
     };
     EXPECT_EQ(FileSystemStoreHelper::GetInstance().InsertEvent(event), SUCCESS);
+    SecEvent event1 {
+        .eventId = 0x18000001,
+        .version = "1.0",
+        .date = "20250228150000",
+        .content = "{\"aaa\": \"111\"}"
+    };
+    EXPECT_EQ(FileSystemStoreHelper::GetInstance().InsertEvent(event1), SUCCESS);
 }
 
 class MockFileSystemStorHelper : public FileSystemStoreHelper {
