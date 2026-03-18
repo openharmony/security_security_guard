@@ -56,6 +56,7 @@ namespace {
 
     constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 16;
     std::atomic<uint32_t> g_taskCount = 0;
+    std::atomic<uint32_t> g_crucialTaskCount = 0;
     constexpr int32_t TOKEN_BUCKET_STEP_SIZE = 500;
     constexpr int32_t TOKEN_BUCKET_MAX_SIZE = TOKEN_BUCKET_STEP_SIZE * 10 * 60;
     constexpr int32_t TOKEN_BUCKET_INTERVAL_TIME = 1000;
@@ -493,6 +494,7 @@ void AcquireDataSubscribeManager::InitEventQueue()
     }
     queue_ = std::make_shared<ffrt::queue>(ffrt::queue_serial, "UploadEvent");
     dbQueue_ = std::make_shared<ffrt::queue>(ffrt::queue_serial, "UploadDbEvent");
+    crucialQueue_ = std::make_shared<ffrt::queue>(ffrt::queue_serial, "UploadEventImmediately");
     SGLOGI("InitEventQueue successed");
 }
 
@@ -501,6 +503,7 @@ void AcquireDataSubscribeManager::DeInitEventQueue()
     std::lock_guard<ffrt::mutex> lock(queueMutex_);
     queue_ = nullptr;
     dbQueue_ = nullptr;
+    crucialQueue_ = nullptr;
 }
 void AcquireDataSubscribeManager::StartTokenBucketTask()
 {
@@ -585,6 +588,19 @@ int AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &eve
         SGLOGE("CheckRiskContent error");
         return BAD_PARAM;
     }
+    EventCfg config {};
+    if (!ConfigDataManager::GetInstance().GetEventConfig(event.eventId, config)) {
+        SGLOGE("GetEventConfig fail eventId=%{public}" PRId64, event.eventId);
+        return BAD_PARAM;
+    }
+    if (config.isBatchUpload != 1) {
+        return UploadEventImmediately(event);
+    }
+    return BatchUploadEvent(event);
+}
+
+int AcquireDataSubscribeManager::BatchUploadEvent(const SecurityCollector::Event &event)
+{
     std::vector<SecurityCollector::Event> tmp {};
     {
         std::lock_guard<ffrt::mutex> lock(eventsMutex_);
@@ -613,6 +629,27 @@ int AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &eve
         queue_->submit(task);
     }
     g_taskCount.fetch_add(1);
+    return SUCCESS;
+}
+
+int AcquireDataSubscribeManager::UploadEventImmediately(const SecurityCollector::Event &event)
+{
+    auto task = [event]() {
+        AcquireDataSubscribeManager::GetInstance().UploadEventTask(event);
+        g_crucialTaskCount.fetch_sub(1);
+    };
+    if (g_crucialTaskCount.load() > UPLOAD_EVENT_TASK_MAX_COUNT) {
+        SGLOGI("immediately subed event be discarded id is %{public}" PRId64, event.eventId);
+        return SUCCESS;
+    }
+    {
+        std::lock_guard<ffrt::mutex> lock(queueMutex_);
+        if (crucialQueue_ == nullptr) {
+            return SUCCESS;
+        }
+        crucialQueue_->submit(task);
+    }
+    g_crucialTaskCount.fetch_add(1);
     return SUCCESS;
 }
 
