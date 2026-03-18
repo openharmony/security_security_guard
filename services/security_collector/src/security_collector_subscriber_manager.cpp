@@ -183,13 +183,6 @@ bool SecurityCollectorSubscriberManager::SubscribeCollector(
     }
     eventToSubscribers_[eventId].emplace(subscriber);
     LOGI("eventId:%{public} " PRId64 ", callbackCount:%{public}zu", eventId, eventToSubscribers_[eventId].size());
-    int64_t duration = subscriber->GetSecurityCollectorSubscribeInfo().GetDuration();
-    if (duration > 0) {
-        auto remote = subscriber->GetRemote();
-        auto timer = std::make_shared<CleanupTimer>();
-        timers_.emplace(remote, timer);
-        timer->Start(remote, duration);
-    }
     return true;
 }
 
@@ -219,10 +212,6 @@ bool SecurityCollectorSubscriberManager::UnsubscribeCollector(const sptr<IRemote
             }
         }
     }
-
-    LOGI("erase timer befoe remoteObject");
-    timers_.erase(remote);
-    LOGI("erase timer after remoteObject");
     return true;
 }
 
