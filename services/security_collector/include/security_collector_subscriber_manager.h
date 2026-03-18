@@ -60,41 +60,10 @@ private:
     private:
         std::shared_ptr<SecurityCollectorSubscriber> subscriber_;
     };
-    
-    class CleanupTimer {
-    public:
-        CleanupTimer() = default;
-        ~CleanupTimer() { Shutdown(); }
-        void StopCollector(const sptr<IRemoteObject> &remote)
-        {
-            // avoid dead lock
-            std::thread work([this, remote] () {
-                SecurityCollectorSubscriberManager::GetInstance().CleanSubscriber(remote);
-            });
-            work.detach();
-        }
-        void Start(const sptr<IRemoteObject> &remote, int64_t duration)
-        {
-            timer_.Setup();
-            timerId_ = timer_.Register([this, remote] { this->StopCollector(remote); }, duration);
-        }
-        void Shutdown()
-        {
-            if (timerId_ != 0) {
-                timer_.Unregister(timerId_);
-            }
-            timer_.Shutdown();
-            timerId_ = 0;
-        }
-    private:
-        Utils::Timer timer_{"cleanup_collector"};
-        uint32_t timerId_{};
-    };
 
     UnsubscribeHandler unsubscribeHandler_{};
     ffrt::mutex collectorMutex_{};
     std::map<int64_t, std::set<std::shared_ptr<SecurityCollectorSubscriber>>> eventToSubscribers_{};
-    std::map<sptr<IRemoteObject>, std::shared_ptr<CleanupTimer>> timers_{};
     std::map<int64_t, std::shared_ptr<ICollectorFwk>> eventToListenner_;
     std::shared_ptr<ICollectorFwk> collectorListenner_{};
     void *handle_ = nullptr;
