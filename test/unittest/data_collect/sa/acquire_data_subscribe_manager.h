@@ -89,7 +89,7 @@ private:
     int InsertMute(const EventMuteFilter &filter, const std::string &clientId);
     int CheckInsertMute(const EventMuteFilter &filter, const std::string &clientId);
     size_t GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event);
-    int IsExceedLimited(const std::string &clientId, pid_t callerPid);
+    int IsExceedLimited(const std::string &clientId, const std::string &eventGroup, pid_t callerPid);
     bool IsFindFlag(const std::set<std::string> &eventSubscribes, int64_t eventId, const std::string &clientId);
     void NotifySub(sptr<IRemoteObject> obj, const SecurityCollector::Event &events);
     void UploadEventToStore(const SecurityCollector::Event &event);
