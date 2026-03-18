@@ -757,7 +757,11 @@ int32_t DataCollectManagerService::WriteRemoteFileToLocal(int fd, const std::str
         }
     }
     inputFd.Reset();
-    fsync(outputFd.Get());
+    if (fsync(outputFd.Get()) != 0) {
+        SGLOGE("fsync failed");
+        outputFd.Reset();
+        return FAILED;
+    }
     outputFd.Reset();
     return SUCCESS;
 }
