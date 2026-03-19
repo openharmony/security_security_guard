@@ -74,6 +74,24 @@ void SecurityGuardFileSystemStoreHelperTest::SetUp()
 void SecurityGuardFileSystemStoreHelperTest::TearDown()
 {
 }
+// This test case must be placed first to generate files for other test cases to call.
+HWTEST_F(SecurityGuardFileSystemStoreHelperTest, InsertEventTest001, TestSize.Level1)
+{
+    SecEvent event {
+        .eventId = 111,
+        .version = "1.0",
+        .date = "20250228150000",
+        .content = "{\"aaa\": \"111\"}"
+    };
+    EXPECT_EQ(FileSystemStoreHelper::GetInstance().InsertEvent(event), SUCCESS);
+    SecEvent event1 {
+        .eventId = 0x18000001,
+        .version = "1.0",
+        .date = "20250228150000",
+        .content = "{\"aaa\": \"111\"}"
+    };
+    EXPECT_EQ(FileSystemStoreHelper::GetInstance().InsertEvent(event1), SUCCESS);
+}
 
 HWTEST_F(SecurityGuardFileSystemStoreHelperTest, QuerySecurityEventTest001, TestSize.Level1)
 {
@@ -93,24 +111,6 @@ HWTEST_F(SecurityGuardFileSystemStoreHelperTest, QuerySecurityEventTest002, Test
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     auto proxy = iface_cast<ISecurityEventQueryCallback>(obj);
     EXPECT_EQ(FileSystemStoreHelper::GetInstance().QuerySecurityEvent(ruler, proxy), SUCCESS);
-}
-
-HWTEST_F(SecurityGuardFileSystemStoreHelperTest, InsertEventTest001, TestSize.Level1)
-{
-    SecEvent event {
-        .eventId = 111,
-        .version = "1.0",
-        .date = "20250228150000",
-        .content = "{\"aaa\": \"111\"}"
-    };
-    EXPECT_EQ(FileSystemStoreHelper::GetInstance().InsertEvent(event), SUCCESS);
-    SecEvent event1 {
-        .eventId = 0x18000001,
-        .version = "1.0",
-        .date = "20250228150000",
-        .content = "{\"aaa\": \"111\"}"
-    };
-    EXPECT_EQ(FileSystemStoreHelper::GetInstance().InsertEvent(event1), SUCCESS);
 }
 
 class MockFileSystemStorHelper : public FileSystemStoreHelper {
