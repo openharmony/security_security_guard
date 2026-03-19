@@ -95,6 +95,8 @@ private:
     void UploadEventToStore(const SecurityCollector::Event &event);
     void UploadEventToSub(const SecurityCollector::Event &event);
     void UploadEventTask(const SecurityCollector::Event &event);
+    int UploadEventImmediately(const SecurityCollector::Event &event);
+    int BatchUploadEvent(const SecurityCollector::Event &event);
     void ClearEventCache();
     class SecurityCollectorSubscriber : public SecurityCollector::ICollectorSubscriber {
     public:
@@ -131,6 +133,7 @@ private:
     std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> sessionsMap_ {};
     std::shared_ptr<ffrt::queue> queue_{};
     std::shared_ptr<ffrt::queue> dbQueue_{};
+    std::shared_ptr<ffrt::queue> crucialQueue_{};
     std::vector<SecEvent> events_ {};
     std::vector<SecurityCollector::Event> notifyEvents_ {};
     size_t eventsBuffSize_ {};
