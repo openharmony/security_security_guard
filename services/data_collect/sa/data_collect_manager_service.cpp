@@ -347,10 +347,9 @@ ErrCode DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     if (subscribeInfo.GetEventGroup() == "") {
         ret = IsCallerHasApiPermission("Subscribe");
     } else if (subscribeInfo.GetEventGroup() == "auditGroup") {
-        ret = IsEventGroupHasPublicPermission(subscribeInfo.GetEventGroup(), {});
+        ret = IsEventGroupHasPublicPermission(subscribeInfo.GetEventGroup(), std::vector<int64_t>{event.eventId});
     } else {
-        ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(),
-            std::vector<int64_t>{subscribeInfo.GetEvent().eventId});
+        ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(), std::vector<int64_t>{event.eventId});
     }
     if (ret != SUCCESS) {
         event.ret = ret;
@@ -378,7 +377,8 @@ ErrCode DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
     if (subscribeInfo.GetEventGroup() == "") {
         ret = IsCallerHasApiPermission("UnSubscribe");
     } else if (subscribeInfo.GetEventGroup() == "auditGroup") {
-        ret = IsEventGroupHasPublicPermission(subscribeInfo.GetEventGroup(), {});
+        ret = IsEventGroupHasPublicPermission(subscribeInfo.GetEventGroup(),
+            std::vector<int64_t>{subscribeInfo.GetEvent().eventId});
     } else {
         ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(),
             std::vector<int64_t>{subscribeInfo.GetEvent().eventId});
@@ -986,9 +986,9 @@ ErrCode DataCollectManagerService::Subscribe(int64_t eventId, const std::string 
     event.eventId = eventId;
     std::string eventGroup = AcquireDataSubscribeManager::GetInstance().GetCurrentClientGroup(clientId);
     if (eventGroup == "securityGroup") {
-        ret = IsEventGroupHasPermission(eventGroup, {});
+        ret = IsEventGroupHasPermission(eventGroup, std::vector<int64_t>{eventId});
     } else {
-        ret = IsEventGroupHasPublicPermission(eventGroup, {});
+        ret = IsEventGroupHasPublicPermission(eventGroup, std::vector<int64_t>{eventId});
     }
     if (ret != SUCCESS) {
         event.ret = ret;
@@ -1017,9 +1017,9 @@ ErrCode DataCollectManagerService::Unsubscribe(int64_t eventId, const std::strin
     event.time = SecurityGuardUtils::GetDate();
     std::string eventGroup = AcquireDataSubscribeManager::GetInstance().GetCurrentClientGroup(clientId);
     if (eventGroup == "securityGroup") {
-        ret = IsEventGroupHasPermission(eventGroup, {});
+        ret = IsEventGroupHasPermission(eventGroup, std::vector<int64_t>{eventId});
     } else {
-        ret = IsEventGroupHasPublicPermission(eventGroup, {});
+        ret = IsEventGroupHasPublicPermission(eventGroup, std::vector<int64_t>{eventId});
     }
     if (ret != SUCCESS) {
         event.ret = ret;
