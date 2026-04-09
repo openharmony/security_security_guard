@@ -41,7 +41,7 @@
 namespace OHOS::Security::SecurityGuard {
 namespace {
     constexpr size_t MAX_CACHE_EVENT_SIZE = 64;
-    constexpr int64_t MAX_DURATION_TEN_SECOND = 10 * 1000;
+    constexpr int64_t MAX_DURATION_TEN_SECOND = 1 * 1000;
     constexpr size_t MAX_SESSION_SIZE = 16;
     constexpr size_t MAX_SESSION_SIZE_ONE_PROCESS = 2;
     constexpr size_t MAX_CACHE_NOTIFY_EVENT_SIZE = 10;
