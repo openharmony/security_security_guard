@@ -1316,6 +1316,28 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg, TestSize.Level0)
     AcquireDataSubscribeManager::GetInstance().eventToListenner_.clear();
 }
 
+HWTEST_F(SecurityGuardDataCollectSaTest, UploadEvent, TestSize.Level0)
+{
+    SecurityCollector::Event event {};
+    sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
+    EXPECT_CALL(*(DataFormat::GetInterface()), CheckRiskContent).WillOnce(Return(true)).WillOnce(Return(true));
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillOnce(
+        [] (int64_t eventId, EventCfg &config) {
+        config.dbTable = "risk_event";
+        config.eventType = 3;
+        config.prog = "security_guard";
+        config.isBatchUpload = 1;
+        return true;
+    }).WillOnce(
+        [] (int64_t eventId, EventCfg &config) {
+        return false;
+    });
+    int ret = AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
+    EXPECT_EQ(ret, SUCCESS);
+    ret = AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
+    EXPECT_EQ(ret, BAD_PARAM);
+}
+
 HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg01, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
