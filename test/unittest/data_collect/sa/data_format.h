@@ -19,12 +19,13 @@
 #include <string>
 
 #include "security_guard_define.h"
+#include "event_define.h"
 
 namespace OHOS::Security::SecurityGuard {
 class DataFormatInterface {
 public:
     virtual ~DataFormatInterface() = default;
-    virtual bool CheckRiskContent(std::string content) = 0;
+    virtual bool CheckRiskContent(const SecurityCollector::Event &event) = 0;
     virtual void ParseConditions(std::string conditions, RequestCondition &reqCondition) = 0;
 };
 
@@ -32,18 +33,18 @@ class MockDataFormatInterface : public DataFormatInterface {
 public:
     MockDataFormatInterface() = default;
     ~MockDataFormatInterface() override = default;
-    MOCK_METHOD1(CheckRiskContent, bool(std::string content));
+    MOCK_METHOD1(CheckRiskContent, bool(const SecurityCollector::Event &event));
     MOCK_METHOD2(ParseConditions, void(std::string conditions, RequestCondition &reqCondition));
 };
 
 class DataFormat {
 public:
-    static bool CheckRiskContent(std::string content)
+    static bool CheckRiskContent(const SecurityCollector::Event &event)
     {
         if (instance_ == nullptr) {
             return false;
         }
-        return instance_->CheckRiskContent(content);
+        return instance_->CheckRiskContent(event);
     }
 
     static void ParseConditions(std::string conditions, RequestCondition &reqCondition)
