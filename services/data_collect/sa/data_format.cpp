@@ -27,15 +27,15 @@ namespace {
     constexpr size_t MAX_CONTENT_SIZE = 10240;
 }
 
-bool DataFormat::CheckRiskContent(std::string content)
+bool DataFormat::CheckRiskContent(const SecurityCollector::Event &event)
 {
-    auto size = content.size();
-    if (size > MAX_CONTENT_SIZE) {
+    auto size = event.content.size();
+    if (size > MAX_CONTENT_SIZE || (event.content.empty() && event.tlvData.empty())) {
         SGLOGE("size error, size=%{public}zu", size);
         return false;
     }
 
-    nlohmann::json jsonObj = nlohmann::json::parse(content, nullptr, false);
+    nlohmann::json jsonObj = nlohmann::json::parse(event.content, nullptr, false);
     if (jsonObj.is_discarded()) {
         SGLOGE("json parse error");
         return false;

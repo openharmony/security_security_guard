@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <string>
 #include <set>
+#include <variant>
 namespace OHOS::Security::SecurityCollector {
 enum EventId : int64_t {
     PASTEBOARD_EVENTID = 1011015000,
@@ -36,6 +37,20 @@ enum EventId : int64_t {
     KEYBOARD_EVENTID,
 };
 
+
+using ValueType = std::variant<
+    uint64_t,
+    int64_t,
+    std::string,
+    uint32_t
+>;
+
+struct Tlv {
+    uint16_t type;
+    uint16_t length;
+    ValueType value;
+};
+
 struct Event {
     int64_t eventId;
     std::string version;
@@ -45,6 +60,7 @@ struct Event {
     int32_t userId;
     std::string deviceId;
     std::set<std::string> eventSubscribes;
+    std::vector<Tlv> tlvData;
 };
 
 struct SecurityCollectorEventMuteFilter {

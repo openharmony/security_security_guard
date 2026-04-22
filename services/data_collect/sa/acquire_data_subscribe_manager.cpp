@@ -584,7 +584,7 @@ int AcquireDataSubscribeManager::UploadEvent(const SecurityCollector::Event &eve
 {
     SGLOGD("UploadEvent eventid = %{public}" PRId64, event.eventId);
     SGLOGD("UploadEvent event conetnt = %{private}s", event.content.c_str());
-    if (!DataFormat::CheckRiskContent(event.content)) {
+    if (!DataFormat::CheckRiskContent(event)) {
         SGLOGE("CheckRiskContent error");
         return BAD_PARAM;
     }
@@ -673,11 +673,11 @@ void AcquireDataSubscribeManager::UploadEventTask(const SecurityCollector::Event
     }
     // change old event id to new eventid
     retEvent.eventId = config.eventId;
-    if (eventWrapper_ != nullptr) {
-        eventWrapper_()->WrapperEvent(retEvent);
-    }
     if (eventFilter_ != nullptr) {
         eventFilter_()->GetFlagsEventNeedToUpload(retEvent);
+    }
+    if (eventWrapper_ != nullptr) {
+        eventWrapper_()->WrapperEvent(retEvent);
     }
     UploadEventToStore(retEvent);
     UploadEventToSub(retEvent);
