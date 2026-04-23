@@ -146,6 +146,9 @@ private:
     size_t eventsBuffSize_ {};
     std::atomic<int32_t> tokenBucket_{};
     bool isStopTokenBucketTask_ = false;
+    std::map<std::string, std::set<int64_t>> reportedStickyEvents_;
+    bool HasStickyEventReported(int64_t eventId, const std::string &clientId);
+    bool MarkStickyEventReported(int64_t eventId, const std::string &clientId);
 };
 } // namespace OHOS::Security::SecurityGuard
 

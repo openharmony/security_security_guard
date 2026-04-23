@@ -98,6 +98,13 @@ private:
     int UploadEventImmediately(const SecurityCollector::Event &event);
     int BatchUploadEvent(const SecurityCollector::Event &event);
     void ClearEventCache();
+    class DbListener : public IDbListener {
+    public:
+        DbListener() = default;
+        ~DbListener() override = default;
+        void OnChange(uint32_t optType, const SecEvent &events,
+            const std::set<std::string> &eventSubscribes) override;
+    };
     class SecurityCollectorSubscriber : public SecurityCollector::ICollectorSubscriber {
     public:
         explicit SecurityCollectorSubscriber(
@@ -139,6 +146,9 @@ private:
     size_t eventsBuffSize_ {};
     std::atomic<int32_t> tokenBucket_{};
     bool isStopTokenBucketTask_ = false;
+    std::map<std::string, std::set<int64_t>> reportedStickyEvents_;
+    bool HasStickyEventReported(int64_t eventId, const std::string &clientId);
+    bool MarkStickyEventReported(int64_t eventId, const std::string &clientId);
 };
 } // namespace OHOS::Security::SecurityGuard
 
