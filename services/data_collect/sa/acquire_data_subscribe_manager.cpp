@@ -728,6 +728,9 @@ bool AcquireDataSubscribeManager::PublishEventToSub(const SecurityCollector::Eve
             continue;
         }
         if (IsFindFlag(event.eventSubscribes, event.eventId, it.second->clientId)) {
+            if (config.isSticky && !MarkStickyEventReported(event.eventId, it.second->clientId)) {
+                continue;
+            }
             NotifySub(it.second->callback, event);
             flag = true;
         }
@@ -996,5 +999,25 @@ const std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientS
     AcquireDataSubscribeManager::GetAuditClientSessionMap()
 {
     return sessionsMap_;
+}
+
+bool AcquireDataSubscribeManager::HasStickyEventReported(int64_t eventId, const std::string &clientId)
+{
+    auto it = reportedStickyEvents_.find(clientId);
+    if (it == reportedStickyEvents_.end()) {
+        return false;
+    }
+    return it->second.find(eventId) != it->second.end();
+}
+
+bool AcquireDataSubscribeManager::MarkStickyEventReported(int64_t eventId, const std::string &clientId)
+{
+    if (HasStickyEventReported(eventId, clientId)) {
+        SGLOGD("sticky event %{public}" PRId64 " has been reported to client %{public}s, skip report",
+            eventId, clientId.c_str());
+        return false;
+    }
+    reportedStickyEvents_[clientId].insert(eventId);
+    return true;
 }
 }

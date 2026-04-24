@@ -282,6 +282,7 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager_impl.cpp",
     "sa/security_guard_data_collect_sa_test.cpp",
+    "sa/security_guard_data_collect_sa_new_test.cpp",
   ]
 
   deps = [
