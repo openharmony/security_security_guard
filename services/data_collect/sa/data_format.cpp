@@ -34,11 +34,12 @@ bool DataFormat::CheckRiskContent(const SecurityCollector::Event &event)
         SGLOGE("size error, size=%{public}zu", size);
         return false;
     }
-
-    nlohmann::json jsonObj = nlohmann::json::parse(event.content, nullptr, false);
-    if (jsonObj.is_discarded()) {
-        SGLOGE("json parse error");
-        return false;
+    if (!event.content.empty()) {
+        nlohmann::json jsonObj = nlohmann::json::parse(event.content, nullptr, false);
+        if (jsonObj.is_discarded()) {
+            SGLOGE("json parse error");
+            return false;
+        }
     }
     return true;
 }
