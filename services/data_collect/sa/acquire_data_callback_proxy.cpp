@@ -32,13 +32,12 @@ int32_t AcquireDataCallbackProxy::OnNotify(const std::vector<SecurityCollector::
     }
 
     for (const auto &event : events) {
-        data.WriteInt64(event.eventId);
-        data.WriteString(event.version);
-        data.WriteString(event.content);
-        data.WriteString(event.extra);
-        data.WriteString(event.timestamp);
-        data.WriteInt32(event.userId);
-        data.WriteString(event.deviceId);
+        if (!data.WriteInt64(event.eventId) || !data.WriteString(event.version) || !data.WriteString(event.content) ||
+            !data.WriteString(event.extra) || !data.WriteString(event.timestamp) || !data.WriteInt32(event.userId) ||
+            !data.WriteString(event.deviceId)) {
+            SGLOGE("failed to write event");
+            return WRITE_ERR;
+        }
         if (!data.WriteUint32(event.eventSubscribes.size())) {
             SGLOGE("failed to write eventSubscribes size");
             return WRITE_ERR;

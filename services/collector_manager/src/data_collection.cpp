@@ -96,7 +96,7 @@ bool DataCollection::SecurityGuardSubscribeCollector(const std::vector<int64_t>&
 
 bool DataCollection::IsCollectorStarted(int64_t eventId)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     auto it = eventIdToLoaderMap_.find(eventId);
     return it != eventIdToLoaderMap_.end();
 }
@@ -109,7 +109,7 @@ bool DataCollection::StopCollectors(const std::vector<int64_t>& eventIds)
         return true;
     }
     bool ret = true;
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     for (int64_t eventId : eventIds) {
         LOGI("StopCollectors eventId is 0x%{public}" PRIx64, eventId);
         auto loader = eventIdToLoaderMap_.find(eventId);
@@ -176,7 +176,7 @@ bool DataCollection::UnsubscribeCollectors(const std::vector<int64_t> &eventIds)
         return true;
     }
     bool ret = true;
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     for (int64_t eventId : eventIds) {
         LOGI("UnsubscribeCollectors eventId is 0x%{public}" PRIx64, eventId);
         auto loader = eventIdToLoaderMap_.find(eventId);
@@ -235,7 +235,7 @@ ErrorCode DataCollection::LoadCollector(
         LOGE("Failed to start collector");
         return FAILED;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     eventIdToLoaderMap_.emplace(eventId, loader);
     LOGI("End LoadCollector");
     return SUCCESS;
@@ -421,11 +421,11 @@ int32_t DataCollection::AddFilter(const SecurityCollectorEventMuteFilter &filter
             filterTmp.eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
         }
     }
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (!IsCollectorStarted(eventId)) {
         LOGE("collector not start, eventId is 0x%{public}" PRIx64, filterTmp.eventId);
         return FAILED;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
     auto loader = eventIdToLoaderMap_.at(eventId);
     ICollector* collector = loader.CallGetCollector();
     if (collector == nullptr) {
@@ -452,11 +452,12 @@ int32_t DataCollection::RemoveFilter(const SecurityCollectorEventMuteFilter &fil
             filterTmp.eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
         }
     }
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (!IsCollectorStarted(eventId)) {
         LOGE("collector not start, eventId is 0x%{public}" PRIx64, filterTmp.eventId);
         return FAILED;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
+
     auto loader = eventIdToLoaderMap_.at(eventId);
     ICollector* collector = loader.CallGetCollector();
     if (collector == nullptr) {

@@ -41,7 +41,10 @@ int32_t SecurityCollectorManagerProxy::Subscribe(const SecurityCollectorSubscrib
         return WRITE_ERR;
     }
 
-    data.WriteRemoteObject(callback);
+    if (!data.WriteRemoteObject(callback)) {
+        LOGE("failed to write remote object for callback");
+        return WRITE_ERR;
+    }
 
     MessageOption option = { MessageOption::TF_SYNC };
     sptr<IRemoteObject> remote = Remote();
@@ -70,7 +73,10 @@ int32_t SecurityCollectorManagerProxy::Unsubscribe(const sptr<IRemoteObject> &ca
         return WRITE_ERR;
     }
 
-    data.WriteRemoteObject(callback);
+    if (!data.WriteRemoteObject(callback)) {
+        LOGE("failed to write remote object for callback");
+        return WRITE_ERR;
+    }
 
     MessageOption option = { MessageOption::TF_SYNC };
     sptr<IRemoteObject> remote = Remote();
@@ -103,7 +109,10 @@ int32_t SecurityCollectorManagerProxy::CollectorStart(const SecurityCollectorSub
         LOGE("failed to write parcelable for subscribeInfo");
         return WRITE_ERR;
     }
-    data.WriteRemoteObject(callback);
+    if (!data.WriteRemoteObject(callback)) {
+        LOGE("failed to write remote object for callback");
+        return WRITE_ERR;
+    }
     MessageOption option = { MessageOption::TF_SYNC };
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -135,7 +144,10 @@ int32_t SecurityCollectorManagerProxy::CollectorStop(const SecurityCollectorSubs
         LOGE("failed to write parcelable for subscribeInfo");
         return WRITE_ERR;
     }
-    data.WriteRemoteObject(callback);
+    if (!data.WriteRemoteObject(callback)) {
+        LOGE("failed to write remote object for callback");
+        return WRITE_ERR;
+    }
     MessageOption option = { MessageOption::TF_SYNC };
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {

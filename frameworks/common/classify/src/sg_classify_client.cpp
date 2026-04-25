@@ -108,7 +108,7 @@ int32_t RequestSecurityModelResultAsync(const std::string &devId, uint32_t model
     const std::string &param, SecurityGuardRiskCallback callback)
 {
 #ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-    if (devId.length() >= DEVICE_ID_MAX_LEN) {
+    if (devId.length() >= DEVICE_ID_MAX_LEN || callback == nullptr) {
         return BAD_PARAM;
     }
     std::unique_lock<std::mutex> lock(g_mutex);
@@ -204,7 +204,7 @@ int32_t RequestSecurityModelResultAsync(const DeviceIdentify *devId, uint32_t mo
     ::SecurityGuardRiskCallback callback)
 {
 #ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
-    if (devId == nullptr || devId->length >= DEVICE_ID_MAX_LEN) {
+    if (devId == nullptr || devId->length >= DEVICE_ID_MAX_LEN || callback == nullptr) {
         return BAD_PARAM;
     }
     auto cppCallBack = [callback](const OHOS::Security::SecurityGuard::SecurityModelResult &tmp) {
