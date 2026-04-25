@@ -319,8 +319,9 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, TestDatabaseManagerMock023, TestSize.
 
 HWTEST_F(SecurityGuardDatabaseManagerTest, CheckRiskContent001, TestSize.Level0)
 {
-    std::string content(MAX_CONTENT_SIZE, 'c');
-    bool ret = DataFormat::CheckRiskContent(content);
+    SecurityCollector::Event event {};
+    event.content = std::string(MAX_CONTENT_SIZE, 'c');
+    bool ret = DataFormat::CheckRiskContent(event);
     EXPECT_FALSE(ret);
 }
 

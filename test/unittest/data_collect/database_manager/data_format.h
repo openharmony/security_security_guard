@@ -19,12 +19,12 @@
 #include <string>
 
 #include "security_guard_define.h"
-
+#include "event_define.h"
 namespace OHOS::Security::SecurityGuard {
 class DataFormat {
 public:
     DataFormat() = delete;
-    static bool CheckRiskContent(std::string content);
+    static bool CheckRiskContent(const SecurityCollector::Event &event);
     static void ParseConditions(std::string conditions, RequestCondition &reqCondition);
 };
 } // namespace OHOS::Security::SecurityGuard
