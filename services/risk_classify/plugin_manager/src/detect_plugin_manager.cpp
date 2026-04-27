@@ -203,11 +203,11 @@ bool DetectPluginManager::ParsePluginDepEventIds(const cJSON *plugin,
     std::unordered_set<int64_t> &depEventIds)
 {
     cJSON *depEventIdsJson = cJSON_GetObjectItem(plugin, "depEventIds");
-    int size = cJSON_GetArraySize(depEventIdsJson);
     if (depEventIdsJson == nullptr || !cJSON_IsArray(depEventIdsJson)) {
         SGLOGE("Json Parse Error: depEventIds not correct.");
         return false;
     }
+    int size = cJSON_GetArraySize(depEventIdsJson);
     for (int i = 0; i < size; i++) {
         cJSON *eventIdJson = cJSON_GetArrayItem(depEventIdsJson, i);
         std::string eventId;

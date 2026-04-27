@@ -229,12 +229,16 @@ std::string FileSystemStoreHelper::GetTimestampFromFileName(const std::string& f
     if (filename.empty()) {
         return "";
     }
-    size_t startPos = filename.find(STORE_FILE_NAME_PREFIX) + STORE_FILE_NAME_PREFIX.length();
-    size_t endPos = filename.find(STORE_FILE_NAME_SUFFIX);
-    if (startPos == std::string::npos || endPos == std::string::npos) {
+    size_t startPos = filename.find(STORE_FILE_NAME_PREFIX);
+    if (startPos == std::string::npos) {
         return "";
     }
-    return filename.substr(startPos, endPos - startPos);
+    size_t endPos = filename.find(STORE_FILE_NAME_SUFFIX, startPos + STORE_FILE_NAME_PREFIX.length());
+    if (endPos == std::string::npos) {
+        return "";
+    }
+    return filename.substr(startPos + STORE_FILE_NAME_PREFIX.length(),
+        endPos - startPos - STORE_FILE_NAME_PREFIX.length());
 }
 
 std::string FileSystemStoreHelper::GetBeginTimeFromFileName(const std::string& filename)
