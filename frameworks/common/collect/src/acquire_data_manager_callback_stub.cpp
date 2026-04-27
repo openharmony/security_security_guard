@@ -42,18 +42,18 @@ int32_t AcquireDataManagerCallbackStub::HandleBatchSubscribeCallback(MessageParc
         return BAD_PARAM;
     }
 
-    uint32_t size = 0;
-    if (!data.ReadUint32(size)) {
+    uint32_t eventSize = 0;
+    if (!data.ReadUint32(eventSize)) {
         SGLOGE("failed to get the event size");
         return BAD_PARAM;
     }
 
-    if (size > MAX_QUERY_EVENT_SIZE) {
+    if (eventSize > MAX_QUERY_EVENT_SIZE) {
         SGLOGE("the event size error");
         return BAD_PARAM;
     }
     std::vector<SecurityCollector::Event> events;
-    for (uint32_t index = 0; index < size; index++) {
+    for (uint32_t index = 0; index < eventSize; index++) {
         SecurityCollector::Event event;
         event.eventId = data.ReadInt64();
         event.version = data.ReadString();
