@@ -120,7 +120,11 @@ void AcquireDataManagerFuzzTest(const uint8_t* data, size_t size)
     int fd = fdp.ConsumeIntegral<int32_t>();
     int64_t eventId = fdp.ConsumeIntegral<int64_t>();
     std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    Security::SecurityCollector::Event event{eventId, string, string, string};
+    Security::SecurityCollector::Event event{};
+    event.eventId = eventId;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     auto subscriber = std::make_shared<MockCollectorSubscriber>(event);
     auto callback = std::make_shared<MockSecurityEventQueryCallback>();
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -143,7 +147,11 @@ void AcquireDataManagerCallbackServiceFuzzTest(const uint8_t* data, size_t size)
     FuzzedDataProvider fdp(data, size);
     int64_t eventId = fdp.ConsumeIntegral<int64_t>();
     std::string string = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
-    Security::SecurityCollector::Event event{eventId, string, string, string};
+    Security::SecurityCollector::Event event{};
+    event.eventId = eventId;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     AcquireDataManagerCallbackService service;
     service.OnNotify({event});
 }

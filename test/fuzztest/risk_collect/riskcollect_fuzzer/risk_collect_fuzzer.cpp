@@ -37,11 +37,12 @@ using namespace OHOS::Security::SecurityGuard;
 namespace OHOS {
 void DataFormatFuzzTest()
 {
-    std::string test = "test";
-    DataFormat::CheckRiskContent(test);
+    SecurityCollector::Event event {};
+    Event.content = "test";
+    DataFormat::CheckRiskContent(event);
     uint32_t oversize = 1000;
-    std::string oversizeString(oversize, 'c');
-    DataFormat::CheckRiskContent(oversizeString);
+    Event.content = oversizeString(oversize, 'c');
+    DataFormat::CheckRiskContent(event);
 
     RequestCondition reqCondition;
     std::string condition1 = "{\"eventId\":0}";

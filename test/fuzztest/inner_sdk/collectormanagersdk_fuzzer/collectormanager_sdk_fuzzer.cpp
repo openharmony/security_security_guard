@@ -116,9 +116,11 @@ void CollectorManagerFuzzTest(const uint8_t* data, size_t size)
         return;
     }
     FuzzedDataProvider fdp(data, size);
-    Security::SecurityCollector::Event event{fdp.ConsumeIntegral<int64_t>(),
-        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
-        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE)};
+    Security::SecurityCollector::Event event{};
+    event.eventId = fdp.ConsumeIntegral<int64_t>();
+    event.version = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    event.content = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    event.extra = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     auto subscriber = std::make_shared<MockCollectorSubscriber>(event);
     std::vector<SecurityEventRuler> rulers{};
     std::vector<SecurityEvent> events{};
