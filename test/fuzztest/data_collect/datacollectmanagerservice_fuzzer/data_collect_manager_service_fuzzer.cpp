@@ -67,7 +67,11 @@ bool DataCollectManagerServiceFuzzTest(FuzzedDataProvider &fdp)
     int fd = fdp.ConsumeIntegral<int32_t>();
     std::vector<std::u16string> args{Str8ToStr16(string)};
     Security::SecurityCollector::SecurityEventRuler ruler{eventId};
-    Security::SecurityCollector::Event event{eventId, string, string, string};
+    Security::SecurityCollector::Event event{};
+    event.eventId = eventId;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
     Security::SecurityGuard::EventMuteFilter info {};
     info.eventId = eventId;

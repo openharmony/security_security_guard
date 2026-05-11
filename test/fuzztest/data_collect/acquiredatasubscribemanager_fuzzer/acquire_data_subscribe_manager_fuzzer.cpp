@@ -57,9 +57,11 @@ public:
 bool AcquireDataSubscribeManagerFuzzTest(FuzzedDataProvider &fdp)
 {
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
-    Security::SecurityCollector::Event event{fdp.ConsumeIntegral<int64_t>(),
-        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
-        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE)};
+    Security::SecurityCollector::Event event{};
+    event.eventId = fdp.ConsumeIntegral<int64_t>();
+    event.version = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    event.content = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    event.extra = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
     AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(subscribeInfo, obj,
         fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
@@ -106,9 +108,11 @@ bool AcquireDataSubscribeManagerFuzzTest(FuzzedDataProvider &fdp)
 
 bool AcquireDataSubscribeManagerFuzzTest1(FuzzedDataProvider &fdp)
 {
-    Security::SecurityCollector::Event event{fdp.ConsumeIntegral<int64_t>(),
-        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE), fdp.ConsumeRandomLengthString(MAX_STRING_SIZE),
-        fdp.ConsumeRandomLengthString(MAX_STRING_SIZE)};
+    Security::SecurityCollector::Event event{};
+    event.eventId = fdp.ConsumeIntegral<int64_t>();
+    event.version = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    event.content = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
+    event.extra = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     AcquireDataSubscribeManager::CollectorListener listener {};
     listener.GetExtraInfo();
     listener.OnNotify(event);

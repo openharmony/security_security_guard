@@ -102,7 +102,11 @@ void SecurityCollectorManagerCallbackProxyFuzzTest(const uint8_t* data, size_t s
     int64_t eventId = *(reinterpret_cast<const int64_t *>(data));
     offset += sizeof(int64_t);
     std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
-    Security::SecurityCollector::Event event{eventId, string, string, string};
+    Security::SecurityCollector::Event event{};
+    event.eventId = eventId;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     SecurityCollectorManagerCallbackProxy proxy{obj};
     proxy.OnNotify(event);
