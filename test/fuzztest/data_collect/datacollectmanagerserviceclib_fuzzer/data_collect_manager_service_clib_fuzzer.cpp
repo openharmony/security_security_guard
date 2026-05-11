@@ -123,7 +123,11 @@ extern "C" int FuzzDataCollectManagerService(FuzzedDataProvider &fdp)
             int64_t eventId = fdp.ConsumeIntegral<int64_t>();
             const std::string string = fdp.ConsumeRandomLengthString();
             const std::string clientId = fdp.ConsumeRandomLengthString();
-            Security::SecurityCollector::Event event{eventId, string, string, string};
+            Security::SecurityCollector::Event event{};
+            event.eventId = eventId;
+            event.version = string;
+            event.content = string;
+            event.extra = string;
             Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
             sptr<OHOS::IRemoteObject> obj(new (std::nothrow) OHOS::MockRemoteObject());
             g_service.Subscribe(subscribeInfo, obj, clientId);
@@ -133,7 +137,11 @@ extern "C" int FuzzDataCollectManagerService(FuzzedDataProvider &fdp)
             int64_t eventId = fdp.ConsumeIntegral<int64_t>();
             const std::string string = fdp.ConsumeRandomLengthString();
             const std::string clientId = fdp.ConsumeRandomLengthString();
-            Security::SecurityCollector::Event event{eventId, string, string, string};
+            Security::SecurityCollector::Event event{};
+            event.eventId = eventId;
+            event.version = string;
+            event.content = string;
+            event.extra = string;
             Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
             sptr<OHOS::IRemoteObject> obj(new (std::nothrow) OHOS::MockRemoteObject());
             g_service.Unsubscribe(subscribeInfo, obj, clientId);
@@ -152,7 +160,11 @@ extern "C" int FuzzDataCollectManagerService(FuzzedDataProvider &fdp)
         case 7: {
             int64_t eventId = fdp.ConsumeIntegral<int64_t>();
             const std::string string = fdp.ConsumeRandomLengthString();
-            Security::SecurityCollector::Event event{eventId, string, string, string};
+            Security::SecurityCollector::Event event{};
+            event.eventId = eventId;
+            event.version = string;
+            event.content = string;
+            event.extra = string;
             Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
             sptr<OHOS::IRemoteObject> obj(new (std::nothrow) OHOS::MockRemoteObject());
             g_service.CollectorStart(subscribeInfo, obj);
@@ -161,7 +173,11 @@ extern "C" int FuzzDataCollectManagerService(FuzzedDataProvider &fdp)
         case 8: {
             int64_t eventId = fdp.ConsumeIntegral<int64_t>();
             const std::string string = fdp.ConsumeRandomLengthString();
-            Security::SecurityCollector::Event event{eventId, string, string, string};
+            Security::SecurityCollector::Event event{};
+            event.eventId = eventId;
+            event.version = string;
+            event.content = string;
+            event.extra = string;
             Security::SecurityCollector::SecurityCollectorSubscribeInfo subscribeInfo{event};
             sptr<OHOS::IRemoteObject> obj(new (std::nothrow) OHOS::MockRemoteObject());
             g_service.CollectorStop(subscribeInfo, obj);

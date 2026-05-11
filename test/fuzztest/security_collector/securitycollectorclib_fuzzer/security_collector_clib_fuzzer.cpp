@@ -83,7 +83,11 @@ extern "C" int FuzzSecurityCollector(FuzzedDataProvider &fdp)
     int64_t eventId = fdp.ConsumeIntegral<int64_t>();
     std::string str = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     SecurityCollectorEventMuteFilter fil{};
-    Security::SecurityCollector::Event event{eventId, str, str, str};
+    Security::SecurityCollector::Event event{};
+    event.eventId = eventId;
+    event.version = str;
+    event.content = str;
+    event.extra = str;
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     SecurityEventRuler ruler(eventId);
     std::vector<SecurityEventRuler> rulers;

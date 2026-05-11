@@ -64,7 +64,11 @@ void SecurityCollectorManagerServiceFuzzTest(const uint8_t* data, size_t size)
     SecurityCollectorEventMuteFilter fil{};
     std::vector<std::u16string> args;
     SecurityCollectorManagerService service(SECURITY_COLLECTOR_MANAGER_SA_ID, false);
-    Security::SecurityCollector::Event event{eventId, string, string, string};
+    Security::SecurityCollector::Event event{};
+    event.eventId = eventId;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     SecurityEventRuler ruler(eventId);
     std::vector<SecurityEventRuler> rulers;
@@ -101,7 +105,11 @@ void SecurityCollectorRunManagerFuzzTest(const uint8_t* data, size_t size)
     int64_t eventId = *(reinterpret_cast<const int64_t *>(data));
     offset += sizeof(int64_t);
     std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
-    Security::SecurityCollector::Event event{eventId, string, string, string};
+    Security::SecurityCollector::Event event{};
+    event.eventId = eventId;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     SecurityCollectorSubscribeInfo subscriberInfo{};
     auto subscriber = std::make_shared<SecurityCollectorSubscriber>(string, subscriberInfo, nullptr,
         [] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {});
@@ -123,7 +131,11 @@ void SecurityCollectorSubscriberManagerFuzzTest(const uint8_t* data, size_t size
     offset += sizeof(int64_t);
     std::string string(reinterpret_cast<const char*>(data + offset), size - offset);
     SecurityCollectorSubscribeInfo subscriberInfo{};
-    Security::SecurityCollector::Event event{eventId, string, string, string};
+    Security::SecurityCollector::Event event{};
+    event.eventId = eventId;
+    event.version = string;
+    event.content = string;
+    event.extra = string;
     auto subscriber = std::make_shared<SecurityCollectorSubscriber>(string, subscriberInfo, nullptr,
         [] (const std::string &appName, const sptr<IRemoteObject> &remote, const Event &event) {});
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
