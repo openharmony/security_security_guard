@@ -79,6 +79,9 @@ int32_t ReportSecurityInfoAsync(const struct EventInfoSt *info)
 
 int32_t SecurityGuardConfigUpdate(int32_t fd, const char *fileName)
 {
+    if (fileName == nullptr) {
+        return OHOS::Security::SecurityGuard::BAD_PARAM;
+    }
     return OHOS::Security::SecurityGuard::NativeDataCollectKit::SecurityGuardConfigUpdate(fd, fileName);
 }
 #ifdef __cplusplus

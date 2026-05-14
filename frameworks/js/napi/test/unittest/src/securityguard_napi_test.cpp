@@ -64,7 +64,7 @@ HWTEST_F(SecurityGuardNapiTest, InnerRequestSecurityModelResult01, TestSize.Leve
 {
     OHOS::Security::SecurityGuard::SecurityGuardRiskCallback callback {};
     EXPECT_EQ(SecurityGuardSdkAdaptor::InnerRequestSecurityModelResult("test", 0, "test", callback),
-        SecurityGuard::NO_PERMISSION);
+        SecurityGuard::BAD_PARAM);
 }
 
 HWTEST_F(SecurityGuardNapiTest, InnerReportSecurityInfo01, TestSize.Level1)
