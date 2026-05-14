@@ -133,8 +133,8 @@ int SgSqliteHelper::ExecuteAndGetLong(int64_t &outValue, const std::string &sql,
 {
     OHOS::Utils::UniqueWriteGuard<OHOS::Utils::RWLock> lock(rwLock_);
     Statement stmt = Prepare(sql);
-    for (size_t i = 0; i < bindArgs.size(); ++i) {
-        stmt.Bind(i + 1, bindArgs[i]);
+    for (size_t i = 0; (i < bindArgs.size()) && (i < INT32_MAX); ++i) {
+        stmt.Bind(static_cast<int32_t>(i + 1), bindArgs[i]);
     }
 
     if (stmt.Step() == Statement::ROW) {
