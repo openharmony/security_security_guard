@@ -310,46 +310,13 @@ HWTEST_F(DataCollectionTest, LoadCollectorWithNonApi01, testing::ext::TestSize.L
     EXPECT_EQ(DataCollection::GetInstance().LoadCollector(path, ruler, events), FAILED);
 }
 
-HWTEST_F(DataCollectionTest, AddFilter, testing::ext::TestSize.Level1)
-{
-    MockMyClass myOb;
-    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
-    collectorFilter.eventId = 1;
-    collectorFilter.mutes.insert("1111");
-    collectorFilter.type = 1;
-    collectorFilter.isSetMute = false;
-    myOb.eventIdToLoaderMap_.emplace(1, LibLoader("testPath"));
-    EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false)).WillOnce(Return(true));
-    EXPECT_EQ(myOb.AddFilter(collectorFilter), FAILED);
-    EXPECT_EQ(myOb.AddFilter(collectorFilter), NULL_OBJECT);
-}
-
-HWTEST_F(DataCollectionTest, RemoveFilter, testing::ext::TestSize.Level1)
-{
-    MockMyClass myOb;
-    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
-    collectorFilter.eventId = 1;
-    collectorFilter.mutes.insert("1111");
-    collectorFilter.type = 1;
-    collectorFilter.isSetMute = false;
-    ModuleCfgSt st {};
-    nlohmann::json json = st;
-    myOb.eventIdToLoaderMap_.emplace(1, LibLoader("testPath"));
-    EXPECT_CALL(myOb, IsCollectorStarted).WillOnce(Return(false)).WillOnce(Return(true));
-    EXPECT_EQ(myOb.RemoveFilter(collectorFilter), FAILED);
-    EXPECT_EQ(myOb.RemoveFilter(collectorFilter), NULL_OBJECT);
-}
-
 HWTEST_F(DataCollectionTest, ICollector01, testing::ext::TestSize.Level1)
 {
     TestCollector collector;
-    SecurityCollector::SecurityCollectorEventMuteFilter collectorFilter {};
     std::vector<SecurityEvent> eventIds {};
     SecurityEventRuler ruler;
     std::shared_ptr<ICollectorFwk> api = std::make_shared<TestFwk> ();
     EXPECT_EQ(collector.IsStartWithSub(), 0);
-    EXPECT_EQ(collector.AddFilter(collectorFilter), -1);
-    EXPECT_EQ(collector.RemoveFilter(collectorFilter), -1);
     EXPECT_EQ(collector.Query(ruler, eventIds), 0);
     EXPECT_EQ(collector.Subscribe(api, 0), 0);
     EXPECT_EQ(collector.Unsubscribe(0), 0);

@@ -22,8 +22,6 @@
         OHOS::Security::SecurityCollector::CollectorManager::Subscribe*;
         OHOS::Security::SecurityCollector::CollectorManager::CollectorStart*;
         OHOS::Security::SecurityCollector::CollectorManager::CollectorStop*;
-        OHOS::Security::SecurityCollector::CollectorManager::AddFilter*;
-        OHOS::Security::SecurityCollector::CollectorManager::RemoveFilter*;
         VTT?for?OHOS::Security::SecurityCollector::SecurityEventRuler*;
         vtable?for?OHOS::Security::SecurityCollector::SecurityEventRuler*;
         OHOS::Security::SecurityCollector::CollectorManager::QuerySecurityEvent*;
@@ -34,19 +32,13 @@
         OHOS::Security::SecurityCollector::ICollectorFwk::GetExtraInfo*;
         OHOS::Security::SecurityCollector::ICollectorFwk::GetEventId*;
         OHOS::Security::SecurityCollector::ICollector::Query*;
-        OHOS::Security::SecurityCollector::ICollector::AddFilter*;
-        OHOS::Security::SecurityCollector::ICollector::RemoveFilter*;
         OHOS::Security::SecurityCollector::ICollector::Subscribe*;
         OHOS::Security::SecurityCollector::ICollector::Unsubscribe*;
         OHOS::Security::SecurityCollector::ICollector::IsStartWithSub*;
         VTT?for?OHOS::Security::SecurityCollector::SecurityCollectorManagerCallbackService*;
         vtable?for?OHOS::Security::SecurityCollector::SecurityCollectorManagerCallbackService*;
-        OHOS::Security::SecurityCollector::SecurityCollectorEventFilter::GetMuteFilter*;
-        OHOS::Security::SecurityCollector::SecurityCollectorEventFilter::Unmarshalling*;
         VTT?for?OHOS::Security::SecurityCollector::SecurityCollectorSubscribeInfo*;
         vtable?for?OHOS::Security::SecurityCollector::SecurityCollectorSubscribeInfo*;
-        VTT?for?OHOS::Security::SecurityCollector::SecurityCollectorEventFilter*;
-        vtable?for?OHOS::Security::SecurityCollector::SecurityCollectorEventFilter*;
         OHOS::Security::SecurityCollector::SecurityCollectorSubscribeInfo::Unmarshalling*;
     };
   local:

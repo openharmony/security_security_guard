@@ -144,13 +144,7 @@ void CollectorManagerFuzzTest(const uint8_t* data, size_t size)
     filter.type = fdp.ConsumeIntegral<int64_t>();
     filter.isSetMute = static_cast<bool>(fdp.ConsumeBool());
     filter.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    SecurityCollectorEventFilter subscribeMute(filter);
-    CollectorManager::GetInstance().AddFilter(subscribeMute);
-    CollectorManager::GetInstance().RemoveFilter(subscribeMute);
-    Parcel parcel;
-    subscribeMute.ReadFromParcel(parcel);
-    subscribeMute.Marshalling(parcel);
-    subscribeMute.Unmarshalling(parcel);
+CollectorManager::GetInstance().QuerySecurityEvent(rulers, events);
 }
 
 void SecurityEventFuzzTest(const uint8_t* data, size_t size)

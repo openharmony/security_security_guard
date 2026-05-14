@@ -29,8 +29,6 @@ public:
     virtual int Unsubscribe(int64_t eventId);
     virtual int Query(const SecurityEventRuler &ruler, std::vector<SecurityEvent> &events);
     virtual int IsStartWithSub();
-    virtual int AddFilter(const SecurityCollectorEventMuteFilter &filter);
-    virtual int RemoveFilter(const SecurityCollectorEventMuteFilter &filter);
 };
 } // namespace OHOS::Security::SecurityCollector
 #endif // SECURITY_COLLECTOR_NOTIFIER_H

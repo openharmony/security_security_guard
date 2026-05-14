@@ -92,8 +92,6 @@ void SecurityCollectorManagerServiceFuzzTest(const uint8_t* data, size_t size)
     SecurityCollectorManagerService::HasPermission(string);
     service.CleanSubscriber(obj);
     service.ExecuteOnNotifyByTask(obj, event);
-    service.AddFilter(fil);
-    service.RemoveFilter(fil);
 }
 
 void SecurityCollectorRunManagerFuzzTest(const uint8_t* data, size_t size)

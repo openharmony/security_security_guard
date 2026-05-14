@@ -80,8 +80,6 @@ void DataCollectionFuzzTest(const uint8_t* data, size_t size)
     DataCollection::GetInstance().CheckFileStream(stream);
     DataCollection::GetInstance().IsCollectorStarted(eventId);
     DataCollection::GetInstance().SecurityGuardSubscribeCollector(eventIds);
-    DataCollection::GetInstance().AddFilter(fil);
-    DataCollection::GetInstance().RemoveFilter(fil);
 }
 
 void LibLoaderFuzzTest(const uint8_t* data, size_t size)
@@ -110,20 +108,6 @@ void SecurityCollectorManagerCallbackProxyFuzzTest(const uint8_t* data, size_t s
     sptr<IRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     SecurityCollectorManagerCallbackProxy proxy{obj};
     proxy.OnNotify(event);
-}
-
-void SecurityCollectorManagerServiceNewFuzzTest(const uint8_t* data, size_t size)
-{
-    SecurityCollectorManagerService service(SECURITY_COLLECTOR_MANAGER_SA_ID, false);
-    FuzzedDataProvider fdp(data, size);
-    SecurityCollectorEventMuteFilter fil {};
-    fil.eventId = fdp.ConsumeIntegral<int64_t>();
-    fil.mutes.insert(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
-    fil.isSetMute = fdp.ConsumeBool();
-    fil.type = fdp.ConsumeIntegral<int64_t>();
-    SecurityCollectorEventFilter filter(fil);
-    service.AddFilter(filter);
-    service.RemoveFilter(filter);
 }
 
 class TestCollector : public ICollector {
@@ -157,8 +141,6 @@ void SecurityCollectorICollectorFuzzTest(const uint8_t* data, size_t size)
     ruler.endTime_ = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     ruler.param_ = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     collector.IsStartWithSub();
-    collector.AddFilter(collectorFilter);
-    collector.RemoveFilter(collectorFilter);
     collector.Query(ruler, eventIds);
     collector.Unsubscribe(fdp.ConsumeIntegral<int64_t>());
 }
