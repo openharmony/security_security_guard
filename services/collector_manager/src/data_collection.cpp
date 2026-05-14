@@ -26,8 +26,6 @@ namespace OHOS::Security::SecurityCollector {
 namespace {
     std::string configPathPre = "/system/etc/";
     const std::string &SA_CONFIG_PATH = configPathPre + SECURITY_GUARD_COLLECTOR_CFG_SOURCE;
-    constexpr int64_t PROCESS_ID_IN_KERNEL_MONITOR = 0x01C000004;
-    constexpr int64_t FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR = 1011015020;
 }
 
 DataCollection &DataCollection::GetInstance()
@@ -406,68 +404,5 @@ int32_t DataCollection::QuerySecurityEvent(const std::vector<SecurityEventRuler>
     }
     LOGI("StartCollectors finish");
     return SUCCESS;
-}
-
-int32_t DataCollection::AddFilter(const SecurityCollectorEventMuteFilter &filter)
-{
-    SecurityCollectorEventMuteFilter filterTmp = filter;
-    int64_t eventId = filterTmp.eventId;
-    if (FileExists("/dev/hkids")) {
-        if (filterTmp.eventId == PROCESS_EVENTID) {
-            eventId = PROCESS_ID_IN_KERNEL_MONITOR;
-        }
-        if (eventId == FILE_EVENTID) {
-            eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
-            filterTmp.eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
-        }
-    }
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (!IsCollectorStarted(eventId)) {
-        LOGE("collector not start, eventId is 0x%{public}" PRIx64, filterTmp.eventId);
-        return FAILED;
-    }
-    auto loader = eventIdToLoaderMap_.at(eventId);
-    ICollector* collector = loader.CallGetCollector();
-    if (collector == nullptr) {
-        LOGE("CallGetCollector error");
-        return NULL_OBJECT;
-    }
-    int ret = collector->AddFilter(filterTmp);
-    if (ret != SUCCESS) {
-        LOGE("fail to set mute to collector, eventId is 0x%{public}" PRIx64, filterTmp.eventId);
-    }
-    return ret;
-}
-
-int32_t DataCollection::RemoveFilter(const SecurityCollectorEventMuteFilter &filter)
-{
-    SecurityCollectorEventMuteFilter filterTmp = filter;
-    int64_t eventId = filterTmp.eventId;
-    if (FileExists("/dev/hkids")) {
-        if (filterTmp.eventId == PROCESS_EVENTID) {
-            eventId = PROCESS_ID_IN_KERNEL_MONITOR;
-        }
-        if (eventId == FILE_EVENTID) {
-            eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
-            filterTmp.eventId = FILE_EVENT_CHANGE_ID_IN_KERNEL_MONITOR;
-        }
-    }
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (!IsCollectorStarted(eventId)) {
-        LOGE("collector not start, eventId is 0x%{public}" PRIx64, filterTmp.eventId);
-        return FAILED;
-    }
-
-    auto loader = eventIdToLoaderMap_.at(eventId);
-    ICollector* collector = loader.CallGetCollector();
-    if (collector == nullptr) {
-        LOGE("CallGetCollector error");
-        return NULL_OBJECT;
-    }
-    int ret = collector->RemoveFilter(filterTmp);
-    if (ret != SUCCESS) {
-        LOGE("fail to set unmute to collector, eventId is 0x%{public}" PRIx64, filterTmp.eventId);
-    }
-    return ret;
 }
 }

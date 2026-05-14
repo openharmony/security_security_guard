@@ -17,7 +17,6 @@
 
 #include "security_collector_define.h"
 #include "security_collector_log.h"
-#include "security_collector_event_filter.h"
 namespace OHOS::Security::SecurityCollector {
 
 int32_t SecurityCollectorManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
@@ -44,12 +43,6 @@ int32_t SecurityCollectorManagerStub::OnRemoteRequest(uint32_t code, MessageParc
             }
             case CMD_SECURITY_EVENT_QUERY: {
                 return HandleSecurityEventQueryCmd(data, reply);
-            }
-            case CMD_SECURITY_EVENT_MUTE: {
-                return HandleMute(data, reply);
-            }
-            case CMD_SECURITY_EVENT_UNMUTE: {
-                return HandleUnmute(data, reply);
             }
             default: {
                 break;
@@ -207,47 +200,5 @@ int32_t SecurityCollectorManagerStub::HandleSecurityEventQueryCmd(MessageParcel 
         }
     }
     return SUCCESS;
-}
-
-int32_t SecurityCollectorManagerStub::HandleMute(MessageParcel &data, MessageParcel &reply)
-{
-    LOGI("%{public}s", __func__);
-    uint32_t expected = sizeof(uint64_t);
-    uint32_t actual = data.GetReadableBytes();
-    if (actual <= expected) {
-        LOGE("actual length error, value=%{public}u", actual);
-        return BAD_PARAM;
-    }
-
-    std::unique_ptr<SecurityCollectorEventFilter> info(
-        data.ReadParcelable<SecurityCollectorEventFilter>());
-    if (!info) {
-        LOGE("failed to read parcelable for mute Info");
-        return BAD_PARAM;
-    }
-    int32_t ret = AddFilter(*info);
-    reply.WriteInt32(ret);
-    return ret;
-}
-
-int32_t SecurityCollectorManagerStub::HandleUnmute(MessageParcel &data, MessageParcel &reply)
-{
-    LOGI("%{public}s", __func__);
-    uint32_t expected = sizeof(uint64_t);
-    uint32_t actual = data.GetReadableBytes();
-    if (actual <= expected) {
-        LOGE("actual length error, value=%{public}u", actual);
-        return BAD_PARAM;
-    }
-
-    std::unique_ptr<SecurityCollectorEventFilter> info(
-        data.ReadParcelable<SecurityCollectorEventFilter>());
-    if (!info) {
-        LOGE("failed to read parcelable for mute Info");
-        return BAD_PARAM;
-    }
-    int32_t ret = RemoveFilter(*info);
-    reply.WriteInt32(ret);
-    return ret;
 }
 }
