@@ -38,8 +38,6 @@ constexpr int FUZZ_COLLECTOR_UNSUBCRIBE = 1;
 constexpr int FUZZ_COLLECTOR_START = 2;
 constexpr int FUZZ_COLLECTOR_STOP = 3;
 constexpr int FUZZ_SECURITY_EVENT_QUERY = 4;
-constexpr int FUZZ_SECURITY_EVENT_MUTE = 5;
-constexpr int FUZZ_SECURITY_EVENT_UNMUTE = 6;
 constexpr int MAX_STRING_SIZE = 1024;
 constexpr int32_t TEST_SA_ID = 3525;
 SecurityCollectorManagerService g_service(TEST_SA_ID, true);
@@ -96,7 +94,7 @@ extern "C" int FuzzSecurityCollector(FuzzedDataProvider &fdp)
     SecurityCollectorSubscribeInfo subscribeInfo{event};
     std::vector<SecurityEvent> events{};
 
-    static const int ipccodes[] = {0, 1, 2, 3, 4, 5, 6};
+    static const int ipccodes[] = {0, 1, 2, 3, 4, 5};
     int code = fdp.PickValueInArray(ipccodes);
     switch (code) {
         case FUZZ_COLLECTOR_SUBCRIBE: {
@@ -117,14 +115,6 @@ extern "C" int FuzzSecurityCollector(FuzzedDataProvider &fdp)
         }
         case FUZZ_SECURITY_EVENT_QUERY: {
             g_service.QuerySecurityEvent(rulers, events);
-            break;
-        }
-        case FUZZ_SECURITY_EVENT_MUTE: {
-            g_service.AddFilter(fil);
-            break;
-        }
-        case FUZZ_SECURITY_EVENT_UNMUTE: {
-            g_service.RemoveFilter(fil);
             break;
         }
         default:

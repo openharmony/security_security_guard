@@ -20,7 +20,6 @@
 
 #include "security_event_ruler.h"
 #include "security_collector_subscribe_info.h"
-#include "security_collector_event_filter.h"
 #include "security_event.h"
 
 namespace OHOS::Security::SecurityCollector {
@@ -33,8 +32,6 @@ public:
         std::vector<SecurityEvent> &events) = 0;
     virtual int32_t CollectorStart(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber) = 0;
     virtual int32_t CollectorStop(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber) = 0;
-    virtual int32_t AddFilter(const SecurityCollectorEventFilter &subscribeMute) = 0;
-    virtual int32_t RemoveFilter(const SecurityCollectorEventFilter &subscribeMute) = 0;
 };
 
 class CollectorManager : public BaseCollectorManager {
@@ -52,8 +49,6 @@ public:
         std::vector<SecurityEvent> &events));
     MOCK_METHOD1(CollectorStart, int32_t(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber));
     MOCK_METHOD1(CollectorStop, int32_t(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber));
-    MOCK_METHOD1(AddFilter, int32_t(const SecurityCollectorEventFilter &subscribeMute));
-    MOCK_METHOD1(RemoveFilter, int32_t(const SecurityCollectorEventFilter &subscribeMute));
 };
 } // OHOS::Security::SecurityCollector
 

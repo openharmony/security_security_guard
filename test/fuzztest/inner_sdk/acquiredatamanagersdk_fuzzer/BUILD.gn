@@ -71,7 +71,6 @@ ohos_fuzztest("AcquireDataManagerSdkFuzzTest") {
     "${sg_root_dir}/frameworks/common/collector/src/collector_service_loader.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/i_collector.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/i_collector_fwk.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/security_collector_event_filter.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_manager_proxy.cpp",
   ]
 

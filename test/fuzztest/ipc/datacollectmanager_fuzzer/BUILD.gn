@@ -61,7 +61,6 @@ ohos_fuzztest("DataCollectManagerFuzzTest") {
   sources = [
     "data_collect_manager_fuzzer.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/security_collector_event_filter.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",

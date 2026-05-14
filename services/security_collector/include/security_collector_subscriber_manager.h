@@ -26,7 +26,6 @@
 #include "i_event_filter.h"
 #include "i_event_wrapper.h"
 #include "security_collector_subscriber.h"
-#include "security_collector_event_filter.h"
 
 namespace OHOS::Security::SecurityCollector {
 typedef SecurityCollector::IEventFilter* (*GetEventFilterFunc)();
@@ -38,8 +37,6 @@ public:
     bool SubscribeCollector(const std::shared_ptr<SecurityCollectorSubscriber> &subscriber);
     bool UnsubscribeCollector(const sptr<IRemoteObject> &remote);
     void SetUnsubscribeHandler(UnsubscribeHandler handler) { unsubscribeHandler_ = handler; }
-    int32_t AddFilter(const SecurityCollectorEventFilter &subscribeMute);
-    int32_t RemoveFilter(const SecurityCollectorEventFilter &subscribeMute);
     void RemoveAllFilter();
 private:
     SecurityCollectorSubscriberManager();
