@@ -16,7 +16,6 @@
 #include "database_manager.h"
 #include <cinttypes>
 #include "config_data_manager.h"
-#include "file_system_store_helper.h"
 #include "risk_event_rdb_helper.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
@@ -56,8 +55,6 @@ int DatabaseManager::InsertEvent(uint32_t source, const std::vector<SecEvent>& e
     }
 
     int ret = SUCCESS;
-    std::vector<SecEvent> fsEvents;
-    fsEvents.reserve(events.size());
     for (const auto &event : events) {
         EventCfg config;
         bool success = ConfigDataManager::GetInstance().GetEventConfig(event.eventId, config);
@@ -77,12 +74,7 @@ int DatabaseManager::InsertEvent(uint32_t source, const std::vector<SecEvent>& e
             DbChanged(IDbListener::INSERT, event, eventSubscribes);
             continue;
         }
-        if (table == FILE_SYSTEM) {
-            SGLOGD("insert event to file system");
-            DbChanged(IDbListener::INSERT, event, eventSubscribes);
-            fsEvents.emplace_back(event);
-            continue;
-        }
+        
         SGLOGD("risk event insert, eventId=%{public}" PRId64, event.eventId);
 
         // notify changed
@@ -95,10 +87,6 @@ int DatabaseManager::InsertEvent(uint32_t source, const std::vector<SecEvent>& e
                 count + 1 - config.storageRomNums);
         }
         ret = RiskEventRdbHelper::GetInstance().InsertEvent(event);
-    }
-
-    if (!fsEvents.empty()) {
-        ret = FileSystemStoreHelper::GetInstance().InsertEvents(fsEvents);
     }
     return ret;
 }

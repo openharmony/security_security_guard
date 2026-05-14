@@ -30,6 +30,7 @@
 #include "string_ex.h"
 #include "directory_ex.h"
 #include "file_ex.h"
+#include "nlohmann/json.hpp"
 #include "acquire_data_subscribe_manager.h"
 #include "bigdata.h"
 #include "collector_manager.h"
@@ -48,11 +49,11 @@
 #include "system_ability_definition.h"
 #include "ffrt.h"
 #include "risk_event_rdb_helper.h"
-#include "file_system_store_helper.h"
 #include "model_manager.h"
 #include "config_define.h"
 #include "data_statistics.h"
 #include "fdsan_fd.h"
+#include "store_define.h"
 #ifdef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 #include "event_group_config.h"
 #endif
@@ -446,10 +447,6 @@ bool DataCollectManagerService::QueryEventByRuler(sptr<ISecurityEventQueryCallba
         }
         QuerySecurityEventCallBack(proxy, replyEvents);
     } else { // query in db
-        if (config.dbTable == FILE_SYSTEM) {
-            (void) FileSystemStoreHelper::GetInstance().QuerySecurityEvent(ruler, proxy);
-            return true;
-        }
         std::vector<SecEvent> events;
         if (ruler.GetBeginTime().empty() && ruler.GetEndTime().empty()) {
             (void) DatabaseManager::GetInstance().QueryEventByEventId(ruler.GetEventId(), events);

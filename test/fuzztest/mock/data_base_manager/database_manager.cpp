@@ -16,7 +16,6 @@
 #include "database_manager.h"
 #include <cinttypes>
 #include "config_data_manager.h"
-#include "file_system_store_helper.h"
 #include "risk_event_rdb_helper.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
