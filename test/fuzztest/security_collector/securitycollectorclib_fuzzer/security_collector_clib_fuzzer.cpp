@@ -80,7 +80,8 @@ void SetPermission()
 
 extern "C" int FuzzSecurityCollector(FuzzedDataProvider &fdp)
 {
-    int64_t eventId = fdp.ConsumeIntegral<int64_t>();
+    static const int64_t eventids[] = {0, 1, 2, 3, 4, 5};
+    int64_t eventId = fdp.PickValueInArray(eventids);
     std::string str = fdp.ConsumeRandomLengthString(MAX_STRING_SIZE);
     SecurityCollectorEventMuteFilter fil{};
     Security::SecurityCollector::Event event{};
