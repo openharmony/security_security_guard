@@ -53,7 +53,6 @@ ohos_fuzztest("SecurityCollectorManagerFuzzTest") {
   ]
   sources = [
     "security_collector_manager_fuzzer.cpp",
-    "${sg_root_dir}/frameworks/common/collector/src/security_collector_event_filter.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_service.cpp",

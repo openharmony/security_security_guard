@@ -215,35 +215,6 @@ bool SecurityCollectorSubscriberManager::UnsubscribeCollector(const sptr<IRemote
     return true;
 }
 
-int32_t SecurityCollectorSubscriberManager::AddFilter(const SecurityCollectorEventFilter &subscribeMute)
-{
-    if (eventFilter_ == nullptr) {
-        LOGI("eventFilter_ is null");
-        return NULL_OBJECT;
-    }
-    int32_t ret = eventFilter_()->SetEventFilter(subscribeMute.GetMuteFilter());
-    if (ret != SUCCESS) {
-        LOGI("SetEventFilter failed, ret=%{public}d", ret);
-        return ret;
-    }
-    return SUCCESS;
-}
-
-
-int32_t SecurityCollectorSubscriberManager::RemoveFilter(const SecurityCollectorEventFilter &subscribeMute)
-{
-    if (eventFilter_ == nullptr) {
-        LOGI("eventFilter_ is null");
-        return NULL_OBJECT;
-    }
-    int32_t ret = eventFilter_()->RemoveEventFilter(subscribeMute.GetMuteFilter());
-    if (ret != SUCCESS) {
-        LOGI("RemoveFilter failed, ret=%{public}d", ret);
-        return ret;
-    }
-    return SUCCESS;
-}
-
 void SecurityCollectorSubscriberManager::RemoveAllFilter()
 {
     if (eventFilter_ == nullptr) {
