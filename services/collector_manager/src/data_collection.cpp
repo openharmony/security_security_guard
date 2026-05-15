@@ -145,6 +145,12 @@ bool DataCollection::SubscribeCollectors(const std::vector<int64_t>& eventIds, s
     std::vector<int64_t> loadedEventIds_;
     for (int64_t eventId : eventIds) {
         LOGI("SubscribeCollectors eventId is 0x%{public}" PRIx64, eventId);
+        auto count = eventIdToSubscribeCount_.find(eventId);
+        if (count == eventIdToSubscribeCount_.end()) {
+            eventIdToSubscribeCount_.emplace(eventId, 1);
+        } else {
+            eventIdToSubscribeCount_.emplace(eventId, count->second + 1);
+        }
         if (IsCollectorStarted(eventId)) {
             LOGI("Collector already started, eventId is 0x%{public}" PRIx64, eventId);
             continue;
@@ -159,6 +165,56 @@ bool DataCollection::SubscribeCollectors(const std::vector<int64_t>& eventIds, s
         ret = LoadCollector(eventId, collectorPath, api);
         if (ret != SUCCESS) {
             LOGE("Load collector failed, eventId is 0x%{public}" PRIx64, eventId);
+            UnsubscribeCollectors(loadedEventIds_);
+            return false;
+        }
+        loadedEventIds_.push_back(eventId);
+    }
+    LOGI("SubscribeCollectors finish");
+    return true;
+}
+
+bool DataCollection::SubscribeCollectorsBySticky(const std::vector<int64_t>& eventIds,
+    std::shared_ptr<ICollectorFwk> api)
+{
+    LOGI("SubscribeCollectorsByIsSticky start");
+    if (eventIds.empty() || !api) {
+        LOGE("Invalid input parameter");
+        return false;
+    }
+    std::vector<int64_t> loadedEventIds_;
+    for (int64_t eventId : eventIds) {
+        LOGI("SubscribeCollectorsByIsSticky eventId is 0x%{public}" PRIx64, eventId);
+        auto count = eventIdToSubscribeCount_.find(eventId);
+        if (count == eventIdToSubscribeCount_.end()) {
+            eventIdToSubscribeCount_.emplace(eventId, 1);
+        } else {
+            eventIdToSubscribeCount_.emplace(eventId, count->second + 1);
+        }
+        if (IsCollectorStarted(eventId)) {
+            LOGI("SubscribeCollectorsByIsSticky already started, eventId is 0x%{public}" PRIx64, eventId);
+            auto loader = eventIdToLoaderMap_.at(eventId);
+            ICollector* collector = loader.CallGetCollector();
+            if (collector == nullptr) {
+                LOGE("SubscribeCollectorsByIsSticky CallGetCollector error");
+                continue;
+            }
+            int result = collector->IsStartWithSub() ? collector->Subscribe(api, eventId) : collector->Start(api);
+            if (result != 0) {
+                LOGE("SubscribeCollectorsByIsSticky Failed to start collector");
+            }
+            continue;
+        }
+        std::string collectorPath;
+        ErrorCode ret = GetCollectorPath(eventId, collectorPath);
+        if (ret != SUCCESS) {
+            LOGE("SubscribeCollectorsByIsSticky GetCollectorPath failed, eventId is 0x%{public}" PRIx64, eventId);
+            UnsubscribeCollectors(loadedEventIds_);
+            return false;
+        }
+        ret = LoadCollector(eventId, collectorPath, api);
+        if (ret != SUCCESS) {
+            LOGE("SubscribeCollectorsByIsSticky Load collector failed, eventId is 0x%{public}" PRIx64, eventId);
             UnsubscribeCollectors(loadedEventIds_);
             return false;
         }
@@ -183,6 +239,15 @@ bool DataCollection::UnsubscribeCollectors(const std::vector<int64_t> &eventIds)
         if (loader == eventIdToLoaderMap_.end()) {
             LOGI("Collector not found, eventId is 0x%{public}" PRIx64, eventId);
             continue;
+        }
+        auto count = eventIdToSubscribeCount_.find(eventId);
+        if (count != eventIdToSubscribeCount_.end()) {
+            uint32_t curCount = count->second - 1;
+            if (curCount > 0) {
+                eventIdToSubscribeCount_.emplace(eventId, curCount);
+                continue;
+            }
+            eventIdToSubscribeCount_.erase(eventId);
         }
         ICollector* collector = loader->second.CallGetCollector();
         if (collector == nullptr) {

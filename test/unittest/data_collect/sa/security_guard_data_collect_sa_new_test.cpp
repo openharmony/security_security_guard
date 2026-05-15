@@ -206,7 +206,7 @@ HWTEST_F(SecurityGuardDataCollectSaNewTest, PublishEventToSub_StickyEvent_Test, 
         .eventId = 1, .version = "version", .content = "content", .eventSubscribes = {"sticky_client2"}};
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig)
         .WillRepeatedly([](int64_t eventId, EventCfg &eventCfg) {
-            eventCfg.isSticky = true;
+            eventCfg.isSticky = 1;
             eventCfg.eventType = static_cast<uint32_t>(EventTypeEnum::SUBSCRIBE_COLL);
             eventCfg.prog = "security_guard";
             return true;
@@ -759,7 +759,7 @@ HWTEST_F(SecurityGuardDataCollectSaNewTest, PublishEventToSub_FileEventId_Test, 
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig)
         .WillRepeatedly([](int64_t eventId, EventCfg &eventCfg) {
             eventCfg.eventType = static_cast<uint32_t>(EventTypeEnum::NORMALE_COLL);
-            eventCfg.isSticky = false;
+            eventCfg.isSticky = 0;
             return true;
     });
     EXPECT_CALL(*(DataFormat::GetInterface()), CheckRiskContent).WillRepeatedly(Return(true));
@@ -905,7 +905,7 @@ HWTEST_F(SecurityGuardDataCollectSaNewTest, SubscribeScInSg_ListennerNull_Test, 
         });
     auto &mgr = AcquireDataSubscribeManager::GetInstance();
     mgr.collectorListener_ = nullptr;
-    int32_t ret = mgr.SubscribeScInSg(1000);
+    int32_t ret = mgr.SubscribeScInSg(1000, 0);
     EXPECT_EQ(ret, NULL_OBJECT);
     mgr.collectorListener_ = std::make_shared<AcquireDataSubscribeManager::CollectorListener>();
 }

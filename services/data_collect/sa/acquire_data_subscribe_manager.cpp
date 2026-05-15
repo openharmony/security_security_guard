@@ -200,6 +200,12 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sp
     if (sessionsMap_.at(clientId)->subEvents.empty()) {
         sessionsMap_.erase(clientId);
     }
+    if (reportedStickyEvents_.find(clientId) != reportedStickyEvents_.end()) {
+        reportedStickyEvents_.at(clientId).erase(eventId);
+        if (reportedStickyEvents_.at(clientId).empty()) {
+            reportedStickyEvents_.erase(clientId);
+        }
+    }
     return SUCCESS;
 }
 
@@ -223,7 +229,7 @@ int AcquireDataSubscribeManager::InsertMute(const EventMuteFilter &filter, const
     return SUCCESS;
 }
 
-int AcquireDataSubscribeManager::SubscribeScInSg(int64_t eventId)
+int AcquireDataSubscribeManager::SubscribeScInSg(int64_t eventId, uint32_t isSticky)
 {
     SecurityCollector::Event event {};
     event.eventId = eventId;
@@ -235,11 +241,19 @@ int AcquireDataSubscribeManager::SubscribeScInSg(int64_t eventId)
         SGLOGE("collectorListener is nullptr");
         return NULL_OBJECT;
     }
-    if (!SecurityCollector::DataCollection::GetInstance().SubscribeCollectors({eventId}, collectorListener_)) {
-        SGLOGI("Subscribe SG failed, eventId=%{public}" PRId64, eventId);
-        return FAILED;
+    if (isSticky == 0) {
+        if (!SecurityCollector::DataCollection::GetInstance().SubscribeCollectors({eventId}, collectorListener_)) {
+            SGLOGI("Subscribe SG failed, eventId=%{public}" PRId64, eventId);
+            return FAILED;
+        }
+        eventToListenner_.emplace(eventId, collectorListener_);
+    } else {
+        if (!SecurityCollector::DataCollection::GetInstance().SubscribeCollectorsBySticky({eventId},
+            collectorListener_)) {
+            SGLOGI("Subscribe SG failed, eventId=%{public}" PRId64, eventId);
+            return FAILED;
+        }
     }
-    eventToListenner_.emplace(eventId, collectorListener_);
     return SUCCESS;
 }
 
@@ -274,7 +288,7 @@ int AcquireDataSubscribeManager::SubscribeSc(int64_t eventId)
     collectorListener_->InsertCallingUids(static_cast<uint32_t>(IPCSkeleton::GetCallingUid()));
     // 订阅SG
     if (config.prog == "security_guard") {
-        return SubscribeScInSg(eventId);
+        return SubscribeScInSg(eventId, config.isSticky);
     }
     // 订阅SC
     return SubscribeScInSc(eventId);
@@ -293,15 +307,17 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
     }
     // 解订阅SG
     if (config.prog == "security_guard") {
-        if (eventToListenner_.count(eventId) == 0) {
-            SGLOGE("not find evenId in linstener, eventId=%{public}" PRId64, eventId);
+        if (config.isSticky == 0 && eventToListenner_.count(eventId) == 0) {
+            SGLOGE("not find eventId in linstener, eventId=%{public}" PRId64, eventId);
             return FAILED;
         }
         if (!SecurityCollector::DataCollection::GetInstance().UnsubscribeCollectors({eventId})) {
             SGLOGE("UnSubscribe SG failed, eventId=%{public}" PRId64, eventId);
             return FAILED;
         }
-        eventToListenner_.erase(eventId);
+        if (config.isSticky == 0) {
+            eventToListenner_.erase(eventId);
+        }
         return SUCCESS;
     }
     // 解订阅SC
@@ -728,7 +744,7 @@ bool AcquireDataSubscribeManager::PublishEventToSub(const SecurityCollector::Eve
             continue;
         }
         if (IsFindFlag(event.eventSubscribes, event.eventId, it.second->clientId)) {
-            if (config.isSticky && !MarkStickyEventReported(event.eventId, it.second->clientId)) {
+            if (config.isSticky == 1 && !MarkStickyEventReported(event.eventId, it.second->clientId)) {
                 continue;
             }
             NotifySub(it.second->callback, event);

@@ -1208,7 +1208,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg, TestSize.Level0)
     event.eventId = 0;
     auto collectorListenner = std::make_shared<AcquireDataSubscribeManager::CollectorListener>();
     AcquireDataSubscribeManager::GetInstance().eventToListenner_.emplace(event.eventId, collectorListenner);
-    int ret = AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(0);
+    int ret = AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(0, 0);
     EXPECT_CALL(*(DataFormat::GetInterface()), CheckRiskContent).WillOnce(Return(false)).WillOnce(Return(true));
     AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
     AcquireDataSubscribeManager::GetInstance().UploadEvent(event);
@@ -1240,7 +1240,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, SubscribeScInSg01, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(SecurityCollector::DataCollection::GetInstance(), SubscribeCollectors).WillOnce(Return(true));
-    int ret = AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(1);
+    int ret = AcquireDataSubscribeManager::GetInstance().SubscribeScInSg(1, 0);
     EXPECT_EQ(ret, SUCCESS);
     AcquireDataSubscribeManager::GetInstance().eventToListenner_.clear();
 }
