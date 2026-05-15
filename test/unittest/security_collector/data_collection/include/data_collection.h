@@ -37,6 +37,7 @@ public:
     virtual bool StartCollectors(const std::vector<int64_t>& eventIds, std::shared_ptr<ICollectorFwk> api);
     virtual bool StopCollectors(const std::vector<int64_t>& eventIds);
     virtual bool SubscribeCollectors(const std::vector<int64_t>& eventIds, std::shared_ptr<ICollectorFwk> api);
+    virtual bool SubscribeCollectorsBySticky(const std::vector<int64_t> &eventIds, std::shared_ptr<ICollectorFwk> api);
     virtual bool UnsubscribeCollectors(const std::vector<int64_t>& eventIds);
     virtual ErrorCode GetCollectorType(int64_t eventId, int32_t& collectorType);
     virtual int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
@@ -57,6 +58,7 @@ private:
     std::mutex closeLibmutex_;
     std::unordered_map<int64_t, LibLoader> eventIdToLoaderMap_;
     std::unordered_map<int64_t, LibLoader> needCloseLibMap_;
+    std::unordered_map<int64_t, uint32_t> eventIdToSubscribeCount_;
 };
 }
 #endif // DATA_COLLECTION_H

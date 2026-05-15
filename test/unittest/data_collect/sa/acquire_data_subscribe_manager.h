@@ -45,6 +45,8 @@ public:
         const sptr<IRemoteObject> &callback, const std::string &clientId);
     int RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback, const std::string &clientId);
     int InsertSubscribeRecord(int64_t eventId, const std::string &clientId);
+    void StartClearEventCache();
+    void StopClearEventCache();
     int RemoveSubscribeRecord(int64_t eventId, const std::string &clientId);
     bool PublishEventToSub(const SecurityCollector::Event &event);
     void RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback);
@@ -53,8 +55,6 @@ public:
     int CreatClient(const std::string &eventGroup, const std::string &clientId, const sptr<IRemoteObject> &cb);
     int DestoryClient(const std::string &eventGroup, const std::string &clientId);
     void SubscriberEventOnSgStart();
-    void StartClearEventCache();
-    void StopClearEventCache();
     std::string GetCurrentClientGroup(const std::string &clientId);
     class ClientSession {
     public:
@@ -67,12 +67,12 @@ public:
         int64_t uid {-1};
         std::string procName {};
     };
+    void StartTokenBucketTask();
+    void StopTokenBucketTask();
     int UploadEvent(const SecurityCollector::Event &event);
     void DeInitDeviceId();
     void InitEventQueue();
     void DeInitEventQueue();
-    void StartTokenBucketTask();
-    void StopTokenBucketTask();
     const std::map<std::string, std::shared_ptr<ClientSession>> &GetAuditClientSessionMap();
 private:
     AcquireDataSubscribeManager();
@@ -81,23 +81,23 @@ private:
     void InitDeviceId();
     int SubscribeSc(int64_t eventId);
     int UnSubscribeSc(int64_t eventId);
-    int SubscribeScInSg(int64_t eventId);
+    int SubscribeScInSg(int64_t eventId, uint32_t isSticky);
     int SubscribeScInSc(int64_t eventId);
+    size_t GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event);
     SecurityCollector::SecurityCollectorEventMuteFilter ConvertFilter(const SecurityGuard::EventMuteFilter &sgFilter,
         const std::string &clientId);
     int RemoveMute(const EventMuteFilter &filter, const std::string &clientId);
     int InsertMute(const EventMuteFilter &filter, const std::string &clientId);
     int CheckInsertMute(const EventMuteFilter &filter, const std::string &clientId);
-    size_t GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event);
     int IsExceedLimited(const std::string &clientId, const std::string &eventGroup, pid_t callerPid);
     bool IsFindFlag(const std::set<std::string> &eventSubscribes, int64_t eventId, const std::string &clientId);
     void NotifySub(sptr<IRemoteObject> obj, const SecurityCollector::Event &events);
+    void ClearEventCache();
     void UploadEventToStore(const SecurityCollector::Event &event);
     void UploadEventToSub(const SecurityCollector::Event &event);
     void UploadEventTask(const SecurityCollector::Event &event);
     int UploadEventImmediately(const SecurityCollector::Event &event);
     int BatchUploadEvent(const SecurityCollector::Event &event);
-    void ClearEventCache();
     class DbListener : public IDbListener {
     public:
         DbListener() = default;

@@ -120,7 +120,7 @@ public:
             WriteStringToParcel(parcel, config_.dbTable) &&
             WriteStringToParcel(parcel, config_.prog) &&
             WriteUint32ToParcel(parcel, config_.isBatchUpload) &&
-            WriteUint32ToParcel(parcel, config_.isSticky ? 1 : 0);
+            WriteUint32ToParcel(parcel, config_.isSticky);
     }
 
     bool ReadFromParcel(Parcel &parcel)
@@ -140,12 +140,7 @@ public:
             ReadStringFromParcel(parcel, config_.dbTable) &&
             ReadStringFromParcel(parcel, config_.prog) &&
             ReadUint32FromParcel(parcel, config_.isBatchUpload) &&
-            [&]() {
-                uint32_t isStickyValue;
-                bool ret = ReadUint32FromParcel(parcel, isStickyValue);
-                config_.isSticky = isStickyValue != 0;
-                return ret;
-            }();
+            ReadUint32FromParcel(parcel, config_.isSticky);
     }
 
     static SecurityEventConfig *Unmarshalling(Parcel &parcel)
