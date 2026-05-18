@@ -32,6 +32,8 @@ public:
     virtual bool StartCollectors(const std::vector<int64_t>& eventIds, std::shared_ptr<ICollectorFwk> api) = 0;
     virtual bool StopCollectors(const std::vector<int64_t>& eventIds) = 0;
     virtual bool SubscribeCollectors(const std::vector<int64_t>& eventIds, std::shared_ptr<ICollectorFwk> api) = 0;
+    virtual bool SubscribeCollectorsBySticky(const std::vector<int64_t> &eventIds,
+        std::shared_ptr<ICollectorFwk> api) = 0;
     virtual bool UnsubscribeCollectors(const std::vector<int64_t>& eventIds) = 0;
     virtual ErrorCode GetCollectorType(int64_t eventId, int32_t& collectorType) = 0;
     virtual int32_t QuerySecurityEvent(const std::vector<SecurityEventRuler> rulers,
@@ -52,6 +54,8 @@ public:
     MOCK_METHOD2(StartCollectors, bool(const std::vector<int64_t>& eventIds, std::shared_ptr<ICollectorFwk> api));
     MOCK_METHOD1(StopCollectors, bool(const std::vector<int64_t>& eventIds));
     MOCK_METHOD2(SubscribeCollectors, bool(const std::vector<int64_t>& eventIds, std::shared_ptr<ICollectorFwk> api));
+    MOCK_METHOD2(SubscribeCollectorsBySticky, bool(const std::vector<int64_t>& eventIds,
+        std::shared_ptr<ICollectorFwk> api));
     MOCK_METHOD1(UnsubscribeCollectors, bool(const std::vector<int64_t>& eventIds));
     MOCK_METHOD2(GetCollectorType, ErrorCode(int64_t eventId, int32_t& collectorType));
     MOCK_METHOD2(QuerySecurityEvent, int32_t(const std::vector<SecurityEventRuler> rulers,
