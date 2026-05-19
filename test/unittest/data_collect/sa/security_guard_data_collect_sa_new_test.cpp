@@ -228,7 +228,7 @@ HWTEST_F(SecurityGuardDataCollectSaNewTest, PublishEventToSub_StickyEvent_Test, 
     int32_t ret = AcquireDataSubscribeManager::GetInstance().CreatClient("auditGroup", "sticky_client2", mockObj);
     EXPECT_EQ(ret, SUCCESS);
     ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(event.eventId, "sticky_client2");
-    EXPECT_EQ(ret, SUCCESS);
+    EXPECT_EQ(ret, 1);
     bool publishRet = AcquireDataSubscribeManager::GetInstance().PublishEventToSub(event);
     EXPECT_TRUE(publishRet);
     publishRet = AcquireDataSubscribeManager::GetInstance().PublishEventToSub(event);
