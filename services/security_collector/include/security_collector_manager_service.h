@@ -19,7 +19,7 @@
 #include <mutex>
 #include "nocopyable.h"
 #include "system_ability.h"
-
+#include "ffrt.h"
 #include "security_collector_subscriber_manager.h"
 #include "security_collector_manager_callback_proxy.h"
 #include "security_collector_manager_stub.h"
@@ -68,7 +68,7 @@ private:
     bool CleanSubscriber(const sptr<IRemoteObject> &remote);
     void ExecuteOnNotifyByTask(const sptr<IRemoteObject> &remote, const Event &event);
 
-    std::mutex deathRecipientMutex_{};
+    ffrt::mutex deathRecipientMutex_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
 };
 } // namespace OHOS::Security::SecurityCollector

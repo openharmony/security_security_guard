@@ -14,7 +14,6 @@
  */
 
 #include "config_manager.h"
-
 #include "config_subscriber.h"
 #include "security_guard_log.h"
 namespace OHOS::Security::SecurityGuard {

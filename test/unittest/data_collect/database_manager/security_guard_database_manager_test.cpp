@@ -38,7 +38,7 @@ using namespace OHOS::Security::SecurityGuardTest;
 
 namespace OHOS {
     std::shared_ptr<AccountSA::MockOsAccountManagerInterface> AccountSA::OsAccountManager::instance_ = nullptr;
-    std::mutex AccountSA::OsAccountManager::mutex_ {};
+    ffrt::mutex AccountSA::OsAccountManager::mutex_ {};
     constexpr uint32_t MAX_CONTENT_SIZE = 10240;
 }
 

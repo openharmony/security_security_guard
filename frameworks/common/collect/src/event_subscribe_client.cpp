@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "event_subscribe_client.h"
+#include "ffrt.h"
 #include "iservice_registry.h"
 #include "security_guard_log.h"
 #include "data_collect_manager_idl_proxy.h"
@@ -23,7 +24,7 @@
 namespace OHOS::Security::SecurityGuard {
 namespace {
     std::set<std::shared_ptr<EventSubscribeClient>> g_clients{};
-    std::mutex g_clientMutex{};
+    ffrt::mutex g_clientMutex{};
 
 }
 
@@ -51,7 +52,7 @@ int32_t EventSubscribeClient::CreatClient(const std::string &eventGroup, EventCa
     std::shared_ptr<EventSubscribeClient> &client)
 {
     SGLOGI("enter EventSubscribeClient CreatClient");
-    std::lock_guard<std::mutex> lock(g_clientMutex);
+    std::lock_guard<ffrt::mutex> lock(g_clientMutex);
     if (callback == nullptr) {
         SGLOGE("callback is nullptr");
         return NULL_OBJECT;

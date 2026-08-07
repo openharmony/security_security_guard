@@ -294,7 +294,7 @@ bool SecurityCollectorManagerService::CleanSubscriber(const sptr<IRemoteObject> 
 
 bool SecurityCollectorManagerService::SetDeathRecipient(const sptr<IRemoteObject> &remote)
 {
-    std::lock_guard<std::mutex> lock(deathRecipientMutex_);
+    std::lock_guard<ffrt::mutex> lock(deathRecipientMutex_);
     if (deathRecipient_ == nullptr) {
         deathRecipient_ = new (std::nothrow) SubscriberDeathRecipient(this);
         if (deathRecipient_ == nullptr) {
@@ -308,7 +308,7 @@ bool SecurityCollectorManagerService::SetDeathRecipient(const sptr<IRemoteObject
 
 void SecurityCollectorManagerService::UnsetDeathRecipient(const sptr<IRemoteObject> &remote)
 {
-    std::lock_guard<std::mutex> lock(deathRecipientMutex_);
+    std::lock_guard<ffrt::mutex> lock(deathRecipientMutex_);
     if (deathRecipient_ != nullptr) {
         remote->RemoveDeathRecipient(deathRecipient_);
     }

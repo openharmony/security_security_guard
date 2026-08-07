@@ -17,7 +17,6 @@
 #define SECURITY_GUARD_DATA_COLLECT_MANAGER_H
 
 #include <map>
-#include <mutex>
 #include "i_collector_subscriber.h"
 #include "security_event_query_callback.h"
 #include "security_event_ruler.h"
@@ -55,7 +54,6 @@ private:
     void HandleDecipient();
     bool IsCurrentSubscriberEventIdExist(const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &sub);
     int32_t SetDeathRecipient(const sptr<IRemoteObject> &remote);
-    std::mutex mutex_{};
     sptr<AcquireDataManagerCallbackService> callback_{};
     std::string sdkFlag_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};

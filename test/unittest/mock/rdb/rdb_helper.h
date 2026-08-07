@@ -57,7 +57,7 @@ public:
     static std::shared_ptr<MockRdbHelperInterface> GetInterface()
     {
         if (instance_ == nullptr) {
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<ffrt::mutex> lock(mutex_);
             if (instance_ == nullptr) {
                 instance_ = std::make_shared<MockRdbHelperInterface>();
             }
@@ -74,7 +74,7 @@ public:
 
 private:
     static std::shared_ptr<MockRdbHelperInterface> instance_;
-    static std::mutex mutex_;
+    static ffrt::mutex mutex_;
 };
 } // namespace OHOS::NativeRdb
 #endif

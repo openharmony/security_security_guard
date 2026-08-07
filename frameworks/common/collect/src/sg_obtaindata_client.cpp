@@ -17,7 +17,7 @@
 
 #include "iservice_registry.h"
 #include "securec.h"
-
+#include "ffrt.h"
 #include "data_collect_manager_callback_service.h"
 #include "data_collect_manager_idl_proxy.h"
 #include "data_collect_manager.h"
@@ -27,14 +27,14 @@
 using namespace OHOS;
 using namespace OHOS::Security::SecurityGuard;
 
-static std::mutex g_mutex;
+static ffrt::mutex g_mutex;
 static int32_t RequestSecurityEventInfoAsyncImpl(const DeviceIdentify *devId, const char *eventJson,
     RequestSecurityEventInfoCallBack callback)
 {
     if (devId == nullptr || eventJson == nullptr || callback == nullptr ||devId->length >= DEVICE_ID_MAX_LEN) {
         return BAD_PARAM;
     }
-    std::unique_lock<std::mutex> lock(g_mutex);
+    std::unique_lock<ffrt::mutex> lock(g_mutex);
     uint8_t tmp[DEVICE_ID_MAX_LEN] = {};
     (void) memset_s(tmp, DEVICE_ID_MAX_LEN, 0, DEVICE_ID_MAX_LEN);
     errno_t rc = memcpy_s(tmp, DEVICE_ID_MAX_LEN, devId->identity, devId->length);

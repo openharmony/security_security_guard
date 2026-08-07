@@ -61,7 +61,8 @@ ohos_shared_library("securityguard_napi") {
     "napi:ace_napi",
     "samgr:samgr_proxy",
     "node:node_header_notice",
-    "libuv:uv"
+    "libuv:uv",
+    "ffrt:libffrt",
   ]
 
   relative_install_dir = "module/security"

@@ -17,7 +17,7 @@
 #define SECURITY_GUARD_COLLECTOR_MANAGER_MOCK_H
 
 #include "gmock/gmock.h"
-
+#include "ffrt.h"
 #include "security_event_ruler.h"
 #include "security_collector_subscribe_info.h"
 #include "security_event.h"

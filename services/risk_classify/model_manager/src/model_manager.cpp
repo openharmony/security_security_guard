@@ -57,7 +57,7 @@ int32_t ModelManager::InitModel(uint32_t modelId)
 {
     std::unordered_map<uint32_t, std::unique_ptr<ModelAttrs>>::iterator iter;
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         iter = modelIdApiMap_.find(modelId);
         if (iter != modelIdApiMap_.end() && iter->second != nullptr && iter->second->GetModelApi() != nullptr) {
             iter->second->GetModelApi()->Release();
@@ -99,7 +99,7 @@ int32_t ModelManager::InitModel(uint32_t modelId)
         return ret;
     }
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         modelIdApiMap_[modelId] = std::move(attr);
     }
     SGLOGI("init model success, modelId=%{public}u", modelId);
@@ -121,7 +121,7 @@ std::string ModelManager::GetResult(uint32_t modelId, const std::string &param)
         }
     }
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         auto iter = modelIdApiMap_.find(modelId);
         if (iter == modelIdApiMap_.end() || iter->second == nullptr || iter->second->GetModelApi() == nullptr) {
             SGLOGI("the model has not been initialized, begin init, modelId=%{public}u", modelId);
@@ -146,7 +146,7 @@ int32_t ModelManager::SubscribeResult(uint32_t modelId, std::shared_ptr<IModelRe
         return ret;
     }
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     auto iter = modelIdApiMap_.find(modelId);
     if (iter == modelIdApiMap_.end() || iter->second == nullptr || iter->second->GetModelApi() == nullptr) {
         SGLOGI("the model has not been initialized, modelId=%{public}u", modelId);
@@ -158,7 +158,7 @@ int32_t ModelManager::SubscribeResult(uint32_t modelId, std::shared_ptr<IModelRe
 
 void ModelManager::Release(uint32_t modelId)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     auto iter = modelIdApiMap_.find(modelId);
     if (iter == modelIdApiMap_.end()) {
         SGLOGI("the model has not been initialized, modelId=%{public}u", modelId);
@@ -183,7 +183,7 @@ int32_t ModelManager::StartSecurityModel(uint32_t modelId, const std::string &pa
         return ret;
     }
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     auto iter = modelIdApiMap_.find(modelId);
     if (iter == modelIdApiMap_.end() || iter->second == nullptr || iter->second->GetModelApi() == nullptr) {
         SGLOGE("the model has not been initialized, modelId=%{public}u", modelId);
