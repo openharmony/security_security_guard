@@ -33,7 +33,6 @@ public:
     }
     int32_t OnNotify(const std::vector<SecurityCollector::Event> &events) override;
 private:
-    std::mutex mutex_;
     std::function<void(const SecurityCollector::Event &event)> callback_;
 };
 } // namespace OHOS::Security::SecurityGuard

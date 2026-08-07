@@ -14,10 +14,14 @@
  */
 
 #include "napi_request_data_manager.h"
-
+#include "ffrt.h"
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
+namespace {
+    ffrt::mutex mutex_;
+    ffrt::mutex envQuerierMutex_;
+}
 NapiRequestDataManager& NapiRequestDataManager::GetInstance()
 {
     static NapiRequestDataManager instance;
@@ -32,7 +36,7 @@ std::shared_ptr<RequestSecurityEventInfoContext> NapiRequestDataManager::GetCont
 
 std::shared_ptr<RequestSecurityEventInfoContext> NapiRequestDataManager::GetContext(napi_env env, bool &isExist)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     auto iter = envContextMap_.find(env);
     if (iter != envContextMap_.end()) {
         SGLOGI("find the env entry");
@@ -49,7 +53,7 @@ std::shared_ptr<RequestSecurityEventInfoContext> NapiRequestDataManager::GetCont
 void NapiRequestDataManager::DeleteContext(napi_env env)
 {
     SGLOGI("begin delete the env entry");
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     auto iter = envContextMap_.find(env);
     if (iter != envContextMap_.end()) {
         if (iter->second != nullptr) {
@@ -68,7 +72,7 @@ void NapiRequestDataManager::DeleteContext(napi_env env)
 
 uint32_t NapiRequestDataManager::AddDataCallback(napi_env env)
 {
-    std::lock_guard<std::mutex> lock(envQuerierMutex_);
+    std::lock_guard<ffrt::mutex> lock(envQuerierMutex_);
     auto iter = envQuerierMap_.find(env);
     if (iter != envQuerierMap_.end()) {
         envQuerierMap_[env]++;
@@ -81,7 +85,7 @@ uint32_t NapiRequestDataManager::AddDataCallback(napi_env env)
  
 uint32_t NapiRequestDataManager::DelDataCallback(napi_env env)
 {
-    std::lock_guard<std::mutex> lock(envQuerierMutex_);
+    std::lock_guard<ffrt::mutex> lock(envQuerierMutex_);
     auto iter = envQuerierMap_.find(env);
     if (iter != envQuerierMap_.end()) {
         envQuerierMap_.erase(iter);
@@ -91,7 +95,7 @@ uint32_t NapiRequestDataManager::DelDataCallback(napi_env env)
  
 bool NapiRequestDataManager::GetDataCallback(napi_env env)
 {
-    std::lock_guard<std::mutex> lock(envQuerierMutex_);
+    std::lock_guard<ffrt::mutex> lock(envQuerierMutex_);
     auto iter = envQuerierMap_.find(env);
     if (iter != envQuerierMap_.end()) {
         return true;

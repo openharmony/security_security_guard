@@ -30,10 +30,10 @@ using namespace OHOS::Security::SecurityGuardTest;
 namespace OHOS {
     std::shared_ptr<Security::AccessToken::MockTokenIdKitInterface>
         Security::AccessToken::TokenIdKit::instance_ = nullptr;
-    std::mutex Security::AccessToken::TokenIdKit::mutex_ {};
+    ffrt::mutex Security::AccessToken::TokenIdKit::mutex_ {};
     std::shared_ptr<Security::AccessToken::MockAccessTokenKitInterface>
         Security::AccessToken::AccessTokenKit::instance_ = nullptr;
-    std::mutex Security::AccessToken::AccessTokenKit::mutex_ {};
+    ffrt::mutex Security::AccessToken::AccessTokenKit::mutex_ {};
 
 class MockRemoteObject final : public IRemoteObject {
 public:

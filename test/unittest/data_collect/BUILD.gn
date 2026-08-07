@@ -299,6 +299,7 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "ffrt:libffrt",
   ]
   if (security_guard_enable_device_id) {
     defines += [ "SECURITY_GUARD_ENABLE_DEVICE_ID" ]

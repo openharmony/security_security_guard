@@ -72,7 +72,7 @@ public:
     static std::shared_ptr<MockPreferenceHelperInterface> GetInterface()
     {
         if (instance_ == nullptr) {
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<ffrt::mutex> lock(mutex_);
             if (instance_ == nullptr) {
                 instance_ = std::make_shared<MockPreferenceHelperInterface>();
             }
@@ -82,7 +82,7 @@ public:
 
 private:
     static std::shared_ptr<MockPreferenceHelperInterface> instance_;
-    static std::mutex mutex_;
+    static ffrt::mutex mutex_;
 };
 } // namespace OHOS::NativePreferences
 #endif // SECURITY_GUARD_PREFERENCES_HELPER_MOCK_H

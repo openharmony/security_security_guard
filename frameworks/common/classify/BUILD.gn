@@ -129,5 +129,6 @@ ohos_shared_library("libsg_classify_sdk") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "ffrt:libffrt",
   ]
 }

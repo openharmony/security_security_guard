@@ -58,7 +58,7 @@ public:
     static std::shared_ptr<MockPreferenceWrapperInterface> GetInterface()
     {
         if (instance_ == nullptr) {
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<ffrt::mutex> lock(mutex_);
             if (instance_ == nullptr) {
                 instance_ = std::make_shared<MockPreferenceWrapperInterface>();
             }
@@ -75,7 +75,7 @@ public:
 
 private:
     static std::shared_ptr<MockPreferenceWrapperInterface> instance_;
-    static std::mutex mutex_;
+    static ffrt::mutex mutex_;
 };
 }  // OHOS::Security::SecurityGuard
 

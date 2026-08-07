@@ -17,7 +17,7 @@
 #define ACCESSTOKEN_KIT_H
 
 #include <string>
-
+#include "ffrt.h"
 #include "parcel.h"
 
 namespace OHOS::Security::AccessToken {

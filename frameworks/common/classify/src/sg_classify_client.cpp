@@ -17,6 +17,7 @@
 
 #ifndef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 #include <future>
+#include "ffrt.h"
 #include "iremote_broker.h"
 #include "iservice_registry.h"
 #include "securec.h"
@@ -36,7 +37,7 @@ namespace {
 using namespace OHOS;
 using namespace OHOS::Security::SecurityGuard;
 
-static std::mutex g_mutex;
+static ffrt::mutex g_mutex;
 
 static int32_t RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
     const std::string &param, ResultCallback callback)
@@ -72,7 +73,7 @@ int32_t RequestSecurityModelResultSync(const std::string &devId, uint32_t modelI
     if (devId.length() >= DEVICE_ID_MAX_LEN) {
         return BAD_PARAM;
     }
-    std::unique_lock<std::mutex> lock(g_mutex);
+    std::unique_lock<ffrt::mutex> lock(g_mutex);
     auto promise = std::make_shared<std::promise<SecurityModelResult>>();
     auto future = promise->get_future();
     auto func = [promise, param] (const std::string &devId, uint32_t modelId,
@@ -111,7 +112,7 @@ int32_t RequestSecurityModelResultAsync(const std::string &devId, uint32_t model
     if (devId.length() >= DEVICE_ID_MAX_LEN || callback == nullptr) {
         return BAD_PARAM;
     }
-    std::unique_lock<std::mutex> lock(g_mutex);
+    std::unique_lock<ffrt::mutex> lock(g_mutex);
     auto func = [callback, param] (const std::string &devId,
         uint32_t modelId, const std::string &result) -> int32_t {
         callback(SecurityModelResult{devId, modelId, param, result});

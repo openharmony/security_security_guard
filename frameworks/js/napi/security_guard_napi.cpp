@@ -19,7 +19,7 @@
 #include <unordered_map>
 #include <map>
 #include <algorithm>
-
+#include "ffrt.h"
 #include "napi_request_data_manager.h"
 #include "napi_security_event_querier.h"
 #include "security_event.h"
@@ -68,8 +68,8 @@ constexpr int TIME_MAX_LEN = 15;
 
 using NAPI_QUERIER_PAIR = std::pair<pid_t, std::shared_ptr<NapiSecurityEventQuerier>>;
 static std::unordered_map<napi_ref, NAPI_QUERIER_PAIR> queriers;
-static std::mutex g_subscribeMutex;
-static std::mutex g_queryMutex;
+static ffrt::mutex g_subscribeMutex;
+static ffrt::mutex g_queryMutex;
 std::map<napi_env, std::vector<SubscribeCBInfo *>> g_subscribers;
 
 static const std::unordered_map<int32_t, std::pair<int32_t, std::string>> g_errorStringMap = {
@@ -957,7 +957,7 @@ static napi_value NapiQuerySecurityEvent(napi_env env, napi_callback_info info)
     auto querier = std::make_shared<NapiSecurityEventQuerier>(context, [] (const napi_env env, const napi_ref ref) {
             napi_value querier = nullptr;
             napi_get_reference_value(env, ref, &querier);
-            std::unique_lock<std::mutex> lock(g_queryMutex);
+            std::unique_lock<ffrt::mutex> lock(g_queryMutex);
             auto iter = CompareAndReturnCacheItem<NapiSecurityEventQuerier>(env, querier, queriers);
             if (iter != queriers.end()) {
                 queriers.erase(iter->first);
@@ -971,7 +971,7 @@ static napi_value NapiQuerySecurityEvent(napi_env env, napi_callback_info info)
         napi_throw(env, GenerateBusinessError(env, code));
         return nullptr;
     }
-    std::unique_lock<std::mutex> lock(g_queryMutex);
+    std::unique_lock<ffrt::mutex> lock(g_queryMutex);
     queriers[context->ref] = std::make_pair(context->threadId, querier);
     NapiRequestDataManager::GetInstance().AddDataCallback(env);
     SGLOGI("NapiQuerySecurityEvent end.");
@@ -1121,7 +1121,7 @@ static bool CompareOnAndOffRef(const napi_env env, napi_ref subscriberRef, napi_
 
 static bool IsSubscribeInMap(napi_env env, SubscribeCBInfo *info)
 {
-    std::lock_guard<std::mutex> lock(g_subscribeMutex);
+    std::lock_guard<ffrt::mutex> lock(g_subscribeMutex);
     auto subscribe = g_subscribers.find(env);
     if (subscribe == g_subscribers.end()) {
         return false;
@@ -1229,7 +1229,7 @@ static void SendEventOnSecEventsChanged(const SubscriberOAWorker &subscriberOAWo
         }
         bool isFound = false;
         {
-            std::lock_guard<std::mutex> lock(g_subscribeMutex);
+            std::lock_guard<ffrt::mutex> lock(g_subscribeMutex);
             SubscriberPtr *subscriber = subscriberOAWorkerData.subscriber;
             for (auto subscriberInstance : g_subscribers) {
                 isFound = std::any_of(subscriberInstance.second.begin(), subscriberInstance.second.end(),
@@ -1330,7 +1330,7 @@ static napi_value Subscribe(napi_env env, napi_callback_info cbInfo)
         napi_throw(env, GenerateBusinessError(env, errCode, "Subscribe failed!"));
         return WrapVoidToJS(env);
     } else {
-        std::lock_guard<std::mutex> lock(g_subscribeMutex);
+        std::lock_guard<ffrt::mutex> lock(g_subscribeMutex);
         g_subscribers[env].emplace_back(info);
     }
     return WrapVoidToJS(env);
@@ -1338,7 +1338,7 @@ static napi_value Subscribe(napi_env env, napi_callback_info cbInfo)
 
 static void AllUnsubscribeSync(napi_env env, UnsubscribeCBInfo *unsubscribeCBInfo)
 {
-    std::lock_guard<std::mutex> lock(g_subscribeMutex);
+    std::lock_guard<ffrt::mutex> lock(g_subscribeMutex);
     auto subscribe = g_subscribers.find(env);
     if (subscribe == g_subscribers.end()) {
         return;
@@ -1365,7 +1365,7 @@ static void AllUnsubscribeSync(napi_env env, UnsubscribeCBInfo *unsubscribeCBInf
 
 static void UnsubscribeSync(napi_env env, UnsubscribeCBInfo *unsubscribeCBInfo)
 {
-    std::lock_guard<std::mutex> lock(g_subscribeMutex);
+    std::lock_guard<ffrt::mutex> lock(g_subscribeMutex);
     auto subscribe = g_subscribers.find(env);
     if (subscribe == g_subscribers.end()) {
         return;
