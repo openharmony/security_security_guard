@@ -71,6 +71,7 @@ ohos_unittest("inner_api_test") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "ffrt:libffrt",
   ]
   sanitize = {
     cfi = true

@@ -45,8 +45,8 @@ namespace OHOS {
         Security::AccessToken::AccessTokenKit::instance_ = nullptr;
     std::shared_ptr<Security::AccessToken::MockTokenIdKitInterface>
         Security::AccessToken::TokenIdKit::instance_ = nullptr;
-    std::mutex Security::AccessToken::AccessTokenKit::mutex_ {};
-    std::mutex Security::AccessToken::TokenIdKit::mutex_ {};
+    ffrt::mutex Security::AccessToken::AccessTokenKit::mutex_ {};
+    ffrt::mutex Security::AccessToken::TokenIdKit::mutex_ {};
     constexpr char PERMISSION[] = "ohos.permission.securityguard.REQUEST_SECURITY_EVENT_INFO";
 }
 

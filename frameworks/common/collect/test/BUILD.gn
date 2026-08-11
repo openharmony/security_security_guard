@@ -69,6 +69,7 @@ ohos_unittest("libsg_collect_sdk_test") {
     "ipc:ipc_single",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "ffrt:libffrt",
   ]
 }
 

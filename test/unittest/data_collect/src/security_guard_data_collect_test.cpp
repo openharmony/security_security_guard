@@ -40,8 +40,8 @@ using namespace OHOS::Security::SecurityGuard;
 using namespace OHOS::Security::SecurityGuardTest;
 
 namespace OHOS {
-    std::mutex AccountSA::OsAccountManager::mutex_ {};
-    std::mutex NativePreferences::PreferencesHelper::mutex_ {};
+    ffrt::mutex AccountSA::OsAccountManager::mutex_ {};
+    ffrt::mutex NativePreferences::PreferencesHelper::mutex_ {};
 }
 
 namespace OHOS::Security::SecurityGuardTest {

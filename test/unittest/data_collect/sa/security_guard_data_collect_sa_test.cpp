@@ -59,9 +59,9 @@ std::shared_ptr<AccountSA::MockOsAccountManagerInterface> AccountSA::OsAccountMa
 std::shared_ptr<Security::AccessToken::MockAccessTokenKitInterface> Security::AccessToken::AccessTokenKit::instance_ =
     nullptr;
 std::shared_ptr<Security::AccessToken::MockTokenIdKitInterface> Security::AccessToken::TokenIdKit::instance_ = nullptr;
-std::mutex Security::SecurityGuard::DataFormat::mutex_{};
-std::mutex Security::AccessToken::AccessTokenKit::mutex_{};
-std::mutex Security::AccessToken::TokenIdKit::mutex_{};
+ffrt::mutex Security::SecurityGuard::DataFormat::mutex_{};
+ffrt::mutex Security::AccessToken::AccessTokenKit::mutex_{};
+ffrt::mutex Security::AccessToken::TokenIdKit::mutex_{};
 } // namespace OHOS
 
 namespace OHOS::Security::SecurityGuardTest {

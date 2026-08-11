@@ -52,8 +52,8 @@ private:
     std::unordered_map<int64_t, EventCfg> eventMap_;
     std::unordered_map<int64_t, std::string> eventToTableMap_;
     std::unordered_map<std::string, EventGroupCfg> eventGroupMap_;
-    std::mutex modelToEventMutex_;
-    std::mutex modelMutex_;
+    ffrt::mutex modelToEventMutex_;
+    ffrt::mutex modelMutex_;
     ffrt::mutex eventMutex_;
     ffrt::mutex eventGroupMutex_;
     ffrt::mutex eventToTableMutex_;

@@ -27,7 +27,7 @@ ConfigDataManager &ConfigDataManager::GetInstance()
 
 void ConfigDataManager::InsertModelMap(uint32_t modelId, const ModelCfg &config)
 {
-    std::lock_guard<std::mutex> lock(modelMutex_);
+    std::lock_guard<ffrt::mutex> lock(modelMutex_);
     modelMap_[modelId] = config;
 }
 
@@ -39,7 +39,7 @@ void ConfigDataManager::InsertEventMap(int64_t eventId, const EventCfg &config)
 
 void ConfigDataManager::InsertModelToEventMap(uint32_t modelId, std::set<int64_t> eventIds)
 {
-    std::lock_guard<std::mutex> lock(modelToEventMutex_);
+    std::lock_guard<ffrt::mutex> lock(modelToEventMutex_);
     modelToEventMap_[modelId] = eventIds;
 }
 
@@ -78,7 +78,7 @@ bool ConfigDataManager::GetIsBatchUpload(const std::string &groupName)
 
 void ConfigDataManager::ResetModelMap()
 {
-    std::lock_guard<std::mutex> lock(modelMutex_);
+    std::lock_guard<ffrt::mutex> lock(modelMutex_);
     modelMap_.clear();
 }
 
@@ -96,7 +96,7 @@ void ConfigDataManager::SwapEventConfigMap(std::unordered_map<int64_t, EventCfg>
 
 void ConfigDataManager::ResetModelToEventMap()
 {
-    std::lock_guard<std::mutex> lock(modelToEventMutex_);
+    std::lock_guard<ffrt::mutex> lock(modelToEventMutex_);
     modelToEventMap_.clear();
 }
 
@@ -109,7 +109,7 @@ void ConfigDataManager::ResetEventToTableMap()
 std::vector<int64_t> ConfigDataManager::GetEventIds(uint32_t modelId)
 {
     SGLOGD("modelId=%{public}u", modelId);
-    std::lock_guard<std::mutex> lock(modelToEventMutex_);
+    std::lock_guard<ffrt::mutex> lock(modelToEventMutex_);
     std::vector<int64_t> vector;
     if (modelToEventMap_.find(modelId) != modelToEventMap_.end()) {
         SGLOGD("map contains modelId=%{public}u", modelId);
@@ -131,7 +131,7 @@ std::vector<int64_t> ConfigDataManager::GetAllEventIds()
 
 std::vector<uint32_t> ConfigDataManager::GetAllModelIds()
 {
-    std::lock_guard<std::mutex> lock(modelMutex_);
+    std::lock_guard<ffrt::mutex> lock(modelMutex_);
     std::vector<uint32_t> vector;
     for (const auto &entry : modelMap_) {
         SGLOGD("modelId=%{public}u", entry.first);
@@ -152,7 +152,7 @@ std::vector<EventCfg> ConfigDataManager::GetAllEventConfigs()
 
 bool ConfigDataManager::GetModelConfig(uint32_t modelId, ModelCfg &config)
 {
-    std::lock_guard<std::mutex> lock(modelMutex_);
+    std::lock_guard<ffrt::mutex> lock(modelMutex_);
     auto it = modelMap_.find(modelId);
     if (it != modelMap_.end()) {
         config = it->second;

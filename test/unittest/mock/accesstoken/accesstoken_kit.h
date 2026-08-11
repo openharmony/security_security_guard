@@ -17,7 +17,7 @@
 #define ACCESSTOKEN_KIT_H
 
 #include <string>
-
+#include "ffrt.h"
 #include "gmock/gmock.h"
 #include "parcel.h"
 
@@ -93,7 +93,7 @@ public:
     static std::shared_ptr<MockTokenIdKitInterface> GetInterface()
     {
         if (instance_ == nullptr) {
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<ffrt::mutex> lock(mutex_);
             if (instance_ == nullptr) {
                 instance_ = std::make_shared<MockTokenIdKitInterface>();
             }
@@ -110,7 +110,7 @@ public:
 
 private:
     static std::shared_ptr<MockTokenIdKitInterface> instance_;
-    static std::mutex mutex_;
+    static ffrt::mutex mutex_;
 };
 
 class AccessTokenKitInterface {
@@ -169,7 +169,7 @@ public:
     static std::shared_ptr<MockAccessTokenKitInterface> GetInterface()
     {
         if (instance_ == nullptr) {
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<ffrt::mutex> lock(mutex_);
             if (instance_ == nullptr) {
                 instance_ = std::make_shared<MockAccessTokenKitInterface>();
             }
@@ -186,7 +186,7 @@ public:
 
 private:
     static std::shared_ptr<MockAccessTokenKitInterface> instance_;
-    static std::mutex mutex_;
+    static ffrt::mutex mutex_;
 };
 }  // OHOS::Security::AccessToken
 
