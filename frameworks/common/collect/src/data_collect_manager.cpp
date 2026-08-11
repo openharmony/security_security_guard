@@ -17,6 +17,7 @@
 #include <chrono>
 #include "fdsan_fd.h"
 #include "directory_ex.h"
+#include "ffrt.h"
 #include "data_collect_manager_idl_proxy.h"
 #include "data_collect_manager_idl.h"
 #include "security_event_ruler.h"
@@ -32,6 +33,7 @@
 namespace {
     constexpr uint32_t MAX_RESUB_COUNTS = 3;
     const std::string SECURITY_GROUP = "securityGroup";
+    ffrt::mutex mutex_{};
 }
 
 namespace OHOS::Security::SecurityGuard {
@@ -44,7 +46,7 @@ DataCollectManager& DataCollectManager::GetInstance()
 DataCollectManager::DataCollectManager() : callback_(new (std::nothrow) AcquireDataManagerCallbackService())
 {
     auto func = [this](const SecurityCollector::Event &event) {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         for (const auto &iter : subscribers_) {
             if (iter->GetSubscribeInfo().GetEvent().eventId == event.eventId) {
                 iter->OnNotify(event);
@@ -174,7 +176,7 @@ void DataCollectManager::HandleDecipient()
 {
     std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> tmp {};
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         if (count_ >= MAX_RESUB_COUNTS) {
             SGLOGE("reSubscriber too many times");
             return;
@@ -209,7 +211,7 @@ void DataCollectManager::HandleDecipient()
         }
     }
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         count_++;
     }
 }
@@ -248,7 +250,7 @@ int32_t DataCollectManager::Subscribe(const std::shared_ptr<SecurityCollector::I
         return NULL_OBJECT;
     }
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         if (callback_ == nullptr) {
             SGLOGE("callback_ is nullptr");
             return NULL_OBJECT;
@@ -271,7 +273,7 @@ int32_t DataCollectManager::Subscribe(const std::shared_ptr<SecurityCollector::I
         }
     }
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         subscribers_.insert(subscriber);
         SGLOGI("current subscrbe size %{public}zu", subscribers_.size());
     }
@@ -286,7 +288,7 @@ int32_t DataCollectManager::Unsubscribe(const std::shared_ptr<SecurityCollector:
         return NULL_OBJECT;
     }
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         if (callback_ == nullptr) {
             SGLOGE("callback is null");
             return NULL_OBJECT;
@@ -308,14 +310,14 @@ int32_t DataCollectManager::Unsubscribe(const std::shared_ptr<SecurityCollector:
         return NULL_OBJECT;
     }
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         subscribers_.erase(subscriber);
     }
     if (!IsCurrentSubscriberEventIdExist(subscriber)) {
         int32_t ret = proxy->Unsubscribe(subscriber->GetSubscribeInfo(), callback_, sdkFlag_);
         if (ret != SUCCESS) {
             {
-                std::lock_guard<std::mutex> lock(mutex_);
+                std::lock_guard<ffrt::mutex> lock(mutex_);
                 subscribers_.insert(subscriber);
             }
             return ret;
@@ -323,7 +325,7 @@ int32_t DataCollectManager::Unsubscribe(const std::shared_ptr<SecurityCollector:
         SGLOGI("Unsubscribe result, ret=%{public}d", ret);
     }
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         SGLOGI("current subscrbe size %{public}zu", subscribers_.size());
     }
     return SUCCESS;
@@ -332,7 +334,7 @@ int32_t DataCollectManager::Unsubscribe(const std::shared_ptr<SecurityCollector:
 bool DataCollectManager::IsCurrentSubscriberEventIdExist(
     const std::shared_ptr<SecurityCollector::ICollectorSubscriber> &sub)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     for (const auto &i : subscribers_) {
         if (i->GetSubscribeInfo().GetEvent().eventId == sub->GetSubscribeInfo().GetEvent().eventId) {
             return true;

@@ -22,7 +22,7 @@
 #include <unordered_map>
 
 #include "singleton.h"
-
+#include "ffrt.h"
 #include "i_model_manager.h"
 #include "model_attrs.h"
 #include "i_model_result_listener.h"
@@ -38,7 +38,7 @@ public:
     int32_t StartSecurityModel(uint32_t modelId, const std::string &param);
 
 private:
-    std::mutex mutex_;
+    ffrt::mutex mutex_;
     std::unordered_map<uint32_t, std::unique_ptr<ModelAttrs>> modelIdApiMap_;
     static std::shared_ptr<IModelManager> modelManagerApi_;
 };

@@ -85,5 +85,6 @@ ohos_fuzztest("CollcetorManagerSdkFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "ffrt:libffrt",
   ]
 }

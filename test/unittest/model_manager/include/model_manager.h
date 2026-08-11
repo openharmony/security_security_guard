@@ -20,7 +20,7 @@
 #include <mutex>
 #include <vector>
 #include <unordered_map>
-
+#include "ffrt.h"
 #include "singleton.h"
 
 #include "i_model_manager.h"
@@ -37,7 +37,7 @@ public:
     virtual void Release(uint32_t modelId);
     virtual int32_t StartSecurityModel(uint32_t modelId, const std::string &param);
 private:
-    std::mutex mutex_;
+    ffrt::mutex mutex_;
     std::unordered_map<uint32_t, std::unique_ptr<ModelAttrs>> modelIdApiMap_;
     static std::shared_ptr<IModelManager> modelManagerApi_;
 };

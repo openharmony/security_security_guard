@@ -15,14 +15,17 @@
 
 #include "acquire_data_manager_callback_service.h"
 #include <cinttypes>
+#include "ffrt.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
-
+namespace {
+    ffrt::mutex mutex_;
+}
 int32_t AcquireDataManagerCallbackService::OnNotify(const std::vector<SecurityCollector::Event> &events)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     if (callback_ == nullptr) {
         SGLOGE("callback is null");
         return FAILED;

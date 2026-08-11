@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "collector_manager.h"
-
+#include "ffrt.h"
 #include "iservice_registry.h"
 #include "security_collector_manager_proxy.h"
 #include "security_collector_manager_callback_service.h"
@@ -23,13 +23,16 @@
 #include "sys_binder.h"
 
 namespace OHOS::Security::SecurityCollector {
+namespace {
+    ffrt::mutex mutex_{};
+}
 int32_t CollectorManager::SubscribeImpl(const std::shared_ptr<ICollectorSubscriber> &subscriber)
 {
     if (subscriber == nullptr) {
         LOGE("subscriber is null");
         return BAD_PARAM;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     if (eventListeners_.find(subscriber) != eventListeners_.end()) {
         LOGE("Already subscribed");
         return BAD_PARAM;
@@ -89,7 +92,7 @@ int32_t CollectorManager::UnsubscribeImpl(const std::shared_ptr<ICollectorSubscr
         return BAD_PARAM;
     }
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     if (eventListeners_.find(subscriber) == eventListeners_.end()) {
         LOGE("Not subscribed");
         return BAD_PARAM;
@@ -141,7 +144,7 @@ void CollectorManager::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &r
 
 void CollectorManager::HandleDecipient()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     eventListeners_.clear();
 }
 

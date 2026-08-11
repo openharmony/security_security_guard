@@ -18,7 +18,6 @@
 
 #include <mutex>
 #include <unordered_map>
-
 #include "security_guard_napi.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -35,8 +34,6 @@ public:
 private:
     std::unordered_map<napi_env, std::shared_ptr<RequestSecurityEventInfoContext>> envContextMap_;
     std::unordered_map<napi_env, uint32_t> envQuerierMap_;
-    std::mutex mutex_;
-    std::mutex envQuerierMutex_;
     NapiRequestDataManager() = default;
     ~NapiRequestDataManager() = default;
 };

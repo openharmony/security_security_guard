@@ -74,7 +74,7 @@ public:
     static std::shared_ptr<MockOsAccountManagerInterface> GetInterface()
     {
         if (instance_ == nullptr) {
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<ffrt::mutex> lock(mutex_);
             if (instance_ == nullptr) {
                 instance_ = std::make_shared<MockOsAccountManagerInterface>();
             }
@@ -91,7 +91,7 @@ public:
 
 private:
     static std::shared_ptr<MockOsAccountManagerInterface> instance_;
-    static std::mutex mutex_;
+    static ffrt::mutex mutex_;
 };
 } // OHOS::AccountSA
 #endif // SECURITY_GUARD_OS_ACCOUNT_MANAGER_MOCK_H
