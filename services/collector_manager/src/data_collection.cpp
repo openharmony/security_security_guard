@@ -41,6 +41,8 @@ bool DataCollection::StartCollectors(const std::vector<int64_t>& eventIds, std::
         LOGE("Invalid input parameter");
         return false;
     }
+    // 串行化启停操作；mutex_ 仅用于簿记，dlopen/采集器代码在锁外执行
+    std::lock_guard<ffrt::mutex> opLock(opMutex_);
     std::vector<int64_t> loadedEventIds_;
     for (int64_t eventId : eventIds) {
         LOGI("StartCollectors eventId is 0x%{public}" PRIx64, eventId);
@@ -52,13 +54,13 @@ bool DataCollection::StartCollectors(const std::vector<int64_t>& eventIds, std::
         int ret = GetCollectorPath(eventId, collectorPath);
         if (ret != SUCCESS) {
             LOGE("GetCollectorPath failed, eventId is 0x%{public}" PRIx64, eventId);
-            StopCollectors(loadedEventIds_);
+            StopCollectorsLocked(loadedEventIds_);
             return false;
         }
         ret = LoadCollector(eventId, collectorPath, api);
         if (ret != SUCCESS) {
             LOGE("Load collector failed, eventId is 0x%{public}" PRIx64, eventId);
-            StopCollectors(loadedEventIds_);
+            StopCollectorsLocked(loadedEventIds_);
             return false;
         }
         loadedEventIds_.push_back(eventId);
@@ -74,38 +76,104 @@ bool DataCollection::IsCollectorStarted(int64_t eventId)
     return it != eventIdToLoaderMap_.end();
 }
 
-bool DataCollection::StopCollectors(const std::vector<int64_t>& eventIds)
+ICollector* DataCollection::GetCollector(int64_t eventId)
+{
+    std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
+    auto loader = eventIdToLoaderMap_.find(eventId);
+    if (loader == eventIdToLoaderMap_.end()) {
+        return nullptr;
+    }
+    return loader->second.CallGetCollector();
+}
+
+void DataCollection::IncrementSubscribeCount(int64_t eventId)
+{
+    std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
+    auto count = eventIdToSubscribeCount_.find(eventId);
+    if (count == eventIdToSubscribeCount_.end()) {
+        eventIdToSubscribeCount_.emplace(eventId, 1);
+    } else {
+        eventIdToSubscribeCount_.emplace(eventId, count->second + 1);
+    }
+}
+
+bool DataCollection::DecrementSubscribeCount(int64_t eventId)
+{
+    std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
+    auto count = eventIdToSubscribeCount_.find(eventId);
+    if (count == eventIdToSubscribeCount_.end()) {
+        return false;
+    }
+    uint32_t curCount = count->second - 1;
+    if (curCount > 0) {
+        eventIdToSubscribeCount_.emplace(eventId, curCount);
+        return true;
+    }
+    eventIdToSubscribeCount_.erase(eventId);
+    return false;
+}
+
+void DataCollection::RebindStickyCollector(int64_t eventId, std::shared_ptr<ICollectorFwk> api)
+{
+    ICollector* collector = GetCollector(eventId);
+    if (collector == nullptr) {
+        LOGE("SubscribeCollectorsByIsSticky CallGetCollector error");
+        return;
+    }
+    int result = collector->IsStartWithSub() ? collector->Subscribe(api, eventId) : collector->Start(api);
+    if (result != 0) {
+        LOGE("SubscribeCollectorsByIsSticky Failed to start collector");
+    }
+}
+
+bool DataCollection::StopCollectorsLocked(const std::vector<int64_t>& eventIds)
 {
     LOGI("StopCollectors start");
     if (eventIds.empty()) {
         LOGW("The eventId list is empty");
         return true;
     }
-    bool ret = true;
-    std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
-    for (int64_t eventId : eventIds) {
-        LOGI("StopCollectors eventId is 0x%{public}" PRIx64, eventId);
-        auto loader = eventIdToLoaderMap_.find(eventId);
-        if (loader == eventIdToLoaderMap_.end()) {
-            LOGI("Collector not found, eventId is 0x%{public}" PRIx64, eventId);
-            continue;
+    // 第一阶段：锁内收集需要停止的事件
+    std::vector<int64_t> toStop;
+    {
+        std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
+        for (int64_t eventId : eventIds) {
+            LOGI("StopCollectors eventId is 0x%{public}" PRIx64, eventId);
+            if (eventIdToLoaderMap_.find(eventId) == eventIdToLoaderMap_.end()) {
+                LOGI("Collector not found, eventId is 0x%{public}" PRIx64, eventId);
+                continue;
+            }
+            toStop.push_back(eventId);
         }
-        ICollector* collector = loader->second.CallGetCollector();
+    }
+    // 第二阶段：锁外执行采集器 Stop（opMutex_ 已保证无并发启停，句柄在事件簿记中保持存活）
+    bool ret = true;
+    for (int64_t eventId : toStop) {
+        ICollector* collector = GetCollector(eventId);
         if (collector == nullptr) {
             LOGE("CallGetCollector error");
             ret = false;
-        } else {
-            int result = collector->Stop();
-            if (result != 0) {
-                LOGE("Failed to stop collector, eventId is 0x%{public}" PRIx64, eventId);
-                ret = false;
-            }
-            LOGI("Stop collector");
-            eventIdToLoaderMap_.erase(loader);
+            continue;
+        }
+        int result = collector->Stop();
+        if (result != 0) {
+            LOGE("Failed to stop collector, eventId is 0x%{public}" PRIx64, eventId);
+            ret = false;
+        }
+        LOGI("Stop collector");
+        {
+            std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
+            eventIdToLoaderMap_.erase(eventId);
         }
     }
     LOGI("StopCollectors finish");
     return ret;
+}
+
+bool DataCollection::StopCollectors(const std::vector<int64_t>& eventIds)
+{
+    std::lock_guard<ffrt::mutex> opLock(opMutex_);
+    return StopCollectorsLocked(eventIds);
 }
 
 int DataCollection::SubscribeCollectors(const std::vector<int64_t>& eventIds, std::shared_ptr<ICollectorFwk> api)
@@ -115,16 +183,12 @@ int DataCollection::SubscribeCollectors(const std::vector<int64_t>& eventIds, st
         LOGE("Invalid input parameter");
         return BAD_PARAM;
     }
+    // 串行化启停操作；mutex_ 仅用于簿记，dlopen/采集器代码在锁外执行
+    std::lock_guard<ffrt::mutex> opLock(opMutex_);
     std::vector<int64_t> loadedEventIds_;
-    std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
     for (int64_t eventId : eventIds) {
         LOGI("SubscribeCollectors eventId is 0x%{public}" PRIx64, eventId);
-        auto count = eventIdToSubscribeCount_.find(eventId);
-        if (count == eventIdToSubscribeCount_.end()) {
-            eventIdToSubscribeCount_.emplace(eventId, 1);
-        } else {
-            eventIdToSubscribeCount_.emplace(eventId, count->second + 1);
-        }
+        IncrementSubscribeCount(eventId);
         if (IsCollectorStarted(eventId)) {
             LOGI("Collector already started, eventId is 0x%{public}" PRIx64, eventId);
             continue;
@@ -133,13 +197,13 @@ int DataCollection::SubscribeCollectors(const std::vector<int64_t>& eventIds, st
         int ret = GetCollectorPath(eventId, collectorPath);
         if (ret != SUCCESS) {
             LOGE("GetCollectorPath failed, eventId is 0x%{public}" PRIx64, eventId);
-            UnsubscribeCollectors(loadedEventIds_);
+            (void)UnsubscribeCollectorsLocked(loadedEventIds_);
             return ret;
         }
         ret = LoadCollector(eventId, collectorPath, api);
         if (ret != SUCCESS) {
             LOGE("Load collector failed, eventId is 0x%{public}" PRIx64, eventId);
-            UnsubscribeCollectors(loadedEventIds_);
+            (void)UnsubscribeCollectorsLocked(loadedEventIds_);
             return ret;
         }
         loadedEventIds_.push_back(eventId);
@@ -156,41 +220,28 @@ int DataCollection::SubscribeCollectorsBySticky(const std::vector<int64_t>& even
         LOGE("Invalid input parameter");
         return BAD_PARAM;
     }
+    std::lock_guard<ffrt::mutex> opLock(opMutex_);
     std::vector<int64_t> loadedEventIds_;
-    std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
     for (int64_t eventId : eventIds) {
         LOGI("SubscribeCollectorsByIsSticky eventId is 0x%{public}" PRIx64, eventId);
-        auto count = eventIdToSubscribeCount_.find(eventId);
-        if (count == eventIdToSubscribeCount_.end()) {
-            eventIdToSubscribeCount_.emplace(eventId, 1);
-        } else {
-            eventIdToSubscribeCount_.emplace(eventId, count->second + 1);
-        }
+        IncrementSubscribeCount(eventId);
         if (IsCollectorStarted(eventId)) {
             LOGI("SubscribeCollectorsByIsSticky already started, eventId is 0x%{public}" PRIx64, eventId);
-            auto loader = eventIdToLoaderMap_.at(eventId);
-            ICollector* collector = loader.CallGetCollector();
-            if (collector == nullptr) {
-                LOGE("SubscribeCollectorsByIsSticky CallGetCollector error");
-                continue;
-            }
-            int result = collector->IsStartWithSub() ? collector->Subscribe(api, eventId) : collector->Start(api);
-            if (result != 0) {
-                LOGE("SubscribeCollectorsByIsSticky Failed to start collector");
-            }
+            // 已启动：仅把新监听器绑定到已运行的采集器（锁外执行采集器代码）
+            RebindStickyCollector(eventId, api);
             continue;
         }
         std::string collectorPath;
         int ret = GetCollectorPath(eventId, collectorPath);
         if (ret != SUCCESS) {
             LOGE("SubscribeCollectorsByIsSticky GetCollectorPath failed, eventId is 0x%{public}" PRIx64, eventId);
-            UnsubscribeCollectors(loadedEventIds_);
+            (void)UnsubscribeCollectorsLocked(loadedEventIds_);
             return ret;
         }
         ret = LoadCollector(eventId, collectorPath, api);
         if (ret != SUCCESS) {
             LOGE("SubscribeCollectorsByIsSticky Load collector failed, eventId is 0x%{public}" PRIx64, eventId);
-            UnsubscribeCollectors(loadedEventIds_);
+            (void)UnsubscribeCollectorsLocked(loadedEventIds_);
             return ret;
         }
         loadedEventIds_.push_back(eventId);
@@ -199,51 +250,63 @@ int DataCollection::SubscribeCollectorsBySticky(const std::vector<int64_t>& even
     return SUCCESS;
 }
 
-int DataCollection::UnsubscribeCollectors(const std::vector<int64_t> &eventIds)
+int DataCollection::UnsubscribeCollectorsLocked(const std::vector<int64_t> &eventIds)
 {
     LOGI("UnsubscribeCollectors start");
     if (eventIds.empty()) {
         LOGW("The eventId list is empty");
         return SUCCESS;
     }
-    int ret = SUCCESS;
-    std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
-    for (int64_t eventId : eventIds) {
-        LOGI("UnsubscribeCollectors eventId is 0x%{public}" PRIx64, eventId);
-        auto loader = eventIdToLoaderMap_.find(eventId);
-        if (loader == eventIdToLoaderMap_.end()) {
-            LOGI("Collector not found, eventId is 0x%{public}" PRIx64, eventId);
-            continue;
-        }
-        auto count = eventIdToSubscribeCount_.find(eventId);
-        if (count != eventIdToSubscribeCount_.end()) {
-            uint32_t curCount = count->second - 1;
-            if (curCount > 0) {
-                eventIdToSubscribeCount_.emplace(eventId, curCount);
+    // 第一阶段：锁内更新引用计数并收集真正需要停止的事件
+    std::vector<int64_t> toStop;
+    {
+        std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
+        for (int64_t eventId : eventIds) {
+            LOGI("UnsubscribeCollectors eventId is 0x%{public}" PRIx64, eventId);
+            if (eventIdToLoaderMap_.find(eventId) == eventIdToLoaderMap_.end()) {
+                LOGI("Collector not found, eventId is 0x%{public}" PRIx64, eventId);
                 continue;
             }
-            eventIdToSubscribeCount_.erase(eventId);
+            if (DecrementSubscribeCount(eventId)) {
+                continue;
+            }
+            toStop.push_back(eventId);
         }
-        ICollector* collector = loader->second.CallGetCollector();
+    }
+    // 第二阶段：锁外执行采集器 Stop/Unsubscribe（opMutex_ 已保证无并发启停）
+    int ret = SUCCESS;
+    for (int64_t eventId : toStop) {
+        ICollector* collector = GetCollector(eventId);
         if (collector == nullptr) {
             LOGE("CallGetCollector error");
             ret = FAILED;
-        } else {
-            int result = collector->IsStartWithSub() ? collector->Unsubscribe(eventId) : collector->Stop();
-            if (result != 0) {
-                LOGE("Failed to Unsubscribe collector, eventId is 0x%{public}" PRIx64, eventId);
-                ret = result;
-            }
-            LOGI("Unsubscribe collector");
-            eventIdToLoaderMap_.erase(loader);
+            continue;
+        }
+        int result = collector->IsStartWithSub() ? collector->Unsubscribe(eventId) : collector->Stop();
+        if (result != 0) {
+            LOGE("Failed to Unsubscribe collector, eventId is 0x%{public}" PRIx64, eventId);
+            ret = result;
+        }
+        LOGI("Unsubscribe collector");
+        {
+            std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
+            eventIdToLoaderMap_.erase(eventId);
         }
     }
     LOGI("UnsubscribeCollectors finish");
     return ret;
 }
 
+int DataCollection::UnsubscribeCollectors(const std::vector<int64_t> &eventIds)
+{
+    std::lock_guard<ffrt::mutex> opLock(opMutex_);
+    return UnsubscribeCollectorsLocked(eventIds);
+}
+
 void DataCollection::CloseLib()
 {
+    // 与启停操作串行，避免在采集器代码执行期间 dlclose 卸载其 .so
+    std::lock_guard<ffrt::mutex> opLock(opMutex_);
     std::lock_guard<ffrt::mutex> lock(closeLibmutex_);
     for (auto &it : needCloseLibMap_) {
         it.second.UnLoadLib();
