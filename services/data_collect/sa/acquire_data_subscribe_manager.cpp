@@ -66,6 +66,12 @@ namespace {
     constexpr int64_t PUBLISH_EVENT_TO_SUB_STEP_TIME = 100;
     ffrt::thread g_tokenBucketThread {};
     ffrt::thread g_cleanEventCacheThread {};
+
+    bool IsSameMuteFilter(const EventMuteFilter &a, const EventMuteFilter &b)
+    {
+        return a.eventId == b.eventId && a.isInclude == b.isInclude &&
+            a.type == b.type && a.mutes.size() == b.mutes.size() && a.mutes == b.mutes;
+    }
 }
 
 #ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
@@ -117,26 +123,41 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(int64_t eventId, const st
 {
     AcquireDataSubscribeManager::GetInstance().InitUserId();
     AcquireDataSubscribeManager::GetInstance().InitDeviceId();
-    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
-    if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
-        SGLOGI("not find current clientId");
-        return BAD_PARAM;
+    std::vector<EventMuteFilter> filtersToSet {};
+    {
+        std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+        if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
+            SGLOGI("not find current clientId");
+            return BAD_PARAM;
+        }
+        if (sessionsMap_.at(clientId)->subEvents.find(eventId) != sessionsMap_.at(clientId)->subEvents.end()) {
+            SGLOGE("not need subscribe again");
+            return SUCCESS;
+        }
+        // 先落账，外部订阅失败时回滚
+        sessionsMap_.at(clientId)->subEvents.insert(eventId);
+        auto it = sessionsMap_.at(clientId)->eventFilters.find(eventId);
+        if (it != sessionsMap_.at(clientId)->eventFilters.end()) {
+            filtersToSet = it->second;
+        }
     }
-    if (sessionsMap_.at(clientId)->subEvents.find(eventId) != sessionsMap_.at(clientId)->subEvents.end()) {
-        SGLOGE("not need subscribe again");
-        return SUCCESS;
-    }
-    int32_t code = SubscribeSc(eventId);
+    // 锁外执行订阅（内部由 subscribeMutex_ 串行并基于最新会话状态重查）
+    int32_t code = SubscribeScIfNeeded(eventId);
     if (code != SUCCESS) {
+        std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+        auto it = sessionsMap_.find(clientId);
+        if (it != sessionsMap_.end() && it->second != nullptr) {
+            it->second->subEvents.erase(eventId);
+        }
         SGLOGE("SubscribeSc error");
         return code;
     }
-    sessionsMap_[clientId]->subEvents.insert(eventId);
-    if (sessionsMap_.at(clientId)->eventFilters.find(eventId) == sessionsMap_.at(clientId)->eventFilters.end()) {
-        return SUCCESS;
-    }
-    for (auto iter : sessionsMap_.at(clientId)->eventFilters.at(eventId)) {
-        InsertMute(iter, clientId);
+    for (const auto &filter : filtersToSet) {
+        // 下发前复查：并发 RemoveSubscribeMute 已删除的过滤不再下发
+        if (!IsFilterInSession(clientId, filter)) {
+            continue;
+        }
+        InsertMute(filter, clientId);
     }
     return SUCCESS;
 }
@@ -147,73 +168,52 @@ int AcquireDataSubscribeManager::InsertSubscribeRecord(
 {
     pid_t callerPid = IPCSkeleton::GetCallingPid();
     int64_t eventId = subscribeInfo.GetEvent().eventId;
+    std::string eventGroup = subscribeInfo.GetEventGroup();
     AcquireDataSubscribeManager::GetInstance().InitUserId();
     AcquireDataSubscribeManager::GetInstance().InitDeviceId();
-    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
-    if (sessionsMap_.find(clientId) != sessionsMap_.end() && sessionsMap_.at(clientId) != nullptr &&
-        sessionsMap_.at(clientId)->subEvents.find(eventId) != sessionsMap_.at(clientId)->subEvents.end()) {
-        SGLOGE("not need subscribe again");
-        return SUCCESS;
+    bool sessionCreated = false;
+    {
+        std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+        if (sessionsMap_.find(clientId) != sessionsMap_.end() && sessionsMap_.at(clientId) != nullptr &&
+            sessionsMap_.at(clientId)->subEvents.find(eventId) != sessionsMap_.at(clientId)->subEvents.end()) {
+            SGLOGE("not need subscribe again");
+            return SUCCESS;
+        }
+        if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
+            auto session = std::make_shared<ClientSession>();
+            session->clientId = clientId;
+            session->callback = callback;
+            session->pid = callerPid;
+            session->eventGroup = eventGroup;
+            sessionsMap_[clientId] = session;
+            sessionCreated = true;
+        }
+        sessionsMap_.at(clientId)->subEvents.insert(eventId);
     }
-    std::string eventGroup = subscribeInfo.GetEventGroup();
-    int32_t code = SubscribeSc(eventId);
+    int32_t code = SubscribeScIfNeeded(eventId);
     if (eventWrapper_ != nullptr && eventGroup == "auditGroup") {
         eventWrapper_()->RecordSubscribeEvent(eventId, code, IPCSkeleton::GetCallingUid());
     }
     if (code != SUCCESS) {
+        std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+        auto it = sessionsMap_.find(clientId);
+        if (it != sessionsMap_.end() && it->second != nullptr) {
+            it->second->subEvents.erase(eventId);
+            if (sessionCreated && it->second->subEvents.empty()) {
+                sessionsMap_.erase(clientId);
+            }
+        }
         SGLOGE("SubscribeSc error");
         return code;
     }
-    if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
-        auto session = std::make_shared<ClientSession>();
-        session->clientId = clientId;
-        session->callback = callback;
-        session->pid = callerPid;
-        session->eventGroup = eventGroup;
-        sessionsMap_[clientId] = session;
-    }
-    sessionsMap_[clientId]->subEvents.insert(eventId);
     return SUCCESS;
 }
 
 int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const sptr<IRemoteObject> &callback,
     const std::string &clientId)
 {
-    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
-    if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
-        SGLOGI("not find current clientId");
-        return SUCCESS;
-    }
-    if (sessionsMap_.at(clientId)->subEvents.find(eventId) == sessionsMap_.at(clientId)->subEvents.end()) {
-        SGLOGI("not find current eventid");
-        return SUCCESS;
-    }
-    sessionsMap_.at(clientId)->subEvents.erase(eventId);
-    bool isFind = false;
-    for (const auto &iter : sessionsMap_) {
-        if (iter.second != nullptr && iter.second->subEvents.find(eventId) != iter.second->subEvents.end()) {
-            isFind = true;
-            break;
-        }
-    }
-    if (!isFind) {
-        int ret = UnSubscribeSc(eventId);
-        if (ret != SUCCESS) {
-            SGLOGE("UnSubscribeSc fail");
-            sessionsMap_.at(clientId)->subEvents.insert(eventId);
-            return ret;
-        }
-    }
-    if (sessionsMap_.at(clientId)->subEvents.empty()) {
-        sessionsMap_.erase(clientId);
-    }
-    if (reportedStickyEvents_.find(clientId) != reportedStickyEvents_.end()) {
-        reportedStickyEvents_.at(clientId).erase(eventId);
-        if (reportedStickyEvents_.at(clientId).empty()) {
-            reportedStickyEvents_.erase(clientId);
-        }
-    }
-    return SUCCESS;
+    // cleanupSession=true：会话无订阅后删除会话并清理 sticky 记录（兼容原回调版本语义）
+    return RemoveSubscribeRecordCore(eventId, clientId, true);
 }
 
 int AcquireDataSubscribeManager::InsertMute(const EventMuteFilter &filter, const std::string &clientId)
@@ -361,62 +361,137 @@ int AcquireDataSubscribeManager::UnSubscribeSc(int64_t eventId)
     return SUCCESS;
 }
 
-int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const std::string &clientId)
+bool AcquireDataSubscribeManager::IsAnySessionSubscribes(int64_t eventId)
 {
-    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
-    if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
-        SGLOGI("not find current clientId");
-        return SUCCESS;
-    }
-    if (sessionsMap_.at(clientId)->subEvents.find(eventId) == sessionsMap_.at(clientId)->subEvents.end()) {
-        SGLOGI("not find current eventid");
-        return SUCCESS;
-    }
-    sessionsMap_.at(clientId)->subEvents.erase(eventId);
-    bool isFind = false;
+    // 调用方必须持有 sessionMutex_
     for (const auto &iter : sessionsMap_) {
         if (iter.second != nullptr && iter.second->subEvents.find(eventId) != iter.second->subEvents.end()) {
-            isFind = true;
-            break;
+            return true;
         }
     }
-    if (!isFind) {
-        int ret = UnSubscribeSc(eventId);
+    return false;
+}
+
+bool AcquireDataSubscribeManager::IsFilterInSession(const std::string &clientId, const EventMuteFilter &filter)
+{
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+    auto it = sessionsMap_.find(clientId);
+    if (it == sessionsMap_.end() || it->second == nullptr) {
+        return false;
+    }
+    auto fit = it->second->eventFilters.find(filter.eventId);
+    if (fit == it->second->eventFilters.end()) {
+        return false;
+    }
+    auto iter = find_if(fit->second.begin(), fit->second.end(),
+        [&filter](const EventMuteFilter &item) { return IsSameMuteFilter(filter, item); });
+    return iter != fit->second.end();
+}
+
+int AcquireDataSubscribeManager::SubscribeScIfNeeded(int64_t eventId)
+{
+    // 对外部订阅调用统一串行，并在执行前基于最新会话状态重查：
+    // 若决策期间会话已被并发移除（RemoteDied/DestoryClient），则不再拉起采集器，
+    // 避免"为无人订阅的事件启动采集器"的泄漏；锁序：subscribeMutex_ -> sessionMutex_。
+    std::lock_guard<ffrt::mutex> lock(subscribeMutex_);
+    {
+        std::lock_guard<ffrt::mutex> sessionLock(sessionMutex_);
+        if (!IsAnySessionSubscribes(eventId)) {
+            return SUCCESS;
+        }
+    }
+    return SubscribeSc(eventId);
+}
+
+int AcquireDataSubscribeManager::UnSubscribeScIfLast(int64_t eventId)
+{
+    // 与 SubscribeScIfNeeded 对称：执行前重查，若仍有会话订阅则保持采集器运行，
+    // 消除"决策与执行之间新订阅到达导致误停采集器"的竞态；锁序：subscribeMutex_ -> sessionMutex_。
+    std::lock_guard<ffrt::mutex> lock(subscribeMutex_);
+    {
+        std::lock_guard<ffrt::mutex> sessionLock(sessionMutex_);
+        if (IsAnySessionSubscribes(eventId)) {
+            return SUCCESS;
+        }
+    }
+    return UnSubscribeSc(eventId);
+}
+
+int AcquireDataSubscribeManager::RemoveSubscribeRecordCore(int64_t eventId, const std::string &clientId,
+    bool cleanupSession)
+{
+    bool needUnsubscribe = false;
+    {
+        std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+        if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
+            SGLOGI("not find current clientId");
+            return SUCCESS;
+        }
+        if (sessionsMap_.at(clientId)->subEvents.find(eventId) == sessionsMap_.at(clientId)->subEvents.end()) {
+            SGLOGI("not find current eventid");
+            return SUCCESS;
+        }
+        sessionsMap_.at(clientId)->subEvents.erase(eventId);
+        needUnsubscribe = !IsAnySessionSubscribes(eventId);
+    }
+    if (needUnsubscribe) {
+        // 锁外退订（内部重查，避免与并发新订阅竞态）
+        int ret = UnSubscribeScIfLast(eventId);
         if (ret != SUCCESS) {
             SGLOGE("UnSubscribeSc fail");
-            sessionsMap_.at(clientId)->subEvents.insert(eventId);
+            std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+            auto it = sessionsMap_.find(clientId);
+            if (it != sessionsMap_.end() && it->second != nullptr) {
+                it->second->subEvents.insert(eventId);
+            }
             return ret;
+        }
+    }
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+    auto it = sessionsMap_.find(clientId);
+    if (it != sessionsMap_.end() && it->second != nullptr) {
+        if (cleanupSession && it->second->subEvents.empty()) {
+            sessionsMap_.erase(clientId);
+        }
+    }
+    if (cleanupSession && reportedStickyEvents_.find(clientId) != reportedStickyEvents_.end()) {
+        reportedStickyEvents_.at(clientId).erase(eventId);
+        if (reportedStickyEvents_.at(clientId).empty()) {
+            reportedStickyEvents_.erase(clientId);
         }
     }
     return SUCCESS;
 }
 
+int AcquireDataSubscribeManager::RemoveSubscribeRecord(int64_t eventId, const std::string &clientId)
+{
+    // cleanupSession=false：不删除会话、不清理 sticky（兼容原无回调版本语义）
+    return RemoveSubscribeRecordCore(eventId, clientId, false);
+}
+
 void AcquireDataSubscribeManager::RemoveSubscribeRecordOnRemoteDied(const sptr<IRemoteObject> &callback)
 {
-    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
-    std::set<int64_t> allSubEventId {};
+    std::string removedClientId;
     std::set<int64_t> currentEventId {};
-    auto finder = [callback](std::pair<std::string, std::shared_ptr<ClientSession>> iter) {
-        return callback == iter.second->callback;
-    };
-    auto iter = find_if(sessionsMap_.begin(), sessionsMap_.end(), finder);
-    if (iter != sessionsMap_.end()) {
-        currentEventId = iter->second->subEvents;
-        if (eventFilter_ != nullptr) {
-            eventFilter_()->RemoveSdkAllEventFilter(iter->first);
-        }
-        sessionsMap_.erase(iter);
-    }
-    for (const auto &iter : sessionsMap_) {
-        for (const auto &it : iter.second->subEvents) {
-            allSubEventId.insert(it);
+    {
+        std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+        auto finder = [callback](std::pair<std::string, std::shared_ptr<ClientSession>> iter) {
+            return callback == iter.second->callback;
+        };
+        auto iter = find_if(sessionsMap_.begin(), sessionsMap_.end(), finder);
+        if (iter != sessionsMap_.end()) {
+            removedClientId = iter->first;
+            currentEventId = iter->second->subEvents;
+            sessionsMap_.erase(iter);
         }
     }
-    for (const auto &iter : currentEventId) {
-        // no one subscribed id
-        if (allSubEventId.find(iter) == allSubEventId.end()) {
-            (void)UnSubscribeSc(iter);
-        }
+    // 插件调用与退订均在锁外执行
+    if (eventFilter_ != nullptr && !removedClientId.empty()) {
+        eventFilter_()->RemoveSdkAllEventFilter(removedClientId);
+    }
+    for (const auto &eventId : currentEventId) {
+        // 内部重查：仅当无其他会话订阅时才真正退订
+        (void)UnSubscribeScIfLast(eventId);
     }
 }
 
@@ -732,6 +807,31 @@ bool AcquireDataSubscribeManager::IsFindFlag(const std::set<std::string> &eventS
     return false;
 }
 
+void AcquireDataSubscribeManager::CollectNotifyObjs(const SecurityCollector::Event &event, bool isSticky,
+    std::vector<sptr<IRemoteObject>> &notifyObjs, bool &flag)
+{
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+    for (auto &it : sessionsMap_) {
+        if (it.second == nullptr) {
+            continue;
+        }
+        if (it.second->subEvents.find(event.eventId) == it.second->subEvents.end()) {
+            continue;
+        }
+        if (!IsFindFlag(event.eventSubscribes, event.eventId, it.second->clientId)) {
+            continue;
+        }
+        if (isSticky && !MarkStickyEventReported(event.eventId, it.second->clientId)) {
+            continue;
+        }
+        // 锁内仅快照回调对象（sptr 保活），IPC 通知在锁外进行：
+        // 否则订阅端在 OnNotify 里反向调用本 SA（Subscribe/Unsubscribe/AddFilter 等）会因
+        // 争抢 sessionMutex_ 而互相等待，形成重入死锁。
+        notifyObjs.emplace_back(it.second->callback);
+        flag = true;
+    }
+}
+
 bool AcquireDataSubscribeManager::PublishEventToSub(const SecurityCollector::Event &event)
 {
     static std::atomic<uint32_t> eventCount {0};
@@ -754,21 +854,14 @@ bool AcquireDataSubscribeManager::PublishEventToSub(const SecurityCollector::Eve
         DataStatistics::GetInstance().IncrementPublishEvents();
         return false;
     }
+    std::vector<sptr<IRemoteObject>> notifyObjs {};
     bool flag = false;
-    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
-    for (auto &it : sessionsMap_) {
-        if (it.second == nullptr) {
-            continue;
-        }
-        if (it.second->subEvents.find(event.eventId) == it.second->subEvents.end()) {
-            continue;
-        }
-        if (IsFindFlag(event.eventSubscribes, event.eventId, it.second->clientId)) {
-            if (config.isSticky == 1 && !MarkStickyEventReported(event.eventId, it.second->clientId)) {
-                continue;
-            }
-            NotifySub(it.second->callback, event);
-            flag = true;
+    CollectNotifyObjs(event, config.isSticky, notifyObjs, flag);
+    {
+        // 保持"同一时刻只向订阅端发一次 IPC"的原有语义；本锁为叶子锁，不与任何重入路径成环
+        std::lock_guard<ffrt::mutex> lock(notifyMutex_);
+        for (const auto &obj : notifyObjs) {
+            NotifySub(obj, event);
         }
     }
     if (flag && setCallingUidsSuccess && event.eventId == FILE_EVENT_ID) {
@@ -817,14 +910,13 @@ int AcquireDataSubscribeManager::CheckInsertMute(const EventMuteFilter &filter, 
         SGLOGE("clientId not creat");
         return BAD_PARAM;
     }
-    auto finder = [filter](const EventMuteFilter &it) {
-        return filter.eventId == it.eventId && filter.isInclude == it.isInclude &&
-        filter.type == it.type && filter.mutes.size() == it.mutes.size() && filter.mutes == it.mutes;
-    };
-    if (sessionsMap_.at(clientId)->eventFilters.find(filter.eventId) != sessionsMap_.at(clientId)->eventFilters.end() &&
-        find_if(sessionsMap_.at(clientId)->eventFilters.at(filter.eventId).begin(),
-        sessionsMap_.at(clientId)->eventFilters.at(filter.eventId).end(), finder) !=
-        sessionsMap_.at(clientId)->eventFilters.at(filter.eventId).end()) {
+    auto fit = sessionsMap_.at(clientId)->eventFilters.find(filter.eventId);
+    if (fit == sessionsMap_.at(clientId)->eventFilters.end()) {
+        return SUCCESS;
+    }
+    auto iter = find_if(fit->second.begin(), fit->second.end(),
+        [&filter](const EventMuteFilter &item) { return IsSameMuteFilter(filter, item); });
+    if (iter != fit->second.end()) {
         SGLOGE("filter exist");
         return BAD_PARAM;
     }
@@ -834,23 +926,36 @@ int AcquireDataSubscribeManager::CheckInsertMute(const EventMuteFilter &filter, 
 int AcquireDataSubscribeManager::InsertSubscribeMute(const EventMuteFilter &filter, const std::string &clientId)
 {
     SGLOGI("in AcquireDataSubscribeManager InsertSubscribeMute, clientId %{public}s", clientId.c_str());
-    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
-    int ret = CheckInsertMute(filter, clientId);
-    if (ret != SUCCESS) {
-        SGLOGE("CheckInsertMute failed, ret=%{public}d", ret);
-        return ret;
+    bool needApply = false;
+    {
+        std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+        int ret = CheckInsertMute(filter, clientId);
+        if (ret != SUCCESS) {
+            SGLOGE("CheckInsertMute failed, ret=%{public}d", ret);
+            return ret;
+        }
+        if (sessionsMap_.at(clientId)->subEvents.find(filter.eventId) == sessionsMap_.at(clientId)->subEvents.end()) {
+            SGLOGW("current event not subscribe, cache filter now evetid= %{public}" PRId64, filter.eventId);
+            sessionsMap_.at(clientId)->eventFilters[filter.eventId].emplace_back(filter);
+            return SUCCESS;
+        }
+        needApply = true;
     }
-    if (sessionsMap_.at(clientId)->subEvents.find(filter.eventId) == sessionsMap_.at(clientId)->subEvents.end()) {
-        SGLOGW("current event not subscribe, cache filter now evetid= %{public}" PRId64, filter.eventId);
-        sessionsMap_.at(clientId)->eventFilters[filter.eventId].emplace_back(filter);
-        return SUCCESS;
-    }
-    ret = InsertMute(filter, clientId);
+    // 插件调用在锁外执行，避免持框架大锁调用 dlopen 出的第三方代码
+    int ret = InsertMute(filter, clientId);
     if (ret != SUCCESS) {
         SGLOGE("InsertMute failed, ret=%{public}d", ret);
         return ret;
     }
-    sessionsMap_.at(clientId)->eventFilters[filter.eventId].emplace_back(filter);
+    {
+        std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+        auto it = sessionsMap_.find(clientId);
+        if (it == sessionsMap_.end() || it->second == nullptr) {
+            // 会话已被并发销毁（RemoteDied/DestoryClient），插件过滤成为孤儿，随 RemoveSdkAllEventFilter 清理
+            return SUCCESS;
+        }
+        it->second->eventFilters[filter.eventId].emplace_back(filter);
+    }
     return SUCCESS;
 }
 
@@ -899,44 +1004,68 @@ int AcquireDataSubscribeManager::RemoveMute(const EventMuteFilter &filter, const
 
 int AcquireDataSubscribeManager::RemoveSubscribeMute(const EventMuteFilter &filter, const std::string &clientId)
 {
-    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     SGLOGI("in AcquireDataSubscribeManager RemoveSubscribeMute, clientId %{public}s", clientId.c_str());
-    if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
-        SGLOGE("clientId not creat");
-        return BAD_PARAM;
-    }
-    auto finder = [filter](const EventMuteFilter &it) {
-        return filter.eventId == it.eventId && filter.isInclude == it.isInclude &&
-        filter.type == it.type && filter.mutes.size() == it.mutes.size() && filter.mutes == it.mutes;
-    };
-    if (sessionsMap_.at(clientId)->eventFilters.find(filter.eventId) == sessionsMap_.at(clientId)->eventFilters.end()) {
-        SGLOGE("filter event id not exist");
-        return BAD_PARAM;
-    }
-    auto iter = find_if(sessionsMap_.at(clientId)->eventFilters.at(filter.eventId).begin(),
-        sessionsMap_.at(clientId)->eventFilters.at(filter.eventId).end(), finder);
-    if (iter == sessionsMap_.at(clientId)->eventFilters.at(filter.eventId).end()) {
-        SGLOGE("filter not exist");
-        return BAD_PARAM;
-    }
-    if (sessionsMap_.at(clientId)->subEvents.find(filter.eventId) == sessionsMap_.at(clientId)->subEvents.end()) {
-        SGLOGW("current event not subscribe, erase filter now evetid= %{public}" PRId64, filter.eventId);
-        iter = sessionsMap_.at(clientId)->eventFilters[filter.eventId].erase(iter);
-        if (sessionsMap_.at(clientId)->eventFilters[filter.eventId].empty()) {
-                sessionsMap_.at(clientId)->eventFilters.erase(filter.eventId);
+    bool needApply = false;
+    {
+        std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+        auto it = sessionsMap_.find(clientId);
+        if (it == sessionsMap_.end() || it->second == nullptr) {
+            SGLOGE("clientId not creat");
+            return BAD_PARAM;
         }
-        return SUCCESS;
+        auto session = it->second;
+        auto fit = session->eventFilters.find(filter.eventId);
+        if (fit == session->eventFilters.end()) {
+            SGLOGE("filter event id not exist");
+            return BAD_PARAM;
+        }
+        auto iter = find_if(fit->second.begin(), fit->second.end(),
+            [&filter](const EventMuteFilter &item) { return IsSameMuteFilter(filter, item); });
+        if (iter == fit->second.end()) {
+            SGLOGE("filter not exist");
+            return BAD_PARAM;
+        }
+        if (session->subEvents.find(filter.eventId) == session->subEvents.end()) {
+            // 事件未订阅，仅删除缓存
+            SGLOGW("current event not subscribe, erase filter now evetid= %{public}" PRId64, filter.eventId);
+            fit->second.erase(iter);
+            if (fit->second.empty()) {
+                session->eventFilters.erase(filter.eventId);
+            }
+            return SUCCESS;
+        }
+        needApply = true;
     }
+    // 插件调用在锁外执行
     int ret = RemoveMute(filter, clientId);
     if (ret != SUCCESS) {
         SGLOGE("RemoveMute failed, ret=%{public}d", ret);
         return ret;
     }
-    iter = sessionsMap_.at(clientId)->eventFilters[filter.eventId].erase(iter);
-    if (sessionsMap_.at(clientId)->eventFilters[filter.eventId].empty()) {
-        sessionsMap_.at(clientId)->eventFilters.erase(filter.eventId);
-    }
+    EraseFilterFromSession(clientId, filter);
     return SUCCESS;
+}
+
+void AcquireDataSubscribeManager::EraseFilterFromSession(const std::string &clientId,
+    const EventMuteFilter &filter)
+{
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+    auto it = sessionsMap_.find(clientId);
+    if (it == sessionsMap_.end() || it->second == nullptr) {
+        return;
+    }
+    auto fit = it->second->eventFilters.find(filter.eventId);
+    if (fit == it->second->eventFilters.end()) {
+        return;
+    }
+    auto iter = find_if(fit->second.begin(), fit->second.end(),
+        [&filter](const EventMuteFilter &item) { return IsSameMuteFilter(filter, item); });
+    if (iter != fit->second.end()) {
+        fit->second.erase(iter);
+        if (fit->second.empty()) {
+            it->second->eventFilters.erase(filter.eventId);
+        }
+    }
 }
 
 SecurityCollector::SecurityCollectorEventMuteFilter AcquireDataSubscribeManager::ConvertFilter(
@@ -979,21 +1108,31 @@ int AcquireDataSubscribeManager::CreatClient(const std::string &eventGroup, cons
 
 int AcquireDataSubscribeManager::DestoryClient(const std::string &eventGroup, const std::string &clientId)
 {
-    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
-    auto iter = sessionsMap_.find(clientId);
-    if (iter == sessionsMap_.end()) {
-        SGLOGE("current clientId not exist");
-        return BAD_PARAM;
-    }
-    for (auto iter : sessionsMap_.at(clientId)->subEvents) {
-        UnSubscribeSc(iter);
-    }
-    for (auto iter : sessionsMap_.at(clientId)->eventFilters) {
-        for (auto it : iter.second) {
-            RemoveMute(it, clientId);
+    std::set<int64_t> subEvents {};
+    std::vector<EventMuteFilter> filters {};
+    {
+        std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+        auto iter = sessionsMap_.find(clientId);
+        if (iter == sessionsMap_.end()) {
+            SGLOGE("current clientId not exist");
+            return BAD_PARAM;
         }
+        subEvents = iter->second->subEvents;
+        for (const auto &filterIter : iter->second->eventFilters) {
+            for (const auto &filter : filterIter.second) {
+                filters.emplace_back(filter);
+            }
+        }
+        sessionsMap_.erase(clientId);
     }
-    sessionsMap_.erase(clientId);
+    // 退订与插件删除均在锁外执行
+    for (int64_t eventId : subEvents) {
+        // 内部重查：仅当无其他会话订阅时才真正退订，避免误停其他订阅者正在使用的采集器
+        (void)UnSubscribeScIfLast(eventId);
+    }
+    for (const auto &filter : filters) {
+        (void)RemoveMute(filter, clientId);
+    }
     return SUCCESS;
 }
 
@@ -1029,9 +1168,11 @@ int AcquireDataSubscribeManager::IsExceedLimited(
     return SUCCESS;
 }
 
-const std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> &
-    AcquireDataSubscribeManager::GetAuditClientSessionMap()
+using RetSessionMap = std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>>;
+RetSessionMap AcquireDataSubscribeManager::GetAuditClientSessionMap()
 {
+    // 锁内拷贝返回，避免无锁暴露内部容器引用导致的数据竞争
+    std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     return sessionsMap_;
 }
 
