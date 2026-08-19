@@ -57,17 +57,15 @@ private:
     // 以下两个方法假设调用方已持有 opMutex_（供启动失败回滚与公开入口复用，避免重复加锁）
     int UnsubscribeCollectorsLocked(const std::vector<int64_t> &eventIds);
     bool StopCollectorsLocked(const std::vector<int64_t>& eventIds);
-    // 以下辅助方法供启停操作内部复用，均不持有 opMutex_（调用方负责持有）
+    // 以下辅助方法供启停操作内部复用，均假设调用方已持有 opMutex_（测试/fuzz 等单线程场景除外）
     ICollector* GetCollector(int64_t eventId);
     void IncrementSubscribeCount(int64_t eventId);
     bool DecrementSubscribeCount(int64_t eventId);
     void RebindStickyCollector(int64_t eventId, std::shared_ptr<ICollectorFwk> api);
-    ffrt::recursive_mutex mutex_;
     ffrt::mutex closeLibmutex_;
     // 串行化"加载/启动采集器"与"停止/卸载采集器"整体操作（含 dlopen 与采集器代码执行）。
-    // mutex_ 仅保护簿记容器（eventIdToLoaderMap_/eventIdToSubscribeCount_）；dlopen、collector->Start/Stop
-    // /Subscribe/Unsubscribe 等外部代码一律在 opMutex_ 下、mutex_ 之外执行。
-    // 回调路径（采集器线程 -> ICollectorFwk::OnNotify）不取本锁，且本锁永不在持 mutex_ 时获取，故无锁环。
+    // eventIdToLoaderMap_/eventIdToSubscribeCount_ 只在本锁串行化的操作内被访问，无需第二把锁。
+    // 回调路径（采集器线程 -> ICollectorFwk::OnNotify）不取本锁；本锁永不在持 closeLibmutex_ 时获取，故无锁环。
     ffrt::mutex opMutex_{};
     std::unordered_map<int64_t, LibLoader> eventIdToLoaderMap_;
     std::unordered_map<int64_t, LibLoader> needCloseLibMap_;
