@@ -46,11 +46,19 @@ DataCollectManager& DataCollectManager::GetInstance()
 DataCollectManager::DataCollectManager() : callback_(new (std::nothrow) AcquireDataManagerCallbackService())
 {
     auto func = [this](const SecurityCollector::Event &event) {
-        std::lock_guard<ffrt::mutex> lock(mutex_);
-        for (const auto &iter : subscribers_) {
-            if (iter->GetSubscribeInfo().GetEvent().eventId == event.eventId) {
-                iter->OnNotify(event);
+        // 锁内仅快照需要通知的订阅者，用户回调在锁外执行：
+        // 否则用户在 OnNotify 里调用 Subscribe/Unsubscribe 会因同线程重入 mutex_ 而自死锁
+        std::vector<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> notifyList;
+        {
+            std::lock_guard<ffrt::mutex> lock(mutex_);
+            for (const auto &iter : subscribers_) {
+                if (iter->GetSubscribeInfo().GetEvent().eventId == event.eventId) {
+                    notifyList.emplace_back(iter);
+                }
             }
+        }
+        for (const auto &iter : notifyList) {
+            iter->OnNotify(event);
         }
     };
     if (callback_ != nullptr) {

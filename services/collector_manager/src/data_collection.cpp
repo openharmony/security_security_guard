@@ -41,7 +41,7 @@ bool DataCollection::StartCollectors(const std::vector<int64_t>& eventIds, std::
         LOGE("Invalid input parameter");
         return false;
     }
-    // 串行化启停操作；mutex_ 仅用于簿记，dlopen/采集器代码在锁外执行
+    // opMutex_ 串行化整个操作；dlopen/采集器代码在锁外执行
     std::lock_guard<ffrt::mutex> opLock(opMutex_);
     std::vector<int64_t> loadedEventIds_;
     for (int64_t eventId : eventIds) {
@@ -71,14 +71,13 @@ bool DataCollection::StartCollectors(const std::vector<int64_t>& eventIds, std::
 
 bool DataCollection::IsCollectorStarted(int64_t eventId)
 {
-    std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
-    auto it = eventIdToLoaderMap_.find(eventId);
-    return it != eventIdToLoaderMap_.end();
+    // 调用方需持有 opMutex_（测试/fuzz 等单线程场景除外）
+    return eventIdToLoaderMap_.find(eventId) != eventIdToLoaderMap_.end();
 }
 
 ICollector* DataCollection::GetCollector(int64_t eventId)
 {
-    std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
+    // 调用方需持有 opMutex_
     auto loader = eventIdToLoaderMap_.find(eventId);
     if (loader == eventIdToLoaderMap_.end()) {
         return nullptr;
@@ -88,7 +87,7 @@ ICollector* DataCollection::GetCollector(int64_t eventId)
 
 void DataCollection::IncrementSubscribeCount(int64_t eventId)
 {
-    std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
+    // 调用方需持有 opMutex_
     auto count = eventIdToSubscribeCount_.find(eventId);
     if (count == eventIdToSubscribeCount_.end()) {
         eventIdToSubscribeCount_.emplace(eventId, 1);
@@ -99,7 +98,7 @@ void DataCollection::IncrementSubscribeCount(int64_t eventId)
 
 bool DataCollection::DecrementSubscribeCount(int64_t eventId)
 {
-    std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
+    // 调用方需持有 opMutex_；返回 true 表示仍有其他订阅者，采集器应保持运行
     auto count = eventIdToSubscribeCount_.find(eventId);
     if (count == eventIdToSubscribeCount_.end()) {
         return false;
@@ -133,18 +132,15 @@ bool DataCollection::StopCollectorsLocked(const std::vector<int64_t>& eventIds)
         LOGW("The eventId list is empty");
         return true;
     }
-    // 第一阶段：锁内收集需要停止的事件
+    // 第一阶段：收集需要停止的事件（opMutex_ 已串行化）
     std::vector<int64_t> toStop;
-    {
-        std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
-        for (int64_t eventId : eventIds) {
-            LOGI("StopCollectors eventId is 0x%{public}" PRIx64, eventId);
-            if (eventIdToLoaderMap_.find(eventId) == eventIdToLoaderMap_.end()) {
-                LOGI("Collector not found, eventId is 0x%{public}" PRIx64, eventId);
-                continue;
-            }
-            toStop.push_back(eventId);
+    for (int64_t eventId : eventIds) {
+        LOGI("StopCollectors eventId is 0x%{public}" PRIx64, eventId);
+        if (eventIdToLoaderMap_.find(eventId) == eventIdToLoaderMap_.end()) {
+            LOGI("Collector not found, eventId is 0x%{public}" PRIx64, eventId);
+            continue;
         }
+        toStop.push_back(eventId);
     }
     // 第二阶段：锁外执行采集器 Stop（opMutex_ 已保证无并发启停，句柄在事件簿记中保持存活）
     bool ret = true;
@@ -161,10 +157,7 @@ bool DataCollection::StopCollectorsLocked(const std::vector<int64_t>& eventIds)
             ret = false;
         }
         LOGI("Stop collector");
-        {
-            std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
-            eventIdToLoaderMap_.erase(eventId);
-        }
+        eventIdToLoaderMap_.erase(eventId);
     }
     LOGI("StopCollectors finish");
     return ret;
@@ -183,7 +176,7 @@ int DataCollection::SubscribeCollectors(const std::vector<int64_t>& eventIds, st
         LOGE("Invalid input parameter");
         return BAD_PARAM;
     }
-    // 串行化启停操作；mutex_ 仅用于簿记，dlopen/采集器代码在锁外执行
+    // opMutex_ 串行化整个操作；dlopen/采集器代码在锁外执行
     std::lock_guard<ffrt::mutex> opLock(opMutex_);
     std::vector<int64_t> loadedEventIds_;
     for (int64_t eventId : eventIds) {
@@ -257,21 +250,18 @@ int DataCollection::UnsubscribeCollectorsLocked(const std::vector<int64_t> &even
         LOGW("The eventId list is empty");
         return SUCCESS;
     }
-    // 第一阶段：锁内更新引用计数并收集真正需要停止的事件
+    // 第一阶段：更新引用计数并收集真正需要停止的事件（opMutex_ 已串行化）
     std::vector<int64_t> toStop;
-    {
-        std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
-        for (int64_t eventId : eventIds) {
-            LOGI("UnsubscribeCollectors eventId is 0x%{public}" PRIx64, eventId);
-            if (eventIdToLoaderMap_.find(eventId) == eventIdToLoaderMap_.end()) {
-                LOGI("Collector not found, eventId is 0x%{public}" PRIx64, eventId);
-                continue;
-            }
-            if (DecrementSubscribeCount(eventId)) {
-                continue;
-            }
-            toStop.push_back(eventId);
+    for (int64_t eventId : eventIds) {
+        LOGI("UnsubscribeCollectors eventId is 0x%{public}" PRIx64, eventId);
+        if (eventIdToLoaderMap_.find(eventId) == eventIdToLoaderMap_.end()) {
+            LOGI("Collector not found, eventId is 0x%{public}" PRIx64, eventId);
+            continue;
         }
+        if (DecrementSubscribeCount(eventId)) {
+            continue;
+        }
+        toStop.push_back(eventId);
     }
     // 第二阶段：锁外执行采集器 Stop/Unsubscribe（opMutex_ 已保证无并发启停）
     int ret = SUCCESS;
@@ -288,10 +278,7 @@ int DataCollection::UnsubscribeCollectorsLocked(const std::vector<int64_t> &even
             ret = result;
         }
         LOGI("Unsubscribe collector");
-        {
-            std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
-            eventIdToLoaderMap_.erase(eventId);
-        }
+        eventIdToLoaderMap_.erase(eventId);
     }
     LOGI("UnsubscribeCollectors finish");
     return ret;
@@ -337,7 +324,7 @@ int DataCollection::LoadCollector(int64_t eventId, std::string path, std::shared
         LOGE("Failed to start collector");
         return result;
     }
-    std::lock_guard<ffrt::recursive_mutex> lock(mutex_);
+    // 调用方持有 opMutex_，落账无需额外加锁
     eventIdToLoaderMap_.emplace(eventId, loader);
     LOGD("End LoadCollector");
     return SUCCESS;

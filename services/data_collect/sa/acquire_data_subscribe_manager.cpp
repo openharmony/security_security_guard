@@ -420,7 +420,6 @@ int AcquireDataSubscribeManager::UnSubscribeScIfLast(int64_t eventId)
 int AcquireDataSubscribeManager::RemoveSubscribeRecordCore(int64_t eventId, const std::string &clientId,
     bool cleanupSession)
 {
-    bool needUnsubscribe = false;
     {
         std::lock_guard<ffrt::mutex> lock(sessionMutex_);
         if (sessionsMap_.find(clientId) == sessionsMap_.end() || sessionsMap_.at(clientId) == nullptr) {
@@ -432,20 +431,17 @@ int AcquireDataSubscribeManager::RemoveSubscribeRecordCore(int64_t eventId, cons
             return SUCCESS;
         }
         sessionsMap_.at(clientId)->subEvents.erase(eventId);
-        needUnsubscribe = !IsAnySessionSubscribes(eventId);
     }
-    if (needUnsubscribe) {
-        // 锁外退订（内部重查，避免与并发新订阅竞态）
-        int ret = UnSubscribeScIfLast(eventId);
-        if (ret != SUCCESS) {
-            SGLOGE("UnSubscribeSc fail");
-            std::lock_guard<ffrt::mutex> lock(sessionMutex_);
-            auto it = sessionsMap_.find(clientId);
-            if (it != sessionsMap_.end() && it->second != nullptr) {
-                it->second->subEvents.insert(eventId);
-            }
-            return ret;
+    // 锁外退订：UnSubscribeScIfLast 内部会重查"是否还有会话订阅"，非最后一个订阅者时自动跳过
+    int ret = UnSubscribeScIfLast(eventId);
+    if (ret != SUCCESS) {
+        SGLOGE("UnSubscribeSc fail");
+        std::lock_guard<ffrt::mutex> lock(sessionMutex_);
+        auto it = sessionsMap_.find(clientId);
+        if (it != sessionsMap_.end() && it->second != nullptr) {
+            it->second->subEvents.insert(eventId);
         }
+        return ret;
     }
     std::lock_guard<ffrt::mutex> lock(sessionMutex_);
     auto it = sessionsMap_.find(clientId);
