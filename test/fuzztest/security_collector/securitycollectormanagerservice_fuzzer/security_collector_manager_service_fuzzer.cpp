@@ -18,6 +18,7 @@
 #include <string>
 #include <fuzzer/FuzzedDataProvider.h>
 #include "securec.h"
+#include "ffrt.h"
 
 #define private public
 #define protected public
@@ -156,5 +157,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::SecurityCollectorManagerServiceFuzzTest(data, size);
     OHOS::SecurityCollectorRunManagerFuzzTest(data, size);
     OHOS::SecurityCollectorSubscriberManagerFuzzTest(data, size);
+    // Wait for all async tasks submitted by this iteration (e.g.
+    // SecurityCollectorRunManager::CollectorListenner::OnNotify) to finish before
+    // the process exits, otherwise they may touch destroyed singletons during
+    // teardown and report use-after-free.
+    ffrt::wait();
     return 0;
 }

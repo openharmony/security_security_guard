@@ -20,6 +20,7 @@
 #include "nativetoken_kit.h"
 #include "token_setproc.h"
 #include "accesstoken_kit.h"
+#include "ffrt.h"
 #define private public
 #define protected public
 #include "event_define.h"
@@ -292,5 +293,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     FuzzedDataProvider fdp(data, size);
     FuzzDataCollectManagerService(fdp);
     g_service.OnStop();
+    // Wait for all async tasks submitted by this iteration (e.g. PushDataCollectTask)
+    // to finish before the process exits, otherwise they may touch destroyed
+    // objects during teardown and report use-after-free.
+    ffrt::wait();
     return 0;
 }
