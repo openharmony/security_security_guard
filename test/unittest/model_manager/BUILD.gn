@@ -52,6 +52,7 @@ ohos_unittest("SecurityGuardModelManagerTest") {
 
   external_deps = [
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",
