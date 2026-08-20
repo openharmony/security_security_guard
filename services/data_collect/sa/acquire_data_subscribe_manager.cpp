@@ -27,7 +27,7 @@
 #include "device_manager.h"
 #endif
 #include "ffrt.h"
- #include "ffrt_inner.h"
+#include "ffrt_inner.h"
 #include "event_define.h"
 #include "i_model_info.h"
 #include "config_data_manager.h"
