@@ -48,6 +48,7 @@ ohos_unittest("security_collector_test") {
 
   external_deps = [
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "ffrt:libffrt",
     "googletest:gmock",
     "hilog:libhilog",
@@ -98,6 +99,7 @@ ohos_unittest("SecurityCollectorTest") {
 
   external_deps = [
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "ffrt:libffrt",
     "googletest:gmock",
     "hilog:libhilog",
@@ -149,6 +151,7 @@ ohos_unittest("SecurityCollectorRunManagerTest") {
 
   external_deps = [
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "ffrt:libffrt",
     "googletest:gmock",
     "hilog:libhilog",
@@ -200,6 +203,7 @@ ohos_unittest("DataCollectionTest") {
 
   external_deps = [
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "googletest:gmock",
     "hilog:libhilog",
     "hisysevent:libhisysevent",

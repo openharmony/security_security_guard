@@ -45,6 +45,7 @@ ohos_unittest("SecurityGuardNapiTest") {
 
   external_deps = [
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",

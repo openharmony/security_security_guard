@@ -79,6 +79,7 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "access_token:libtokenid_sdk",
     "cJSON:cjson",
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "ffrt:libffrt",
     "googletest:gmock",
     "hilog:libhilog",
