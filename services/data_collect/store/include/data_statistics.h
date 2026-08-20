@@ -19,6 +19,7 @@
 #include <atomic>
 #include <cstdint>
 #include "ffrt.h"
+#include "ffrt_inner.h"
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -42,6 +43,9 @@ private:
     std::atomic<uint64_t> insertEventsCounters_;
     std::atomic<uint64_t> publishEventsDropCounters_;
     std::atomic<bool> running_ { false };
+    ffrt::thread loopThread_;
+    ffrt::mutex mutex_;
+    ffrt::condition_variable cv_;
 };
 } // namespace OHOS::Security::SecurityGuard
 #endif // DATA_STATISTICS_H

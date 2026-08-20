@@ -59,14 +59,21 @@ ohos_fuzztest("DataCollectManagerServiceClibFuzzTest") {
     "SECURITY_GUARD_MODEL_CFG_SOURCE = \"${security_guard_model_cfg_source}\"",
     "SECURITY_GUARD_EVENT_GROUP_CFG_SOURCE = \"${security_guard_event_group_cfg_source}\"",
     "SECURITY_GUARD_CONFIG_UPDATE_TRUST_LIST_SOURCE = \"${security_guard_config_update_trust_list_source}\"",
-    "SECURITY_GUARD_COLLECTOR_CFG_SOURCE = \"${security_guard_collector_cfg_source}\"",
-    "SECURITY_GUARD_EVENT_FILTER_PATH = \"${security_guard_event_filter_path}\"",
-    "SECURITY_GUARD_EVENT_WRAPPER_PATH = \"${security_guard_event_wrapper_path}\"",
+    # Fuzz builds must never dlopen external .so files (collectors, event filter,
+    # event wrapper): external code may submit infinite ffrt tasks, which would
+    # make ffrt::wait() in LLVMFuzzerTestOneInput hang forever. Point all plugin
+    # paths at non-existent files so loading always fails.
+    "SECURITY_GUARD_COLLECTOR_CFG_SOURCE = \"security_guard_fuzz_disabled.cfg\"",
+    "SECURITY_GUARD_EVENT_FILTER_PATH = \"/system/lib/libsg_event_filter_fuzz_disabled.so\"",
+    "SECURITY_GUARD_EVENT_WRAPPER_PATH = \"/system/lib/libsg_event_wrapper_fuzz_disabled.so\"",
   ]
 
   sources = [
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
+    "${sg_root_dir}/services/collector_manager/src/collector_cfg_marshalling.cpp",
+    "${sg_root_dir}/services/collector_manager/src/data_collection.cpp",
+    "${sg_root_dir}/services/collector_manager/src/lib_loader.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_subscribe_manager.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_callback_proxy.cpp",
@@ -86,7 +93,6 @@ ohos_fuzztest("DataCollectManagerServiceClibFuzzTest") {
     "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
     "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",
-    "${sg_root_dir}/services/collector_manager:security_collector_manager",
     "${sg_root_dir}/services/data_collect:sg_collect_service_database",
     "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_stub",
     "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
