@@ -16,9 +16,11 @@
 #include <atomic>
 #include <cstdint>
 #include <chrono>
+#include <mutex>
 #include <string>
 #include <sstream>
 #include "ffrt.h"
+#include "ffrt_inner.h"
 #include "security_guard_log.h"
 #include "data_statistics.h"
 
@@ -48,19 +50,31 @@ void DataStatistics::IncrementPublishEvents(uint64_t count)
 DataStatistics::DataStatistics()
 {
     running_ = true;
-    ffrt::submit([this]() { RunLoop(); });
+    loopThread_ = ffrt::thread([this]() { RunLoop(); });
 }
 
 DataStatistics::~DataStatistics()
 {
-    running_ = false;
+    {
+        std::lock_guard<ffrt::mutex> lock(mutex_);
+        running_ = false;
+    }
+    cv_.notify_all();
+    if (loopThread_.joinable()) {
+        loopThread_.join();
+    }
 }
 
 void DataStatistics::RunLoop()
 {
     constexpr int64_t PRINT_INTERVAL_SECONDS = 300;
+    std::unique_lock<ffrt::mutex> lock(mutex_);
     while (running_) {
-        ffrt::this_task::sleep_for(std::chrono::seconds(PRINT_INTERVAL_SECONDS));
+        cv_.wait_for(lock, std::chrono::seconds(PRINT_INTERVAL_SECONDS),
+            [this]() { return !running_; });
+        if (!running_) {
+            break;
+        }
         std::stringstream ss;
         ss << "DataStatistics requestDataSubmitDropCounters = "
            << requestDataSubmitDropCounters_.load()
