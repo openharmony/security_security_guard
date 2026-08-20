@@ -63,6 +63,7 @@ ohos_unittest("libsg_collect_sdk_test") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "googletest:gmock",
     "hilog:libhilog",
     "ipc:ipc_core",

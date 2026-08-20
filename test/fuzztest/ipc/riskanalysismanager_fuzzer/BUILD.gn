@@ -47,6 +47,7 @@ ohos_fuzztest("RiskAnalysisManagerFuzzTest") {
 
   external_deps = [
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "hilog:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",

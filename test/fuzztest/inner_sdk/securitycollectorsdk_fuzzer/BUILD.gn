@@ -43,7 +43,7 @@ ohos_fuzztest("SecurityCollectorSdkFuzzTest") {
   if (security_guard_trim_model_analysis) {
     defines += [ "SECURITY_GUARD_TRIM_MODEL_ANALYSIS" ]
   }
-  sources = [ 
+  sources = [
     "securitycollector_sdk_fuzzer.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/i_collector_subscriber.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_manager_callback_service.cpp",
@@ -82,6 +82,7 @@ ohos_fuzztest("SecurityCollectorSdkFuzzTest") {
 
   external_deps = [
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
