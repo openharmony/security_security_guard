@@ -70,6 +70,7 @@ ohos_unittest("data_collect_test") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "ffrt:libffrt",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
@@ -146,6 +147,7 @@ ohos_unittest("SecurityGuardDataCollectTest") {
 
   external_deps = [
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "ffrt:libffrt",
     "googletest:gmock",
     "hilog:libhilog",
@@ -199,6 +201,7 @@ ohos_unittest("SecurityGuardDatabaseManagerTest") {
 
   external_deps = [
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "ffrt:libffrt",
     "googletest:gmock",
     "hilog:libhilog",
@@ -289,6 +292,7 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
 
   external_deps = [
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "ffrt:libffrt",
     "googletest:gmock",
     "hilog:libhilog",
