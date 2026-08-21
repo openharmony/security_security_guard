@@ -24,13 +24,7 @@ class AcquireDataManagerCallbackService : public AcquireDataManagerCallbackStub 
 public:
     explicit AcquireDataManagerCallbackService() = default;
     ~AcquireDataManagerCallbackService() override = default;
-    void RegistCallBack(std::function<void(const SecurityCollector::Event &event)> callback)
-    {
-        if (callback == nullptr) {
-            return;
-        }
-        callback_ = callback;
-    }
+    void RegistCallBack(std::function<void(const SecurityCollector::Event &event)> callback);
     int32_t OnNotify(const std::vector<SecurityCollector::Event> &events) override;
 private:
     std::function<void(const SecurityCollector::Event &event)> callback_;
