@@ -396,11 +396,14 @@ ErrCode DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
         BigData::ReportSgUnsubscribeEvent(event);
         return ret;
     }
+    sptr<IRemoteObject::DeathRecipient> deathRecipient;
     {
         std::lock_guard<ffrt::mutex> lock(mutex_);
-        if (deathRecipient_ != nullptr) {
-            cb->RemoveDeathRecipient(deathRecipient_);
-        }
+        deathRecipient = deathRecipient_;
+    }
+    if (deathRecipient != nullptr) {
+        // RemoveDeathRecipient 是跨进程 IPC，放到锁外执行
+        cb->RemoveDeathRecipient(deathRecipient);
     }
     ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(subscribeInfo.GetEvent().eventId, cb,
         clientId);
@@ -645,8 +648,14 @@ void DataCollectManagerService::SubscriberDeathRecipient::OnRemoteDied(const wpt
         return;
     }
     AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecordOnRemoteDied(object);
-    if (object->IsProxyObject() && service->deathRecipient_ != nullptr) {
-        object->RemoveDeathRecipient(service->deathRecipient_);
+    sptr<IRemoteObject::DeathRecipient> deathRecipient;
+    {
+        // deathRecipient_ 可能被并发 SetDeathCallBack 改写，先快照再在锁外移除，避免数据竞争
+        std::lock_guard<ffrt::mutex> lock(service->mutex_);
+        deathRecipient = service->deathRecipient_;
+    }
+    if (object->IsProxyObject() && deathRecipient != nullptr) {
+        object->RemoveDeathRecipient(deathRecipient);
     }
     SGLOGI("end OnRemoteDied");
 }
@@ -1036,17 +1045,22 @@ ErrCode DataCollectManagerService::RemoveFilter(const SecurityEventFilter &subsc
 
 int32_t DataCollectManagerService::SetDeathCallBack(SgSubscribeEvent event, const sptr<IRemoteObject> &callback)
 {
-    std::lock_guard<ffrt::mutex> lock(mutex_);
-    if (deathRecipient_ == nullptr) {
-        deathRecipient_ = new (std::nothrow) SubscriberDeathRecipient(this);
+    sptr<IRemoteObject::DeathRecipient> deathRecipient;
+    {
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         if (deathRecipient_ == nullptr) {
-            SGLOGE("no memory");
-            event.ret = NULL_OBJECT;
-            BigData::ReportSgSubscribeEvent(event);
-            return NULL_OBJECT;
+            deathRecipient_ = new (std::nothrow) SubscriberDeathRecipient(this);
+            if (deathRecipient_ == nullptr) {
+                SGLOGE("no memory");
+                event.ret = NULL_OBJECT;
+                BigData::ReportSgSubscribeEvent(event);
+                return NULL_OBJECT;
+            }
         }
+        deathRecipient = deathRecipient_;
     }
-    callback->AddDeathRecipient(deathRecipient_);
+    // AddDeathRecipient 是跨进程 IPC，放到锁外执行
+    callback->AddDeathRecipient(deathRecipient);
     return SUCCESS;
 }
 
@@ -1130,6 +1144,8 @@ ErrCode DataCollectManagerService::DestoryClient(const std::string &eventGroup, 
         SGLOGE("check permission fail");
         return ret;
     }
+    sptr<IRemoteObject> callback;
+    sptr<IRemoteObject::DeathRecipient> deathRecipient;
     {
         std::lock_guard<ffrt::mutex> lock(mutex_);
         auto iter = clientCallBacks_.find(clientId);
@@ -1137,15 +1153,26 @@ ErrCode DataCollectManagerService::DestoryClient(const std::string &eventGroup, 
             SGLOGE("clientId not exist");
             return BAD_PARAM;
         }
-        ret = AcquireDataSubscribeManager::GetInstance().DestoryClient(eventGroup, clientId);
-        if (ret != SUCCESS) {
-            SGLOGI("AcquireDataSubscribeManager, DestoryClient ret=%{public}d", ret);
-            return ret;
+        callback = iter->second;
+        deathRecipient = deathRecipient_;
+    }
+    // 会话销毁（含采集器 Stop、SC 跨进程退订等外部调用）与 RemoveDeathRecipient 均在锁外执行，
+    // 避免持服务锁横跨外部调用
+    ret = AcquireDataSubscribeManager::GetInstance().DestoryClient(eventGroup, clientId);
+    if (ret != SUCCESS) {
+        SGLOGI("AcquireDataSubscribeManager, DestoryClient ret=%{public}d", ret);
+        return ret;
+    }
+    if (deathRecipient != nullptr && callback != nullptr) {
+        callback->RemoveDeathRecipient(deathRecipient);
+    }
+    {
+        std::lock_guard<ffrt::mutex> lock(mutex_);
+        auto iter = clientCallBacks_.find(clientId);
+        // 仅当回调槽位仍是本次快照的对象时删除，避免误删并发重新订阅产生的新槽位
+        if (iter != clientCallBacks_.end() && iter->second == callback) {
+            clientCallBacks_.erase(clientId);
         }
-        if (deathRecipient_ != nullptr) {
-            clientCallBacks_.at(clientId)->RemoveDeathRecipient(deathRecipient_);
-        }
-        clientCallBacks_.erase(clientId);
     }
     return SUCCESS;
 }

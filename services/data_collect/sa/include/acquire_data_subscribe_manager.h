@@ -20,6 +20,7 @@
 #include <unordered_set>
 #include <mutex>
 #include <set>
+#include <vector>
 
 #include "ffrt.h"
 #include "iremote_object.h"
@@ -73,7 +74,7 @@ public:
     void DeInitEventQueue();
     void StartTokenBucketTask();
     void StopTokenBucketTask();
-    const std::map<std::string, std::shared_ptr<ClientSession>> &GetAuditClientSessionMap();
+    std::map<std::string, std::shared_ptr<ClientSession>> GetAuditClientSessionMap();
 private:
     AcquireDataSubscribeManager();
     ~AcquireDataSubscribeManager();
@@ -91,6 +92,19 @@ private:
     int CheckInsertMute(const EventMuteFilter &filter, const std::string &clientId);
     int IsExceedLimited(const std::string &clientId, const std::string &eventGroup, pid_t callerPid);
     bool IsFindFlag(const std::set<std::string> &eventSubscribes, int64_t eventId, const std::string &clientId);
+    // 以下辅助方法用于"锁内决策、锁外执行"改造：
+    // - IsAnySessionSubscribes：调用方必须持有 sessionMutex_
+    // - IsFilterInSession：内部自行加 sessionMutex_
+    // - SubscribeScIfNeeded / UnSubscribeScIfLast：内部按 subscribeMutex_ -> sessionMutex_ 顺序加锁
+    // - RemoveSubscribeRecordCore：内部先 sessionMutex_（决策），释放后再经 UnSubscribeScIfLast 退订
+    bool IsAnySessionSubscribes(int64_t eventId);
+    bool IsFilterInSession(const std::string &clientId, const EventMuteFilter &filter);
+    int SubscribeScIfNeeded(int64_t eventId);
+    int UnSubscribeScIfLast(int64_t eventId);
+    int RemoveSubscribeRecordCore(int64_t eventId, const std::string &clientId, bool cleanupSession);
+    void CollectNotifyObjs(const SecurityCollector::Event &event, bool isSticky,
+        std::vector<sptr<IRemoteObject>> &notifyObjs, bool &flag);
+    void EraseFilterFromSession(const std::string &clientId, const EventMuteFilter &filter);
     void NotifySub(sptr<IRemoteObject> obj, const SecurityCollector::Event &events);
     void ClearEventCache();
     void UploadEventToStore(const SecurityCollector::Event &event);
@@ -122,6 +136,11 @@ private:
         std::unordered_set<uint32_t> callingUids_;
     };
     std::shared_ptr<CollectorListener> collectorListener_{};
+    // 采集器订阅簿记（eventToListenner_/scSubscribeMap_）与对采集器框架的外部订阅/退订调用
+    // （DataCollection::SubscribeCollectors / CollectorManager::Subscribe 等）统一在此锁下串行执行。
+    // 锁序约束：subscribeMutex_ -> sessionMutex_（仅在执行前重查会话时嵌套），禁止反向。
+    // 采集器回调路径（OnNotify -> UploadEvent -> PublishEventToSub）只取 sessionMutex_，永不取本锁，从而不构成锁环。
+    ffrt::mutex subscribeMutex_{};
     std::unordered_map<int64_t, std::shared_ptr<SecurityCollectorSubscriber>> scSubscribeMap_{};
     std::map<int64_t, std::shared_ptr<SecurityCollector::ICollectorFwk>> eventToListenner_;
     void *handle_ = nullptr;
@@ -134,7 +153,12 @@ private:
     ffrt::mutex queueMutex_ {};
     std::string deviceId_ {};
     int32_t userId_ {-1};
+    // 只保护 sessionsMap_ / reportedStickyEvents_（纯数据）。临界区内禁止任何外部调用
+    // （IPC、dlopen 采集器/插件代码、数据库 IO），外部动作一律"锁内快照、锁外执行"。
     ffrt::mutex sessionMutex_{};
+    // 串行化对订阅端的 IPC 通知（NotifySub）。重构后通知已移出 sessionMutex_，
+    // 本锁用于保持"同一时刻只向订阅端发一次 IPC"的语义；它是叶子锁，不与任何重入路径成环。
+    ffrt::mutex notifyMutex_{};
     ffrt::mutex eventsMutex_{};
     std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> sessionsMap_ {};
     std::shared_ptr<ffrt::queue> queue_{};

@@ -23,7 +23,6 @@
 #include "acquire_data_manager_callback_service.h"
 namespace OHOS::Security::SecurityGuard {
 namespace {
-    std::set<std::shared_ptr<EventSubscribeClient>> g_clients{};
     ffrt::mutex g_clientMutex{};
 
 }
