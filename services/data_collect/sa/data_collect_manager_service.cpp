@@ -55,6 +55,10 @@
 #include "data_statistics.h"
 #include "fdsan_fd.h"
 #include "store_define.h"
+#ifdef HICOLLIE_ENABLE
+#include "xcollie/xcollie_define.h"
+#endif
+#include "xcollie_utils.h"
 #ifdef SECURITY_GUARD_TRIM_MODEL_ANALYSIS
 #include "event_group_config.h"
 #endif
@@ -95,6 +99,11 @@ namespace {
     constexpr int32_t TOKEN_BUCKET_STEP_SIZE = 20;
     constexpr int32_t TOKEN_BUCKET_INTERVAL_TIME = 1000;
     ffrt::thread g_tokenBucketThread {};
+    #ifdef HICOLLIE_ENABLE
+       constexpr uint32_t XCOLLIE_FLAG = HiviewDFX::XCOLLIE_FLAG_LOG | HiviewDFX::XCOLLIE_FLAG_RECOVERY;
+    #else
+       constexpr uint32_t XCOLLIE_FLAG = 0;
+    #endif
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DataCollectManagerService, DATA_COLLECT_MANAGER_SA_ID, true);
@@ -207,6 +216,7 @@ ErrCode DataCollectManagerService::RequestDataSubmit(int64_t eventId, const std:
     if (ret != SUCCESS) {
         return ret;
     }
+    XCollie_Utils xcollie("SGIPC_RequestDataSubmit", XCOLLIE_FLAG);
     int32_t prev = tokenBucket_.fetch_sub(1);
     if (prev <= 0) {
         tokenBucket_.fetch_add(1);
@@ -359,6 +369,7 @@ ErrCode DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     } else {
         ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(), std::vector<int64_t>{event.eventId});
     }
+    XCollie_Utils xcollie("SGIPC_Subscribe", XCOLLIE_FLAG);
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSgSubscribeEvent(event);
@@ -391,6 +402,7 @@ ErrCode DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
         ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(),
             std::vector<int64_t>{subscribeInfo.GetEvent().eventId});
     }
+    XCollie_Utils xcollie("SGIPC_Unsubscribe", XCOLLIE_FLAG);
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSgUnsubscribeEvent(event);
@@ -478,6 +490,7 @@ ErrCode DataCollectManagerService::QuerySecurityEventById(const std::vector<Secu
     if (ret != SUCCESS) {
         return ret;
     }
+    XCollie_Utils xcollie("SGIPC_QuerySecurityEventById", XCOLLIE_FLAG);
     auto proxy = iface_cast<ISecurityEventQueryCallback>(cb);
     if (proxy == nullptr) {
         SGLOGI("proxy is null");
@@ -522,6 +535,7 @@ ErrCode DataCollectManagerService::QuerySecurityEvent(const std::vector<Security
     if (ret != SUCCESS) {
         return ret;
     }
+    XCollie_Utils xcollie("SGIPC_QuerySecurityEvent", XCOLLIE_FLAG);
     auto proxy = iface_cast<ISecurityEventQueryCallback>(cb);
     if (proxy == nullptr) {
         SGLOGI("proxy is null");
@@ -659,6 +673,7 @@ ErrCode DataCollectManagerService::CollectorStart(
     if (code != SUCCESS) {
         return code;
     }
+    XCollie_Utils xcollie("SGIPC_CollectorStart", XCOLLIE_FLAG);
     EventCfg config;
     if (!ConfigDataManager::GetInstance().GetEventConfig(subscribeInfo.GetEvent().eventId, config)) {
         SGLOGE("GetEventConfig error, eventId is 0x%{public}" PRIx64, subscribeInfo.GetEvent().eventId);
@@ -699,6 +714,7 @@ ErrCode DataCollectManagerService::CollectorStop(const SecurityCollector::Securi
     if (code != SUCCESS) {
         return code;
     }
+    XCollie_Utils xcollie("SGIPC_CollectorStop", XCOLLIE_FLAG);
     EventCfg config;
     if (!ConfigDataManager::GetInstance().GetEventConfig(subscribeInfo.GetEvent().eventId, config)) {
         SGLOGE("GetEventConfig error, eventId is 0x%{public}" PRIx64, subscribeInfo.GetEvent().eventId);
@@ -888,6 +904,7 @@ ErrCode DataCollectManagerService::ConfigUpdate(int fd, const std::string& name)
     if (code != SUCCESS) {
         return code;
     }
+    XCollie_Utils xcollie("SGIPC_ConfigUpdate", XCOLLIE_FLAG);
     {
         std::lock_guard<ffrt::mutex> lock(g_configCacheMutex);
         if (!ParseTrustListFile(TRUST_LIST_FILE_PATH)) {
@@ -985,6 +1002,7 @@ ErrCode DataCollectManagerService::AddFilter(const SecurityEventFilter &subscrib
     } else {
         ret = IsEventGroupHasPublicPermission(eventGroup, std::vector<int64_t>{filter.eventId});
     }
+    XCollie_Utils xcollie("SGIPC_AddFilter", XCOLLIE_FLAG);
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSetMuteEvent(event);
@@ -1017,6 +1035,7 @@ ErrCode DataCollectManagerService::RemoveFilter(const SecurityEventFilter &subsc
     } else {
         ret = IsEventGroupHasPublicPermission(eventGroup, std::vector<int64_t>{filter.eventId});
     }
+    XCollie_Utils xcollie("SGIPC_RemoveFilter", XCOLLIE_FLAG);
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSetUnMuteEvent(event);
@@ -1064,6 +1083,7 @@ ErrCode DataCollectManagerService::Subscribe(int64_t eventId, const std::string 
     } else {
         ret = IsEventGroupHasPublicPermission(eventGroup, std::vector<int64_t>{eventId});
     }
+    XCollie_Utils xcollie("SGIPC_NewSubscribe", XCOLLIE_FLAG);
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSgSubscribeEvent(event);
@@ -1100,6 +1120,7 @@ ErrCode DataCollectManagerService::Unsubscribe(int64_t eventId, const std::strin
         BigData::ReportSgUnsubscribeEvent(event);
         return ret;
     }
+    XCollie_Utils xcollie("SGIPC_NewUnsubscribe", XCOLLIE_FLAG);
     ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeRecord(eventId, clientId);
     if (ret != SUCCESS) {
         SGLOGE("RemoveSubscribeRecord fail");
@@ -1126,6 +1147,7 @@ ErrCode DataCollectManagerService::DestoryClient(const std::string &eventGroup, 
     } else {
         ret = IsEventGroupHasPublicPermission(eventGroup, {});
     }
+    XCollie_Utils xcollie("SGIPC_DestoryClient", XCOLLIE_FLAG);
     if (ret != SUCCESS) {
         SGLOGE("check permission fail");
         return ret;
@@ -1164,6 +1186,7 @@ ErrCode DataCollectManagerService::CreatClient(const std::string &eventGroup, co
     } else {
         ret = IsEventGroupHasPublicPermission(eventGroup, {});
     }
+    XCollie_Utils xcollie("SGIPC_CreatClient", XCOLLIE_FLAG);
     if (ret != SUCCESS) {
         SGLOGE("check permission fail");
         return ret;
@@ -1203,6 +1226,7 @@ ErrCode DataCollectManagerService::QueryCodeSignInfoByPath(const int fd, const i
     if (code != SUCCESS) {
         return code;
     }
+    XCollie_Utils xcollie("SGIPC_QueryCodeSignInfoByPath", XCOLLIE_FLAG);
     std::string param = "fd=" + std::to_string(fd) + ",pid=" + std::to_string(pid);
     SecurityCollector::SecurityEventRuler ruler(0xffffffff06, "", "", param);
     std::vector<SecurityCollector::SecurityEvent> replyEvents {};
@@ -1227,7 +1251,7 @@ ErrCode DataCollectManagerService::QueryAllClientsInfo(std::string &resStr)
     if (code != SUCCESS) {
         return code;
     }
-
+    XCollie_Utils xcollie("SGIPC_QueryAllClientsInfo", XCOLLIE_FLAG);
     std::map<std::string, std::shared_ptr<AcquireDataSubscribeManager::ClientSession>> clientSessionMap =
         AcquireDataSubscribeManager::GetInstance().GetAuditClientSessionMap();
     nlohmann::json resultObj = nlohmann::json::array();
