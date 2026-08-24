@@ -70,7 +70,8 @@
         "sqlite",
         "node",
         "libuv",
-        "bounds_checking_function"
+        "bounds_checking_function",
+        "hicollie"
       ],
       "third_party": [
       ]
