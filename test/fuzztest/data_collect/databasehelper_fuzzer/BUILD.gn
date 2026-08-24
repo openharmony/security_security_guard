@@ -65,6 +65,7 @@ ohos_fuzztest("DatabaseHelperFuzzTest") {
 
   sources = [
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
+    "${sg_root_dir}/frameworks/common/utils/src/xcollie_utils.cpp",
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/sa/acquire_data_subscribe_manager.cpp",
@@ -108,6 +109,10 @@ ohos_fuzztest("DatabaseHelperFuzzTest") {
     "sqlite:sqlite",
     "os_account:os_account_innerkits",
   ]
+  if (security_guard_hicollie_able) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
   if (security_guard_enable_device_id) {
     defines += [ "SECURITY_GUARD_ENABLE_DEVICE_ID" ]
     external_deps += [
