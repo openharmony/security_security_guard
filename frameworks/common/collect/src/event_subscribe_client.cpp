@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 #include "event_subscribe_client.h"
+#include <algorithm>
+#include <unistd.h>
 #include "ffrt.h"
 #include "iservice_registry.h"
 #include "security_guard_log.h"
@@ -25,6 +27,8 @@ namespace OHOS::Security::SecurityGuard {
 namespace {
     std::set<std::shared_ptr<EventSubscribeClient>> g_clients{};
     ffrt::mutex g_clientMutex{};
+    ffrt::mutex g_mutex_{};
+    constexpr uint32_t MAX_RESUB_COUNTS = 3;
 
 }
 
@@ -104,7 +108,7 @@ int32_t EventSubscribeClient::SetDeathRecipient(std::shared_ptr<EventSubscribeCl
     const sptr<IRemoteObject> &remote)
 {
     if (client->deathRecipient_ == nullptr) {
-        client->deathRecipient_ = new (std::nothrow) DeathRecipient();
+        client->deathRecipient_ = new (std::nothrow) DeathRecipient(client);
         if (client->deathRecipient_ == nullptr) {
             SGLOGE("deathRecipient_ is nullptr.");
             return NULL_OBJECT;
@@ -114,6 +118,84 @@ int32_t EventSubscribeClient::SetDeathRecipient(std::shared_ptr<EventSubscribeCl
         }
     }
     return SUCCESS;
+}
+
+void EventSubscribeClient::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
+{
+    SGLOGI("DataCollectManagerService died, try to recover EventSubscribeClient state");
+    auto client = client_.lock();
+    if (client == nullptr) {
+        SGLOGE("client is nullptr");
+        return;
+    }
+    sptr<IRemoteObject> object = remote.promote();
+    if (object != nullptr) {
+        object->RemoveDeathRecipient(this);
+    }
+    client->HandleDeath();
+}
+
+sptr<IRemoteObject> EventSubscribeClient::ReconnectService()
+{
+    sleep(1);
+    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (registry == nullptr) {
+        SGLOGE("GetSystemAbilityManager error");
+        return nullptr;
+    }
+    sptr<IRemoteObject> object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+    if (object == nullptr || deathRecipient_ == nullptr || !object->AddDeathRecipient(deathRecipient_)) {
+        SGLOGE("Failed to reconnect service");
+        return nullptr;
+    }
+    return object;
+}
+
+void EventSubscribeClient::HandleDeath()
+{
+    std::set<int64_t> events;
+    std::vector<std::shared_ptr<EventMuteFilter>> filters;
+    {
+        std::lock_guard<ffrt::mutex> lock(g_mutex_);
+        if (count_ >= MAX_RESUB_COUNTS) {
+            SGLOGE("reSubscribe too many times, clientId=%{public}s", clientId_.c_str());
+            return;
+        }
+        events = subscribedEventIds_;
+        filters = filters_;
+        count_++;
+    }
+    sptr<IRemoteObject> object = ReconnectService();
+    if (object == nullptr) {
+        return;
+    }
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
+    if (proxy == nullptr || callback_ == nullptr) {
+        SGLOGE("proxy or callback is null");
+        return;
+    }
+    int32_t ret = proxy->CreatClient(eventGroup_, clientId_, callback_);
+    if (ret != SUCCESS) {
+        SGLOGE("ReCreatClient fail, clientId=%{public}s, ret=%{public}d", clientId_.c_str(), ret);
+        return;
+    }
+    for (int64_t eventId : events) {
+        int32_t code = proxy->Subscribe(eventId, clientId_);
+        if (code != SUCCESS) {
+            SGLOGE("ReSubscribe fail, eventId=%{public}lld, ret=%{public}d",
+                static_cast<long long>(eventId), code);
+        }
+    }
+    for (const auto &filter : filters) {
+        if (filter == nullptr) {
+            continue;
+        }
+        SecurityEventFilter innerFilter(*filter);
+        int32_t code = proxy->AddFilter(innerFilter, clientId_);
+        if (code != SUCCESS) {
+            SGLOGE("ReAddFilter fail, ret=%{public}d", code);
+        }
+    }
 }
 
 int32_t EventSubscribeClient::Subscribe(int64_t eventId)
@@ -134,6 +216,10 @@ int32_t EventSubscribeClient::Subscribe(int64_t eventId)
     if (ret != SUCCESS) {
         SGLOGI("Subscribe result, ret=%{public}d", ret);
         return ret;
+    }
+    {
+        std::lock_guard<ffrt::mutex> lock(g_mutex_);
+        subscribedEventIds_.insert(eventId);
     }
     return SUCCESS;
 }
@@ -156,6 +242,10 @@ int32_t EventSubscribeClient::Unsubscribe(int64_t eventId)
     if (ret != SUCCESS) {
         SGLOGI("UnSubscribe result, ret=%{public}d", ret);
         return ret;
+    }
+    {
+        std::lock_guard<ffrt::mutex> lock(g_mutex_);
+        subscribedEventIds_.erase(eventId);
     }
     return SUCCESS;
 }
@@ -184,6 +274,10 @@ int32_t EventSubscribeClient::AddFilter(const std::shared_ptr<EventMuteFilter> &
         SGLOGI("UnSubscribe result, ret=%{public}d", ret);
         return ret;
     }
+    {
+        std::lock_guard<ffrt::mutex> lock(g_mutex_);
+        filters_.push_back(filter);
+    }
     return SUCCESS;
 }
 int32_t EventSubscribeClient::RemoveFilter(const std::shared_ptr<EventMuteFilter> &filter)
@@ -209,6 +303,17 @@ int32_t EventSubscribeClient::RemoveFilter(const std::shared_ptr<EventMuteFilter
     if (ret != SUCCESS) {
         SGLOGI("RemoveFilter result, ret=%{public}d", ret);
         return ret;
+    }
+    {
+        std::lock_guard<ffrt::mutex> lock(g_mutex_);
+        auto it = std::find_if(filters_.begin(), filters_.end(),
+            [&filter](const std::shared_ptr<EventMuteFilter> &f) {
+                return f != nullptr && f->eventId == filter->eventId && f->isInclude == filter->isInclude &&
+                    f->type == filter->type && f->mutes == filter->mutes;
+            });
+        if (it != filters_.end()) {
+            filters_.erase(it);
+        }
     }
     return SUCCESS;
 }

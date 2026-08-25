@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 #include "collector_manager.h"
+#include <unistd.h>
+#include <vector>
 #include "ffrt.h"
 #include "iservice_registry.h"
 #include "security_collector_manager_proxy.h"
@@ -25,6 +27,7 @@
 namespace OHOS::Security::SecurityCollector {
 namespace {
     ffrt::mutex mutex_{};
+    constexpr uint32_t MAX_RESUB_COUNTS = 3;
 }
 int32_t CollectorManager::SubscribeImpl(const std::shared_ptr<ICollectorSubscriber> &subscriber)
 {
@@ -144,8 +147,44 @@ void CollectorManager::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &r
 
 void CollectorManager::HandleDecipient()
 {
-    std::lock_guard<ffrt::mutex> lock(mutex_);
-    eventListeners_.clear();
+    std::vector<std::shared_ptr<ICollectorSubscriber>> tmp {};
+    {
+        std::lock_guard<ffrt::mutex> lock(mutex_);
+        if (count_ >= MAX_RESUB_COUNTS) {
+            LOGE("reSubscribe too many times");
+            return;
+        }
+        for (const auto &iter : eventListeners_) {
+            tmp.push_back(iter.first);
+        }
+        eventListeners_.clear();
+    }
+    // wait for collector service to restart
+    sleep(1);
+    auto object = CollectorServiceLoader::GetInstance().LoadCollectorService();
+    if (object == nullptr) {
+        LOGE("object is null");
+        return;
+    }
+    auto proxy = iface_cast<ISecurityCollectorManager>(object);
+    if (proxy == nullptr) {
+        LOGE("proxy is null");
+        return;
+    }
+    if (deathRecipient_ == nullptr || !object->AddDeathRecipient(deathRecipient_)) {
+        LOGE("Failed to add death recipient");
+        return;
+    }
+    for (const auto &subscriber : tmp) {
+        int32_t ret = Subscribe(subscriber);
+        if (ret != SUCCESS) {
+            LOGE("ReSubscribe fail, ret=%{public}d", ret);
+        }
+    }
+    {
+        std::lock_guard<ffrt::mutex> lock(mutex_);
+        count_++;
+    }
 }
 
 int32_t CollectorManager::QuerySecurityEventImpl(const std::vector<SecurityEventRuler> &rulers,

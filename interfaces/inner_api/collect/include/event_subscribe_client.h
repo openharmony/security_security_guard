@@ -16,6 +16,11 @@
 #ifndef SECURITY_GUARD_EVENT_SUBSCRIBE_CLIENT_H
 #define SECURITY_GUARD_EVENT_SUBSCRIBE_CLIENT_H
 
+#include <memory>
+#include <mutex>
+#include <set>
+#include <utility>
+#include <vector>
 #include "acquire_data_manager_callback_service.h"
 #include "event_info.h"
 
@@ -38,16 +43,23 @@ private:
     static int32_t SetDeathRecipient(std::shared_ptr<EventSubscribeClient> client,
         const sptr<IRemoteObject> &remote);
     static void Deleter(EventSubscribeClient *client);
+    void HandleDeath();
+    sptr<IRemoteObject> ReconnectService();
     class DeathRecipient : public IRemoteObject::DeathRecipient {
     public:
-        DeathRecipient() = default;
+        explicit DeathRecipient(std::weak_ptr<EventSubscribeClient> client) : client_(std::move(client)) {}
         ~DeathRecipient() override = default;
-        void OnRemoteDied(const wptr<IRemoteObject> &remote) override {};
+        void OnRemoteDied(const wptr<IRemoteObject> &remote) override;
+    private:
+        std::weak_ptr<EventSubscribeClient> client_;
     };
     sptr<AcquireDataManagerCallbackService> callback_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
     std::string eventGroup_{};
     std::string clientId_{};
+    std::set<int64_t> subscribedEventIds_{};
+    std::vector<std::shared_ptr<EventMuteFilter>> filters_{};
+    uint32_t count_ = 0;
 };
 }
 #endif

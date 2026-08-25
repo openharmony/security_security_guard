@@ -52,6 +52,7 @@ private:
     int32_t CollectorStopImpl(const SecurityCollector::SecurityCollectorSubscribeInfo &subscriber);
     std::map<std::shared_ptr<ICollectorSubscriber>, sptr<SecurityCollectorManagerCallbackService>> eventListeners_;
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
+    uint32_t count_ = 0;
 };
 } // namespace OHOS::Security::SecurityCollector
 #endif // SECURITY_COLLECTOR_MANAGER_H
