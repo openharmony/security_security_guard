@@ -87,6 +87,8 @@ ohos_fuzztest("DataCollectManagerServiceClibFuzzTest") {
     "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_run_manager.cpp",
     "${sg_root_dir}/test/fuzztest/mock/data_statistics/data_statistics.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_event_ruler.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
     "data_collect_manager_service_clib_fuzzer.cpp",
   ]
 

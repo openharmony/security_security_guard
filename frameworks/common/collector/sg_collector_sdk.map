@@ -18,20 +18,12 @@
     extern "C++" {
         OHOS::Security::SecurityCollector::ICollectorFwk::GetEventId*;
         OHOS::Security::SecurityCollector::CollectorManager::Unsubscribe*;
-        OHOS::Security::SecurityCollector::ICollectorSubscriber::ICollectorSubscriber*;
         OHOS::Security::SecurityCollector::CollectorManager::Subscribe*;
         OHOS::Security::SecurityCollector::CollectorManager::CollectorStart*;
         OHOS::Security::SecurityCollector::CollectorManager::CollectorStop*;
-        VTT?for?OHOS::Security::SecurityCollector::SecurityEventRuler*;
-        vtable?for?OHOS::Security::SecurityCollector::SecurityEventRuler*;
         OHOS::Security::SecurityCollector::CollectorManager::QuerySecurityEvent*;
         OHOS::Security::SecurityCollector::CollectorManager::QuerySecurityEventBatch*;
-        VTT?for?OHOS::Security::SecurityCollector::SecurityEvent*;
-        vtable?for?OHOS::Security::SecurityCollector::SecurityEvent*;
-        OHOS::Security::SecurityCollector::SecurityEvent::Unmarshalling*;
-        OHOS::Security::SecurityCollector::SecurityEventRuler::Unmarshalling*;
         OHOS::Security::SecurityCollector::ICollectorFwk::GetExtraInfo*;
-        OHOS::Security::SecurityCollector::ICollectorFwk::GetEventId*;
         OHOS::Security::SecurityCollector::ICollector::Query*;
         OHOS::Security::SecurityCollector::ICollector::BatchQuery*;
         OHOS::Security::SecurityCollector::ICollector::Subscribe*;
@@ -39,9 +31,6 @@
         OHOS::Security::SecurityCollector::ICollector::IsStartWithSub*;
         VTT?for?OHOS::Security::SecurityCollector::SecurityCollectorManagerCallbackService*;
         vtable?for?OHOS::Security::SecurityCollector::SecurityCollectorManagerCallbackService*;
-        VTT?for?OHOS::Security::SecurityCollector::SecurityCollectorSubscribeInfo*;
-        vtable?for?OHOS::Security::SecurityCollector::SecurityCollectorSubscribeInfo*;
-        OHOS::Security::SecurityCollector::SecurityCollectorSubscribeInfo::Unmarshalling*;
     };
   local:
     *;
