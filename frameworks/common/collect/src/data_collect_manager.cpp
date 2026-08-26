@@ -31,9 +31,9 @@
 #include "security_collector_subscribe_info.h"
 
 namespace {
-    constexpr uint32_t MAX_RESUB_COUNTS = 3;
     const std::string SECURITY_GROUP = "securityGroup";
     ffrt::mutex mutex_{};
+    constexpr int RECONNECT_RETRY_DELAY_SECONDS[] = {1, 5, 15, 30, 60, 60, 60, 60, 60};
 }
 
 namespace OHOS::Security::SecurityGuard {
@@ -177,7 +177,8 @@ void DataCollectManager::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> 
         return;
     }
     object->RemoveDeathRecipient(this);
-    DataCollectManager::GetInstance().HandleDecipient();
+    // avoid blocking binder thread
+    ffrt::submit([]() {DataCollectManager::GetInstance().HandleDecipient();});
 }
 
 void DataCollectManager::HandleDecipient()
@@ -185,43 +186,41 @@ void DataCollectManager::HandleDecipient()
     std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> tmp {};
     {
         std::lock_guard<ffrt::mutex> lock(mutex_);
-        if (count_ >= MAX_RESUB_COUNTS) {
-            SGLOGE("reSubscriber too many times");
-            return;
-        }
         if (callback_ == nullptr) {
             SGLOGE("callback is nullptr");
             return;
         }
         subscribers_.swap(tmp);
     }
-    // wait sg start up
-    sleep(1);
-    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (registry == nullptr) {
-        SGLOGE("GetSystemAbilityManager error");
+    if (tmp.empty()) {
         return;
     }
-    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerIdl>(object);
-    if (proxy == nullptr) {
-        SGLOGE("proxy is null");
-        return;
-    }
-    if (deathRecipient_ == nullptr || !object->AddDeathRecipient(deathRecipient_)) {
-        SGLOGE("Failed to add death recipient");
-        return;
-    }
-    for (const auto &iter : tmp) {
-        int32_t ret = Subscribe(iter);
-        if (ret != SUCCESS) {
-            SGLOGE("ReSubscribe fail, ret=%{public}d", ret);
+    for (int delay : RECONNECT_RETRY_DELAY_SECONDS) {
+        ffrt::this_task::sleep_for(std::chrono::seconds(delay));
+        auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (registry == nullptr) {
+            SGLOGE("GetSystemAbilityManager error");
+            continue;
         }
+        auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+        auto proxy = iface_cast<DataCollectManagerIdl>(object);
+        if (proxy == nullptr) {
+            SGLOGE("proxy is null");
+            continue;
+        }
+        if (deathRecipient_ == nullptr || !object->AddDeathRecipient(deathRecipient_)) {
+            SGLOGE("Failed to add death recipient");
+            continue;
+        }
+        for (const auto &iter : tmp) {
+            int32_t ret = Subscribe(iter);
+            if (ret != SUCCESS) {
+                SGLOGE("ReSubscribe fail, ret=%{public}d", ret);
+            }
+        }
+        return;
     }
-    {
-        std::lock_guard<ffrt::mutex> lock(mutex_);
-        count_++;
-    }
+    SGLOGE("recover subscriptions fail");
 }
 
 int32_t DataCollectManager::SetDeathRecipient(const sptr<IRemoteObject> &remote)

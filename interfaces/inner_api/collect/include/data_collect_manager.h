@@ -58,7 +58,6 @@ private:
     std::string sdkFlag_{};
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
     std::set<std::shared_ptr<SecurityCollector::ICollectorSubscriber>> subscribers_{};
-    uint32_t count_ = 0;
 };
 }  // namespace OHOS::Security::SecurityGuard
 #endif  // SECURITY_GUARD_DATA_COLLECT_MANAGER_H
