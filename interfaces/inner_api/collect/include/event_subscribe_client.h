@@ -59,7 +59,6 @@ private:
     std::string clientId_{};
     std::set<int64_t> subscribedEventIds_{};
     std::vector<std::shared_ptr<EventMuteFilter>> filters_{};
-    uint32_t count_ = 0;
 };
 }
 #endif

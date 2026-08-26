@@ -14,7 +14,7 @@
  */
 #include "event_subscribe_client.h"
 #include <algorithm>
-#include <unistd.h>
+#include <chrono>
 #include "ffrt.h"
 #include "iservice_registry.h"
 #include "security_guard_log.h"
@@ -27,8 +27,7 @@ namespace OHOS::Security::SecurityGuard {
 namespace {
     ffrt::mutex g_clientMutex{};
     ffrt::mutex g_mutex_{};
-    constexpr uint32_t MAX_RESUB_COUNTS = 3;
-
+    constexpr int RECONNECT_RETRY_DELAY_SECONDS[] = {1, 5, 15, 30, 60, 60, 60, 60, 60};
 }
 
 void EventSubscribeClient::Deleter(EventSubscribeClient *client)
@@ -131,12 +130,12 @@ void EventSubscribeClient::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject
     if (object != nullptr) {
         object->RemoveDeathRecipient(this);
     }
-    client->HandleDeath();
+    // avoid blocking binder thread
+    ffrt::submit([client]() {client->HandleDeath();});
 }
 
 sptr<IRemoteObject> EventSubscribeClient::ReconnectService()
 {
-    sleep(1);
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry == nullptr) {
         SGLOGE("GetSystemAbilityManager error");
@@ -156,45 +155,45 @@ void EventSubscribeClient::HandleDeath()
     std::vector<std::shared_ptr<EventMuteFilter>> filters;
     {
         std::lock_guard<ffrt::mutex> lock(g_mutex_);
-        if (count_ >= MAX_RESUB_COUNTS) {
-            SGLOGE("reSubscribe too many times, clientId=%{public}s", clientId_.c_str());
-            return;
-        }
         events = subscribedEventIds_;
         filters = filters_;
-        count_++;
     }
-    sptr<IRemoteObject> object = ReconnectService();
-    if (object == nullptr) {
-        return;
-    }
-    auto proxy = iface_cast<DataCollectManagerIdl>(object);
-    if (proxy == nullptr || callback_ == nullptr) {
-        SGLOGE("proxy or callback is null");
-        return;
-    }
-    int32_t ret = proxy->CreatClient(eventGroup_, clientId_, callback_);
-    if (ret != SUCCESS) {
-        SGLOGE("ReCreatClient fail, clientId=%{public}s, ret=%{public}d", clientId_.c_str(), ret);
-        return;
-    }
-    for (int64_t eventId : events) {
-        int32_t code = proxy->Subscribe(eventId, clientId_);
-        if (code != SUCCESS) {
-            SGLOGE("ReSubscribe fail, eventId=%{public}lld, ret=%{public}d",
-                static_cast<long long>(eventId), code);
-        }
-    }
-    for (const auto &filter : filters) {
-        if (filter == nullptr) {
+    for (int delay : RECONNECT_RETRY_DELAY_SECONDS) {
+        ffrt::this_task::sleep_for(std::chrono::seconds(delay));
+        sptr<IRemoteObject> object = ReconnectService();
+        if (object == nullptr) {
             continue;
         }
-        SecurityEventFilter innerFilter(*filter);
-        int32_t code = proxy->AddFilter(innerFilter, clientId_);
-        if (code != SUCCESS) {
-            SGLOGE("ReAddFilter fail, ret=%{public}d", code);
+        auto proxy = iface_cast<DataCollectManagerIdl>(object);
+        if (proxy == nullptr || callback_ == nullptr) {
+            SGLOGE("proxy or callback is null");
+            continue;
         }
+        int32_t ret = proxy->CreatClient(eventGroup_, clientId_, callback_);
+        if (ret != SUCCESS) {
+            SGLOGE("ReCreatClient fail, clientId=%{public}s, ret=%{public}d", clientId_.c_str(), ret);
+            continue;
+        }
+        for (int64_t eventId : events) {
+            int32_t code = proxy->Subscribe(eventId, clientId_);
+            if (code != SUCCESS) {
+                SGLOGE("ReSubscribe fail, eventId=%{public}lld, ret=%{public}d",
+                    static_cast<long long>(eventId), code);
+            }
+        }
+        for (const auto &filter : filters) {
+            if (filter == nullptr) {
+                continue;
+            }
+            SecurityEventFilter innerFilter(*filter);
+            int32_t code = proxy->AddFilter(innerFilter, clientId_);
+            if (code != SUCCESS) {
+                SGLOGE("ReAddFilter fail, ret=%{public}d", code);
+            }
+        }
+        return;
     }
+    SGLOGE("recover EventSubscribeClient fail, clientId=%{public}s", clientId_.c_str());
 }
 
 int32_t EventSubscribeClient::Subscribe(int64_t eventId)
