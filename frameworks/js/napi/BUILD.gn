@@ -15,6 +15,7 @@ import("//base/security/security_guard/security_guard.gni")
 import("//build/ohos.gni")
 
 ohos_shared_library("securityguard_napi") {
+  version_script = "securityguard_napi.map"
   include_dirs = [
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/js/napi",
