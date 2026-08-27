@@ -17,6 +17,7 @@ import("//build/ohos.gni")
 ohos_shared_library("security_collector_manager") {
   subsystem_name = "security"
   part_name = "security_guard"
+  version_script = "security_collector_manager.map"
 
   include_dirs = [
     "${sg_root_dir}/services/collector_manager/include",
