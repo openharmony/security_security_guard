@@ -369,12 +369,12 @@ ErrCode DataCollectManagerService::Subscribe(const SecurityCollector::SecurityCo
     } else {
         ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(), std::vector<int64_t>{event.eventId});
     }
-    XCollie_Utils xcollie("SGIPC_Subscribe", XCOLLIE_FLAG);
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSgSubscribeEvent(event);
         return ret;
     }
+    XCollie_Utils xcollie("SGIPC_Subscribe", XCOLLIE_FLAG);
     ret = SetDeathCallBack(event, cb);
     if (ret != SUCCESS) {
         return ret;
@@ -402,12 +402,12 @@ ErrCode DataCollectManagerService::Unsubscribe(const SecurityCollector::Security
         ret = IsEventGroupHasPermission(subscribeInfo.GetEventGroup(),
             std::vector<int64_t>{subscribeInfo.GetEvent().eventId});
     }
-    XCollie_Utils xcollie("SGIPC_Unsubscribe", XCOLLIE_FLAG);
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSgUnsubscribeEvent(event);
         return ret;
     }
+    XCollie_Utils xcollie("SGIPC_Unsubscribe", XCOLLIE_FLAG);
     sptr<IRemoteObject::DeathRecipient> deathRecipient;
     {
         std::lock_guard<ffrt::mutex> lock(mutex_);
@@ -1011,12 +1011,12 @@ ErrCode DataCollectManagerService::AddFilter(const SecurityEventFilter &subscrib
     } else {
         ret = IsEventGroupHasPublicPermission(eventGroup, std::vector<int64_t>{filter.eventId});
     }
-    XCollie_Utils xcollie("SGIPC_AddFilter", XCOLLIE_FLAG);
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSetMuteEvent(event);
         return ret;
     }
+    XCollie_Utils xcollie("SGIPC_AddFilter", XCOLLIE_FLAG);
     ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeMute(filter, clientId);
     if (ret != SUCCESS) {
         SGLOGE("InsertSubscribeMute fail");
@@ -1044,12 +1044,12 @@ ErrCode DataCollectManagerService::RemoveFilter(const SecurityEventFilter &subsc
     } else {
         ret = IsEventGroupHasPublicPermission(eventGroup, std::vector<int64_t>{filter.eventId});
     }
-    XCollie_Utils xcollie("SGIPC_RemoveFilter", XCOLLIE_FLAG);
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSetUnMuteEvent(event);
         return ret;
     }
+    XCollie_Utils xcollie("SGIPC_RemoveFilter", XCOLLIE_FLAG);
     ret = AcquireDataSubscribeManager::GetInstance().RemoveSubscribeMute(filter, clientId);
     if (ret != SUCCESS) {
         SGLOGE("fail to RemoveSubscribeMute");
@@ -1097,12 +1097,12 @@ ErrCode DataCollectManagerService::Subscribe(int64_t eventId, const std::string 
     } else {
         ret = IsEventGroupHasPublicPermission(eventGroup, std::vector<int64_t>{eventId});
     }
-    XCollie_Utils xcollie("SGIPC_NewSubscribe", XCOLLIE_FLAG);
     if (ret != SUCCESS) {
         event.ret = ret;
         BigData::ReportSgSubscribeEvent(event);
         return ret;
     }
+    XCollie_Utils xcollie("SGIPC_NewSubscribe", XCOLLIE_FLAG);
     ret = AcquireDataSubscribeManager::GetInstance().InsertSubscribeRecord(eventId, clientId);
     if (ret != SUCCESS) {
         SGLOGE("InsertSubscribeRecord fail");
@@ -1161,11 +1161,11 @@ ErrCode DataCollectManagerService::DestoryClient(const std::string &eventGroup, 
     } else {
         ret = IsEventGroupHasPublicPermission(eventGroup, {});
     }
-    XCollie_Utils xcollie("SGIPC_DestoryClient", XCOLLIE_FLAG);
     if (ret != SUCCESS) {
         SGLOGE("check permission fail");
         return ret;
     }
+    XCollie_Utils xcollie("SGIPC_DestoryClient", XCOLLIE_FLAG);
     sptr<IRemoteObject> callback;
     sptr<IRemoteObject::DeathRecipient> deathRecipient;
     {
@@ -1213,11 +1213,11 @@ ErrCode DataCollectManagerService::CreatClient(const std::string &eventGroup, co
     } else {
         ret = IsEventGroupHasPublicPermission(eventGroup, {});
     }
-    XCollie_Utils xcollie("SGIPC_CreatClient", XCOLLIE_FLAG);
     if (ret != SUCCESS) {
         SGLOGE("check permission fail");
         return ret;
     }
+    XCollie_Utils xcollie("SGIPC_CreatClient", XCOLLIE_FLAG);
     if (cb == nullptr) {
         SGLOGE("cb is null");
         return NULL_OBJECT;
