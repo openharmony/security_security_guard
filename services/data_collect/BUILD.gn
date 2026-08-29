@@ -143,6 +143,7 @@ ohos_shared_library("sg_collect_service") {
 ohos_shared_library("sg_collect_service_database") {
   subsystem_name = "security"
   part_name = "security_guard"
+  version_script = "sg_collect_service_database.map"
 
   configs = [
     "${sg_root_dir}/services/risk_classify:security_guard_model_configs",
