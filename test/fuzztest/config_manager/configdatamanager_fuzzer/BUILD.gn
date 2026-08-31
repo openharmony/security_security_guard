@@ -21,6 +21,7 @@ ohos_fuzztest("ConfigDataManagerFuzzTest") {
       "${sg_root_dir}/test/fuzztest/config_manager/configdatamanager_fuzzer"
 
   include_dirs = [
+    "${sg_root_dir}/test/fuzztest/mock/ffrt",
     "${sg_root_dir}/services/config_manager/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/json/include",
@@ -79,6 +80,5 @@ ohos_fuzztest("ConfigDataManagerFuzzTest") {
     "ipc:ipc_core",
     "json:nlohmann_json_static",
     "sqlite:sqlite",
-    "ffrt:libffrt",
   ]
 }
