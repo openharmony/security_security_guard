@@ -56,7 +56,6 @@ ohos_fuzztest("RiskCollectFuzzTest") {
   external_deps = [
     "c_utils:utils",
     "bounds_checking_function:libsec_shared",
-    "ffrt:libffrt",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",

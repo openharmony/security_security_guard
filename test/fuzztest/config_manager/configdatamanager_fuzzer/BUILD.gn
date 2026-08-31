@@ -80,6 +80,5 @@ ohos_fuzztest("ConfigDataManagerFuzzTest") {
     "ipc:ipc_core",
     "json:nlohmann_json_static",
     "sqlite:sqlite",
-    "ffrt:libffrt",
   ]
 }

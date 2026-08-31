@@ -25,9 +25,7 @@
 #include "ffrt.h"
 
 namespace OHOS::Security::SecurityGuard {
-namespace {
-    constexpr uint32_t SENSITIVITY_INFO = 2;
-}
+
 DatabaseManager &DatabaseManager::GetInstance()
 {
     static DatabaseManager instance;
