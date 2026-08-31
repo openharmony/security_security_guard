@@ -31,6 +31,7 @@ ohos_fuzztest("SecurityCollectorClibFuzzTest") {
     "SECURITY_GUARD_EVENT_WRAPPER_PATH = \"/system/lib/libsg_event_wrapper_fuzz_disabled.so\"",
   ]
   include_dirs = [
+    "${sg_root_dir}/test/fuzztest/mock/ffrt",
     "${sg_root_dir}/interfaces/inner_api/common/include",
     "${sg_root_dir}/interfaces/inner_api/collector/include",
     "${sg_root_dir}/frameworks/common/collector/include",
@@ -76,7 +77,6 @@ ohos_fuzztest("SecurityCollectorClibFuzzTest") {
     "c_utils:utils",
     "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
-    "ffrt:libffrt",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",
