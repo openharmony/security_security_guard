@@ -74,7 +74,6 @@ ohos_fuzztest("SecurityCollectorManagerFuzzTest") {
     "c_utils:utils",
     "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
-    "ffrt:libffrt",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hisysevent:libhisyseventmanager",

@@ -55,7 +55,6 @@ namespace {
     constexpr int UPLOAD_EVENT_TASK_MAX_COUNT = 500;
 #endif
 
-    constexpr int UPLOAD_EVENT_DB_TASK_MAX_COUNT = 16;
     std::atomic<uint32_t> g_taskCount = 0;
     std::atomic<uint32_t> g_crucialTaskCount = 0;
     constexpr int32_t TOKEN_BUCKET_STEP_SIZE = 500;
