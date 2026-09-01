@@ -26,6 +26,9 @@ public:
     ~AcquireDataManagerCallbackService() override = default;
     void RegistCallBack(std::function<void(const SecurityCollector::Event &event)> callback);
     int32_t OnNotify(const std::vector<SecurityCollector::Event> &events) override;
+    // 清空已注册的回调，并等待所有在途的OnNotify执行完毕后返回。
+    // 返回后 stub不会再调用用户回调，此时销毁回调所捕获的状态时安全的。
+    void ClearCallback();
 private:
     std::function<void(const SecurityCollector::Event &event)> callback_;
 };

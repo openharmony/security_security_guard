@@ -36,6 +36,14 @@ void EventSubscribeClient::Deleter(EventSubscribeClient *client)
     if (client == nullptr) {
         return;
     }
+    // 在销毁服务端 client之前， 先排空在途OnNotify 并清空回调。
+    // 本函数在最后一个 shared_ptr释放时同步执行。 当调用方把 client_作为对象成员时，
+    // Deleter 在调用方析构函数内部执行，此时调用方内存仍然有效，
+    // 在途回调可安全访问器状态；ClearCallBack返回后不会再触发任何用户回调，
+    // 随后销毁调用方状态即不存在UAF。
+    if (client->callback_ != nullptr) {
+        client->callback_->ClearCallback();
+    }
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry != nullptr) {
         auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
@@ -314,5 +322,12 @@ int32_t EventSubscribeClient::RemoveFilter(const std::shared_ptr<EventMuteFilter
         }
     }
     return SUCCESS;
+}
+
+void EventSubscribeClient::ClearCallback()
+{
+    if (callback_ != nullptr) {
+        callback_->ClearCallback();
+    }
 }
 }
