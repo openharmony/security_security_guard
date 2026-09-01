@@ -36,11 +36,26 @@ void AcquireDataManagerCallbackService::RegistCallBack(
     callback_ = callback;
 }
 
+void AcquireDataManagerCallbackService::ClearCallback()
+{
+    // OnNotify 在“拷贝回调 + 执行用户回调”整段期间都持有 g_notifymutex，
+    // 因此这里取g_notifymutex 即可等待所有在途OnNotify跑完整段循环。
+    // 锁序为g_notifymutex->g_callbackmutex,与下发OnNotify一致，不会死锁。
+    std::lock_guard<ffrt::mutex> execLock(g_notifyMutex);
+    std::lock_guard<ffrt::mutex> slotLock(g_callbackMutex);
+    callback_ = nullptr;
+}
+
 int32_t AcquireDataManagerCallbackService::OnNotify(const std::vector<SecurityCollector::Event> &events)
 {
+    // 持续持有 g_notifyMutex 贯穿“拷贝回调 + 执行回调”整段。
+    // ClearCallback 取同一把锁，故其返回后不会有任何OnNotify 处于拷贝点之后或循环体内，
+    // 不存在ClearCallback在拷贝与执行之间插入并返回。
+    // 导致回调仍取访问已经释放状态的竞态窗口。
+    std::lock_guard<ffrt::mutex> execLock(g_notifyMutex);
     std::function<void(const SecurityCollector::Event &event)> callback;
     {
-        std::lock_guard<ffrt::mutex> lock(g_callbackMutex);
+        std::lock_guard<ffrt::mutex> slotLock(g_callbackMutex);
         callback = callback_;
     }
     if (callback == nullptr) {
