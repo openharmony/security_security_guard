@@ -17,6 +17,7 @@ import("//build/ohos.gni")
 ohos_shared_library("sg_config_data_manager") {
   subsystem_name = "security"
   part_name = "security_guard"
+  version_script = "sg_config_data_manager.map"
 
   defines = []
 

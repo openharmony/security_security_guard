@@ -67,6 +67,7 @@ ohos_fuzztest("SecurityCollectorManagerServiceFuzzTest") {
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_stub.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_run_manager.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_subscriber_manager.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_event_ruler.cpp",
     "security_collector_manager_service_fuzzer.cpp",
   ]
 

@@ -43,6 +43,8 @@ ohos_shared_library("security_collector_service") {
   ]
   sources = [
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_event_ruler.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/i_collector_fwk.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_service.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_manager_stub.cpp",
@@ -70,7 +72,6 @@ ohos_shared_library("security_collector_service") {
 
   deps = [
     "${sg_root_dir}/frameworks/common/collect:libsg_collect_sdk",
-    "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
     "${sg_root_dir}/services/collector_manager:security_collector_manager",
   ]
 

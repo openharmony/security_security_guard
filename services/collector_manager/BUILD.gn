@@ -17,6 +17,7 @@ import("//build/ohos.gni")
 ohos_shared_library("security_collector_manager") {
   subsystem_name = "security"
   part_name = "security_guard"
+  version_script = "security_collector_manager.map"
 
   include_dirs = [
     "${sg_root_dir}/services/collector_manager/include",
@@ -45,6 +46,7 @@ ohos_shared_library("security_collector_manager") {
     "${sg_root_dir}/services/collector_manager/src/collector_cfg_marshalling.cpp",
     "${sg_root_dir}/services/collector_manager/src/data_collection.cpp",
     "${sg_root_dir}/services/collector_manager/src/lib_loader.cpp",
+    "${sg_root_dir}/frameworks/common/collector/src/security_event_ruler.cpp",
   ]
 
   sanitize = {
@@ -66,7 +68,6 @@ ohos_shared_library("security_collector_manager") {
   ]
 
   deps = [
-    "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
   ]
 
   external_deps = [
