@@ -38,7 +38,7 @@ public:
     // 返回后框架不会再触发用户回调，此时销毁回调所捕获的状态时安全的。
     // 把 client_作为对象成员的调用方无需显示调用本接口；
     // 最后一个shared_ptr 释放时Deleter会自动执行该被操作。
-    void ClearCallback();
+    void ClearCallBack();
 private:
     EventSubscribeClient() = default;
     ~EventSubscribeClient() = default;
