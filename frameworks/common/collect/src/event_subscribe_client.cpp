@@ -36,13 +36,15 @@ void EventSubscribeClient::Deleter(EventSubscribeClient *client)
     if (client == nullptr) {
         return;
     }
-    // 在销毁服务端 client之前， 先排空在途OnNotify 并清空回调。
-    // 本函数在最后一个 shared_ptr释放时同步执行。 当调用方把 client_作为对象成员时，
+    // 在销毁服务端 client 之前，先排空在途 OnNotify 并清空回调。
+    // 本函数在最后一个 shared_ptr 释放时同步执行。当调用方把 client_ 作为对象成员时，
     // Deleter 在调用方析构函数内部执行，此时调用方内存仍然有效，
-    // 在途回调可安全访问器状态；ClearCallBack返回后不会再触发任何用户回调，
-    // 随后销毁调用方状态即不存在UAF。
+    // 在途回调可安全访问其状态；ClearCallBack 返回后不会再触发任何用户回调，
+    // 随后销毁调用方状态即不存在 UAF。
+    // 注意：若用户回调内部释放了最后一个 shared_ptr，会在此处等待自身持有的
+    // notifyMutex_ 而死锁，调用方必须避免在回调内销毁 client。
     if (client->callback_ != nullptr) {
-        client->callback_->ClearCallback();
+        client->callback_->ClearCallBack();
     }
     auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (registry != nullptr) {
@@ -324,10 +326,12 @@ int32_t EventSubscribeClient::RemoveFilter(const std::shared_ptr<EventMuteFilter
     return SUCCESS;
 }
 
-void EventSubscribeClient::ClearCallback()
+void EventSubscribeClient::ClearCallBack()
 {
+    // 注意：禁止在用户回调内部（OnNotify 触发的执行流）调用本接口，
+    // 否则会因等待自身持有的 notifyMutex_ 而死锁。
     if (callback_ != nullptr) {
-        callback_->ClearCallback();
+        callback_->ClearCallBack();
     }
 }
 }
