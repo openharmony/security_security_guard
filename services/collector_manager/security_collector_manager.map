@@ -18,9 +18,6 @@
     extern "C++" {
       OHOS::Security::SecurityCollector::DataCollection::*;
       OHOS::Security::SecurityCollector::LibLoader::*;
-      OHOS::Security::SecurityCollector::SecurityEventRuler::*;
-      VTT?for?OHOS::Security::SecurityCollector::SecurityEventRuler;
-      vtable?for?OHOS::Security::SecurityCollector::SecurityEventRuler;
     };
   local:
     *;
