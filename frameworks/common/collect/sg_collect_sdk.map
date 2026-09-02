@@ -27,6 +27,7 @@
         OHOS::Security::SecurityGuard::DataCollectManager::StopCollector*;
         VTT?for?OHOS::Security::SecurityCollector::SecurityEventRuler*;
         vtable?for?OHOS::Security::SecurityCollector::SecurityEventRuler*;
+        OHOS::Security::SecurityCollector::SecurityEventRuler::Unmarshalling*;
         OHOS::Security::SecurityGuard::DataCollectManager::QuerySecurityEvent*;
         OHOS::Security::SecurityGuard::EventInfo::EventInfo*;
         OHOS::Security::SecurityGuard::DataCollectManager::ReportSecurityEvent*;
