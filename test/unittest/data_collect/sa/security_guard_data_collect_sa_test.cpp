@@ -399,7 +399,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_BadParam, TestSize.Le
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     service.tokenBucket_.fetch_add(1);
@@ -416,7 +416,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success01, TestSize.L
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -434,7 +434,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestDataSubmit_Success02, TestSize.L
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(true));
     EXPECT_CALL(*(DataFormat::GetInterface()), CheckRiskContent).WillOnce(Return(true));
@@ -465,7 +465,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestRiskData02, TestSize.Level0)
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -482,7 +482,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RequestRiskData03, TestSize.Level0)
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(false));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -521,7 +521,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Subscribe02, TestSize.Level0)
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(false));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -536,7 +536,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, Unsubscribe02, TestSize.Level0)
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(false));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -829,7 +829,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent01, TestSize.Level0)
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(Return(false));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -845,7 +845,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent02, TestSize.Level0)
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(false));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -862,7 +862,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent03, TestSize.Level0)
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -879,7 +879,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent04, TestSize.Level0)
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(Return(true));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -915,7 +915,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QuerySecurityEvent07, TestSize.Level0)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED))
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_DENIED))
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillOnce(Return(true))
@@ -948,7 +948,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart02, TestSize.Level0)
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(false));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -963,7 +963,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart03, TestSize.Level0)
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(true));
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly([](int64_t eventId, EventCfg &config) {
@@ -984,7 +984,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStart04, TestSize.Level0)
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(true));
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly([](int64_t eventId, EventCfg &config) {
@@ -1019,7 +1019,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop02, TestSize.Level0)
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(false));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -1034,7 +1034,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop03, TestSize.Level0)
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(true));
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly([](int64_t eventId, EventCfg &config) {
@@ -1055,7 +1055,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, CollectorStop04, TestSize.Level0)
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(true));
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventConfig).WillRepeatedly([](int64_t eventId, EventCfg &config) {
@@ -1091,7 +1091,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate02, TestSize.Level0)
 {
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(false));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -1103,7 +1103,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate03, TestSize.Level0)
 {
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -1117,7 +1117,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, ConfigUpdate04, TestSize.Level0)
 
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(true));
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
@@ -1174,7 +1174,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, QueryEventConfig002, TestSize.Level0)
     std::string queryInfo;
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillOnce(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillOnce(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID).WillOnce(Return(true));
     std::vector<EventCfg> emptyVector{};
@@ -1833,7 +1833,7 @@ HWTEST_F(SecurityGuardDataCollectSaTest, UploadEventToSub_Test, TestSize.Level0)
     EXPECT_CALL(ConfigDataManager::GetInstance(), GetEventGroupConfig).WillRepeatedly(Return(true));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::TokenIdKit::GetInterface()), IsSystemAppByFullTokenID)
         .WillRepeatedly(Return(true));

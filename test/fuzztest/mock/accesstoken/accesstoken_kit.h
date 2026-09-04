@@ -83,7 +83,7 @@ public:
         return PERMISSION_GRANTED;
     }
 
-    static ATokenTypeEnum GetTokenType(AccessTokenID tokenID)
+    static ATokenTypeEnum GetTokenTypeFlag(AccessTokenID tokenID)
     {
         return TOKEN_HAP;
     }
