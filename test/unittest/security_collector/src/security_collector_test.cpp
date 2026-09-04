@@ -85,7 +85,7 @@ public:
 
 HWTEST_F(SecurityCollectorTest, GetAppName01, TestSize.Level1)
 {
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag).WillOnce(
         Return(AccessToken::ATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetHapTokenInfo).WillOnce(
         Return(SecurityCollector::ErrorCode::FAILED));
@@ -94,7 +94,7 @@ HWTEST_F(SecurityCollectorTest, GetAppName01, TestSize.Level1)
 
 HWTEST_F(SecurityCollectorTest, GetAppName02, TestSize.Level1)
 {
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag).WillOnce(
         Return(AccessToken::ATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetHapTokenInfo).WillRepeatedly(
         [] (AccessToken::AccessTokenID tokenID, AccessToken::HapTokenInfo& hapTokenInfoRes) {
@@ -106,7 +106,7 @@ HWTEST_F(SecurityCollectorTest, GetAppName02, TestSize.Level1)
 
 HWTEST_F(SecurityCollectorTest, GetAppName03, TestSize.Level1)
 {
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag).WillOnce(
         Return(AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetNativeTokenInfo).WillOnce(
         Return(SecurityCollector::ErrorCode::FAILED));
@@ -115,7 +115,7 @@ HWTEST_F(SecurityCollectorTest, GetAppName03, TestSize.Level1)
 
 HWTEST_F(SecurityCollectorTest, GetAppName04, TestSize.Level1)
 {
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag).WillOnce(
         Return(AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetNativeTokenInfo).WillOnce(
         [] (AccessToken::AccessTokenID tokenID, AccessToken::NativeTokenInfo& nativeTokenInfoRes) {
@@ -127,7 +127,7 @@ HWTEST_F(SecurityCollectorTest, GetAppName04, TestSize.Level1)
 
 HWTEST_F(SecurityCollectorTest, GetAppName05, TestSize.Level1)
 {
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType).WillRepeatedly(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag).WillRepeatedly(
         Return(AccessToken::ATokenTypeEnum::TOKEN_INVALID));
     EXPECT_EQ(SecurityCollectorManagerService::GetAppName(), "");
 }
@@ -220,7 +220,7 @@ HWTEST_F(SecurityCollectorTest, CollectorStart04, TestSize.Level1)
         collectorType = 1;
         return SecurityCollector::ErrorCode::SUCCESS;
     });
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag).WillOnce(
         Return(AccessToken::ATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetHapTokenInfo).WillOnce(
         Return(SecurityCollector::ErrorCode::FAILED));
@@ -238,7 +238,7 @@ HWTEST_F(SecurityCollectorTest, CollectorStart05, TestSize.Level1)
         collectorType = 1;
         return SecurityCollector::ErrorCode::SUCCESS;
     });
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag).WillOnce(
         Return(AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetNativeTokenInfo).WillOnce(
         [] (AccessToken::AccessTokenID tokenID, AccessToken::NativeTokenInfo& nativeTokenInfoRes) {
@@ -260,7 +260,7 @@ HWTEST_F(SecurityCollectorTest, CollectorStart06, TestSize.Level1)
         collectorType = 1;
         return SecurityCollector::ErrorCode::SUCCESS;
     });
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag).WillOnce(
         Return(AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetNativeTokenInfo).WillOnce(
         [] (AccessToken::AccessTokenID tokenID, AccessToken::NativeTokenInfo& nativeTokenInfoRes) {
@@ -288,7 +288,7 @@ HWTEST_F(SecurityCollectorTest, CollectorStop02, TestSize.Level1)
     EXPECT_TRUE(obj != nullptr);
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag).WillOnce(
         Return(AccessToken::ATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetHapTokenInfo).WillOnce(
         Return(SecurityCollector::ErrorCode::FAILED));
@@ -302,7 +302,7 @@ HWTEST_F(SecurityCollectorTest, CollectorStop03, TestSize.Level1)
     EXPECT_TRUE(obj != nullptr);
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag).WillOnce(
         Return(AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetNativeTokenInfo).WillOnce(
         [] (AccessToken::AccessTokenID tokenID, AccessToken::NativeTokenInfo& nativeTokenInfoRes) {
@@ -320,7 +320,7 @@ HWTEST_F(SecurityCollectorTest, CollectorStop04, TestSize.Level1)
     EXPECT_TRUE(obj != nullptr);
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType).WillOnce(
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag).WillOnce(
         Return(AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetNativeTokenInfo).WillOnce(
         [] (AccessToken::AccessTokenID tokenID, AccessToken::NativeTokenInfo& nativeTokenInfoRes) {
