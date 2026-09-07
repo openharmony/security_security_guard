@@ -51,6 +51,7 @@ ohos_unittest("data_collect_test") {
 
   sources = [
     "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
+    "${sg_root_dir}/frameworks/common/collect/src/auth_event.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_event_ruler.cpp",
     "${sg_root_dir}/frameworks/common/json/src/json_cfg.cpp",
@@ -263,6 +264,7 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
   ]
   sources = [
     "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
+    "${sg_root_dir}/frameworks/common/collect/src/auth_event.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/i_collector_fwk.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/i_collector_subscriber.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
@@ -280,9 +282,22 @@ ohos_unittest("SecurityGuardDataCollectSaTest") {
     "${sg_root_dir}/services/risk_classify/model_manager/src/db_operate.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager.cpp",
     "${sg_root_dir}/services/risk_classify/model_manager/src/model_manager_impl.cpp",
+    "sa/auth_event_parcelable_test.cpp",
     "sa/security_guard_data_collect_sa_test.cpp",
     "sa/security_guard_data_collect_sa_new_test.cpp",
   ]
+
+  # AuthEvent 框架：仅特定设备开启（parcelable 测试与 auth_event.cpp 无条件，
+  # 其序列化符号被 IDL 生成 stub/proxy 引用）
+  if (security_guard_auth_event_enable) {
+    defines += [ "SECURITY_GUARD_AUTH_EVENT_ENABLE" ]
+    sources += [
+      "${sg_root_dir}/services/data_collect/sa/auth_event_callback_proxy.cpp",
+      "${sg_root_dir}/services/data_collect/sa/auth_event_subscribe_manager.cpp",
+      "${sg_root_dir}/services/data_collect/sa/auth_event_reporter.cpp",
+      "sa/auth_event_subscribe_manager_test.cpp",
+    ]
+  }
 
   deps = [
     "${sg_root_dir}/services/bigdata:sg_bigdata_stamp",

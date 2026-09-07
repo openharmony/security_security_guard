@@ -67,6 +67,7 @@ ohos_fuzztest("RiskAnalysisManagerFuzzTest") {
     "${sg_root_dir}/frameworks/common/collect/src/data_collect_manager.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/sg_collect_client.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/sg_obtaindata_client.cpp",
+    "${sg_root_dir}/frameworks/common/collect/src/auth_event.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/acquire_data_manager_callback_service.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/acquire_data_manager_callback_stub.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/data_collect_manager_callback_service.cpp",
