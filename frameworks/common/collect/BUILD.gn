@@ -58,6 +58,7 @@ ohos_shared_library("libsg_collect_sdk") {
     "${sg_root_dir}/frameworks/common/utils/src/security_guard_utils.cpp",
     "src/acquire_data_manager_callback_service.cpp",
     "src/acquire_data_manager_callback_stub.cpp",
+    "src/auth_event.cpp",
     "src/data_collect_manager.cpp",
     "src/data_collect_manager_callback_service.cpp",
     "src/data_collect_manager_callback_stub.cpp",
@@ -71,6 +72,14 @@ ohos_shared_library("libsg_collect_sdk") {
   ]
 
   deps = [ "${sg_root_dir}/services/data_collect/idl:data_collect_manager_idl_sa_proxy" ]
+
+  if (security_guard_auth_event_enable) {
+    sources += [
+      "src/auth_event_callback_service.cpp",
+      "src/auth_event_callback_stub.cpp",
+      "src/auth_event_subscribe_client.cpp",
+    ]
+  }
 
   sanitize = {
     integer_overflow = true

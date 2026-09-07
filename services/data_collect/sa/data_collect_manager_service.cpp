@@ -33,6 +33,9 @@
 #include "nlohmann/json.hpp"
 #include "acquire_data_subscribe_manager.h"
 #include "bigdata.h"
+#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
+#include "auth_event_subscribe_manager.h"
+#endif
 #include "collector_manager.h"
 #include "config_data_manager.h"
 #include "data_collect_manager_callback_proxy.h"
@@ -795,6 +798,27 @@ int32_t DataCollectManagerService::IsCallerHasApiPermission(const std::string &a
     return SUCCESS;
 }
 
+#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
+int32_t DataCollectManagerService::IsCallerAllowedSubscribeAuthEvent()
+{
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        int32_t callingUid = static_cast<int32_t>(IPCSkeleton::GetCallingUid());
+        if (!AuthEventSubscribeManager::GetInstance().IsUidAllowed(callingUid)) {
+            SGLOGE("native caller uid not allowed");
+            return NO_PERMISSION;
+        }
+        return SUCCESS;
+    }
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_HAP) {
+        return IsCallerHasPublicPermissions(callerToken, {AUTH_AUDIT_EVENT_PERMISSION});
+    }
+    SGLOGE("token type not allowed");
+    return NO_PERMISSION;
+}
+#endif
+
 int32_t DataCollectManagerService::IsEventGroupHasPublicPermission(const std::string &eventGroup,
     const std::vector<int64_t> &eventIds)
 {
@@ -1296,4 +1320,130 @@ ErrCode DataCollectManagerService::QueryAllClientsInfo(std::string &resStr)
     resStr = resultObj.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
     return SUCCESS;
 }
+
+#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
+ErrCode DataCollectManagerService::CreatAuthEventClient(const std::string &clientId, bool timeoutAllowFlag,
+    const sptr<IRemoteObject> &cb)
+{
+    SGLOGI("enter");
+    int32_t code = IsCallerAllowedSubscribeAuthEvent();
+    if (code != SUCCESS) {
+        return code;
+    }
+    if (cb == nullptr) {
+        SGLOGE("cb is null");
+        return NULL_OBJECT;
+    }
+    XCollie_Utils xcollie("SGIPC_CreatAuthEventClient", XCOLLIE_FLAG);
+    pid_t callerPid = IPCSkeleton::GetCallingPid();
+    int32_t callerUid = static_cast<int32_t>(IPCSkeleton::GetCallingUid());
+    return AuthEventSubscribeManager::GetInstance().CreatAuthEventClient(clientId, timeoutAllowFlag, callerPid,
+        callerUid, cb);
+}
+
+ErrCode DataCollectManagerService::DestoryAuthEventClient(const std::string &clientId)
+{
+    SGLOGI("clientId=%{private}s", clientId.c_str());
+    int32_t code = IsCallerAllowedSubscribeAuthEvent();
+    if (code != SUCCESS) {
+        return code;
+    }
+    XCollie_Utils xcollie("SGIPC_DestoryAuthEventClient", XCOLLIE_FLAG);
+    return AuthEventSubscribeManager::GetInstance().DestoryAuthEventClient(clientId, IPCSkeleton::GetCallingPid());
+}
+
+ErrCode DataCollectManagerService::SubscribeAuthEvent(int64_t eventId, const std::string &clientId)
+{
+    SGLOGI("eventId=%{public}" PRId64 ", clientId=%{private}s", eventId, clientId.c_str());
+    int32_t code = IsCallerAllowedSubscribeAuthEvent();
+    if (code != SUCCESS) {
+        return code;
+    }
+    if (clientId.empty()) {
+        SGLOGE("clientId is empty");
+        return BAD_PARAM;
+    }
+    XCollie_Utils xcollie("SGIPC_SubscribeAuthEvent", XCOLLIE_FLAG);
+    EventCfg config;
+    if (!ConfigDataManager::GetInstance().GetEventConfig(eventId, config)) {
+        SGLOGE("GetEventConfig error, eventId is 0x%{public}" PRIx64, eventId);
+        return BAD_PARAM;
+    }
+    return AuthEventSubscribeManager::GetInstance().SubscribeAuthEvent(eventId, clientId,
+        IPCSkeleton::GetCallingPid());
+}
+
+ErrCode DataCollectManagerService::UnsubscribeAuthEvent(int64_t eventId, const std::string &clientId)
+{
+    SGLOGI("eventId=%{public}" PRId64 ", clientId=%{private}s", eventId, clientId.c_str());
+    int32_t code = IsCallerAllowedSubscribeAuthEvent();
+    if (code != SUCCESS) {
+        return code;
+    }
+    if (clientId.empty()) {
+        SGLOGE("clientId is empty");
+        return BAD_PARAM;
+    }
+    XCollie_Utils xcollie("SGIPC_UnsubscribeAuthEvent", XCOLLIE_FLAG);
+    return AuthEventSubscribeManager::GetInstance().UnsubscribeAuthEvent(eventId, clientId,
+        IPCSkeleton::GetCallingPid());
+}
+
+ErrCode DataCollectManagerService::SetAuthResult(const AuthEvent &event, bool allowFlag,
+    const std::string &clientId)
+{
+    SGLOGI("eventId=%{public}" PRId64 ", allowFlag=%{public}d", event.GetEventId(), static_cast<int32_t>(allowFlag));
+    int32_t code = IsCallerAllowedSubscribeAuthEvent();
+    if (code != SUCCESS) {
+        return code;
+    }
+    if (clientId.empty()) {
+        SGLOGE("clientId is empty");
+        return BAD_PARAM;
+    }
+    XCollie_Utils xcollie("SGIPC_SetAuthResult", XCOLLIE_FLAG);
+    pid_t callerPid = IPCSkeleton::GetCallingPid();
+    int32_t callerUid = static_cast<int32_t>(IPCSkeleton::GetCallingUid());
+    return AuthEventSubscribeManager::GetInstance().SetAuthResult(callerPid, callerUid, clientId, event, allowFlag);
+}
+#else
+// AuthEvent 框架未启用：IDL 生成的纯虚方法仍需实现以保持可编译，一律拒绝
+ErrCode DataCollectManagerService::CreatAuthEventClient(const std::string &clientId, bool timeoutAllowFlag,
+    const sptr<IRemoteObject> &cb)
+{
+    (void)clientId;
+    (void)timeoutAllowFlag;
+    (void)cb;
+    return FAILED;
+}
+
+ErrCode DataCollectManagerService::DestoryAuthEventClient(const std::string &clientId)
+{
+    (void)clientId;
+    return FAILED;
+}
+
+ErrCode DataCollectManagerService::SubscribeAuthEvent(int64_t eventId, const std::string &clientId)
+{
+    (void)eventId;
+    (void)clientId;
+    return FAILED;
+}
+
+ErrCode DataCollectManagerService::UnsubscribeAuthEvent(int64_t eventId, const std::string &clientId)
+{
+    (void)eventId;
+    (void)clientId;
+    return FAILED;
+}
+
+ErrCode DataCollectManagerService::SetAuthResult(const AuthEvent &event, bool allowFlag,
+    const std::string &clientId)
+{
+    (void)event;
+    (void)allowFlag;
+    (void)clientId;
+    return FAILED;
+}
+#endif
 }

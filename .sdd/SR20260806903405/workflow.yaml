@@ -1,0 +1,508 @@
+sr: SR20260806903405
+workflow_id: 8a315824-58b2-4155-b9a3-ed07a2a83180
+entry: dev
+status: done
+created_at: '2026-09-03T09:08:12.526544+00:00'
+vars:
+  SR: SR20260806903405
+  详设路径版本: v2
+steps:
+- id: 1
+  type: dev-init
+  name: dev-init
+  finished: true
+  execution_status: completed
+  attempt: 1
+  started_at: '2026-09-03T09:08:18.656212Z'
+  ended_at: '2026-09-03T09:21:34.466169Z'
+  execution: prompt
+  session: inherit
+  skill: []
+  prompt:
+    steps:
+    - confirm: 向用户确认本次要开发的需求，并简述准备采用的轻量流程（设计 → 门禁 → 任务拆分 → 开发）。
+    - collect: 如用户已提供需求原文、issue 链接摘要或长描述，写入 .sdd/SR20260806903405/requirement.md，作为
+        dev-design 的输入上下文；用户只给了一句话需求时可跳过。
+    - context: 快速判断本仓库是否已有 .sdd/software_architecture.md。存在则直接复用，不要重新生成；不存在也不要在本节点补写完整架构文档，dev
+        入口不强制要求它。
+    rendered: 'confirm: 向用户确认本次要开发的需求，并简述准备采用的轻量流程（设计 → 门禁 → 任务拆分 → 开发）。
+
+      collect: 如用户已提供需求原文、issue 链接摘要或长描述，写入 .sdd/SR20260806903405/requirement.md，作为
+      dev-design 的输入上下文；用户只给了一句话需求时可跳过。
+
+      context: 快速判断本仓库是否已有 .sdd/software_architecture.md。存在则直接复用，不要重新生成；不存在也不要在本节点补写完整架构文档，dev
+      入口不强制要求它。'
+  data_prompt:
+    description: dev 入口的轻量初始化：确认需求、可选落盘需求原文。.sdd/SR20260806903405/ 目录由 aaw start 创建，本步骤无需重复创建。不产出强制交付件，确认完成即可
+      done。
+  input: []
+  output:
+  - path: .sdd/SR20260806903405/requirement.md
+    required: false
+  available_next:
+  - dev-design
+  data_schema: null
+  vars:
+    SR: SR20260806903405
+    详设路径版本: v2
+  depends_on: []
+  next:
+  - 2
+  result_data: null
+- id: 2
+  type: dev-design
+  name: dev-design
+  finished: true
+  execution_status: completed
+  attempt: 1
+  started_at: '2026-09-03T09:21:39.929863Z'
+  ended_at: '2026-09-03T10:07:51.797193Z'
+  execution: skill
+  session: inherit
+  skill:
+  - dev-design
+  prompt: null
+  data_prompt:
+    description: 个人开发者轻量设计：一份 dev-design.md 覆盖需求、现状摘要、方案、契约变更、影响面和验收标准。必经 ASIS 代码取证，先读需求与架构、再取证代码、把现状摘要写在需求与方案之间、全量取证细节写进文末现状附录，最后基于取证结果向用户提问。不区分档位，篇幅由需求复杂度自然决定。无需提交额外数据，交付件写好即可
+      done。
+  input:
+  - path: .sdd/SR20260806903405/requirement.md
+    required: false
+  - path: .sdd/software_architecture.md
+    required: false
+  output:
+  - path: .sdd/SR20260806903405/dev-design.md
+    required: true
+  available_next:
+  - dev-design-gate
+  data_schema: null
+  vars:
+    SR: SR20260806903405
+    详设路径版本: v2
+  depends_on: []
+  next:
+  - 3
+  result_data: null
+- id: 3
+  type: dev-design-gate
+  name: dev-design-gate
+  finished: true
+  execution_status: completed
+  attempt: 1
+  started_at: '2026-09-03T10:07:58.034623Z'
+  ended_at: '2026-09-03T10:09:04.051103Z'
+  execution: skill
+  session: inherit
+  skill:
+  - dev-design-gate
+  prompt: null
+  data_prompt:
+    description: 读取门禁结果后构造 gate_result 数据。按 7 项准入逐一判定，其中「现状证据充分性」优先（确认现状附录存在、摘要与附录一致、取证覆盖需求相关代码位置）。只有结论为通过时提交
+      gate_result=pass 并执行 done；不通过或阻塞时不要推进，可提交 fail/blocked 获得 CLI 拒绝提示，然后原地修正 dev-design.md
+      重新执行本节点。
+  input:
+  - path: .sdd/SR20260806903405/dev-design.md
+    required: true
+  - path: .sdd/SR20260806903405/requirement.md
+    required: false
+  output:
+  - path: .sdd/SR20260806903405/.context/dev-design-gate.md
+    required: true
+  available_next:
+  - dev-task-split
+  data_schema:
+    description: 提交轻量设计门禁结论；只有 gate_result=pass 会进入 dev-task-split。
+    fields:
+      gate_result:
+        description: 通过填 pass；不通过填 fail；阻塞填 blocked。
+        example: pass
+      recommendation:
+        description: 门禁建议。
+        example: 可进入任务拆分
+      report:
+        description: 门禁结果文件路径；每轮检查都必须生成或更新报告，不得填 null。
+        example: .sdd/SR-001/.context/dev-design-gate.md
+      summary:
+        description: 门禁紧凑统计；必须与本轮报告和最终结论一致。
+        example:
+          unqualified_items: 0
+          blocking_issues: 0
+          pending_questions: 0
+  vars:
+    SR: SR20260806903405
+    详设路径版本: v2
+  depends_on: []
+  next:
+  - 4
+  result_data: null
+- id: 4
+  type: dev-task-split
+  name: dev-task-split
+  finished: true
+  execution_status: completed
+  attempt: 1
+  started_at: '2026-09-03T10:09:06.915611Z'
+  ended_at: '2026-09-03T10:10:44.935154Z'
+  execution: skill
+  session: inherit
+  skill:
+  - task-split
+  prompt:
+    inline: '本实例为 task-split 的【轻量模式】：本次工作流采用 dev 入口，唯一权威设计输入是
+
+      .sdd/SR20260806903405/dev-design.md，不存在《模块详细设计说明书》《模块测试用例设计》和
+
+      《模块设计门禁结果》三件套，也不需要它们。不要因为缺少这三份文档而中止，
+
+      也不要引导用户去执行 module-tobe-design / module-test-design / module-design-gate。
+
+
+      load_skill task-split，按其轻量模式分支执行：以 dev-design.md 的方案、契约变更、
+
+      影响面和验收标准为唯一事实来源，生成薄任务计划 .sdd/SR20260806903405/tasks-overview.md。
+
+      验收标准同时承担测试规格的角色。
+
+
+      tasks-overview.md 必须保留标准格式契约：每个任务一个 `### T{N}` 小节，
+
+      并预留由 task-dev 回填的 `- 状态：` 字段。不要生成 T1/T2 独立任务文件。
+
+
+      完成后从任务计划表按串行顺序提取任务标题，构造 {"tasks":[...]} 传给 aaw done。
+
+      提交前必须校验：tasks-overview.md 存在、任务列表非空、覆盖核对完整、
+
+      Open Questions 为空；tasks 列表只包含标题，不含 T1/T2 前缀或 .md 后缀。
+
+      '
+    rendered: '本实例为 task-split 的【轻量模式】：本次工作流采用 dev 入口，唯一权威设计输入是
+
+      .sdd/SR20260806903405/dev-design.md，不存在《模块详细设计说明书》《模块测试用例设计》和
+
+      《模块设计门禁结果》三件套，也不需要它们。不要因为缺少这三份文档而中止，
+
+      也不要引导用户去执行 module-tobe-design / module-test-design / module-design-gate。
+
+
+      load_skill task-split，按其轻量模式分支执行：以 dev-design.md 的方案、契约变更、
+
+      影响面和验收标准为唯一事实来源，生成薄任务计划 .sdd/SR20260806903405/tasks-overview.md。
+
+      验收标准同时承担测试规格的角色。
+
+
+      tasks-overview.md 必须保留标准格式契约：每个任务一个 `### T{N}` 小节，
+
+      并预留由 task-dev 回填的 `- 状态：` 字段。不要生成 T1/T2 独立任务文件。
+
+
+      完成后从任务计划表按串行顺序提取任务标题，构造 {"tasks":[...]} 传给 aaw done。
+
+      提交前必须校验：tasks-overview.md 存在、任务列表非空、覆盖核对完整、
+
+      Open Questions 为空；tasks 列表只包含标题，不含 T1/T2 前缀或 .md 后缀。
+
+      '
+  data_prompt:
+    description: 从 tasks-overview.md 的任务计划表按串行顺序提取任务标题；列表项不要包含 T1/T2 前缀。
+  input:
+  - path: .sdd/SR20260806903405/dev-design.md
+    required: true
+  - path: .sdd/SR20260806903405/.context/dev-design-gate.md
+    required: false
+  output:
+  - path: .sdd/SR20260806903405/tasks-overview.md
+    required: true
+  available_next:
+  - dev-task-dev
+  data_schema:
+    description: 从 dev-task-split 生成的 tasks-overview.md 任务计划表中提取任务列表
+    fields:
+      tasks:
+        description: 任务标题列表，每个任务对应一个独立开发单元；不要包含 T1-/T2- 前缀或 .md 后缀。
+        example:
+        - 用户CRUD
+        - 权限校验
+  vars:
+    SR: SR20260806903405
+    详设路径版本: v2
+  depends_on: []
+  next: &id002
+  - 5
+  - 6
+  - 7
+  result_data: null
+- id: 5
+  type: dev-task-dev
+  name: T1-dev-task-dev
+  finished: true
+  execution_status: completed
+  attempt: 1
+  started_at: '2026-09-03T10:15:29.322480Z'
+  ended_at: '2026-09-03T12:34:13.350986Z'
+  execution: skill
+  session: inherit
+  skill:
+  - task-dev
+  prompt:
+    inline: '本实例为 task-dev 的【轻量模式】：本次工作流采用 dev 入口，权威设计输入是
+
+      .sdd/SR20260806903405/dev-design.md，不存在《模块详细设计说明书》《模块测试用例设计》和
+
+      《模块设计门禁结果》三件套。不要因为缺少这三份文档而中止或回流上游。
+
+
+      load_skill task-dev，按其轻量模式分支执行：
+
+      - 实现设计的事实来源是 dev-design.md 的方案与契约变更章节；
+
+      - 验证规格的事实来源是 dev-design.md 的验收标准章节；
+
+      - tasks-overview.md 仍然管理任务范围、顺序和最终交接。
+
+
+      其余流程、质量边界和状态指引协议保持不变：仍按 实现与测试 → 只读语义 Review
+
+      → 优化修复与测试重验 → CodeCheck subAgent → 回填 tasks-overview 与候选提交信息
+
+      的固定顺序推进，仍以 CLI 的 task_dev.guidance 为进度事实来源，
+
+      仍不得执行 git add / git commit，也不得自行开始下一个 Task。
+
+      '
+    rendered: '本实例为 task-dev 的【轻量模式】：本次工作流采用 dev 入口，权威设计输入是
+
+      .sdd/SR20260806903405/dev-design.md，不存在《模块详细设计说明书》《模块测试用例设计》和
+
+      《模块设计门禁结果》三件套。不要因为缺少这三份文档而中止或回流上游。
+
+
+      load_skill task-dev，按其轻量模式分支执行：
+
+      - 实现设计的事实来源是 dev-design.md 的方案与契约变更章节；
+
+      - 验证规格的事实来源是 dev-design.md 的验收标准章节；
+
+      - tasks-overview.md 仍然管理任务范围、顺序和最终交接。
+
+
+      其余流程、质量边界和状态指引协议保持不变：仍按 实现与测试 → 只读语义 Review
+
+      → 优化修复与测试重验 → CodeCheck subAgent → 回填 tasks-overview 与候选提交信息
+
+      的固定顺序推进，仍以 CLI 的 task_dev.guidance 为进度事实来源，
+
+      仍不得执行 git add / git commit，也不得自行开始下一个 Task。
+
+      '
+  data_prompt: null
+  input:
+  - path: .sdd/SR20260806903405/tasks-overview.md
+    required: true
+  - path: .sdd/SR20260806903405/dev-design.md
+    required: true
+  - path: .sdd/SR20260806903405/.context/dev-design-gate.md
+    required: false
+  - path: .sdd/software_architecture.md
+    required: false
+  - path: .sdd/spec.md
+    required: false
+  - path: .sdd/AICodingGuidelines.md
+    required: false
+  output: []
+  available_next: &id001 []
+  data_schema: null
+  vars:
+    SR: SR20260806903405
+    详设路径版本: v2
+    序号: '1'
+    任务标题: 数据结构与IPC契约扩展
+  depends_on: []
+  next: []
+  result_data: null
+- id: 6
+  type: dev-task-dev
+  name: T2-dev-task-dev
+  finished: true
+  execution_status: completed
+  attempt: 1
+  started_at: '2026-09-03T12:38:39.402931Z'
+  ended_at: '2026-09-04T01:39:26.659566Z'
+  execution: skill
+  session: inherit
+  skill:
+  - task-dev
+  prompt:
+    inline: '本实例为 task-dev 的【轻量模式】：本次工作流采用 dev 入口，权威设计输入是
+
+      .sdd/SR20260806903405/dev-design.md，不存在《模块详细设计说明书》《模块测试用例设计》和
+
+      《模块设计门禁结果》三件套。不要因为缺少这三份文档而中止或回流上游。
+
+
+      load_skill task-dev，按其轻量模式分支执行：
+
+      - 实现设计的事实来源是 dev-design.md 的方案与契约变更章节；
+
+      - 验证规格的事实来源是 dev-design.md 的验收标准章节；
+
+      - tasks-overview.md 仍然管理任务范围、顺序和最终交接。
+
+
+      其余流程、质量边界和状态指引协议保持不变：仍按 实现与测试 → 只读语义 Review
+
+      → 优化修复与测试重验 → CodeCheck subAgent → 回填 tasks-overview 与候选提交信息
+
+      的固定顺序推进，仍以 CLI 的 task_dev.guidance 为进度事实来源，
+
+      仍不得执行 git add / git commit，也不得自行开始下一个 Task。
+
+      '
+    rendered: '本实例为 task-dev 的【轻量模式】：本次工作流采用 dev 入口，权威设计输入是
+
+      .sdd/SR20260806903405/dev-design.md，不存在《模块详细设计说明书》《模块测试用例设计》和
+
+      《模块设计门禁结果》三件套。不要因为缺少这三份文档而中止或回流上游。
+
+
+      load_skill task-dev，按其轻量模式分支执行：
+
+      - 实现设计的事实来源是 dev-design.md 的方案与契约变更章节；
+
+      - 验证规格的事实来源是 dev-design.md 的验收标准章节；
+
+      - tasks-overview.md 仍然管理任务范围、顺序和最终交接。
+
+
+      其余流程、质量边界和状态指引协议保持不变：仍按 实现与测试 → 只读语义 Review
+
+      → 优化修复与测试重验 → CodeCheck subAgent → 回填 tasks-overview 与候选提交信息
+
+      的固定顺序推进，仍以 CLI 的 task_dev.guidance 为进度事实来源，
+
+      仍不得执行 git add / git commit，也不得自行开始下一个 Task。
+
+      '
+  data_prompt: null
+  input:
+  - path: .sdd/SR20260806903405/tasks-overview.md
+    required: true
+  - path: .sdd/SR20260806903405/dev-design.md
+    required: true
+  - path: .sdd/SR20260806903405/.context/dev-design-gate.md
+    required: false
+  - path: .sdd/software_architecture.md
+    required: false
+  - path: .sdd/spec.md
+    required: false
+  - path: .sdd/AICodingGuidelines.md
+    required: false
+  output: []
+  available_next: *id001
+  data_schema: null
+  vars:
+    SR: SR20260806903405
+    详设路径版本: v2
+    序号: '2'
+    任务标题: 服务端订阅管理与接入校验
+  depends_on:
+  - 5
+  next: []
+  result_data: null
+- id: 7
+  type: dev-task-dev
+  name: T3-dev-task-dev
+  finished: true
+  execution_status: completed
+  attempt: 1
+  started_at: '2026-09-04T02:56:50.941527Z'
+  ended_at: '2026-09-04T02:56:51.254754Z'
+  execution: skill
+  session: inherit
+  skill:
+  - task-dev
+  prompt:
+    inline: '本实例为 task-dev 的【轻量模式】：本次工作流采用 dev 入口，权威设计输入是
+
+      .sdd/SR20260806903405/dev-design.md，不存在《模块详细设计说明书》《模块测试用例设计》和
+
+      《模块设计门禁结果》三件套。不要因为缺少这三份文档而中止或回流上游。
+
+
+      load_skill task-dev，按其轻量模式分支执行：
+
+      - 实现设计的事实来源是 dev-design.md 的方案与契约变更章节；
+
+      - 验证规格的事实来源是 dev-design.md 的验收标准章节；
+
+      - tasks-overview.md 仍然管理任务范围、顺序和最终交接。
+
+
+      其余流程、质量边界和状态指引协议保持不变：仍按 实现与测试 → 只读语义 Review
+
+      → 优化修复与测试重验 → CodeCheck subAgent → 回填 tasks-overview 与候选提交信息
+
+      的固定顺序推进，仍以 CLI 的 task_dev.guidance 为进度事实来源，
+
+      仍不得执行 git add / git commit，也不得自行开始下一个 Task。
+
+      '
+    rendered: '本实例为 task-dev 的【轻量模式】：本次工作流采用 dev 入口，权威设计输入是
+
+      .sdd/SR20260806903405/dev-design.md，不存在《模块详细设计说明书》《模块测试用例设计》和
+
+      《模块设计门禁结果》三件套。不要因为缺少这三份文档而中止或回流上游。
+
+
+      load_skill task-dev，按其轻量模式分支执行：
+
+      - 实现设计的事实来源是 dev-design.md 的方案与契约变更章节；
+
+      - 验证规格的事实来源是 dev-design.md 的验收标准章节；
+
+      - tasks-overview.md 仍然管理任务范围、顺序和最终交接。
+
+
+      其余流程、质量边界和状态指引协议保持不变：仍按 实现与测试 → 只读语义 Review
+
+      → 优化修复与测试重验 → CodeCheck subAgent → 回填 tasks-overview 与候选提交信息
+
+      的固定顺序推进，仍以 CLI 的 task_dev.guidance 为进度事实来源，
+
+      仍不得执行 git add / git commit，也不得自行开始下一个 Task。
+
+      '
+  data_prompt: null
+  input:
+  - path: .sdd/SR20260806903405/tasks-overview.md
+    required: true
+  - path: .sdd/SR20260806903405/dev-design.md
+    required: true
+  - path: .sdd/SR20260806903405/.context/dev-design-gate.md
+    required: false
+  - path: .sdd/software_architecture.md
+    required: false
+  - path: .sdd/spec.md
+    required: false
+  - path: .sdd/AICodingGuidelines.md
+    required: false
+  output: []
+  available_next: *id001
+  data_schema: null
+  vars:
+    SR: SR20260806903405
+    详设路径版本: v2
+    序号: '3'
+    任务标题: 客户端SDK与集成验证
+  depends_on:
+  - 6
+  next: []
+  result_data: null
+transition_history:
+- type: user_confirm
+  from_step: 4
+  from_type: dev-task-split
+  user_confirm: must
+  next_ids: *id002
+  confirmed_at: '2026-09-03T10:15:23.767364+00:00'

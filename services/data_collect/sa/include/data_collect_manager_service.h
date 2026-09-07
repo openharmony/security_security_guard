@@ -71,6 +71,14 @@ public:
         const sptr<IRemoteObject> &cb, const std::string &eventGroup) override;
     ErrCode QueryCodeSignInfoByPath(const int fd, const int pid, std::string &resStr) override;
     ErrCode QueryAllClientsInfo(std::string &resStr) override;
+    // AuthEvent 框架接口：IDL 生成纯虚方法必须覆写以保持可编译；
+    // 关闭 SECURITY_GUARD_AUTH_EVENT_ENABLE 时实现为占位（一律返回 FAILED）
+    ErrCode CreatAuthEventClient(const std::string &clientId, bool timeoutAllowFlag,
+        const sptr<IRemoteObject> &cb) override;
+    ErrCode DestoryAuthEventClient(const std::string &clientId) override;
+    ErrCode SubscribeAuthEvent(int64_t eventId, const std::string &clientId) override;
+    ErrCode UnsubscribeAuthEvent(int64_t eventId, const std::string &clientId) override;
+    ErrCode SetAuthResult(const AuthEvent &event, bool allowFlag, const std::string &clientId) override;
 private:
     class SubscriberDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
@@ -89,6 +97,9 @@ private:
     static int32_t QueryEventConfig(std::string &result);
     int32_t WriteRemoteFileToLocal(int fd, const std::string &realPath);
     int32_t IsCallerHasApiPermission(const std::string &api);
+#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
+    int32_t IsCallerAllowedSubscribeAuthEvent();
+#endif
     int32_t IsCallerHasSystemPermission(const AccessToken::AccessTokenID &callerToken);
     int32_t IsCallerHasPublicPermissions(const AccessToken::AccessTokenID &callerToken,
         const std::set<std::string> &permissions);
