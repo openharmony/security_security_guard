@@ -417,7 +417,7 @@ int32_t SecurityCollectorManagerService::QuerySecurityEventBatch(const std::vect
 std::string SecurityCollectorManagerService::GetAppName()
 {
     AccessToken::AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(tokenId);
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_HAP) {
         AccessToken::HapTokenInfo hapTokenInfo;
         int ret = AccessToken::AccessTokenKit::GetHapTokenInfo(tokenId, hapTokenInfo);

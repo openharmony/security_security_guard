@@ -247,7 +247,7 @@ ErrCode DataCollectManagerService::RequestRiskData(const std::string &devId, con
         SGLOGE("caller no permission");
         return NO_PERMISSION;
     }
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
         uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
         if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
@@ -766,7 +766,7 @@ int32_t DataCollectManagerService::IsCallerHasPublicPermissions(
 
 int32_t DataCollectManagerService::IsCallerHasSystemPermission(const AccessToken::AccessTokenID &callerToken)
 {
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
         uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
         if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
