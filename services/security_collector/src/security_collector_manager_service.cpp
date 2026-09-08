@@ -249,13 +249,13 @@ int32_t SecurityCollectorManagerService::CollectorStop(const SecurityCollectorSu
 {
     Event event = subscribeInfo.GetEvent();
     int32_t ret = HasPermission(COLLECT_EVENT_PERMISSION);
-    if (g_refCount.load() <= 0) {
-        LOGE("Collector stop failed, subscriber count is 0");
-        return FAILED;
-    }
     if (ret != SUCCESS) {
         LOGE("caller no permission");
         return ret;
+    }
+    if (g_refCount.load() <= 0) {
+        LOGE("Collector stop failed, subscriber count is 0");
+        return FAILED;
     }
     std::string appName = GetAppName();
     LOGI("in CollectorStop, appname:%{public}s", appName.c_str());
@@ -274,6 +274,7 @@ int32_t SecurityCollectorManagerService::CollectorStop(const SecurityCollectorSu
     if (!SecurityCollectorRunManager::GetInstance().StopCollector(subscriber)) {
         subEvent.ret = BAD_PARAM;
         ReportScSubscribeEvent(subEvent);
+        g_refCount.fetch_sub(1);
         return BAD_PARAM;
     }
     subEvent.ret = SUCCESS;
@@ -332,6 +333,9 @@ void SecurityCollectorManagerService::SubscriberDeathRecipient::OnRemoteDied(con
         return;
     }
     if (service->CleanSubscriber(object)) {
+        if (g_refCount.load() <= 0) {
+            return;
+        }
         g_refCount.fetch_sub(1);
     }
     LOGD("SecurityCollectorManagerService out");

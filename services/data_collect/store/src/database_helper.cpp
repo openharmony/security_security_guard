@@ -164,10 +164,11 @@ int DatabaseHelper::QueryEventByOwner(std::string owner, std::vector<SecEvent> &
 
 int64_t DatabaseHelper::CountAllEvent()
 {
-    int64_t count;
+    int64_t count = 0;
     int ret = Count(count, dbTable_, {});
     if (ret != SUCCESS) {
         SGLOGE("failed to count event, ret=%{public}d", ret);
+        return 0;
     }
     return count;
 }
@@ -188,6 +189,9 @@ int64_t DatabaseHelper::CountEventByEventId(int64_t eventId)
 int DatabaseHelper::DeleteOldEventByEventId(int64_t eventId, int64_t count)
 {
     if (count <= 0 || eventId < 0) {
+        return BAD_PARAM;
+    }
+    if (count > INT32_MAX) {
         return BAD_PARAM;
     }
     GenericValues conditions;

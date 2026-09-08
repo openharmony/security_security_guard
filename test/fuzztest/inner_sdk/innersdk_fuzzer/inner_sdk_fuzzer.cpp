@@ -186,7 +186,6 @@ void RiskAnalysisManagerProxyFuzzTest(const uint8_t* data, size_t size)
     std::string string(fdp.ConsumeRandomLengthString(MAX_STRING_SIZE));
     RiskAnalysisManagerProxy proxy{obj};
     proxy.RequestSecurityModelResult(string, uint32, string, callback);
-    proxy.SetModelState(uint32, true);
 }
 #endif
 }  // namespace OHOS

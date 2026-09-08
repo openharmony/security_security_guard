@@ -173,11 +173,6 @@ void RiskAnalysisManagerService::PushRiskAnalysisTask(uint32_t modelId, std::str
     ffrt::submit(task);
 }
 
-ErrCode RiskAnalysisManagerService::SetModelState(uint32_t modelId, bool enable)
-{
-    return SUCCESS;
-}
-
 ErrCode RiskAnalysisManagerService::StartSecurityModel(uint32_t modelId, const std::string &param)
 {
     SGLOGI("enter RiskAnalysisManagerService StartSecurityModel");

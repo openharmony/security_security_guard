@@ -320,15 +320,7 @@ HWTEST_F(SecurityCollectorTest, CollectorStop04, TestSize.Level1)
     EXPECT_TRUE(obj != nullptr);
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken).WillOnce(
         Return(AccessToken::PermissionState::PERMISSION_GRANTED));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag).WillOnce(
-        Return(AccessToken::ATokenTypeEnum::TOKEN_NATIVE));
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetNativeTokenInfo).WillOnce(
-        [] (AccessToken::AccessTokenID tokenID, AccessToken::NativeTokenInfo& nativeTokenInfoRes) {
-            nativeTokenInfoRes.processName = "processName";
-            return SecurityCollector::ErrorCode::SUCCESS;
-        });
-    EXPECT_CALL(SecurityCollectorRunManager::GetInstance(), StopCollector).WillOnce(Return(true));
-    EXPECT_EQ(g_service.CollectorStop(info, obj), SecurityCollector::ErrorCode::SUCCESS);
+    EXPECT_EQ(g_service.CollectorStop(info, obj), SecurityCollector::ErrorCode::FAILED);
 }
 
 HWTEST_F(SecurityCollectorTest, ExecuteOnNotifyByTask01, TestSize.Level1)

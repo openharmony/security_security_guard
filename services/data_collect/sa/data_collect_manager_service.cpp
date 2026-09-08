@@ -923,10 +923,10 @@ ErrCode DataCollectManagerService::ConfigUpdate(int fd, const std::string& name)
             return BAD_PARAM;
         }
     }
-
     const std::string &realPath = CONFIG_ROOT_PATH + "tmp/" + name;
     SGLOGI("config file is %{private}s, fd is %{public}d", realPath.c_str(), fd);
-    std::string tmpPath = realPath + ".t";
+    std::string tmpPath = realPath + "." + std::to_string(IPCSkeleton::GetCallingPid()) + "." +
+        std::to_string(gettid()) + ".t";
     int32_t ret = WriteRemoteFileToLocal(fd, tmpPath);
     if (ret != SUCCESS) {
         SGLOGE("write remote file to local fail");
