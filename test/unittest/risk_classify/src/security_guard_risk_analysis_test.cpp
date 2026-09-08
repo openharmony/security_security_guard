@@ -105,13 +105,6 @@ HWTEST_F(SecurityGuardRiskAnalysisTest, IsApiHasPermission_Success, TestSize.Lev
     EXPECT_EQ(result, 0);
 }
 
-HWTEST_F(SecurityGuardRiskAnalysisTest, SetModelState_Success, TestSize.Level1) {
-    uint32_t modelId = 1;
-    bool enable = true;
-    int32_t result = riskAnalysisManagerService.SetModelState(modelId, enable);
-    ASSERT_EQ(result, SUCCESS);
-}
-
 HWTEST_F(SecurityGuardRiskAnalysisTest, RequestSecurityModelResult01, TestSize.Level1) {
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));

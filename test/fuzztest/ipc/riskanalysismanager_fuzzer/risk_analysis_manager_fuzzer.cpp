@@ -17,6 +17,7 @@
 
 #include <string>
 
+#include <string_ex.h>
 #include "risk_analysis_manager_callback_service.h"
 #include "risk_analysis_manager_service.h"
 #include "security_guard_log.h"
@@ -53,11 +54,12 @@ void OnRemoteRequestFuzzTest(const uint8_t* data, size_t size)
             datas, reply, option);
         return;
     }
-    // handle set model state cmd
+    // handle start security model cmd
     datas.WriteUint32(modelId);
-    datas.WriteBool(size % REMAINDER_VALUE == 0);
+    std::string param(reinterpret_cast<const char *>(data + offset), size - offset);
+    datas.WriteString16(Str8ToStr16(param));
     g_service.OnRemoteRequest(
-        static_cast<uint32_t>(RiskAnalysisManagerIpcCode::COMMAND_SET_MODEL_STATE), datas, reply, option);
+        static_cast<uint32_t>(RiskAnalysisManagerIpcCode::COMMAND_START_SECURITY_MODEL), datas, reply, option);
 }
 }  // namespace OHOS::Security::SecurityGuard
 

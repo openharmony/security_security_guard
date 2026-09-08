@@ -92,7 +92,7 @@ void DataCollection::IncrementSubscribeCount(int64_t eventId)
     if (count == eventIdToSubscribeCount_.end()) {
         eventIdToSubscribeCount_.emplace(eventId, 1);
     } else {
-        eventIdToSubscribeCount_.emplace(eventId, count->second + 1);
+        count->second += 1;
     }
 }
 
@@ -105,7 +105,7 @@ bool DataCollection::DecrementSubscribeCount(int64_t eventId)
     }
     uint32_t curCount = count->second - 1;
     if (curCount > 0) {
-        eventIdToSubscribeCount_.emplace(eventId, curCount);
+        count->second = curCount;
         return true;
     }
     eventIdToSubscribeCount_.erase(eventId);
