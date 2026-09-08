@@ -117,7 +117,7 @@ class AccessTokenKitInterface {
 public:
     virtual ~AccessTokenKitInterface() = default;
     virtual int32_t VerifyAccessToken(AccessToken::AccessTokenID callerToken, const std::string &permission) = 0;
-    virtual ATokenTypeEnum GetTokenType(AccessTokenID tokenID) = 0;
+    virtual ATokenTypeEnum GetTokenTypeFlag(AccessTokenID tokenID) = 0;
     virtual int GetHapTokenInfo(AccessTokenID tokenID, HapTokenInfo& hapTokenInfoRes) = 0;
     virtual int GetNativeTokenInfo(AccessTokenID tokenID, NativeTokenInfo& nativeTokenInfoRes) = 0;
 };
@@ -127,7 +127,7 @@ public:
     MockAccessTokenKitInterface() = default;
     ~MockAccessTokenKitInterface() override = default;
     MOCK_METHOD2(VerifyAccessToken, int32_t(AccessToken::AccessTokenID callerToken, const std::string &permission));
-    MOCK_METHOD1(GetTokenType, ATokenTypeEnum(AccessTokenID tokenID));
+    MOCK_METHOD1(GetTokenTypeFlag, ATokenTypeEnum(AccessTokenID tokenID));
     MOCK_METHOD2(GetHapTokenInfo, int(AccessTokenID tokenID, HapTokenInfo& hapTokenInfoRes));
     MOCK_METHOD2(GetNativeTokenInfo, int(AccessTokenID tokenID, NativeTokenInfo& nativeTokenInfoRes));
 };
@@ -142,12 +142,12 @@ public:
         return instance_->VerifyAccessToken(callerToken, permission);
     }
 
-    static ATokenTypeEnum GetTokenType(AccessTokenID tokenID)
+    static ATokenTypeEnum GetTokenTypeFlag(AccessTokenID tokenID)
     {
         if (instance_ == nullptr) {
             return TOKEN_INVALID;
         }
-        return instance_->GetTokenType(tokenID);
+        return instance_->GetTokenTypeFlag(tokenID);
     }
 
     static int GetHapTokenInfo(AccessTokenID tokenID, HapTokenInfo& hapTokenInfoRes)

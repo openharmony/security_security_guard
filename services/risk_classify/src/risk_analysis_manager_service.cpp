@@ -107,7 +107,7 @@ int32_t RiskAnalysisManagerService::IsCallerHasApiPermission(const std::string &
         int code = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, per);
         return code == AccessToken::PermissionState::PERMISSION_GRANTED;
     })) {
-        AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+        AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
         if (tokenType != AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
             uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
             if (!AccessToken::TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
