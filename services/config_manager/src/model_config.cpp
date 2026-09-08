@@ -104,9 +104,19 @@ bool ModelConfig::Update()
         SGLOGE("copyFile error");
         return false;
     }
-    ConfigDataManager::GetInstance().ResetModelMap();
-    CacheModelConfig(configs);
-    CacheModelToEvent(configs);
+    std::unordered_map<uint32_t, ModelCfg> newModelMap {};
+    std::unordered_map<uint32_t, std::set<int64_t>> newModelToEventMap {};
+    for (const ModelCfg &config : configs) {
+        SGLOGD("modelId=%{public}u", config.modelId);
+        newModelMap[config.modelId] = config;
+        std::set<int64_t> set;
+        for (int64_t event : config.eventList) {
+            set.emplace(event);
+        }
+        newModelToEventMap[config.modelId] = std::move(set);
+    }
+    ConfigDataManager::GetInstance().SwapModelMap(std::move(newModelMap));
+    ConfigDataManager::GetInstance().SwapModelToEventMap(std::move(newModelToEventMap));
     SGLOGI("cache ModelConfig success");
     return true;
 }

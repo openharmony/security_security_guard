@@ -1119,9 +1119,8 @@ static bool CompareOnAndOffRef(const napi_env env, napi_ref subscriberRef, napi_
     return result;
 }
 
-static bool IsSubscribeInMap(napi_env env, SubscribeCBInfo *info)
+static bool IsSubscribeInMapLocked(napi_env env, SubscribeCBInfo *info)
 {
-    std::lock_guard<ffrt::mutex> lock(g_subscribeMutex);
     auto subscribe = g_subscribers.find(env);
     if (subscribe == g_subscribers.end()) {
         return false;
@@ -1319,19 +1318,24 @@ static napi_value Subscribe(napi_env env, napi_callback_info cbInfo)
     info->subscriber = std::make_shared<SubscriberPtr>(info->events);
     info->subscriber->SetEnv(env);
     info->subscriber->SetCallbackRef(info->callbackRef);
-    if (IsSubscribeInMap(env, info)) {
-        SGLOGE("Current callback ref is existed");
-        delete info;
-        return WrapVoidToJS(env);
+    {
+        std::lock_guard<ffrt::mutex> lock(g_subscribeMutex);
+        if (IsSubscribeInMapLocked(env, info)) {
+            SGLOGE("Current callback ref is existed");
+            delete info;
+            return WrapVoidToJS(env);
+        }
+        g_subscribers[env].emplace_back(info);
     }
+
     int32_t errCode = SecurityGuardSdkAdaptor::Subscribe(info->subscriber);
     if (errCode != 0) {
+        std::lock_guard<ffrt::mutex> lock(g_subscribeMutex);
+        auto &vec =  g_subscribers[env];
+        vec.erase(std::remove(vec.begin(), vec.end(), info), vec.end());
         delete info;
         napi_throw(env, GenerateBusinessError(env, errCode, "Subscribe failed!"));
         return WrapVoidToJS(env);
-    } else {
-        std::lock_guard<ffrt::mutex> lock(g_subscribeMutex);
-        g_subscribers[env].emplace_back(info);
     }
     return WrapVoidToJS(env);
 }

@@ -36,7 +36,6 @@ public:
     void OnStop() override;
     ErrCode RequestSecurityModelResult(const std::string &devId, uint32_t modelId,
         const std::string &param, const sptr<IRemoteObject> &cb) override;
-    ErrCode SetModelState(uint32_t modelId, bool enable) override;
     ErrCode StartSecurityModel(uint32_t modelId, const std::string &param) override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;

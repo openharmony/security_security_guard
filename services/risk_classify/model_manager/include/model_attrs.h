@@ -43,8 +43,8 @@ public:
     IModel *GetModelApi() { return api_; };
 
 private:
-    void *handle_;
-    IModel *api_;
+    void *handle_ = nullptr;
+    IModel *api_ = nullptr;
 };
 } // namespace OHOS::Security::SecurityGuard
 

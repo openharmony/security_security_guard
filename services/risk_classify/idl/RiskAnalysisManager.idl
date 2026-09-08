@@ -18,6 +18,5 @@ sequenceable OHOS.IRemoteObject;
 interface OHOS.Security.SecurityGuard.RiskAnalysisManager {
     void RequestSecurityModelResult([in] String devId, [in] unsigned int modelId,
         [in] String param, [in] IRemoteObject cb);
-    void SetModelState([in] unsigned int modelId, [in] boolean enable);
     void StartSecurityModel([in] unsigned int modelId, [in] String param);
 }
