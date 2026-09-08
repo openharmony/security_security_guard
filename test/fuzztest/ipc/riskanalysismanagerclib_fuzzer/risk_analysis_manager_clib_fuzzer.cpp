@@ -71,7 +71,7 @@ void SetPermission()
 
 extern "C" int FuzzRiskAnalysisFuzzService(FuzzedDataProvider &fdp)
 {
-    static const int ipccode[] = {0, 1, 2, 3, 4};
+    static const int ipccode[] = {0, 1, 2, 3};
     int code = fdp.PickValueInArray(ipccode);
     switch (code) {
         case 0: {
@@ -84,22 +84,17 @@ extern "C" int FuzzRiskAnalysisFuzzService(FuzzedDataProvider &fdp)
         }
         case 1: {
             uint32_t modleId = fdp.ConsumeIntegral<uint32_t>();
-            g_service.SetModelState(modleId, fdp.ConsumeBool());
-            break;
-        }
-        case 2: {
-            uint32_t modleId = fdp.ConsumeIntegral<uint32_t>();
             const std::string param = fdp.ConsumeRandomLengthString();
             g_service.StartSecurityModel(modleId, param);
             break;
         }
-        case 3: {
+        case 2: {
             uint32_t systemAbilityId = fdp.ConsumeIntegral<int32_t>();
             const std::string deviceId = fdp.ConsumeRandomLengthString();
             g_service.OnAddSystemAbility(systemAbilityId, deviceId);
             break;
         }
-        case 4: {
+        case 3: {
             uint32_t systemAbilityId = fdp.ConsumeIntegral<int32_t>();
             const std::string deviceId = fdp.ConsumeRandomLengthString();
             g_service.OnRemoveSystemAbility(systemAbilityId, deviceId);

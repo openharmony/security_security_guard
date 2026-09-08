@@ -94,6 +94,18 @@ void ConfigDataManager::SwapEventConfigMap(std::unordered_map<int64_t, EventCfg>
     eventMap_.swap(newEventMap);
 }
 
+void ConfigDataManager::SwapModelMap(std::unordered_map<uint32_t, ModelCfg> newModelMap)
+{
+    std::lock_guard<ffrt::mutex> lock(modelMutex_);
+    modelMap_.swap(newModelMap);
+}
+
+void ConfigDataManager::SwapModelToEventMap(std::unordered_map<uint32_t, std::set<int64_t>> newModelToEventMap)
+{
+    std::lock_guard<ffrt::mutex> lock(modelToEventMutex_);
+    modelToEventMap_.swap(newModelToEventMap);
+}
+
 void ConfigDataManager::ResetModelToEventMap()
 {
     std::lock_guard<ffrt::mutex> lock(modelToEventMutex_);

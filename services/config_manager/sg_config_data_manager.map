@@ -36,6 +36,9 @@
       OHOS::Security::SecurityGuard::ConfigDataManager::GetModelConfig*;
       OHOS::Security::SecurityGuard::ConfigDataManager::GetEventConfig*;
       OHOS::Security::SecurityGuard::ConfigDataManager::GetTableFromEventId*;
+      OHOS::Security::SecurityGuard::ConfigDataManager::SwapModelMap*;
+      OHOS::Security::SecurityGuard::ConfigDataManager::SwapModelToEventMap*;
+
     };
   local:
     *;

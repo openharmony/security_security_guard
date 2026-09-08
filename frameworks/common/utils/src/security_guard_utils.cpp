@@ -16,8 +16,9 @@
 #include "security_guard_utils.h"
 
 #include <cerrno>
+#include <cstdio>
 #include <fstream>
-
+#include <unistd.h>
 #include "security_guard_log.h"
 
 namespace OHOS::Security::SecurityGuard {
@@ -134,7 +135,8 @@ bool SecurityGuardUtils::CopyFile(const std::string &srcPath, const std::string 
         return false;
     }
     src.seekg(0, std::ios::beg);
-    std::ofstream dst(dstPath, std::ios::binary);
+    std::string tmpPath = dstPath + ".tmp";
+    std::ofstream dst(tmpPath, std::ios::binary);
     if (!dst.is_open()) {
         SGLOGE("copy file stream error");
         src.close();
@@ -144,6 +146,12 @@ bool SecurityGuardUtils::CopyFile(const std::string &srcPath, const std::string 
     dst << src.rdbuf();
     src.close();
     dst.close();
+
+    if (rename(tmpPath.c_str(), dstPath.c_str()) != 0) {
+        SGLOGE("rename tmp file error, errno=%{public}d", errno);
+        unlink(tmpPath.c_str());
+        return false;
+    }
     return true;
 }
 }

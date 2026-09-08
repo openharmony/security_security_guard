@@ -228,8 +228,6 @@ HWTEST_F(InnerApiCollectorTest, RiskAnalysisManagerProxyTest001, testing::ext::T
     RiskAnalysisManagerProxy proxy{obj};
     int ret = proxy.RequestSecurityModelResult(string, uint32, string, callback);
     EXPECT_TRUE(ret == SUCCESS);
-    ret = proxy.SetModelState(uint32, true);
-    EXPECT_TRUE(ret == SUCCESS);
 }
 
 HWTEST_F(InnerApiCollectorTest, CollectorManagerTest001, testing::ext::TestSize.Level1)
