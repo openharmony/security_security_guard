@@ -53,7 +53,9 @@ ohos_fuzztest("RiskAnalysisManagerClibFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-
+  defines = [
+    "SECURITY_GUARD_PLUGIN_CFG_PATH = \"/system/etc/security_guard_plugin_cfg_path_disable\"",
+  ]
   sources = [
     "risk_analysis_manager_clib_fuzzer.cpp",
     "${sg_root_dir}/services/risk_classify/src/risk_analysis_manager_service.cpp",
