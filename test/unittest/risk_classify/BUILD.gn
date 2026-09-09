@@ -46,6 +46,10 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "${sg_root_dir}/services/risk_classify/model_manager/include",
   ]
 
+  defines = [
+    "SECURITY_GUARD_PLUGIN_CFG_PATH = \"${security_guard_plugin_cfg_path}\"",
+  ]
+
   sources = [
     "${sg_root_dir}/frameworks/common/utils/src/file_util.cpp",
     "${sg_root_dir}/frameworks/common/utils/src/json_util.cpp",

@@ -86,7 +86,7 @@ void RiskAnalysisManagerService::OnStart()
     }
     ffrt::submit([this] {
         ffrt::this_task::sleep_for(std::chrono::milliseconds(DELAY_TIME));
-        const std::string fileName = "/system/etc/detect_plugin.json";
+        const std::string fileName = SECURITY_GUARD_PLUGIN_CFG_PATH;
         DetectPluginManager::getInstance().LoadAllPlugins(fileName);
     });
 }
