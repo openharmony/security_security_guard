@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
 #ifndef SECURITY_GUARD_AUTH_EVENT_SUBSCRIBE_MANAGER_H
 #define SECURITY_GUARD_AUTH_EVENT_SUBSCRIBE_MANAGER_H
+#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
 
 #include <cstdint>
 #include <map>
@@ -86,6 +86,5 @@ private:
 };
 } // namespace OHOS::Security::SecurityGuard
 
-#endif // SECURITY_GUARD_AUTH_EVENT_SUBSCRIBE_MANAGER_H
-
 #endif // SECURITY_GUARD_AUTH_EVENT_ENABLE
+#endif // SECURITY_GUARD_AUTH_EVENT_SUBSCRIBE_MANAGER_H

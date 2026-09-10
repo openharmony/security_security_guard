@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
 #ifndef SECURITY_GUARD_AUTH_EVENT_REPORTER_H
 #define SECURITY_GUARD_AUTH_EVENT_REPORTER_H
+#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
 
 #include <cstdint>
 
@@ -33,13 +33,11 @@ public:
     static void ReportAuthBlockResult(pid_t callerPid, int32_t callerUid, const AuthEvent &event);
 
 private:
-    // HA lite 客户端真实上报的统一接入点。
-    // TODO: 引入 ha_client_lite_api.h 后在此组装并上报事件（ eventName + 参数键值对），
-    //       当前以 SGLOGI 日志兜底，保证可编译可测。
+    // HA lite 客户端真实上报的统一接入点：ha_client_lite_api.h 依赖进入本仓构建环境后，
+    // 仅修改本函数完成接入（组装 eventName + 参数键值对并上报），上层打点语义不受影响。
     static void ReportToHa(const char *eventName, pid_t callerPid, int32_t callerUid, const AuthEvent &event);
 };
 } // namespace OHOS::Security::SecurityGuard
 
-#endif // SECURITY_GUARD_AUTH_EVENT_REPORTER_H
-
 #endif // SECURITY_GUARD_AUTH_EVENT_ENABLE
+#endif // SECURITY_GUARD_AUTH_EVENT_REPORTER_H

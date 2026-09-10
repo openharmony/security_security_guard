@@ -168,13 +168,12 @@ HWTEST_F(AuthEventSdkTest, ClientMethodsWithFakeSession001, TestSize.Level0)
     client->DeleteClient();
 }
 
-HWTEST_F(AuthEventSdkTest, ClientDeleter001, TestSize.Level0)
+HWTEST_F(AuthEventSdkTest, ClientDestructor001, TestSize.Level0)
 {
-    // Deleter 兜底：注入假会话对象引用后释放最后一个 shared_ptr，
+    // 析构兜底：注入假会话对象引用后释放最后一个 shared_ptr，
     // Destroy 经 mock SendRequest 失败路径执行，不崩溃
     {
-        auto client = std::shared_ptr<AuthEventSubscribeClient>(new AuthEventSubscribeClient(),
-            AuthEventSubscribeClient::Deleter);
+        auto client = std::make_shared<AuthEventSubscribeClient>();
         client->sessionRemote_ = CreateFakeSessionRemote();
     }
     SUCCEED();
@@ -182,8 +181,7 @@ HWTEST_F(AuthEventSdkTest, ClientDeleter001, TestSize.Level0)
 
 HWTEST_F(AuthEventSdkTest, ClientSetDeathRecipient001, TestSize.Level0)
 {
-    auto client = std::shared_ptr<AuthEventSubscribeClient>(new AuthEventSubscribeClient(),
-        AuthEventSubscribeClient::Deleter);
+    auto client = std::make_shared<AuthEventSubscribeClient>();
     client->sessionRemote_ = CreateFakeSessionRemote();
     OHOS::sptr<MockRemoteObjectForSdkTest> remote(new (std::nothrow) MockRemoteObjectForSdkTest());
     ASSERT_NE(remote, nullptr);
