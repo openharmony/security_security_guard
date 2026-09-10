@@ -799,7 +799,7 @@ int32_t DataCollectManagerService::IsCallerHasApiPermission(const std::string &a
 }
 
 #ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
-ErrCode DataCollectManagerService::CreatAuthEventClient(const sptr<IRemoteObject> &cb,
+ErrCode DataCollectManagerService::CreatAuthEventClient(const sptr<IRemoteObject> &cb, bool timeoutAllowFlag,
     sptr<IRemoteObject> &session)
 {
     SGLOGI("enter");
@@ -814,14 +814,16 @@ ErrCode DataCollectManagerService::CreatAuthEventClient(const sptr<IRemoteObject
     XCollie_Utils xcollie("SGIPC_CreatAuthEventClient", XCOLLIE_FLAG);
     pid_t callerPid = IPCSkeleton::GetCallingPid();
     int32_t callerUid = static_cast<int32_t>(IPCSkeleton::GetCallingUid());
-    return AuthEventSubscribeManager::GetInstance().CreatAuthEventClient(callerPid, callerUid, cb, session);
+    return AuthEventSubscribeManager::GetInstance().CreatAuthEventClient(callerPid, callerUid, timeoutAllowFlag,
+        cb, session);
 }
 #else
 // AuthEvent 框架未启用：IDL 生成的纯虚方法仍需实现以保持可编译，一律拒绝（session 不下发）
-ErrCode DataCollectManagerService::CreatAuthEventClient(const sptr<IRemoteObject> &cb,
+ErrCode DataCollectManagerService::CreatAuthEventClient(const sptr<IRemoteObject> &cb, bool timeoutAllowFlag,
     sptr<IRemoteObject> &session)
 {
     (void)cb;
+    (void)timeoutAllowFlag;
     session = nullptr;
     return FAILED;
 }

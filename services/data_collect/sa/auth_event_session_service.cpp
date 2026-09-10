@@ -38,9 +38,9 @@ constexpr uint32_t XCOLLIE_FLAG = 0;
 #endif
 }
 
-AuthEventSessionService::AuthEventSessionService(pid_t callerPid, int32_t callerUid,
+AuthEventSessionService::AuthEventSessionService(pid_t callerPid, int32_t callerUid, bool timeoutAllowFlag,
     const sptr<IRemoteObject> &callback)
-    : pid_(callerPid), uid_(callerUid), callback_(callback)
+    : pid_(callerPid), uid_(callerUid), timeoutAllowFlag_(timeoutAllowFlag), callback_(callback)
 {
 }
 

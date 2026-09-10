@@ -110,7 +110,7 @@ void AuthEventSubscribeManager::RemoveSessionLocked(const sptr<AuthEventSessionS
 }
 
 int32_t AuthEventSubscribeManager::CreatAuthEventClient(pid_t callerPid, int32_t callerUid,
-    const sptr<IRemoteObject> &callback, sptr<IRemoteObject> &sessionRemote)
+    bool timeoutAllowFlag, const sptr<IRemoteObject> &callback, sptr<IRemoteObject> &sessionRemote)
 {
     if (callback == nullptr) {
         SGLOGE("callback is null");
@@ -129,7 +129,7 @@ int32_t AuthEventSubscribeManager::CreatAuthEventClient(pid_t callerPid, int32_t
                 return BAD_PARAM;
             }
         }
-        session = new (std::nothrow) AuthEventSessionService(callerPid, callerUid, callback);
+        session = new (std::nothrow) AuthEventSessionService(callerPid, callerUid, timeoutAllowFlag, callback);
         if (session == nullptr) {
             SGLOGE("new session fail");
             return FAILED;

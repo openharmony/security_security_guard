@@ -45,9 +45,10 @@ class AuthEventSubscribeManager {
 public:
     static AuthEventSubscribeManager& GetInstance();
 
-    // 主接口路径：创建会话对象并经 sessionRemote 下发其远端引用（binder handle 即会话路由）
-    int32_t CreatAuthEventClient(pid_t callerPid, int32_t callerUid, const sptr<IRemoteObject> &callback,
-        sptr<IRemoteObject> &sessionRemote);
+    // 主接口路径：创建会话对象并经 sessionRemote 下发其远端引用（binder handle 即会话路由）。
+    // timeoutAllowFlag：该客户端的回填超时处置策略（默认放行），会话保存供超时需求（另一需求）消费
+    int32_t CreatAuthEventClient(pid_t callerPid, int32_t callerUid, bool timeoutAllowFlag,
+        const sptr<IRemoteObject> &callback, sptr<IRemoteObject> &sessionRemote);
     // 会话对象方法路径（AuthEventSessionService 转调，会话有效性以"在会话集合中"为权威判定）
     int32_t SubscribeAuthEvent(AuthEventSessionService *session, int64_t eventId);
     int32_t UnsubscribeAuthEvent(AuthEventSessionService *session, int64_t eventId);
