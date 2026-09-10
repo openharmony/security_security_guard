@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
 #ifndef SECURITY_GUARD_I_AUTH_EVENT_CALLBACK_H
 #define SECURITY_GUARD_I_AUTH_EVENT_CALLBACK_H
+#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
 
 #include <cstdint>
 
@@ -37,6 +37,5 @@ public:
 };
 } // namespace OHOS::Security::SecurityGuard
 
-#endif // SECURITY_GUARD_I_AUTH_EVENT_CALLBACK_H
-
 #endif // SECURITY_GUARD_AUTH_EVENT_ENABLE
+#endif // SECURITY_GUARD_I_AUTH_EVENT_CALLBACK_H

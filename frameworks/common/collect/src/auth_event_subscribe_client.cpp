@@ -34,30 +34,39 @@ namespace {
     constexpr int RECONNECT_RETRY_DELAY_SECONDS[] = {1, 5, 15, 30, 60, 60, 60, 60, 60};
 }
 
-void AuthEventSubscribeClient::Deleter(AuthEventSubscribeClient *client)
+AuthEventSubscribeClient::AuthEventSubscribeClient(ConstructTag) : AuthEventSubscribeClient() {}
+
+AuthEventSubscribeClient::~AuthEventSubscribeClient()
 {
-    if (client == nullptr) {
-        return;
-    }
-    // 在销毁服务端会话之前，先排空在途 OnAuthEvent 并清空回调。
     // 本函数在最后一个 shared_ptr 释放时同步执行。当调用方把 client 作为对象成员时，
-    // Deleter 在调用方析构函数内部执行，此时调用方内存仍然有效，
-    // 在途回调可安全访问其状态；ClearCallBack 返回后不会再触发任何用户回调，
+    // 析构在调用方析构函数内部执行，此时调用方内存仍然有效，
+    // 在途回调可安全访问其状态；Release 返回后不会再触发任何用户回调，
     // 随后销毁调用方状态即不存在 UAF。
-    // 注意：若用户回调内部释放了最后一个 shared_ptr，会在此处等待自身持有的
+    // 注意：若用户回调内部释放了最后一个 shared_ptr，会因等待自身持有的
     // notifyMutex_ 而死锁，调用方必须避免在回调内销毁 client。
-    if (client->callback_ != nullptr) {
-        client->callback_->ClearCallBack();
+    Release();
+}
+
+void AuthEventSubscribeClient::Release()
+{
+    if (callback_ != nullptr) {
+        callback_->ClearCallBack();
     }
     sptr<IRemoteObject> sessionRemote;
     sptr<IRemoteObject::DeathRecipient> deathRecipient;
     {
         std::lock_guard<ffrt::mutex> lock(g_mutex_);
-        client->deleted_ = true;
-        sessionRemote = client->sessionRemote_;
-        client->sessionRemote_ = nullptr;
-        deathRecipient = client->deathRecipient_;
+        deleted_ = true;
+        sessionRemote = sessionRemote_;
+        sessionRemote_ = nullptr;
+        deathRecipient = deathRecipient_;
     }
+    DestroyRemoteObjects(sessionRemote, deathRecipient);
+}
+
+void AuthEventSubscribeClient::DestroyRemoteObjects(const sptr<IRemoteObject> &sessionRemote,
+    const sptr<IRemoteObject::DeathRecipient> &deathRecipient)
+{
     if (sessionRemote != nullptr) {
         auto session = iface_cast<AuthEventSession>(sessionRemote);
         if (session != nullptr) {
@@ -73,7 +82,6 @@ void AuthEventSubscribeClient::Deleter(AuthEventSubscribeClient *client)
             }
         }
     }
-    delete client;
 }
 
 int32_t AuthEventSubscribeClient::CreatClient(AuthEventCallback callback,
@@ -108,7 +116,7 @@ int32_t AuthEventSubscribeClient::CreatClient(AuthEventCallback callback,
         SGLOGI("CreatAuthEventClient result, ret=%{public}d", ret);
         return ret != SUCCESS ? ret : FAILED;
     }
-    client = std::shared_ptr<AuthEventSubscribeClient>(new AuthEventSubscribeClient(), Deleter);
+    client = std::make_shared<AuthEventSubscribeClient>(ConstructTag {});
     client->callback_ = serviceCallback;
     client->timeoutAllowFlag_ = timeoutAllowFlag;
     {
@@ -170,6 +178,12 @@ sptr<IRemoteObject> AuthEventSubscribeClient::ReconnectService()
     return object;
 }
 
+bool AuthEventSubscribeClient::IsDeleted()
+{
+    std::lock_guard<ffrt::mutex> lock(g_mutex_);
+    return deleted_;
+}
+
 void AuthEventSubscribeClient::HandleDeath()
 {
     std::set<int64_t> events;
@@ -180,53 +194,64 @@ void AuthEventSubscribeClient::HandleDeath()
     }
     for (int delay : RECONNECT_RETRY_DELAY_SECONDS) {
         ffrt::this_task::sleep_for(std::chrono::seconds(delay));
-        {
-            std::lock_guard<ffrt::mutex> lock(g_mutex_);
-            if (deleted_) {
-                SGLOGI("client deleted, stop reconnect");
-                return;
-            }
+        if (IsDeleted()) {
+            SGLOGI("client deleted, stop reconnect");
+            return;
         }
-        sptr<IRemoteObject> object = ReconnectService();
-        if (object == nullptr) {
-            continue;
+        if (RecoverSession(events)) {
+            return;
         }
-        auto proxy = iface_cast<DataCollectManagerIdl>(object);
-        if (proxy == nullptr || callback_ == nullptr) {
-            SGLOGE("proxy or callback is null");
-            continue;
-        }
-        // 服务端重启后会话丢失，重新创建会话并获取新的会话对象代理（沿用超时处置策略）
-        sptr<IRemoteObject> newSessionRemote = nullptr;
-        int32_t ret = proxy->CreatAuthEventClient(callback_, timeoutAllowFlag_, newSessionRemote);
-        if (ret != SUCCESS || newSessionRemote == nullptr) {
-            SGLOGE("ReCreatClient fail, ret=%{public}d", ret);
-            continue;
-        }
-        auto sessionProxy = iface_cast<AuthEventSession>(newSessionRemote);
-        if (sessionProxy == nullptr) {
-            SGLOGE("session proxy is null");
-            continue;
-        }
-        {
-            std::lock_guard<ffrt::mutex> lock(g_mutex_);
-            if (deleted_) {
-                SGLOGI("client deleted during reconnect, discard new session");
-                sessionProxy->Destroy();
-                return;
-            }
-            sessionRemote_ = newSessionRemote;
-        }
-        for (int64_t eventId : events) {
-            int32_t code = sessionProxy->Subscribe(eventId);
-            if (code != SUCCESS) {
-                SGLOGE("ReSubscribe fail, eventId=%{public}lld, ret=%{public}d",
-                    static_cast<long long>(eventId), code);
-            }
-        }
-        return;
     }
     SGLOGE("recover AuthEventSubscribeClient fail");
+}
+
+bool AuthEventSubscribeClient::RecoverSession(const std::set<int64_t> &events)
+{
+    sptr<IRemoteObject> object = ReconnectService();
+    if (object == nullptr) {
+        return false;
+    }
+    auto proxy = iface_cast<DataCollectManagerIdl>(object);
+    if (proxy == nullptr || callback_ == nullptr) {
+        SGLOGE("proxy or callback is null");
+        return false;
+    }
+    // 服务端重启后会话丢失，重建会话并获取新的会话对象代理（沿用超时处置策略）
+    sptr<IRemoteObject> newSessionRemote = nullptr;
+    int32_t ret = proxy->CreatAuthEventClient(callback_, timeoutAllowFlag_, newSessionRemote);
+    if (ret != SUCCESS || newSessionRemote == nullptr) {
+        SGLOGE("ReCreatClient fail, ret=%{public}d", ret);
+        return false;
+    }
+    auto sessionProxy = iface_cast<AuthEventSession>(newSessionRemote);
+    if (sessionProxy == nullptr) {
+        SGLOGE("session proxy is null");
+        return false;
+    }
+    if (!SwitchSessionRemote(newSessionRemote, sessionProxy)) {
+        return true; // client 已销毁：新建会话已随之销毁，终止重连
+    }
+    for (int64_t eventId : events) {
+        int32_t code = sessionProxy->Subscribe(eventId);
+        if (code != SUCCESS) {
+            SGLOGE("ReSubscribe fail, eventId=%{public}lld, ret=%{public}d",
+                static_cast<long long>(eventId), code);
+        }
+    }
+    return true;
+}
+
+bool AuthEventSubscribeClient::SwitchSessionRemote(const sptr<IRemoteObject> &newSessionRemote,
+    const sptr<AuthEventSession> &sessionProxy)
+{
+    std::lock_guard<ffrt::mutex> lock(g_mutex_);
+    if (deleted_) {
+        SGLOGI("client deleted during reconnect, discard new session");
+        sessionProxy->Destroy();
+        return false;
+    }
+    sessionRemote_ = newSessionRemote;
+    return true;
 }
 
 int32_t AuthEventSubscribeClient::Subscribe(int64_t eventId)
@@ -308,33 +333,7 @@ void AuthEventSubscribeClient::DeleteClient()
 {
     // 注意：禁止在用户回调内部（OnAuthEvent 触发的执行流）调用本接口，
     // 否则会因等待自身持有的 notifyMutex_ 而死锁。
-    if (callback_ != nullptr) {
-        callback_->ClearCallBack();
-    }
-    sptr<IRemoteObject> sessionRemote;
-    sptr<IRemoteObject::DeathRecipient> deathRecipient;
-    {
-        std::lock_guard<ffrt::mutex> lock(g_mutex_);
-        deleted_ = true;
-        sessionRemote = sessionRemote_;
-        sessionRemote_ = nullptr;
-        deathRecipient = deathRecipient_;
-    }
-    if (sessionRemote != nullptr) {
-        auto session = iface_cast<AuthEventSession>(sessionRemote);
-        if (session != nullptr) {
-            session->Destroy();
-        }
-    }
-    if (deathRecipient != nullptr) {
-        auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (registry != nullptr) {
-            auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-            if (object != nullptr) {
-                object->RemoveDeathRecipient(deathRecipient);
-            }
-        }
-    }
+    Release();
 }
 } // namespace OHOS::Security::SecurityGuard
 

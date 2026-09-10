@@ -35,9 +35,8 @@ void AuthEventReporter::ReportAuthBlockResult(pid_t callerPid, int32_t callerUid
 void AuthEventReporter::ReportToHa(const char *eventName, pid_t callerPid, int32_t callerUid,
     const AuthEvent &event)
 {
-    // TODO: 接入 HA lite 客户端真实上报。
-    // 步骤：#include "ha_client_lite_api.h"（依赖部件引入本仓构建后），
-    //       按 eventName 上报事件，参数：CALLER_PID/CALLER_UID/EVENT_ID/CONTENT/METADATA。
+    // HA lite 客户端真实上报的统一入口（依赖 ha_client_lite_api.h 进入本仓构建环境后
+    // 在此组装并上报：eventName + CALLER_PID/CALLER_UID/EVENT_ID/CONTENT/METADATA）。
     // 注意：HA 上报若为耗时接口，仅允许锁外调用（与 Notify 推送同纪律）。
     const std::string content = event.GetContent();
     const std::string metadata = event.GetMetadata();

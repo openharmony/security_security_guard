@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
 #ifndef SECURITY_GUARD_AUTH_EVENT_CALLBACK_STUB_H
 #define SECURITY_GUARD_AUTH_EVENT_CALLBACK_STUB_H
+#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
 
 #include "iremote_stub.h"
 #include "nocopyable.h"
@@ -32,6 +32,5 @@ public:
 };
 } // namespace OHOS::Security::SecurityGuard
 
-#endif // SECURITY_GUARD_AUTH_EVENT_CALLBACK_STUB_H
-
 #endif // SECURITY_GUARD_AUTH_EVENT_ENABLE
+#endif // SECURITY_GUARD_AUTH_EVENT_CALLBACK_STUB_H

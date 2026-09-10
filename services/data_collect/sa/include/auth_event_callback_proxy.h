@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
 #ifndef SECURITY_GUARD_AUTH_EVENT_CALLBACK_PROXY_H
 #define SECURITY_GUARD_AUTH_EVENT_CALLBACK_PROXY_H
+#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
 
 #include "iremote_object.h"
 #include "iremote_proxy.h"
@@ -35,6 +35,5 @@ private:
 };
 } // namespace OHOS::Security::SecurityGuard
 
-#endif // SECURITY_GUARD_AUTH_EVENT_CALLBACK_PROXY_H
-
 #endif // SECURITY_GUARD_AUTH_EVENT_ENABLE
+#endif // SECURITY_GUARD_AUTH_EVENT_CALLBACK_PROXY_H

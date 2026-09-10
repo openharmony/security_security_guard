@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
 #ifndef SECURITY_GUARD_AUTH_EVENT_SUBSCRIBE_CLIENT_H
 #define SECURITY_GUARD_AUTH_EVENT_SUBSCRIBE_CLIENT_H
+#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
 
 #include <cstdint>
 #include <functional>
@@ -27,9 +27,18 @@
 #include "iremote_object.h"
 
 namespace OHOS::Security::SecurityGuard {
+class AuthEventSession;
 using AuthEventCallback = std::function<void(const AuthEvent &event)>;
 class AuthEventSubscribeClient {
+private:
+    struct ConstructTag {};
+
 public:
+    // 供 std::make_shared 使用的构造占位：ConstructTag 为私有类型，外部无法构造实参，
+    // 保证实例仍只能经 CreatClient 创建
+    AuthEventSubscribeClient(ConstructTag tag);
+    // 最后一个 shared_ptr 释放时自动断开回调、排空在途 OnAuthEvent 并销毁服务端会话
+    ~AuthEventSubscribeClient();
     // 创建会话：服务端创建会话对象并经 [out] 下发远端引用（sessionRemote_），
     // 一个 client 对象 = 一个服务端会话，会话身份由 binder handle 承载，无 clientId。
     // timeoutAllowFlag：回填超时处置策略（默认放行），随会话保存，供超时需求（另一需求）消费
@@ -42,17 +51,28 @@ public:
     // 随后销毁服务端会话。返回后框架不会再触发用户回调，
     // 此时销毁回调所捕获的状态是安全的。
     // 把 client 作为对象成员的调用方无需显式调用本接口；
-    // 最后一个 shared_ptr 释放时 Deleter 会自动执行该操作。
+    // 最后一个 shared_ptr 释放时析构函数会自动执行该操作。
     void DeleteClient();
+
 private:
     AuthEventSubscribeClient() = default;
-    ~AuthEventSubscribeClient() = default;
     AuthEventSubscribeClient(const AuthEventSubscribeClient&) = delete;
     AuthEventSubscribeClient& operator= (const AuthEventSubscribeClient&) = delete;
     static int32_t SetDeathRecipient(std::shared_ptr<AuthEventSubscribeClient> client,
         const sptr<IRemoteObject> &remote);
-    static void Deleter(AuthEventSubscribeClient *client);
+    // 断开回调、置销毁标记并销毁服务端会话（DeleteClient 与析构共用路径）
+    void Release();
+    // 锁外执行跨进程清理：销毁服务端会话并解除 SA 死亡通知
+    static void DestroyRemoteObjects(const sptr<IRemoteObject> &sessionRemote,
+        const sptr<IRemoteObject::DeathRecipient> &deathRecipient);
+    bool IsDeleted();
+    // 服务端死亡后的退避重连：重建会话并按快照重订阅，成功或已终止返回 true
     void HandleDeath();
+    // 单轮重连尝试：重建会话与订阅；返回 true 表示完成（成功或已销毁终止），false 表示继续重试
+    bool RecoverSession(const std::set<int64_t> &events);
+    // 锁内写回新会话引用；已销毁时销毁新建会话并返回 false（终止重连）
+    bool SwitchSessionRemote(const sptr<IRemoteObject> &newSessionRemote,
+        const sptr<AuthEventSession> &sessionProxy);
     sptr<IRemoteObject> ReconnectService();
     class DeathRecipient : public IRemoteObject::DeathRecipient {
     public:
@@ -71,6 +91,5 @@ private:
 };
 } // namespace OHOS::Security::SecurityGuard
 
-#endif // SECURITY_GUARD_AUTH_EVENT_SUBSCRIBE_CLIENT_H
-
 #endif // SECURITY_GUARD_AUTH_EVENT_ENABLE
+#endif // SECURITY_GUARD_AUTH_EVENT_SUBSCRIBE_CLIENT_H
