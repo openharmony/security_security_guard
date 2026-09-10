@@ -32,21 +32,11 @@ public:
     // 内容：应用信息（caller pid/uid）+ 事件信息（eventId/content/metadata）。
     static void ReportAuthBlockResult(pid_t callerPid, int32_t callerUid, const AuthEvent &event);
 
-    // 回填超时打点：NotifyAuthEvent 分发后超时未回填时上报。
-    // 内容：应用信息（订阅者 pid/uid）+ 事件信息 + 起始时间（分发时刻）+ 结束时间（超时判定时刻），
-    // 均为毫秒时间戳，两者之差即超时时长。
-    static void ReportAuthResultTimeout(pid_t callerPid, int32_t callerUid, const AuthEvent &event,
-        int64_t startMs, int64_t endMs);
-
-    // 当前毫秒时间戳（墙上时钟）
-    static int64_t NowMs();
-
 private:
     // HA lite 客户端真实上报的统一接入点。
     // TODO: 引入 ha_client_lite_api.h 后在此组装并上报事件（ eventName + 参数键值对），
     //       当前以 SGLOGI 日志兜底，保证可编译可测。
-    static void ReportToHa(const char *eventName, pid_t callerPid, int32_t callerUid, const AuthEvent &event,
-        int64_t startMs, int64_t endMs);
+    static void ReportToHa(const char *eventName, pid_t callerPid, int32_t callerUid, const AuthEvent &event);
 };
 } // namespace OHOS::Security::SecurityGuard
 

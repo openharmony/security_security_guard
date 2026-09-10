@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -50,6 +50,19 @@ public:
     void SetUp() {}
     void TearDown() {}
 };
+
+// 注入服务端下发形态的会话对象远端引用（无 SA 3524 环境，proxy 走 mock SendRequest）
+OHOS::sptr<MockRemoteObjectForSdkTest> CreateFakeSessionRemote()
+{
+    auto remote = OHOS::sptr<MockRemoteObjectForSdkTest>(new (std::nothrow) MockRemoteObjectForSdkTest());
+    if (remote != nullptr) {
+        ON_CALL(*remote, AddDeathRecipient(_)).WillByDefault(Return(true));
+        ON_CALL(*remote, RemoveDeathRecipient(_)).WillByDefault(Return(true));
+        ON_CALL(*remote, SendRequest(_, _, _, _)).WillByDefault(Return(-1));
+    }
+    return remote;
+}
+}
 
 HWTEST_F(AuthEventSdkTest, CallbackServiceOnAuthEvent001, TestSize.Level0)
 {
@@ -127,23 +140,27 @@ HWTEST_F(AuthEventSdkTest, ClientCreatClient001, TestSize.Level0)
 
 HWTEST_F(AuthEventSdkTest, ClientMethodsBeforeCreate001, TestSize.Level0)
 {
-    // 未创建会话（clientId 为空）时各方法返回 BAD_PARAM
+    // 会话对象引用为空：各方法返回 NULL_OBJECT
     auto client = std::make_shared<AuthEventSubscribeClient>();
     AuthEvent event(3001, "content", "metadata");
+    EXPECT_EQ(client->Subscribe(11), NULL_OBJECT);
+    EXPECT_EQ(client->Unsubscribe(11), NULL_OBJECT);
+    EXPECT_EQ(client->SetAuthResult(event, true), NULL_OBJECT);
+    // 幂等 DeleteClient 不崩溃
+    client->DeleteClient();
+    client->DeleteClient();
+    // 已销毁（deleted_ 置位）后各方法返回 BAD_PARAM
     EXPECT_EQ(client->Subscribe(11), BAD_PARAM);
     EXPECT_EQ(client->Unsubscribe(11), BAD_PARAM);
     EXPECT_EQ(client->SetAuthResult(event, true), BAD_PARAM);
-    // 幂等销毁不崩溃
-    client->DeleteClient();
-    client->DeleteClient();
 }
 
-HWTEST_F(AuthEventSdkTest, ClientMethodsWithFakeClientId001, TestSize.Level0)
+HWTEST_F(AuthEventSdkTest, ClientMethodsWithFakeSession001, TestSize.Level0)
 {
-    // 注入服务端回传形态的 clientId：无 SA 3524 环境下 proxy 获取失败，
-    // 各方法不崩溃且返回非 SUCCESS
+    // 注入服务端下发形态的会话对象远端引用：各方法经 session 代理走 SendRequest
+    // 失败路径（mock 返回 -1），不崩溃且返回非 SUCCESS
     auto client = std::make_shared<AuthEventSubscribeClient>();
-    client->clientId_ = "auth_fake_client";
+    client->sessionRemote_ = CreateFakeSessionRemote();
     AuthEvent event(3002, "content", "metadata");
     EXPECT_NE(client->Subscribe(12), SUCCESS);
     EXPECT_NE(client->Unsubscribe(12), SUCCESS);
@@ -153,11 +170,12 @@ HWTEST_F(AuthEventSdkTest, ClientMethodsWithFakeClientId001, TestSize.Level0)
 
 HWTEST_F(AuthEventSdkTest, ClientDeleter001, TestSize.Level0)
 {
-    // Deleter 兜底：注入假 clientId 后释放最后一个 shared_ptr，不崩溃且清理 clientId
+    // Deleter 兜底：注入假会话对象引用后释放最后一个 shared_ptr，
+    // Destroy 经 mock SendRequest 失败路径执行，不崩溃
     {
         auto client = std::shared_ptr<AuthEventSubscribeClient>(new AuthEventSubscribeClient(),
             AuthEventSubscribeClient::Deleter);
-        client->clientId_ = "auth_fake_client_deleter";
+        client->sessionRemote_ = CreateFakeSessionRemote();
     }
     SUCCEED();
 }
@@ -166,14 +184,13 @@ HWTEST_F(AuthEventSdkTest, ClientSetDeathRecipient001, TestSize.Level0)
 {
     auto client = std::shared_ptr<AuthEventSubscribeClient>(new AuthEventSubscribeClient(),
         AuthEventSubscribeClient::Deleter);
-    client->clientId_ = "auth_fake_client_recipient";
+    client->sessionRemote_ = CreateFakeSessionRemote();
     OHOS::sptr<MockRemoteObjectForSdkTest> remote(new (std::nothrow) MockRemoteObjectForSdkTest());
     ASSERT_NE(remote, nullptr);
     EXPECT_CALL(*remote, AddDeathRecipient(_)).WillOnce(Return(false));
     EXPECT_EQ(AuthEventSubscribeClient::SetDeathRecipient(client, remote), SUCCESS);
     EXPECT_NE(client->deathRecipient_, nullptr);
     client->DeleteClient();
-}
 }
 
 #endif // SECURITY_GUARD_AUTH_EVENT_ENABLE

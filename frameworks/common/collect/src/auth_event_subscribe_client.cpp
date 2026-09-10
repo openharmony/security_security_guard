@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@
 #include "iservice_registry.h"
 #include "security_guard_define.h"
 #include "security_guard_log.h"
+#include "auth_event_session_proxy.h"
 #include "data_collect_manager_idl_proxy.h"
 #include "data_collect_manager_idl.h"
 #include "i_data_collect_manager.h"
@@ -38,7 +39,7 @@ void AuthEventSubscribeClient::Deleter(AuthEventSubscribeClient *client)
     if (client == nullptr) {
         return;
     }
-    // 在销毁服务端 client 之前，先排空在途 OnAuthEvent 并清空回调。
+    // 在销毁服务端会话之前，先排空在途 OnAuthEvent 并清空回调。
     // 本函数在最后一个 shared_ptr 释放时同步执行。当调用方把 client 作为对象成员时，
     // Deleter 在调用方析构函数内部执行，此时调用方内存仍然有效，
     // 在途回调可安全访问其状态；ClearCallBack 返回后不会再触发任何用户回调，
@@ -48,24 +49,26 @@ void AuthEventSubscribeClient::Deleter(AuthEventSubscribeClient *client)
     if (client->callback_ != nullptr) {
         client->callback_->ClearCallBack();
     }
-    std::string clientId;
+    sptr<IRemoteObject> sessionRemote;
     sptr<IRemoteObject::DeathRecipient> deathRecipient;
     {
         std::lock_guard<ffrt::mutex> lock(g_mutex_);
         client->deleted_ = true;
-        clientId = client->clientId_;
-        client->clientId_ = "";
+        sessionRemote = client->sessionRemote_;
+        client->sessionRemote_ = nullptr;
         deathRecipient = client->deathRecipient_;
     }
-    if (!clientId.empty()) {
+    if (sessionRemote != nullptr) {
+        auto session = iface_cast<AuthEventSession>(sessionRemote);
+        if (session != nullptr) {
+            session->Destroy();
+        }
+    }
+    if (deathRecipient != nullptr) {
         auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (registry != nullptr) {
             auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-            auto proxy = iface_cast<DataCollectManagerIdl>(object);
-            if (proxy != nullptr) {
-                proxy->DestoryAuthEventClient(clientId);
-            }
-            if (object != nullptr && deathRecipient != nullptr) {
+            if (object != nullptr) {
                 object->RemoveDeathRecipient(deathRecipient);
             }
         }
@@ -73,16 +76,8 @@ void AuthEventSubscribeClient::Deleter(AuthEventSubscribeClient *client)
     delete client;
 }
 
-std::string AuthEventSubscribeClient::ConstructClientId(const AuthEventCallbackService *serviceCallback)
-{
-    std::string timeStr = std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
-    std::string ptrStr = std::to_string(reinterpret_cast<int64_t>(serviceCallback));
-    std::size_t hash = std::hash<std::string>{}(timeStr + ptrStr);
-    return std::to_string(hash);
-}
-
 int32_t AuthEventSubscribeClient::CreatClient(AuthEventCallback callback,
-    std::shared_ptr<AuthEventSubscribeClient> &client, bool timeoutAllowFlag)
+    std::shared_ptr<AuthEventSubscribeClient> &client)
 {
     SGLOGI("enter");
     std::lock_guard<ffrt::mutex> lock(g_clientMutex);
@@ -107,18 +102,17 @@ int32_t AuthEventSubscribeClient::CreatClient(AuthEventCallback callback,
         return NULL_OBJECT;
     }
     serviceCallback->RegistCallBack(callback);
-    std::string clientId = ConstructClientId(serviceCallback);
-    int32_t ret = proxy->CreatAuthEventClient(clientId, timeoutAllowFlag, serviceCallback);
-    if (ret != SUCCESS) {
+    sptr<IRemoteObject> sessionRemote = nullptr;
+    int32_t ret = proxy->CreatAuthEventClient(serviceCallback, sessionRemote);
+    if (ret != SUCCESS || sessionRemote == nullptr) {
         SGLOGI("CreatAuthEventClient result, ret=%{public}d", ret);
-        return ret;
+        return ret != SUCCESS ? ret : FAILED;
     }
     client = std::shared_ptr<AuthEventSubscribeClient>(new AuthEventSubscribeClient(), Deleter);
     client->callback_ = serviceCallback;
-    client->timeoutAllowFlag_ = timeoutAllowFlag;
     {
         std::lock_guard<ffrt::mutex> memberLock(g_mutex_);
-        client->clientId_ = clientId;
+        client->sessionRemote_ = sessionRemote;
     }
     ret = SetDeathRecipient(client, object);
     if (ret != SUCCESS) {
@@ -181,7 +175,7 @@ void AuthEventSubscribeClient::HandleDeath()
     {
         std::lock_guard<ffrt::mutex> lock(g_mutex_);
         events = subscribedEventIds_;
-        clientId_ = "";
+        sessionRemote_ = nullptr; // 服务端已重启，旧会话对象已随进程消亡
     }
     for (int delay : RECONNECT_RETRY_DELAY_SECONDS) {
         ffrt::this_task::sleep_for(std::chrono::seconds(delay));
@@ -201,24 +195,29 @@ void AuthEventSubscribeClient::HandleDeath()
             SGLOGE("proxy or callback is null");
             continue;
         }
-        // 服务端重启后会话丢失，重新生成 clientId 重建会话
-        std::string newClientId = ConstructClientId(callback_.GetRefPtr());
-        int32_t ret = proxy->CreatAuthEventClient(newClientId, timeoutAllowFlag_, callback_);
-        if (ret != SUCCESS) {
+        // 服务端重启后会话丢失，重新创建会话并获取新的会话对象代理
+        sptr<IRemoteObject> newSessionRemote = nullptr;
+        int32_t ret = proxy->CreatAuthEventClient(callback_, newSessionRemote);
+        if (ret != SUCCESS || newSessionRemote == nullptr) {
             SGLOGE("ReCreatClient fail, ret=%{public}d", ret);
+            continue;
+        }
+        auto sessionProxy = iface_cast<AuthEventSession>(newSessionRemote);
+        if (sessionProxy == nullptr) {
+            SGLOGE("session proxy is null");
             continue;
         }
         {
             std::lock_guard<ffrt::mutex> lock(g_mutex_);
             if (deleted_) {
                 SGLOGI("client deleted during reconnect, discard new session");
-                proxy->DestoryAuthEventClient(newClientId);
+                sessionProxy->Destroy();
                 return;
             }
-            clientId_ = newClientId;
+            sessionRemote_ = newSessionRemote;
         }
         for (int64_t eventId : events) {
-            int32_t code = proxy->SubscribeAuthEvent(eventId, newClientId);
+            int32_t code = sessionProxy->Subscribe(eventId);
             if (code != SUCCESS) {
                 SGLOGE("ReSubscribe fail, eventId=%{public}lld, ret=%{public}d",
                     static_cast<long long>(eventId), code);
@@ -232,27 +231,20 @@ void AuthEventSubscribeClient::HandleDeath()
 int32_t AuthEventSubscribeClient::Subscribe(int64_t eventId)
 {
     SGLOGI("enter");
-    std::string clientId;
+    sptr<AuthEventSession> session {};
     {
         std::lock_guard<ffrt::mutex> lock(g_mutex_);
-        clientId = clientId_;
+        if (deleted_) {
+            SGLOGE("client deleted");
+            return BAD_PARAM;
+        }
+        session = iface_cast<AuthEventSession>(sessionRemote_);
     }
-    if (clientId.empty()) {
-        SGLOGE("client not created");
-        return BAD_PARAM;
-    }
-    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (registry == nullptr) {
-        SGLOGE("GetSystemAbilityManager error");
+    if (session == nullptr) {
+        SGLOGE("session proxy is null");
         return NULL_OBJECT;
     }
-    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerIdl>(object);
-    if (proxy == nullptr) {
-        SGLOGE("proxy is null");
-        return NULL_OBJECT;
-    }
-    int32_t ret = proxy->SubscribeAuthEvent(eventId, clientId);
+    int32_t ret = session->Subscribe(eventId);
     if (ret != SUCCESS) {
         SGLOGI("Subscribe result, ret=%{public}d", ret);
         return ret;
@@ -267,27 +259,20 @@ int32_t AuthEventSubscribeClient::Subscribe(int64_t eventId)
 int32_t AuthEventSubscribeClient::Unsubscribe(int64_t eventId)
 {
     SGLOGI("enter");
-    std::string clientId;
+    sptr<AuthEventSession> session {};
     {
         std::lock_guard<ffrt::mutex> lock(g_mutex_);
-        clientId = clientId_;
+        if (deleted_) {
+            SGLOGE("client deleted");
+            return BAD_PARAM;
+        }
+        session = iface_cast<AuthEventSession>(sessionRemote_);
     }
-    if (clientId.empty()) {
-        SGLOGE("client not created");
-        return BAD_PARAM;
-    }
-    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (registry == nullptr) {
-        SGLOGE("GetSystemAbilityManager error");
+    if (session == nullptr) {
+        SGLOGE("session proxy is null");
         return NULL_OBJECT;
     }
-    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerIdl>(object);
-    if (proxy == nullptr) {
-        SGLOGE("proxy is null");
-        return NULL_OBJECT;
-    }
-    int32_t ret = proxy->UnsubscribeAuthEvent(eventId, clientId);
+    int32_t ret = session->Unsubscribe(eventId);
     if (ret != SUCCESS) {
         SGLOGI("Unsubscribe result, ret=%{public}d", ret);
         return ret;
@@ -302,27 +287,20 @@ int32_t AuthEventSubscribeClient::Unsubscribe(int64_t eventId)
 int32_t AuthEventSubscribeClient::SetAuthResult(const AuthEvent &event, bool allowFlag)
 {
     SGLOGI("enter");
-    std::string clientId;
+    sptr<AuthEventSession> session {};
     {
         std::lock_guard<ffrt::mutex> lock(g_mutex_);
-        clientId = clientId_;
+        if (deleted_) {
+            SGLOGE("client deleted");
+            return BAD_PARAM;
+        }
+        session = iface_cast<AuthEventSession>(sessionRemote_);
     }
-    if (clientId.empty()) {
-        SGLOGE("client not created");
-        return BAD_PARAM;
-    }
-    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (registry == nullptr) {
-        SGLOGE("GetSystemAbilityManager error");
+    if (session == nullptr) {
+        SGLOGE("session proxy is null");
         return NULL_OBJECT;
     }
-    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerIdl>(object);
-    if (proxy == nullptr) {
-        SGLOGE("proxy is null");
-        return NULL_OBJECT;
-    }
-    return proxy->SetAuthResult(event, allowFlag, clientId);
+    return session->SetAuthResult(event, allowFlag);
 }
 
 void AuthEventSubscribeClient::DeleteClient()
@@ -332,29 +310,29 @@ void AuthEventSubscribeClient::DeleteClient()
     if (callback_ != nullptr) {
         callback_->ClearCallBack();
     }
-    std::string clientId;
+    sptr<IRemoteObject> sessionRemote;
     sptr<IRemoteObject::DeathRecipient> deathRecipient;
     {
         std::lock_guard<ffrt::mutex> lock(g_mutex_);
         deleted_ = true;
-        clientId = clientId_;
-        clientId_ = "";
+        sessionRemote = sessionRemote_;
+        sessionRemote_ = nullptr;
         deathRecipient = deathRecipient_;
     }
-    if (clientId.empty()) {
-        return;
+    if (sessionRemote != nullptr) {
+        auto session = iface_cast<AuthEventSession>(sessionRemote);
+        if (session != nullptr) {
+            session->Destroy();
+        }
     }
-    auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (registry == nullptr) {
-        return;
-    }
-    auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
-    auto proxy = iface_cast<DataCollectManagerIdl>(object);
-    if (proxy != nullptr) {
-        proxy->DestoryAuthEventClient(clientId);
-    }
-    if (object != nullptr && deathRecipient != nullptr) {
-        object->RemoveDeathRecipient(deathRecipient);
+    if (deathRecipient != nullptr) {
+        auto registry = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (registry != nullptr) {
+            auto object = registry->GetSystemAbility(DATA_COLLECT_MANAGER_SA_ID);
+            if (object != nullptr) {
+                object->RemoveDeathRecipient(deathRecipient);
+            }
+        }
     }
 }
 } // namespace OHOS::Security::SecurityGuard

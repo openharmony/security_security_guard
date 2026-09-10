@@ -97,8 +97,9 @@ ohos_fuzztest("DataCollectManagerServiceFuzzTest") {
     defines += [ "SECURITY_GUARD_AUTH_EVENT_ENABLE" ]
     sources += [
       "${sg_root_dir}/services/data_collect/sa/auth_event_callback_proxy.cpp",
-      "${sg_root_dir}/services/data_collect/sa/auth_event_subscribe_manager.cpp",
       "${sg_root_dir}/services/data_collect/sa/auth_event_reporter.cpp",
+      "${sg_root_dir}/services/data_collect/sa/auth_event_session_service.cpp",
+      "${sg_root_dir}/services/data_collect/sa/auth_event_subscribe_manager.cpp",
     ]
   }
 
@@ -111,6 +112,9 @@ ohos_fuzztest("DataCollectManagerServiceFuzzTest") {
     "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
   ]
 
+  if (security_guard_auth_event_enable) {
+    deps += [ "${sg_root_dir}/services/data_collect/idl:auth_event_session_sa_stub" ]
+  }
   external_deps = [
     "c_utils:utils",
     "bounds_checking_function:libsec_shared",
