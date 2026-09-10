@@ -17,7 +17,6 @@ sequenceable OHOS.IRemoteObject;
 sequenceable OHOS.Security.SecurityCollector.SecurityEventRuler;
 sequenceable OHOS.Security.SecurityCollector.SecurityCollectorSubscribeInfo;
 sequenceable OHOS.Security.SecurityGuard.SecurityEventFilter;
-sequenceable OHOS.Security.SecurityGuard.AuthEvent;
 
 interface OHOS.Security.SecurityGuard.DataCollectManagerIdl {
     void RequestDataSubmit([in] long eventId, [in] String version, [in] String time, [in] String content);
@@ -39,9 +38,5 @@ interface OHOS.Security.SecurityGuard.DataCollectManagerIdl {
     void QuerySecurityEventById([in] List<SecurityEventRuler> rulers, [in] IRemoteObject cb, [in] String eventGroup);
     void QueryCodeSignInfoByPath([in] int fd, [in] int pid, [inout] String resStr);
     void QueryAllClientsInfo([inout] String resStr);
-    void CreatAuthEventClient([in] String clientId, [in] boolean timeoutAllowFlag, [in] IRemoteObject cb);
-    void DestoryAuthEventClient([in] String clientId);
-    void SubscribeAuthEvent([in] long eventId, [in] String clientId);
-    void UnsubscribeAuthEvent([in] long eventId, [in] String clientId);
-    void SetAuthResult([in] AuthEvent event, [in] boolean allowFlag, [in] String clientId);
+    void CreatAuthEventClient([in] IRemoteObject cb, [out] IRemoteObject session);
 }

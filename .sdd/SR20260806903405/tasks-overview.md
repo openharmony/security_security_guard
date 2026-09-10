@@ -8,20 +8,20 @@
 - 来源测试规格：`.sdd/SR20260806903405/dev-design.md` 第 6 节「验收标准」（轻量模式，无独立测试设计文档）
 - 来源门禁结果：`.sdd/SR20260806903405/.context/dev-design-gate.md`
 - 门禁结论：通过
-- 任务总数：4（T4 为工作流 done 后的增量迭代，按用户陆续补充的规格执行）
-- 生成时间：2026-09-03（T4 追记：2026-09-07）
+- 任务总数：5（T4、T5 为工作流 done 后的增量迭代，按用户陆续补充的规格执行）
+- 生成时间：2026-09-03（T4 追记：2026-09-07；T5 追记：2026-09-10）
 
 ## 执行规则
 
 - `dev-design.md` 是实现设计与验证规格的唯一事实来源。开发每个任务前必须完整读取该文档，尤其是第 4 节「契约变更」与第 6 节「验收标准」。
 - 按串行执行顺序逐个执行，编号与顺序一致；同一时刻只开发一个任务。
-- T1-T3 为原计划任务（工作流已闭环）；T4 为 T3 交付后用户追加规格的增量迭代（HA 打点、整需求宏隔离、权限/配置校验、pending 重构、clientId 回迁客户端、超时处置），随对话直接实施，不经过 task-split 重新拆分（单批次小步变更）。
+- T1-T3 为原计划任务（工作流已闭环）；T4 为 T3 交付后用户追加规格的增量迭代（HA 打点、整需求宏隔离、权限/配置校验、pending 重构、clientId 回迁客户端、超时处置）；T5 为 v9 设计变更增量迭代（移除服务端超时特性、会话关联重构为方案 D「会话即远端对象」、错误码场景全量梳理），随对话直接实施，不经过 task-split 重新拆分（单批次小步变更）。
 - 设计文档发生变化时，停止开发，返回设计门禁并重新生成、确认任务计划。
 
 ## 串行执行顺序
 
 ```text
-T1 → T2 → T3 → T4
+T1 → T2 → T3 → T4 → T5
 ```
 
 ## 任务计划
@@ -94,3 +94,13 @@ T1 → T2 → T3 → T4
 - 待处理：uid 白名单具体值待用户；ha_client_lite_api.h 依赖进仓后替换 ReportToHa 日志兜底（单点）；上机集成验证沿用 T3 登记项
 - 后续须知：无
 - 证据：每轮变更后 `hb build security_guard -t` 编译通过；宏隔离双形态（开/关）均验证编译通过后恢复默认 false；单测累计 42 例（parcelable 3 + 管理器 31 + SDK 8，管理器含 Timeout001-004/TimeoutAction001-002/SessionApiPermission001-002/SubscribeEventIdNotInConfig001 等增量用例）
+
+### T5：增量迭代（移除超时特性 + 会话即远端对象重构 + 错误码梳理）
+
+- 状态：Completed
+- 修改文件：新增 `services/data_collect/idl/AuthEventSession.idl`、`services/data_collect/sa/include/auth_event_session_service.h`、`services/data_collect/sa/auth_event_session_service.cpp`（会话对象 + per-session DeathRecipient）；修改 `DataCollectManagerIdl.idl`（5 方法收缩为 1 方法 `CreatAuthEventClient([in] IRemoteObject cb, [out] IRemoteObject session)`，实测 IDL 支持 [out] IRemoteObject）、`idl/BUILD.gn`（+auth_event_session_interface target 与 stub/proxy source_set）、`data_collect_manager_service_ipc_interface_code.h`（登记码收缩为 13 一个）、`auth_event_subscribe_manager.h/.cpp`（重写：会话集合 set<sptr<AuthEventSessionService>>、结果表、配额、双轨校验 IsCallerAllowed 静态方法自服务类迁入、NotifyAuthEvent 保留、超时跟踪全删）、`auth_event_session_service.*`（四方法：权限→会话有效性→pid 归属→配置校验→转调 manager）、`data_collect_manager_service.h/.cpp` 与 mock 影子头（1 方法签名）、`auth_event_reporter.h/.cpp`（删 ReportAuthResultTimeout/NowMs，仅留 AUTH_BLOCK_RESULT）、`auth_event_subscribe_client.h/.cpp`（重写：sessionRemote_ 成员直调、删 clientId/timeoutAllowFlag/ConstructClientId、重连重建会话）、9 个 fuzz BUILD.gn 与 services/SDK/SaTest BUILD.gn（+session_service 源与 stub 依赖；修复 v8 遗留的 libsg_collect_sdk 及其测试 target 缺 defines 注入问题）、两个测试文件（删 6 超时用例、session 语义重写）
+- 核心实现：① **移除服务端事件超时判断**（用户明确属另一需求）：pendingResults_/CheckAuthResultTimeout/AUTH_RESULT_TIMEOUT_MS/timeoutAllowFlag/seqNum 填充解析/AUTH_RESULT_TIMEOUT 打点全删；② **方案 D 会话即远端对象**（用户裁决）：主接口仅 1 方法，服务端创建 AuthEventSessionService（stub 实例即会话状态容器）经 [out] 下发代理，SDK 持 sessionRemote_ 直调四方法——零身份参数、服务端零会话查表、死亡清理 per-session DeathRecipient 自治（O(1)）；③ 用户裁决语义：Unsubscribe 未订阅幂等 SUCCESS、同 cb 重复创建 BAD_PARAM、Destroy 幂等 SUCCESS 且销毁后其他方法 BAD_PARAM；④ 错误码场景全量矩阵落设计文档 4.9/详设 1.2.2（全部复用既有 ErrorCode，不新增码）
+- 设计偏差：已同步 dev-design 至 v9；`.sdd/SR20260806903405/详细设计.md` 按 v9 全文重写
+- 待处理：uid 白名单具体值仍待用户；ha_client_lite_api.h 依赖进仓后替换 ReportToHa 日志兜底；上机集成验证沿用 T3 登记项
+- 后续须知：v9 后主接口 wire code 仅新增 1 个（code 20）；会话方法走独立 AuthEventSessionIpcCode 空间（1-4）
+- 证据：`hb build security_guard -t --gn-args security_guard_auth_event_enable=true` 与默认 false 双形态编译全绿；开启形态产物 llvm-nm 验证（libsg_collect_sdk.z.so AuthEventSubscribeClient 6 导出 + 0 undefined AuthEvent；libsg_collect_service.z.so AuthEventSessionService 32 符号）；单测编译产物验证（SaTest 26 例注册 + SDK test 8 例注册 + parcelable 3 例 = 37 例，ARM 产物运行需真机）；改动净统计 28 文件 +852/-1017

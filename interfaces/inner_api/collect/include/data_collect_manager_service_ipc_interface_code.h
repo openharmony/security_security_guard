@@ -36,11 +36,9 @@ enum class DataCollectManagerInterfaceCode {
 #ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
     // 以下为 AuthEvent 框架接口的登记值（非 wire code）：
     // 3524 的实际 IPC code 由 IDL 生成枚举 DataCollectManagerIdlIpcCode 按方法声明顺序分配。
+    // 会话内方法（Subscribe/Unsubscribe/SetAuthResult/Destroy）由独立 AuthEventSession.idl
+    // 生成枚举 AuthEventSessionIpcCode 承载，不在此登记。
     CMD_CREAT_AUTH_EVENT_CLIENT = 13,
-    CMD_DESTORY_AUTH_EVENT_CLIENT = 14,
-    CMD_SUBSCRIBE_AUTH_EVENT = 15,
-    CMD_UNSUBSCRIBE_AUTH_EVENT = 16,
-    CMD_SET_AUTH_RESULT = 17,
 #endif
 };
 

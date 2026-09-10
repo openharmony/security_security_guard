@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,7 +21,6 @@
 #include <functional>
 #include <memory>
 #include <set>
-#include <string>
 
 #include "auth_event.h"
 #include "auth_event_callback_service.h"
@@ -31,9 +30,10 @@ namespace OHOS::Security::SecurityGuard {
 using AuthEventCallback = std::function<void(const AuthEvent &event)>;
 class AuthEventSubscribeClient {
 public:
-    // timeoutAllowFlag：回填超时处置策略（超时未回填时框架按该策略落结果），默认放行
+    // 创建会话：服务端创建会话对象并经 [out] 下发远端引用（sessionRemote_），
+    // 一个 client 对象 = 一个服务端会话，会话身份由 binder handle 承载，无 clientId
     static int32_t CreatClient(AuthEventCallback callback,
-        std::shared_ptr<AuthEventSubscribeClient> &client, bool timeoutAllowFlag = true);
+        std::shared_ptr<AuthEventSubscribeClient> &client);
     int32_t Subscribe(int64_t eventId);
     int32_t Unsubscribe(int64_t eventId);
     int32_t SetAuthResult(const AuthEvent &event, bool allowFlag);
@@ -50,7 +50,6 @@ private:
     AuthEventSubscribeClient& operator= (const AuthEventSubscribeClient&) = delete;
     static int32_t SetDeathRecipient(std::shared_ptr<AuthEventSubscribeClient> client,
         const sptr<IRemoteObject> &remote);
-    static std::string ConstructClientId(const AuthEventCallbackService *serviceCallback);
     static void Deleter(AuthEventSubscribeClient *client);
     void HandleDeath();
     sptr<IRemoteObject> ReconnectService();
@@ -63,10 +62,10 @@ private:
         std::weak_ptr<AuthEventSubscribeClient> client_;
     };
     sptr<AuthEventCallbackService> callback_{};
+    sptr<IRemoteObject> sessionRemote_{}; // 服务端下发的会话对象远端引用，CreatClient 时填充
     sptr<IRemoteObject::DeathRecipient> deathRecipient_{};
-    std::string clientId_{}; // 服务端生成并回传，CreatClient 时填充
     std::set<int64_t> subscribedEventIds_{};
-    bool deleted_ {false}; // 已显式销毁标记：阻止 HandleDeath 自动重建已删除的会话
+    bool deleted_ {false}; // 已显式销毁标记：阻止 HandleDeath 自动重建已删除的会话；销毁后各方法返回 BAD_PARAM
 };
 } // namespace OHOS::Security::SecurityGuard
 
