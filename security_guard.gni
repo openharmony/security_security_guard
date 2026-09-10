@@ -28,6 +28,7 @@ declare_args() {
   security_guard_security_collector_sa_profile_path = "security_collector.cfg"
   security_guard_event_filter_path = "/system/lib/libsg_event_filter.so"
   security_guard_event_wrapper_path = "/system/lib/libsg_event_wrapper.so"
+  security_guard_plugin_cfg_path = "/system/etc/detect_plugin.json"
   security_guard_device_type = "rk3568"
   security_guard_hicollie_able = true
   if (defined(global_parts_info) && !defined(global_parts_info.hiviewdfx_hicollie)) {
