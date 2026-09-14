@@ -142,7 +142,7 @@ void CollectorManager::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &r
         return;
     }
     object->RemoveDeathRecipient(this);
-    ffrt::submit([]() {CollectorManager::GetInstance().HandleDecipient();});
+    CollectorManager::GetInstance().HandleDecipient();
 }
 
 void CollectorManager::HandleDecipient()
