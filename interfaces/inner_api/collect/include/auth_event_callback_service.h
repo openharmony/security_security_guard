@@ -15,7 +15,6 @@
 
 #ifndef SECURITY_GUARD_AUTH_EVENT_CALLBACK_SERVICE_H
 #define SECURITY_GUARD_AUTH_EVENT_CALLBACK_SERVICE_H
-#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
 
 #include <functional>
 #include <memory>
@@ -42,5 +41,4 @@ private:
 };
 } // namespace OHOS::Security::SecurityGuard
 
-#endif // SECURITY_GUARD_AUTH_EVENT_ENABLE
 #endif // SECURITY_GUARD_AUTH_EVENT_CALLBACK_SERVICE_H

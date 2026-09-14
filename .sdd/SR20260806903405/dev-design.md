@@ -1,7 +1,7 @@
 # 支持阻断服务使用者接入阻断框架 · dev 设计
 
 > 状态：正式稿 v9（v8 + T5 增量迭代：移除服务端超时跟踪/超时处置/超时打点——超时属另一需求；会话关联重构为「会话即远端对象」方案 D——主接口仅追加 CreatAuthEventClient 1 方法下发 session 代理，新增独立 AuthEventSession IDL，删除 clientId 全链路；错误码场景全量梳理）
-> v9 变更：① **移除服务端事件超时判断**（本需求只做会话管理）：删除 pendingResults_ 超时跟踪表、CheckAuthResultTimeout、AUTH_RESULT_TIMEOUT_MS=400、~~timeoutAllowFlag~~、seqNum 的 metadata 填充与解析、AUTH_RESULT_TIMEOUT 打点；保留结果表 authResults_、NotifyAuthEvent 分发（不再分配 eventIndex）、AUTH_BLOCK_RESULT 打点。【修订：timeoutAllowFlag 参数保留——IDL/SDK/会话链路携带并随会话保存，本需求仅保存不消费，供超时需求（另一需求）届时按会话读取】② **会话关联改方案 D（会话即远端对象）**：主接口 IDL 5 方法缩减为 1 方法 `CreatAuthEventClient([in] IRemoteObject cb, [in] boolean timeoutAllowFlag, [out] IRemoteObject session)`（实测 IDL 支持 [out] IRemoteObject：proxy `reply.ReadRemoteObject()` / stub `SUCCEEDED(errCode)` 时 `WriteRemoteObject`）；新增独立 `AuthEventSession.idl`（Subscribe/Unsubscribe/SetAuthResult/Destroy 四方法）；服务端 `AuthEventSessionService`（stub 实例）即会话本体——每会话对象自带 pid/uid/callback/eventIds/timeoutAllowFlag，方法直落对象、零会话查表；SDK 持 session 代理直调、零身份参数；clientId、ConstructClientId、会话查重/空判/死亡反查遍历全部删除。③ 用户裁决：Unsubscribe 未订阅 eventId 幂等 SUCCESS；同一 cb 重复 CreatAuthEventClient → BAD_PARAM；Destroy 幂等 SUCCESS，销毁后调其他方法 → BAD_PARAM。④ 错误码场景全量梳理（见 4.9）。⑤ **对外头文件随 gni 开关暴露**：本需求 5 个对外头（auth_event.h、i_auth_event_callback.h、auth_event_callback_service.h、auth_event_callback_stub.h、auth_event_subscribe_client.h）移出 bundle.json header_base 登记目录 `interfaces/inner_api/collect/include/`，落位 `frameworks/common/collect/include/auth_event/`（仓内先例：SDK 回调适配头本就在 frameworks/common/collect/include）；对外暴露唯一通道为 libsg_collect_sdk 的 public_configs（`security_guard_config`）在 gni 开启时追加该目录——关闭时头文件不在任何 header_base/公共 include 路径，完全不对外。
+> v9 变更：① **移除服务端事件超时判断**（本需求只做会话管理）：删除 pendingResults_ 超时跟踪表、CheckAuthResultTimeout、AUTH_RESULT_TIMEOUT_MS=400、~~timeoutAllowFlag~~、seqNum 的 metadata 填充与解析、AUTH_RESULT_TIMEOUT 打点；保留结果表 authResults_、NotifyAuthEvent 分发（不再分配 eventIndex）、AUTH_BLOCK_RESULT 打点。【修订：timeoutAllowFlag 参数保留——IDL/SDK/会话链路携带并随会话保存，本需求仅保存不消费，供超时需求（另一需求）届时按会话读取】② **会话关联改方案 D（会话即远端对象）**：主接口 IDL 5 方法缩减为 1 方法 `CreatAuthEventClient([in] IRemoteObject cb, [in] boolean timeoutAllowFlag, [out] IRemoteObject session)`（实测 IDL 支持 [out] IRemoteObject：proxy `reply.ReadRemoteObject()` / stub `SUCCEEDED(errCode)` 时 `WriteRemoteObject`）；新增独立 `AuthEventSession.idl`（Subscribe/Unsubscribe/SetAuthResult/Destroy 四方法）；服务端 `AuthEventSessionService`（stub 实例）即会话本体——每会话对象自带 pid/uid/callback/eventIds/timeoutAllowFlag，方法直落对象、零会话查表；SDK 持 session 代理直调、零身份参数；clientId、ConstructClientId、会话查重/空判/死亡反查遍历全部删除。③ 用户裁决：Unsubscribe 未订阅 eventId 幂等 SUCCESS；同一 cb 重复 CreatAuthEventClient → BAD_PARAM；Destroy 幂等 SUCCESS，销毁后调其他方法 → BAD_PARAM。④ 错误码场景全量梳理（见 4.9）。⑤ **对外头文件回归标准位置、声明常驻**（修订：初版曾迁 frameworks/ 由 public_configs 条件暴露，因 binarys 预编译消费拿不到头、且宏包裹导致外部 include 为空，改回）：5 个对外头（auth_event.h、i_auth_event_callback.h、auth_event_callback_service.h、auth_event_callback_stub.h、auth_event_subscribe_client.h）位于 `interfaces/inner_api/collect/include/`（bundle.json header_base 登记，源码树与 binarys 发布链路天然可用）；**声明不做功能宏包裹（常驻），符号有无由 so 按 gni 决定**——未开启设备上调用方编译通过、链接报 undefined symbol（对齐 syscap 裁剪常规形态）；头内注释声明"仅特定设备开放"。
 > v8 变更：分发索引不再作为 AuthEvent 独立字段（eventIndex_ 删除，parcelable 回归三字段），改为以 JSON 键 `seqNum` 填充在 metadata 中传输（服务端分发时 nlohmann 合并写入，客户端回填时解析；pending 内部键仍为 (clientId, eventIndex) 整数）。【v9 已随超时特性整体移除，仅存档】
 > v7 变更：① 新增 HA 打点（AUTH_BLOCK_RESULT，适配层 AuthEventReporter，`ha_client_lite_api.h` 依赖未进仓先日志兜底）；② 整个需求经 gni 开关 `security_guard_auth_event_enable`（默认 false）+ 宏 `SECURITY_GUARD_AUTH_EVENT_ENABLE` 隔离；③ 会话操作前置双轨校验；④ Subscribe 增加事件配置校验（GetEventConfig 未命中 → BAD_PARAM）；⑤ clientId 改回客户端生成（IDL 入参）【v9 已删除 clientId，改 session 对象下发】；⑥ CreatClient 超时处置策略 timeoutAllowFlag【v9 已删除】。
 > v6 变更（T3 Review 落地）：① libsg_collect_sdk sources 编入 auth_event.cpp（so 符号自包含）；② sg_collect_sdk.map 导出 AuthEventSubscribeClient 5 方法与 AuthEvent 序列化/vtable/VTT 符号；③ HandleDeath 改为对齐 event_subscribe_client 的退避自动重连（{1,5,15,30,60×5}，重建后更新服务端新 clientId 并重订阅快照）；④ 新增 deleted_ 标志防护 DeleteClient/Deleter 与在途重连的会话复活竞态；⑤ Deleter 补 RemoveDeathRecipient；⑥ 影响面修正：bundle.json 无需修改（inner_kits 为 header_files 空数组 + header_base 目录登记，新头自动暴露，对齐仓库现状）。
@@ -62,7 +62,7 @@
 - 销毁：`client->DeleteClient()`（或最后一个 shared_ptr 释放触发 Deleter）→ SDK 排空在途 OnAuthEvent → session 代理调 `Destroy()` → 服务端双轨校验 → pid 归属校验 → manager 会话集合移除 + 会话置无效（重复 Destroy 幂等返回 SUCCESS；销毁后再调其他方法 → `BAD_PARAM`）→ 锁外 RemoveDeathRecipient。
 - 异常：订阅者进程死亡 → per-session DeathRecipient（持该会话对象引用）→ manager 移除会话并置无效；服务端死亡 → SDK DeathRecipient 触发 HandleDeath 退避自动重连重建（重新走 CreatAuthEventClient 拿新 session 代理 + 按快照重订阅，对齐 EventSubscribeClient 范式）；调用方 DeleteClient 后重连被 deleted_ 标志终止。
 - 配额超限：`CreatAuthEventClient` 时进程内已有 2 个会话 → `CLIENT_EXCEED_PROCESS_LIMIT`；会话集合已有 16 个 → `CLIENT_EXCEED_GLOBAL_LIMIT`；同一 cb 重复创建 → `BAD_PARAM`。
-- 功能裁剪：gni 开关 `security_guard_auth_event_enable=false`（默认）时，主接口 `CreatAuthEventClient` 退化为占位实现（`FAILED`，session 不下发），功能源不编入，对既有 3524 零影响；`auth_event.cpp` 与其单测无条件编入（IDL 生成 stub/proxy 引用其序列化符号）；**本需求 5 个对外头文件位于 `frameworks/common/collect/include/auth_event/`（不在 bundle.json header_base 登记目录），对外暴露唯一通道是 libsg_collect_sdk public_configs 在 gni 开启时追加该目录——默认关闭时头文件不对外暴露**。
+- 功能裁剪：gni 开关 `security_guard_auth_event_enable=false`（默认）时，主接口 `CreatAuthEventClient` 退化为占位实现（`FAILED`，session 不下发），功能源不编入，对既有 3524 零影响；`auth_event.cpp` 与其单测无条件编入（IDL 生成 stub/proxy 引用其序列化符号）；**5 个对外头位于 `interfaces/inner_api/collect/include/`（声明常驻、不做功能宏包裹），未开启设备上调用方链接期失败（so 无符号）——头内注释声明仅特定设备开放**。
 
 ## 4. 契约变更
 
@@ -70,7 +70,7 @@
 
 ### 4.1 数据结构（新增）
 
-- `AuthEvent : Parcelable` — 头文件 `frameworks/common/collect/include/auth_event/auth_event.h`
+- `AuthEvent : Parcelable` — 头文件 `interfaces/inner_api/collect/include/auth_event.h`
   - 字段（三字段）：`int64_t eventId`（阻断/鉴权事件标识）；`std::string content`（事件内容，JSON 扩展）；`std::string metadata`（元数据，JSON 扩展，由订阅者与事件源约定，框架不解析）；
   - 实现手写 `Marshalling/Unmarshalling`（对齐 `security_event.h:24-47` 范式），实现文件 `frameworks/common/collect/src/auth_event.cpp`。
 - ~~`AuthEventSubscribeInfo`~~ — v2 取消（会话模式按 eventId 逐个订阅，无需批量结构）。
@@ -104,7 +104,7 @@ void Destroy();
 
 ### 4.3 回调 broker（新增）
 
-- `IAuthEventCallback : IRemoteBroker` — `frameworks/common/collect/include/auth_event/i_auth_event_callback.h`
+- `IAuthEventCallback : IRemoteBroker` — `interfaces/inner_api/collect/include/i_auth_event_callback.h`
   - `DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Security.DataCollectManager.AuthEventCallback")`
   - 接口码枚举 `AuthEventCallbackInterfaceCode { CMD_ON_AUTH_EVENT = 1 }`（同文件追加）+ broker 内 `CMD_ON_AUTH_EVENT`；
   - 方法：`virtual int32_t OnAuthEvent(const AuthEvent &event) = 0;`
@@ -113,7 +113,7 @@ void Destroy();
 
 ### 4.4 客户端 SDK（新增，libsg_collect_sdk 内）
 
-- `AuthEventSubscribeClient` — 头文件 `frameworks/common/collect/include/auth_event/auth_event_subscribe_client.h`（对外暴露经 public_configs 条件通道，见"功能裁剪"），实现 `frameworks/common/collect/src/auth_event_subscribe_client.cpp`：
+- `AuthEventSubscribeClient` — 头文件 `interfaces/inner_api/collect/include/auth_event_subscribe_client.h`（声明常驻，符号按 gni 裁剪，见"功能裁剪"），实现 `frameworks/common/collect/src/auth_event_subscribe_client.cpp`：
   ```cpp
   using AuthEventCallback = std::function<void(const AuthEvent &event)>;
   class AuthEventSubscribeClient {
@@ -266,10 +266,10 @@ void Destroy();
 
 新增：
 
-- `frameworks/common/collect/include/auth_event/auth_event.h` —— 新增：AuthEvent 结构
-- `frameworks/common/collect/include/auth_event/i_auth_event_callback.h` —— 新增：回调 broker（含回调接口码枚举）
-- `frameworks/common/collect/include/auth_event/auth_event_callback_service.h` —— 新增：客户端回调适配（service 继承手写 stub）
-- `frameworks/common/collect/include/auth_event/auth_event_subscribe_client.h` —— 新增：SDK 会话客户端类
+- `interfaces/inner_api/collect/include/auth_event.h` —— 新增：AuthEvent 结构
+- `interfaces/inner_api/collect/include/i_auth_event_callback.h` —— 新增：回调 broker（含回调接口码枚举）
+- `interfaces/inner_api/collect/include/auth_event_callback_service.h` —— 新增：客户端回调适配（service 继承手写 stub）
+- `interfaces/inner_api/collect/include/auth_event_subscribe_client.h` —— 新增：SDK 会话客户端类
 - `frameworks/common/collect/src/auth_event.cpp` —— 新增：AuthEvent 序列化实现
 - `frameworks/common/collect/src/auth_event_callback_service.cpp` —— 新增：回调适配实现（含 stub OnRemoteRequest）
 - `frameworks/common/collect/src/auth_event_subscribe_client.cpp` —— 新增：SDK 实现
@@ -293,7 +293,7 @@ void Destroy();
 - `services/data_collect/sa/data_collect_manager_service.cpp` —— 修改：CreatAuthEventClient 单方法实现（双轨校验挪至 manager 静态方法）
 - `test/unittest/data_collect/sa/data_collect_manager_service.h` —— 修改：mock 影子头同步 1 方法签名
 - `services/data_collect/BUILD.gn` —— 修改：新增 auth_event.cpp、auth_event_session_service.cpp 与服务端源文件
-- `frameworks/common/collect/BUILD.gn` —— 修改：新增 SDK 源文件（auth_event/callback_service/subscribe_client）与 auth_session_proxy 依赖
+- `frameworks/common/collect/BUILD.gn` —— 修改：新增 SDK 源文件（auth_event/callback_service/subscribe_client）与 auth_session_proxy 依赖（对外头在 interfaces 目录，经 bundle.json header_base 暴露，无需 public_configs 条件通道）
 - `frameworks/common/collect/sg_collect_sdk.map` —— 修改：导出 AuthEventSubscribeClient 方法与 AuthEvent 序列化/vtable/VTT 符号
 - `frameworks/common/collect/test/BUILD.gn` —— 修改：测试 target 补 SDK 新源文件与新测试
 - `bundle.json` —— 无需修改（inner_kits 为 header_files 空数组 + header_base 目录登记，新头自动暴露，对齐仓库现状）
