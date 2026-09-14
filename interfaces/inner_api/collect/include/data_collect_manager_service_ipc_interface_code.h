@@ -37,7 +37,7 @@ enum class DataCollectManagerInterfaceCode {
     // 3524 的实际 IPC code 由 IDL 生成枚举 DataCollectManagerIdlIpcCode 按方法声明顺序分配。
     // 会话内方法（Subscribe/Unsubscribe/SetAuthResult/Destroy）由独立 AuthEventSession.idl
     // 生成枚举 AuthEventSessionIpcCode 承载，不在此登记。
-#endif
+    CMD_CREAT_AUTH_EVENT_CLIENT = 13,
 };
 
 enum class AuthEventCallbackInterfaceCode {
