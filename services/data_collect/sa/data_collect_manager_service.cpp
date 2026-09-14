@@ -33,6 +33,9 @@
 #include "nlohmann/json.hpp"
 #include "acquire_data_subscribe_manager.h"
 #include "bigdata.h"
+#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
+#include "auth_event_subscribe_manager.h"
+#endif
 #include "collector_manager.h"
 #include "config_data_manager.h"
 #include "data_collect_manager_callback_proxy.h"
@@ -795,6 +798,37 @@ int32_t DataCollectManagerService::IsCallerHasApiPermission(const std::string &a
     return SUCCESS;
 }
 
+#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
+ErrCode DataCollectManagerService::CreatAuthEventClient(const sptr<IRemoteObject> &cb, bool timeoutAllowFlag,
+    sptr<IRemoteObject> &session)
+{
+    SGLOGI("enter");
+    int32_t code = AuthEventSubscribeManager::GetInstance().IsCallerAllowed();
+    if (code != SUCCESS) {
+        return code;
+    }
+    if (cb == nullptr) {
+        SGLOGE("cb is null");
+        return NULL_OBJECT;
+    }
+    XCollie_Utils xcollie("SGIPC_CreatAuthEventClient", XCOLLIE_FLAG);
+    pid_t callerPid = IPCSkeleton::GetCallingPid();
+    int32_t callerUid = static_cast<int32_t>(IPCSkeleton::GetCallingUid());
+    return AuthEventSubscribeManager::GetInstance().CreatAuthEventClient(callerPid, callerUid, timeoutAllowFlag,
+        cb, session);
+}
+#else
+// AuthEvent 框架未启用：IDL 生成的纯虚方法仍需实现以保持可编译，一律拒绝（session 不下发）
+ErrCode DataCollectManagerService::CreatAuthEventClient(const sptr<IRemoteObject> &cb, bool timeoutAllowFlag,
+    sptr<IRemoteObject> &session)
+{
+    (void)cb;
+    (void)timeoutAllowFlag;
+    session = nullptr;
+    return FAILED;
+}
+#endif
+
 int32_t DataCollectManagerService::IsEventGroupHasPublicPermission(const std::string &eventGroup,
     const std::vector<int64_t> &eventIds)
 {
@@ -1296,4 +1330,5 @@ ErrCode DataCollectManagerService::QueryAllClientsInfo(std::string &resStr)
     resStr = resultObj.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
     return SUCCESS;
 }
+
 }

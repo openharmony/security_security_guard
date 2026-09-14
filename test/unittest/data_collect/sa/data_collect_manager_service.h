@@ -70,6 +70,8 @@ public:
         const sptr<IRemoteObject> &cb, const std::string &eventGroup) override;
     ErrCode QueryCodeSignInfoByPath(const int fd, const int pid, std::string &resStr) override;
     ErrCode QueryAllClientsInfo(std::string &resStr) override;
+    ErrCode CreatAuthEventClient(const sptr<IRemoteObject> &cb, bool timeoutAllowFlag,
+        sptr<IRemoteObject> &session) override;
 private:
     class SubscriberDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
