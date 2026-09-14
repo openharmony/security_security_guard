@@ -22,7 +22,6 @@ ohos_fuzztest("RequestSecurityEventInfoAsyncFuzzTest") {
   include_dirs = [
     "${sg_root_dir}/test/fuzztest/mock/ffrt",
     "${sg_root_dir}/frameworks/common/collect/include",
-    "${sg_root_dir}/frameworks/common/collect/include/auth_event",
     "${sg_root_dir}/frameworks/common/collector/include",
     "${sg_root_dir}/frameworks/common/constants/include",
     "${sg_root_dir}/frameworks/common/log/include",

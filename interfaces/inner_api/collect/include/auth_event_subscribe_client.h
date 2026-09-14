@@ -15,7 +15,9 @@
 
 #ifndef SECURITY_GUARD_AUTH_EVENT_SUBSCRIBE_CLIENT_H
 #define SECURITY_GUARD_AUTH_EVENT_SUBSCRIBE_CLIENT_H
-#ifdef SECURITY_GUARD_AUTH_EVENT_ENABLE
+
+// AuthEvent 框架仅特定设备开放：由部件构建开关 security_guard_auth_event_enable 控制，
+// 未开启设备上 libsg_collect_sdk 不含本框架符号（调用方在链接期失败）。
 
 #include <cstdint>
 #include <functional>
@@ -91,5 +93,4 @@ private:
 };
 } // namespace OHOS::Security::SecurityGuard
 
-#endif // SECURITY_GUARD_AUTH_EVENT_ENABLE
 #endif // SECURITY_GUARD_AUTH_EVENT_SUBSCRIBE_CLIENT_H
