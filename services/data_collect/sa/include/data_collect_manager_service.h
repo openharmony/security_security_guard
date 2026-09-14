@@ -71,6 +71,12 @@ public:
         const sptr<IRemoteObject> &cb, const std::string &eventGroup) override;
     ErrCode QueryCodeSignInfoByPath(const int fd, const int pid, std::string &resStr) override;
     ErrCode QueryAllClientsInfo(std::string &resStr) override;
+    // AuthEvent 框架接口：IDL 生成纯虚方法必须覆写以保持可编译；
+    // 关闭 SECURITY_GUARD_AUTH_EVENT_ENABLE 时实现为占位（返回 FAILED，session 不下发）。
+    // 会话内方法（Subscribe/Unsubscribe/SetAuthResult/Destroy）由 AuthEventSession.idl
+    // 生成的独立会话对象 AuthEventSessionService 承载，不在本服务类。
+    ErrCode CreatAuthEventClient(const sptr<IRemoteObject> &cb, bool timeoutAllowFlag,
+        sptr<IRemoteObject> &session) override;
 private:
     class SubscriberDeathRecipient : public IRemoteObject::DeathRecipient {
     public:

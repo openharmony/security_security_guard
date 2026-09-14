@@ -17,6 +17,8 @@ declare_args() {
   security_guard_enable = true
   security_guard_enable_ext = false
   security_guard_trim_model_analysis = false
+  # AuthEvent 阻断服务使用者框架（含 HA 打点）：仅特定设备开启
+  security_guard_auth_event_enable = false
   security_guard_enable_device_id = false
   security_guard_event_cfg_source = "security_guard_event.json"
   security_guard_model_cfg_source = "security_guard_model.cfg"

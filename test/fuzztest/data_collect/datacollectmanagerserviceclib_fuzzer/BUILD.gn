@@ -81,18 +81,28 @@ ohos_fuzztest("DataCollectManagerServiceClibFuzzTest") {
     "${sg_root_dir}/services/data_collect/sa/acquire_data_subscribe_manager.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/sa/data_collect_manager_service.cpp",
-    "${sg_root_dir}/services/data_collect/sa/data_format.cpp",
+        "${sg_root_dir}/services/data_collect/sa/data_format.cpp",
     "${sg_root_dir}/services/data_collect/sa/security_event_query_callback_proxy.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_helper.cpp",
     "${sg_root_dir}/services/data_collect/store/src/database_manager.cpp",
     "${sg_root_dir}/services/data_collect/store/src/risk_event_rdb_helper.cpp",
     "${sg_root_dir}/frameworks/common/collect/src/security_event_filter.cpp",
+    "${sg_root_dir}/frameworks/common/collect/src/auth_event.cpp",
     "${sg_root_dir}/services/security_collector/src/security_collector_run_manager.cpp",
     "${sg_root_dir}/test/fuzztest/mock/data_statistics/data_statistics.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_event_ruler.cpp",
     "${sg_root_dir}/frameworks/common/collector/src/security_collector_subscribe_info.cpp",
     "data_collect_manager_service_clib_fuzzer.cpp",
   ]
+  if (security_guard_auth_event_enable) {
+    defines += [ "SECURITY_GUARD_AUTH_EVENT_ENABLE" ]
+    sources += [
+      "${sg_root_dir}/services/data_collect/sa/auth_event_callback_proxy.cpp",
+      "${sg_root_dir}/services/data_collect/sa/auth_event_reporter.cpp",
+      "${sg_root_dir}/services/data_collect/sa/auth_event_session_service.cpp",
+      "${sg_root_dir}/services/data_collect/sa/auth_event_subscribe_manager.cpp",
+    ]
+  }
 
   deps = [
     "${sg_root_dir}/frameworks/common/collector:libsg_collector_sdk",
@@ -103,6 +113,9 @@ ohos_fuzztest("DataCollectManagerServiceClibFuzzTest") {
     "${sg_root_dir}/services/risk_classify/model_manager:sg_model_manager_stamp",
   ]
 
+  if (security_guard_auth_event_enable) {
+    deps += [ "${sg_root_dir}/services/data_collect/idl:auth_event_session_sa_stub" ]
+  }
   external_deps = [
     "c_utils:utils",
     "bounds_checking_function:libsec_shared",
