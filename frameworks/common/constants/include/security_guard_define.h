@@ -18,36 +18,9 @@
 
 #include <string>
 
-namespace OHOS::Security::SecurityGuard {
-using ErrorCode = enum {
-    SUCCESS,
-    FAILED,
-    NO_PERMISSION,
-    NO_SYSTEMCALL,
-    STREAM_ERROR,
-    FILE_ERR,
-    BAD_PARAM,
-    JSON_ERR,
-    NULL_OBJECT,
-    TIME_OUT,
-    NOT_FOUND,
-    TASK_ERR,
-    READ_ERR,
-    WRITE_ERR,
-    DB_CHECK_ERR,
-    DB_LOAD_ERR,
-    DB_OPT_ERR,
-    DB_INFO_ERR,
-    DUPLICATE,
-    API_SUPPORT_ERROR = 801,
-    FILTER_UNSUPPORTED = 1005,
-    FILTER_EXCEED_LIMIT = 1006,
-    CLIENT_EXCEED_PROCESS_LIMIT = 1007,
-    CLIENT_EXCEED_GLOBAL_LIMIT = 1008,
-    FILE_NOT_FOUND = 1011,      // same as ext
-    KERNEL_NOT_SUPPORT = 1012,
-};
+#include "security_guard_error_code.h"
 
+namespace OHOS::Security::SecurityGuard {
 using SecurityModel = struct {
     std::string devId;
     uint32_t modelId;
