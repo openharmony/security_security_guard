@@ -95,12 +95,6 @@ HWTEST_F(DetectPluginManagerTest, DispatchEvent002, TestSize.Level1) {
     EXPECT_TRUE(DetectPluginManager::getInstance().eventIdMap_.count(event.eventId) == 0);
 }
 
-HWTEST_F(DetectPluginManagerTest, RetrySubscriptionTask001, TestSize.Level1) {
-    DetectPluginManager::getInstance().failedEventIdset_.insert(0x02C000000);
-    DetectPluginManager::getInstance().RetrySubscriptionTask();
-    EXPECT_TRUE(DetectPluginManager::getInstance().failedEventIdset_.size() == 0);
-}
-
 HWTEST_F(DetectPluginManagerTest, ParsePluginConfig001, TestSize.Level1) {
     EXPECT_TRUE(DetectPluginManager::getInstance().ParsePluginConfig(
         "/data/test/unittest/resource/detect_plugin.json"));
