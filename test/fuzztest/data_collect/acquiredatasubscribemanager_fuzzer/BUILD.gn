@@ -44,6 +44,7 @@ ohos_fuzztest("AcquireDataSubscribeManagerFuzzTest") {
     "${sg_root_dir}/frameworks/common/classify/include",
     "${sg_root_dir}/test/fuzztest/mock/config_manager",
     "${sg_root_dir}/services/security_collector/include",
+    "${sg_root_dir}/test/fuzztest/datacollectmanagerserviceclib_fuzzer/include",
   ]
   cflags = [
     "-g",
@@ -128,8 +129,5 @@ ohos_fuzztest("AcquireDataSubscribeManagerFuzzTest") {
   }
   if (security_guard_enable_device_id) {
     defines += [ "SECURITY_GUARD_ENABLE_DEVICE_ID" ]
-    external_deps += [
-      "device_manager:devicemanagersdk",
-    ]
   }
 }
