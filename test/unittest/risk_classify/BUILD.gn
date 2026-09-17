@@ -35,7 +35,6 @@ ohos_unittest("SecurityGuardRiskAnalysisTest") {
     "${sg_root_dir}/test/unittest/mock/account_manager",
     "${sg_root_dir}/test/unittest/mock/collector_manager",
     "${sg_root_dir}/test/unittest/mock/config_manager",
-    "${sg_root_dir}/test/unittest/mock/data_collect",
     "${sg_root_dir}/test/unittest/mock/database_manager",
     "${sg_root_dir}/test/unittest/mock/preferences",
     "${sg_root_dir}/test/unittest/mock/preferences_wrapper",
