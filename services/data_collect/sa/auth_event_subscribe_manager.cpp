@@ -53,7 +53,7 @@ bool AuthEventSubscribeManager::IsUidAllowed(int32_t uid) const
 int32_t AuthEventSubscribeManager::IsCallerAllowed()
 {
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenType(callerToken);
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
         int32_t callingUid = static_cast<int32_t>(IPCSkeleton::GetCallingUid());
         if (!GetInstance().IsUidAllowed(callingUid)) {
