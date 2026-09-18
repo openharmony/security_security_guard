@@ -44,7 +44,7 @@ ohos_fuzztest("AcquireDataSubscribeManagerFuzzTest") {
     "${sg_root_dir}/frameworks/common/classify/include",
     "${sg_root_dir}/test/fuzztest/mock/config_manager",
     "${sg_root_dir}/services/security_collector/include",
-    "${sg_root_dir}/test/fuzztest/datacollectmanagerserviceclib_fuzzer/include",
+    "${sg_root_dir}/test/fuzztest/data_collect/datacollectmanagerserviceclib_fuzzer/include",
   ]
   cflags = [
     "-g",
