@@ -93,7 +93,7 @@ HWTEST_F(AuthEventSubscribeManagerTest, IsUidAllowed001, TestSize.Level0)
 HWTEST_F(AuthEventSubscribeManagerTest, DualTrackCheck001, TestSize.Level0)
 {
     // native token + uid 不在清单 -> NO_PERMISSION
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_NATIVE));
     DataCollectManagerService service(SecurityGuard::DATA_COLLECT_MANAGER_SA_ID, true);
     sptr<IRemoteObject> sessionRemote = nullptr;
@@ -107,7 +107,7 @@ HWTEST_F(AuthEventSubscribeManagerTest, DualTrackCheck002, TestSize.Level0)
     // native token + uid 在清单 -> SUCCESS 且下发非空会话对象
     auto &manager = AuthEventSubscribeManager::GetInstance();
     manager.allowedUids_ = {getuid()};
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_NATIVE));
     DataCollectManagerService service(SecurityGuard::DATA_COLLECT_MANAGER_SA_ID, true);
     sptr<IRemoteObject> sessionRemote = nullptr;
@@ -120,7 +120,7 @@ HWTEST_F(AuthEventSubscribeManagerTest, DualTrackCheck002, TestSize.Level0)
 HWTEST_F(AuthEventSubscribeManagerTest, DualTrackCheck003, TestSize.Level0)
 {
     // HAP token + 权限 GRANTED -> SUCCESS 且下发非空会话对象
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
@@ -134,7 +134,7 @@ HWTEST_F(AuthEventSubscribeManagerTest, DualTrackCheck003, TestSize.Level0)
 HWTEST_F(AuthEventSubscribeManagerTest, DualTrackCheck004, TestSize.Level0)
 {
     // HAP token + 权限 DENIED -> NO_PERMISSION
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_DENIED));
@@ -147,7 +147,7 @@ HWTEST_F(AuthEventSubscribeManagerTest, DualTrackCheck004, TestSize.Level0)
 HWTEST_F(AuthEventSubscribeManagerTest, DualTrackCheck005, TestSize.Level0)
 {
     // 非 native/HAP token -> NO_PERMISSION
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_INVALID));
     DataCollectManagerService service(SecurityGuard::DATA_COLLECT_MANAGER_SA_ID, true);
     sptr<IRemoteObject> sessionRemote = nullptr;
@@ -158,7 +158,7 @@ HWTEST_F(AuthEventSubscribeManagerTest, DualTrackCheck005, TestSize.Level0)
 HWTEST_F(AuthEventSubscribeManagerTest, SetAuthResultPermission001, TestSize.Level0)
 {
     // 会话回填权限：先以 GRANTED 建立会话，再切换 DENIED -> NO_PERMISSION
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
@@ -175,7 +175,7 @@ HWTEST_F(AuthEventSubscribeManagerTest, SetAuthResultPermission001, TestSize.Lev
 HWTEST_F(AuthEventSubscribeManagerTest, SetAuthResultPermission002, TestSize.Level0)
 {
     // 会话回填权限：HAP + GRANTED -> SUCCESS 且状态表落值
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
@@ -193,7 +193,7 @@ HWTEST_F(AuthEventSubscribeManagerTest, SetAuthResultPermission002, TestSize.Lev
 HWTEST_F(AuthEventSubscribeManagerTest, SessionApiPermission001, TestSize.Level0)
 {
     // 会话方法前置权限校验：无权限调用方（HAP+DENIED）在会话校验前即被拦截 -> NO_PERMISSION
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_DENIED));
@@ -209,7 +209,7 @@ HWTEST_F(AuthEventSubscribeManagerTest, SessionApiPermission001, TestSize.Level0
 HWTEST_F(AuthEventSubscribeManagerTest, SessionApiPermission002, TestSize.Level0)
 {
     // 有权限调用方（HAP+GRANTED）通过权限校验，进入会话校验（已销毁会话 -> BAD_PARAM）
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
@@ -225,7 +225,7 @@ HWTEST_F(AuthEventSubscribeManagerTest, SessionApiPermission002, TestSize.Level0
 HWTEST_F(AuthEventSubscribeManagerTest, SubscribeEventIdNotInConfig001, TestSize.Level0)
 {
     // 订阅的 eventId 必须在事件配置中（GetEventConfig 未命中 -> BAD_PARAM）
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
@@ -364,7 +364,7 @@ HWTEST_F(AuthEventSubscribeManagerTest, InvalidSession004, TestSize.Level0)
 HWTEST_F(AuthEventSubscribeManagerTest, PidBound005, TestSize.Level0)
 {
     // 会话方法按调用方进程绑定：其他进程的会话对象（pid 不匹配）无法操作
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
@@ -385,7 +385,7 @@ HWTEST_F(AuthEventSubscribeManagerTest, PidBound005, TestSize.Level0)
 HWTEST_F(AuthEventSubscribeManagerTest, DestroySemantics006, TestSize.Level0)
 {
     auto &manager = AuthEventSubscribeManager::GetInstance();
-    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenType)
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), GetTokenTypeFlag)
         .WillRepeatedly(Return(AccessToken::TypeATokenTypeEnum::TOKEN_HAP));
     EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
         .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
