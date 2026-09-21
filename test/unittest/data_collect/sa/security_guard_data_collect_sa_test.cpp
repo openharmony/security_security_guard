@@ -1316,6 +1316,81 @@ HWTEST_F(SecurityGuardDataCollectSaTest, RemoveSubscribeMute001, TestSize.Level0
     EXPECT_EQ(result, BAD_PARAM);
 }
 
+HWTEST_F(SecurityGuardDataCollectSaTest, EraseFilterFromSession001, TestSize.Level0)
+{
+    AcquireDataSubscribeManager adsm{};
+    EventMuteFilter filter{};
+    filter.eventId = 111;
+    filter.isInclude = true;
+    filter.type = 1;
+    filter.mutes = {"mute_a"};
+    auto session = std::make_shared<AcquireDataSubscribeManager::ClientSession>();
+    adsm.sessionsMap_["client_a"] = session;
+    adsm.sessionsMap_["client_null"] = nullptr;
+
+    // clientId not exist: return directly
+    adsm.EraseFilterFromSession("client_not_exist", filter);
+    EXPECT_EQ(adsm.sessionsMap_.count("client_a"), 1u);
+
+    // session is null: return directly
+    adsm.EraseFilterFromSession("client_null", filter);
+
+    // event id not in eventFilters: return directly
+    adsm.EraseFilterFromSession("client_a", filter);
+    EXPECT_EQ(adsm.sessionsMap_["client_a"]->eventFilters.size(), 0u);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, EraseFilterFromSession002, TestSize.Level0)
+{
+    AcquireDataSubscribeManager adsm{};
+    EventMuteFilter filter{};
+    filter.eventId = 111;
+    filter.isInclude = true;
+    filter.type = 1;
+    filter.mutes = {"mute_a"};
+    EventMuteFilter mismatch{};
+    mismatch.eventId = 111;
+    mismatch.mutes = {"mute_b"};
+    EventMuteFilter absent{};
+    absent.eventId = 111;
+    absent.mutes = {"mute_absent"};
+    auto session = std::make_shared<AcquireDataSubscribeManager::ClientSession>();
+    session->eventFilters[111] = {filter, mismatch};
+    adsm.sessionsMap_["client_a"] = session;
+
+    // filter not matched: keep all
+    adsm.EraseFilterFromSession("client_a", absent);
+    EXPECT_EQ(adsm.sessionsMap_["client_a"]->eventFilters[111].size(), 2u);
+
+    // filter matched and vector not empty: erase one, keep event id entry
+    adsm.EraseFilterFromSession("client_a", filter);
+    EXPECT_EQ(adsm.sessionsMap_["client_a"]->eventFilters[111].size(), 1u);
+    EXPECT_EQ(adsm.sessionsMap_["client_a"]->eventFilters.count(111), 1u);
+
+    // last filter erased: remove event id entry
+    adsm.EraseFilterFromSession("client_a", mismatch);
+    EXPECT_EQ(adsm.sessionsMap_["client_a"]->eventFilters.count(111), 0u);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, CollectorListenerGetExtraInfo001, TestSize.Level0)
+{
+    AcquireDataSubscribeManager::CollectorListener listener{};
+
+    // no calling uid: empty string
+    EXPECT_EQ(listener.GetExtraInfo(), "");
+
+    // current process uid is skipped
+    listener.InsertCallingUids(static_cast<uint32_t>(getuid()));
+    EXPECT_EQ(listener.GetExtraInfo(), "");
+
+    // other uids are joined into extra info
+    listener.InsertCallingUids(987650);
+    listener.InsertCallingUids(987651);
+    std::string extraInfo = listener.GetExtraInfo();
+    EXPECT_NE(extraInfo.find("987650"), std::string::npos);
+    EXPECT_NE(extraInfo.find("987651"), std::string::npos);
+}
+
 HWTEST_F(SecurityGuardDataCollectSaTest, CreatClient001, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj(new (std::nothrow) MockRemoteObject());
@@ -1765,6 +1840,43 @@ HWTEST_F(SecurityGuardDataCollectSaTest, TestQueryAllClientsInfo, TestSize.Level
     DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
     std::string result{};
     EXPECT_EQ(service.QueryAllClientsInfo(result), NO_PERMISSION);
+}
+
+HWTEST_F(SecurityGuardDataCollectSaTest, TestQueryAllClientsInfo001, TestSize.Level0)
+{
+    EXPECT_CALL(*(AccessToken::AccessTokenKit::GetInterface()), VerifyAccessToken)
+        .WillRepeatedly(Return(AccessToken::PermissionState::PERMISSION_GRANTED));
+
+    auto &adsm = AcquireDataSubscribeManager::GetInstance();
+    auto auditSession = std::make_shared<AcquireDataSubscribeManager::ClientSession>();
+    auditSession->eventGroup = "auditGroup";
+    auditSession->procName = "query_all_audit_proc";
+    auditSession->pid = 4321;
+    auditSession->uid = 987654;
+    auto otherSession = std::make_shared<AcquireDataSubscribeManager::ClientSession>();
+    otherSession->eventGroup = "securityGroup";
+    otherSession->procName = "query_all_other_proc";
+    adsm.sessionsMap_["query_client_audit"] = auditSession;
+    adsm.sessionsMap_["query_client_other"] = otherSession;
+
+    DataCollectManagerService service(DATA_COLLECT_MANAGER_SA_ID, true);
+    std::string result{};
+    EXPECT_EQ(service.QueryAllClientsInfo(result), SUCCESS);
+    EXPECT_NE(result.find("query_all_audit_proc"), std::string::npos);
+    EXPECT_NE(result.find("4321"), std::string::npos);
+    EXPECT_NE(result.find("987654"), std::string::npos);
+    EXPECT_EQ(result.find("query_all_other_proc"), std::string::npos);
+
+    adsm.sessionsMap_.erase("query_client_audit");
+    adsm.sessionsMap_.erase("query_client_other");
+
+    // empty session map: success with empty json array
+    auto savedMap = adsm.sessionsMap_;
+    adsm.sessionsMap_.clear();
+    std::string emptyResult{};
+    EXPECT_EQ(service.QueryAllClientsInfo(emptyResult), SUCCESS);
+    EXPECT_EQ(emptyResult, "[]");
+    adsm.sessionsMap_ = savedMap;
 }
 
 HWTEST_F(SecurityGuardDataCollectSaTest, GetCurrentClientGroup_Test, TestSize.Level0)

@@ -15,6 +15,8 @@
 
 #include "security_guard_config_manager_test.h"
 
+#include <unistd.h>
+
 #include "file_ex.h"
 #include "gmock/gmock.h"
 #include "nlohmann/json.hpp"
@@ -1138,5 +1140,72 @@ HWTEST_F(SecurityGuardUtilsTest, TestAddStrArrayInfoNullJson, TestSize.Level1)
     const char *key = "testArrayKey";
     bool success = AddStrArrayInfo(nullptr, values, key);
     EXPECT_FALSE(success);
+}
+
+// Covers ConfigSubscriber::GetUpdateFileDstPath:
+// 001: file missing or fileName not matched, dstPath keeps its original value.
+HWTEST_F(SecurityGuardConfigManagerTest, GetUpdateFileDstPath001, TestSize.Level1)
+{
+    std::string dstPath = "origin";
+    ConfigSubscriber::GetUpdateFileDstPath("no_such_update_file_name", dstPath);
+    EXPECT_EQ(dstPath, "origin");
+}
+
+// 002: bootstrap the first valid {fileName, dstPath} entry from the real update
+// config file (if deployed) and verify the match branch assigns dstPath.
+HWTEST_F(SecurityGuardConfigManagerTest, GetUpdateFileDstPath002, TestSize.Level1)
+{
+    const std::string updateCfgFile = "/system/etc/security_guard_update_config.json";
+    std::string jsonStr;
+    if (!FileUtil::ReadFileToStr(updateCfgFile, 1 * 1024 * 1024, jsonStr)) {
+        GTEST_LOG_(WARNING) << "update config file not present, skip match branch";
+        return;
+    }
+    cJSON *root = cJSON_Parse(jsonStr.c_str());
+    if (root == nullptr || !cJSON_IsArray(root)) {
+        cJSON_Delete(root);
+        return;
+    }
+    std::string fileName;
+    std::string expectDst;
+    bool found = false;
+    int size = cJSON_GetArraySize(root);
+    for (int i = 0; i < size && !found; i++) {
+        cJSON *item = cJSON_GetArrayItem(root, i);
+        if (JsonUtil::GetString(item, "fileName", fileName) && JsonUtil::GetString(item, "dstPath", expectDst)) {
+            found = true;
+        }
+    }
+    cJSON_Delete(root);
+    if (!found) {
+        GTEST_LOG_(WARNING) << "no valid {fileName, dstPath} entry, skip match branch";
+        return;
+    }
+    std::string dstPath;
+    ConfigSubscriber::GetUpdateFileDstPath(fileName, dstPath);
+    EXPECT_EQ(dstPath, expectDst);
+}
+
+// Covers ConfigSubscriber::UpdateConfig (config_subscriber.cpp:83-89):
+// 001: empty file, dstPath stays empty and CopyFile is skipped.
+HWTEST_F(SecurityGuardConfigManagerTest, UpdateConfig001, TestSize.Level1)
+{
+    bool ret = ConfigSubscriber::UpdateConfig("");
+    EXPECT_FALSE(ret);
+}
+
+// 002: non-cache existing file, no matching update entry: dstPath keeps the
+// file value, CopyFile(file, file) succeeds via tmp+rename, config update
+// event is reported and the tmp file is removed by UpdateConfig itself.
+HWTEST_F(SecurityGuardConfigManagerTest, UpdateConfig002, TestSize.Level1)
+{
+    const std::string file = "/data/local/tmp/sg_update_config_test.json";
+    {
+        std::ofstream out(file);
+        out << "update config test content";
+    }
+    bool ret = ConfigSubscriber::UpdateConfig(file);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(access(file.c_str(), F_OK), -1); // removed by UpdateConfig
 }
 }

@@ -19,6 +19,8 @@
 #include "file_ex.h"
 #include "gmock/gmock.h"
 
+#include <unistd.h>
+
 #include "security_guard_define.h"
 #include "security_guard_log.h"
 #include "security_guard_utils.h"
@@ -197,6 +199,62 @@ HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInitModel002, TestSize.L
     ModelManager::GetInstance().SubscribeResult(9999, nullptr);
     ModelManager::GetInstance().Release(9999);
     EXPECT_TRUE(ModelManager::GetInstance().InitModel(9999) != SUCCESS);
+}
+
+// Covers ModelManager::InitModel branches below dlopen (model_manager.cpp line 78+):
+// dlsym fail / GetModelApi null / model Init fail / success.
+// Branches behind the test plugin require libtest_model_api.z.so deployed under
+// /system/lib64/ (PREFIX_MODEL_PATH); they are skipped when the so is absent.
+HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerInitModel003, TestSize.Level0)
+{
+    // system so without GetModelApi export: dlsym fail
+    const char *sysSo = "/system/lib64/libhilog.z.so";
+    if (access(sysSo, F_OK) == 0) {
+        EXPECT_CALL(ConfigDataManager::GetInstance(), GetModelConfig)
+        .WillOnce([](uint32_t modelId, ModelCfg &config) {
+            config.path = "/system/lib64/libhilog.z.so";
+            return true;
+        });
+        EXPECT_EQ(ModelManager::GetInstance().InitModel(7001), FAILED);
+    }
+
+    const char *testSo = "/system/lib64/libtest_model_api.z.so";
+    if (access(testSo, F_OK) != 0) {
+        GTEST_LOG_(WARNING) << "libtest_model_api.z.so not deployed under /system/lib64, skip plugin branches";
+        return;
+    }
+
+    // plugin returns null api
+    setenv("SG_TEST_MODEL_API_MODE", "null", 1);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetModelConfig)
+    .WillOnce([](uint32_t modelId, ModelCfg &config) {
+        config.path = "/system/lib64/libtest_model_api.z.so";
+        return true;
+    });
+    EXPECT_EQ(ModelManager::GetInstance().InitModel(7002), FAILED);
+
+    // model api Init fail
+    setenv("SG_TEST_MODEL_API_MODE", "init_fail", 1);
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetModelConfig)
+    .WillOnce([](uint32_t modelId, ModelCfg &config) {
+        config.path = "/system/lib64/libtest_model_api.z.so";
+        return true;
+    });
+    EXPECT_EQ(ModelManager::GetInstance().InitModel(7003), 999);
+
+    // model api Init success and registered in map
+    unsetenv("SG_TEST_MODEL_API_MODE");
+    EXPECT_CALL(ConfigDataManager::GetInstance(), GetModelConfig)
+    .WillOnce([](uint32_t modelId, ModelCfg &config) {
+        config.path = "/system/lib64/libtest_model_api.z.so";
+        return true;
+    });
+    EXPECT_EQ(ModelManager::GetInstance().InitModel(7004), SUCCESS);
+    EXPECT_TRUE(ModelManager::GetInstance().modelIdApiMap_[7004] != nullptr);
+    EXPECT_TRUE(ModelManager::GetInstance().modelIdApiMap_[7004]->GetModelApi() != nullptr);
+    ModelManager::GetInstance().Release(7004);
+    EXPECT_TRUE(ModelManager::GetInstance().modelIdApiMap_.find(7004) ==
+        ModelManager::GetInstance().modelIdApiMap_.end());
 }
 
 HWTEST_F(SecurityGuardModelManagerTest, TestModelManagerStartSecurityModel001, TestSize.Level0)
