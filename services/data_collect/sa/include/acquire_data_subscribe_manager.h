@@ -84,7 +84,6 @@ private:
     int UnSubscribeSc(int64_t eventId);
     int SubscribeScInSg(int64_t eventId, uint32_t isSticky);
     int SubscribeScInSc(int64_t eventId);
-    size_t GetSecurityCollectorEventBufSize(const SecurityCollector::Event &event);
     SecurityCollector::SecurityCollectorEventMuteFilter ConvertFilter(const SecurityGuard::EventMuteFilter &sgFilter,
         const std::string &clientId);
     int RemoveMute(const EventMuteFilter &filter, const std::string &clientId);

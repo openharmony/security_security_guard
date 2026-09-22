@@ -28,6 +28,10 @@
 #include "sg_collect_client.h"
 #undef private
 
+#define private public
+#include "iservice_registry.h"
+#undef private
+
 using namespace testing::ext;
 using namespace OHOS::Security::SecurityGuardTest;
 
@@ -41,6 +45,86 @@ extern "C" {
 #endif
 
 namespace OHOS::Security::SecurityGuardTest {
+
+// ISystemAbilityManager mock: GetSystemAbility always returns nullptr, so
+// iface_cast gets a null object and the "proxy is null" branches are reachable.
+class NullSystemAbilityManager : public OHOS::ISystemAbilityManager {
+public:
+    NullSystemAbilityManager() = default;
+    ~NullSystemAbilityManager() override = default;
+    OHOS::sptr<OHOS::IRemoteObject> AsObject() override { return nullptr; }
+    std::vector<std::u16string> ListSystemAbilities(unsigned int dumpFlags) override { return {}; }
+    OHOS::sptr<OHOS::IRemoteObject> GetSystemAbility(int32_t systemAbilityId) override { return nullptr; }
+    OHOS::sptr<OHOS::IRemoteObject> CheckSystemAbility(int32_t systemAbilityId) override { return {}; }
+    int32_t RemoveSystemAbility(int32_t systemAbilityId) override { return {}; }
+    int32_t SubscribeSystemAbility(int32_t systemAbilityId,
+        const OHOS::sptr<OHOS::ISystemAbilityStatusChange>& listener) override { return {}; }
+    int32_t UnSubscribeSystemAbility(int32_t systemAbilityId,
+        const OHOS::sptr<OHOS::ISystemAbilityStatusChange>& listener) override { return {}; }
+    OHOS::sptr<OHOS::IRemoteObject> GetSystemAbility(int32_t systemAbilityId,
+        const std::string& deviceId) override { return {}; }
+    OHOS::sptr<OHOS::IRemoteObject> CheckSystemAbility(int32_t systemAbilityId,
+        const std::string& deviceId) override { return {}; }
+    int32_t AddOnDemandSystemAbilityInfo(int32_t systemAbilityId,
+        const std::u16string& localAbilityManagerName) override { return {}; }
+    OHOS::sptr<OHOS::IRemoteObject> CheckSystemAbility(int32_t systemAbilityId, bool& isExist) override { return {}; }
+    int32_t AddSystemAbility(int32_t systemAbilityId, const OHOS::sptr<OHOS::IRemoteObject>& ability,
+        const SAExtraProp& extraProp) override { return {}; }
+    int32_t AddSystemProcess(const std::u16string& procName,
+        const OHOS::sptr<OHOS::IRemoteObject>& procObject) override { return {}; }
+    OHOS::sptr<OHOS::IRemoteObject> LoadSystemAbility(int32_t systemAbilityId, int32_t timeout) override { return {}; }
+    int32_t LoadSystemAbility(int32_t systemAbilityId,
+        const OHOS::sptr<OHOS::ISystemAbilityLoadCallback>& callback) override { return {}; }
+    int32_t LoadSystemAbility(int32_t systemAbilityId, const std::string& deviceId,
+        const OHOS::sptr<OHOS::ISystemAbilityLoadCallback>& callback) override { return {}; }
+    int32_t UnloadSystemAbility(int32_t systemAbilityId) override { return {}; }
+    int32_t CancelUnloadSystemAbility(int32_t systemAbilityId) override { return {}; }
+    int32_t UnloadAllIdleSystemAbility() override { return {}; }
+    int32_t GetSystemProcessInfo(int32_t systemAbilityId,
+        OHOS::SystemProcessInfo& systemProcessInfo) override { return {}; }
+    int32_t GetRunningSystemProcess(std::list<OHOS::SystemProcessInfo>& systemProcessInfos) override { return {}; }
+    int32_t SubscribeSystemProcess(const OHOS::sptr<OHOS::ISystemProcessStatusChange>& listener) override
+    {
+        return {};
+    }
+    int32_t SendStrategy(int32_t type, std::vector<int32_t>& systemAbilityIds, int32_t level,
+        std::string& action) override { return {}; }
+    int32_t UnSubscribeSystemProcess(const OHOS::sptr<OHOS::ISystemProcessStatusChange>& listener) override
+    {
+        return {};
+    }
+    int32_t GetExtensionSaIds(const std::string& extension, std::vector<int32_t> &saIds) override { return {}; }
+    int32_t GetExtensionRunningSaList(const std::string& extension,
+        std::vector<OHOS::sptr<OHOS::IRemoteObject>>& saList) override { return {}; }
+    int32_t GetRunningSaExtensionInfoList(const std::string& extension,
+        std::vector<SaExtensionInfo>& infoList) override { return {}; }
+    int32_t GetCommonEventExtraDataIdlist(int32_t saId, std::vector<int64_t>& extraDataIdList,
+        const std::string& eventName) override { return {}; }
+    int32_t GetOnDemandReasonExtraData(int64_t extraDataId,
+        OHOS::MessageParcel& extraDataParcel) override { return {}; }
+    int32_t GetOnDemandPolicy(int32_t systemAbilityId, OnDemandPolicyType type,
+        std::vector<SystemAbilityOnDemandEvent>& abilityOnDemandEvents) override { return {}; }
+    int32_t UpdateOnDemandPolicy(int32_t systemAbilityId, OnDemandPolicyType type,
+        const std::vector<SystemAbilityOnDemandEvent>& abilityOnDemandEvents) override { return {}; }
+    int32_t GetOnDemandSystemAbilityIds(std::vector<int32_t>& systemAbilityIds) override { return {}; }
+};
+
+// Replace and restore SystemAbilityManagerClient::systemAbilityManager_ (RAII).
+class SamgrMockGuard {
+public:
+    explicit SamgrMockGuard(const OHOS::sptr<OHOS::ISystemAbilityManager> &mock)
+    {
+        auto &client = OHOS::SystemAbilityManagerClient::GetInstance();
+        origin_ = client.systemAbilityManager_;
+        client.systemAbilityManager_ = mock;
+    }
+    ~SamgrMockGuard()
+    {
+        OHOS::SystemAbilityManagerClient::GetInstance().systemAbilityManager_ = origin_;
+    }
+private:
+    OHOS::sptr<OHOS::ISystemAbilityManager> origin_ {};
+};
 
 void DataCollectKitTest::SetUpTestCase()
 {
@@ -603,9 +687,131 @@ HWTEST_F(DataCollectKitTest, ClientUnSubscribe01, TestSize.Level1)
 HWTEST_F(DataCollectKitTest, ClientSetDeathRecipient01, TestSize.Level1)
 {
     auto client = std::make_shared<SecurityGuard::EventSubscribeClient>();
-    auto serviceCallback = new (std::nothrow) SecurityGuard::AcquireDataManagerCallbackService();
+    OHOS::sptr<OHOS::IRemoteObject> serviceCallback =
+        new (std::nothrow) SecurityGuard::AcquireDataManagerCallbackService();
     int32_t ret = SecurityGuard::EventSubscribeClient::SetDeathRecipient(client, serviceCallback);
     EXPECT_EQ(ret, SecurityGuard::SUCCESS);
+}
+
+HWTEST_F(DataCollectKitTest, ClientDeleter001, TestSize.Level1)
+{
+    // null client: return directly
+    SecurityGuard::EventSubscribeClient::Deleter(nullptr);
+
+    // client with callback: ClearCallBack then release, no crash on registry path
+    auto *client = new SecurityGuard::EventSubscribeClient();
+    client->callback_ = new (std::nothrow) SecurityGuard::AcquireDataManagerCallbackService();
+    client->deathRecipient_ = new (std::nothrow) SecurityGuard::EventSubscribeClient::DeathRecipient(
+        std::weak_ptr<SecurityGuard::EventSubscribeClient>());
+    SecurityGuard::EventSubscribeClient::Deleter(client);
+}
+
+HWTEST_F(DataCollectKitTest, ClientConstructClientId001, TestSize.Level1)
+{
+    auto *serviceCallback = new (std::nothrow) SecurityGuard::AcquireDataManagerCallbackService();
+    auto *otherCallback = new (std::nothrow) SecurityGuard::AcquireDataManagerCallbackService();
+    std::string id1 = SecurityGuard::EventSubscribeClient::ConstructClientId(serviceCallback);
+    std::string id2 = SecurityGuard::EventSubscribeClient::ConstructClientId(otherCallback);
+    EXPECT_FALSE(id1.empty());
+    EXPECT_FALSE(id2.empty());
+    EXPECT_STRNE(id1.c_str(), id2.c_str());
+    delete serviceCallback;
+    delete otherCallback;
+}
+
+HWTEST_F(DataCollectKitTest, ClientSetDeathRecipient002, TestSize.Level1)
+{
+    // death recipient already exists: reuse it and return success
+    auto client = std::make_shared<SecurityGuard::EventSubscribeClient>();
+    OHOS::sptr<OHOS::IRemoteObject> serviceCallback =
+        new (std::nothrow) SecurityGuard::AcquireDataManagerCallbackService();
+    int32_t ret = SecurityGuard::EventSubscribeClient::SetDeathRecipient(client, serviceCallback);
+    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
+    EXPECT_TRUE(client->deathRecipient_ != nullptr);
+    auto firstRecipient = client->deathRecipient_;
+    ret = SecurityGuard::EventSubscribeClient::SetDeathRecipient(client, serviceCallback);
+    EXPECT_EQ(ret, SecurityGuard::SUCCESS);
+    EXPECT_EQ(client->deathRecipient_, firstRecipient);
+}
+
+HWTEST_F(DataCollectKitTest, ClientClearCallBack001, TestSize.Level1)
+{
+    // callback is null: no-op
+    auto client = std::make_shared<SecurityGuard::EventSubscribeClient>();
+    client->ClearCallBack();
+
+    // callback is set: forwarded to service, user callback no longer triggered after clear
+    bool callbackInvoked = false;
+    OHOS::sptr<SecurityGuard::AcquireDataManagerCallbackService> serviceCallback =
+        new (std::nothrow) SecurityGuard::AcquireDataManagerCallbackService();
+    serviceCallback->RegistCallBack([&callbackInvoked](const SecurityCollector::Event &event) {
+        callbackInvoked = true;
+    });
+    client->callback_ = serviceCallback;
+    client->ClearCallBack();
+    std::vector<SecurityCollector::Event> events {};
+    EXPECT_EQ(serviceCallback->OnNotify(events), SecurityGuard::FAILED);
+    EXPECT_FALSE(callbackInvoked);
+}
+
+HWTEST_F(DataCollectKitTest, ClientOnRemoteDied001, TestSize.Level1)
+{
+    // weak client expired: return directly without recovery task
+    auto client = std::make_shared<SecurityGuard::EventSubscribeClient>();
+    SecurityGuard::EventSubscribeClient::DeathRecipient recipient(client);
+    client.reset();
+    const wptr<OHOS::IRemoteObject> remote {};
+    recipient.OnRemoteDied(remote);
+}
+
+// Covers the "proxy is null" branches in DataCollectManager and EventSubscribeClient:
+// mock samgr returns null object, iface_cast yields null proxy.
+HWTEST_F(DataCollectKitTest, ManagerProxyNull001, TestSize.Level1)
+{
+    OHOS::sptr<OHOS::ISystemAbilityManager> mock(new (std::nothrow) NullSystemAbilityManager());
+    SamgrMockGuard guard(mock);
+    auto &manager = SecurityGuard::DataCollectManager::GetInstance();
+
+    auto info = std::make_shared<SecurityGuard::EventInfo>(1, "1.0", "content");
+    EXPECT_EQ(manager.ReportSecurityEvent(info, true), SecurityGuard::NULL_OBJECT);
+    EXPECT_EQ(manager.SecurityGuardConfigUpdate(1, "test"), SecurityGuard::NULL_OBJECT);
+
+    SecurityCollector::Event event {};
+    EXPECT_EQ(manager.StartCollector(event, 0), SecurityGuard::NULL_OBJECT);
+    EXPECT_EQ(manager.StopCollector(event), SecurityGuard::NULL_OBJECT);
+
+    auto subscriber = std::make_shared<MockSubscriberPtr>(event);
+    EXPECT_EQ(manager.Subscribe(subscriber), SecurityGuard::NULL_OBJECT);
+    manager.subscribers_.insert(subscriber);
+    EXPECT_EQ(manager.Unsubscribe(subscriber), SecurityGuard::NULL_OBJECT);
+    manager.subscribers_.erase(subscriber);
+
+    std::vector<SecurityCollector::SecurityEventRuler> rulers;
+    auto callback = std::make_shared<MockNapiSecurityEventQuerier>();
+    EXPECT_EQ(manager.QuerySecurityEvent(rulers, callback), SecurityGuard::NULL_OBJECT);
+    EXPECT_EQ(manager.QuerySecurityEvent(rulers, callback, "auditGroup"), SecurityGuard::NULL_OBJECT);
+    EXPECT_EQ(manager.QuerySecurityEventById(rulers, callback, "auditGroup"), SecurityGuard::NULL_OBJECT);
+
+    std::string result;
+    // QuerySecurityEventConfig returns FAILED on null object before the proxy check
+    EXPECT_EQ(manager.QuerySecurityEventConfig(result), SecurityGuard::FAILED);
+    EXPECT_EQ(manager.QueryAllClientsInfo(result), SecurityGuard::FAILED);
+
+    std::string devId;
+    std::string eventList;
+    EXPECT_EQ(manager.RequestSecurityEventInfo(devId, eventList, nullptr), SecurityGuard::NULL_OBJECT);
+
+    // EventSubscribeClient with the same null-object samgr
+    SecurityGuard::EventSubscribeClient subscribeClient {};
+    EXPECT_EQ(subscribeClient.Subscribe(11), SecurityGuard::NULL_OBJECT);
+    EXPECT_EQ(subscribeClient.Unsubscribe(11), SecurityGuard::NULL_OBJECT);
+    auto filter = std::make_shared<SecurityGuard::EventMuteFilter>();
+    EXPECT_EQ(subscribeClient.AddFilter(filter), SecurityGuard::NULL_OBJECT);
+    EXPECT_EQ(subscribeClient.RemoveFilter(filter), SecurityGuard::NULL_OBJECT);
+    auto func = [](const SecurityCollector::Event &event) {};
+    std::shared_ptr<SecurityGuard::EventSubscribeClient> subscribeSharedClient {};
+    EXPECT_EQ(SecurityGuard::EventSubscribeClient::CreatClient("auditGroup", func, subscribeSharedClient),
+        SecurityGuard::NULL_OBJECT);
 }
 
 HWTEST_F(DataCollectKitTest, TestQueryProcInfo, TestSize.Level1)

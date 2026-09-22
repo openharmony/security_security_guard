@@ -65,7 +65,35 @@ ohos_unittest("SecurityGuardModelManagerTest") {
   ]
 }
 
+ohos_shared_library("libtest_model_api") {
+  testonly = true
+  subsystem_name = "securitycloudgovernance"
+  part_name = "security_guard"
+  # PREFIX_MODEL_PATH requires plugin so under /system/lib64/lib*
+  module_install_dir = "lib64"
+
+  include_dirs = [
+    "${sg_root_dir}/interfaces/inner_api/classify/include",
+    "${sg_root_dir}/interfaces/inner_api/common/include",
+  ]
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  branch_protector_ret = "pac_ret"
+  sources = [
+    "src/test_model_api.cpp",
+  ]
+}
+
 group("unittest") {
   testonly = true
-  deps = [ ":SecurityGuardModelManagerTest" ]
+  deps = [
+    ":SecurityGuardModelManagerTest",
+    ":libtest_model_api",
+  ]
 }

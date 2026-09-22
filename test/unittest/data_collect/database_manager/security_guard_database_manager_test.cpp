@@ -325,6 +325,27 @@ HWTEST_F(SecurityGuardDatabaseManagerTest, CheckRiskContent001, TestSize.Level0)
     EXPECT_FALSE(ret);
 }
 
+HWTEST_F(SecurityGuardDatabaseManagerTest, CheckRiskContent002, TestSize.Level0)
+{
+    SecurityCollector::Event event {};
+    // content size exceeds max size
+    event.content = std::string(MAX_CONTENT_SIZE + 1, 'c');
+    EXPECT_FALSE(DataFormat::CheckRiskContent(event));
+
+    // content and tlvData are both empty
+    event.content = "";
+    EXPECT_FALSE(DataFormat::CheckRiskContent(event));
+
+    // valid json content
+    event.content = "{\"content\":\"test\"}";
+    EXPECT_TRUE(DataFormat::CheckRiskContent(event));
+
+    // empty content with non-empty tlvData skips json parse
+    event.content = "";
+    event.tlvData.push_back(SecurityCollector::Tlv{});
+    EXPECT_TRUE(DataFormat::CheckRiskContent(event));
+}
+
 HWTEST_F(SecurityGuardDatabaseManagerTest, ParseConditions001, TestSize.Level0)
 {
     std::string conditions;
