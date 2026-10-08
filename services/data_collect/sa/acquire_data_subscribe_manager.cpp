@@ -570,14 +570,19 @@ void AcquireDataSubscribeManager::InitUserId()
 void AcquireDataSubscribeManager::InitDeviceId()
 {
 #ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
-    auto callback = std::make_shared<InitCallback>();
-    int32_t ret = DistributedHardware::DeviceManager::GetInstance().InitDeviceManager(PKG_NAME, callback);
-    if (ret != SUCCESS) {
-        SGLOGI("init device manager failed, result is %{public}d", ret);
-        return;
+    bool expected = false;
+    if (isDeviceManagerInit_.compare_exchange_strong(expected, true)) {
+        auto callback = std::make_shared<InitCallback>();
+        int32_t ret = DistributedHardware::DeviceManager::GetInstance().InitDeviceManager(PKG_NAME, callback);
+        if (ret != SUCCESS) {
+            SGLOGI("init device manager failed, result is %{public}d", ret);
+            isDeviceManagerInit_ = false;
+            return;
+        }
     }
+
     DistributedHardware::DmDeviceInfo deviceInfo;
-    ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceInfo(PKG_NAME, deviceInfo);
+    int32_t ret = DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceInfo(PKG_NAME, deviceInfo);
     if (ret != SUCCESS) {
         SGLOGI("get local device into error, code=%{public}d", ret);
         return;
@@ -590,6 +595,7 @@ void AcquireDataSubscribeManager::InitDeviceId()
 void AcquireDataSubscribeManager::DeInitDeviceId()
 {
 #ifdef SECURITY_GUARD_ENABLE_DEVICE_ID
+    isDeviceManagerInit_.store(false);
     int ret = DistributedHardware::DeviceManager::GetInstance().UnInitDeviceManager(PKG_NAME);
     if (ret != SUCCESS) {
         SGLOGE("UnInitDeviceManager fail, code =%{public}d", ret);
