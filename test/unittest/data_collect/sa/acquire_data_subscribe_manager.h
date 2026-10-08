@@ -153,6 +153,7 @@ private:
     ffrt::mutex queueMutex_ {};
     std::string deviceId_ {};
     int32_t userId_ {-1};
+    std::atomic<bool> isDeviceManagerInit_ {false};
     // 只保护 sessionsMap_ / reportedStickyEvents_（纯数据）。临界区内禁止任何外部调用
     // （IPC、dlopen 采集器/插件代码、数据库 IO），外部动作一律"锁内快照、锁外执行"。
     ffrt::mutex sessionMutex_{};
